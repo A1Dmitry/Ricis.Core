@@ -57,6 +57,6 @@ public sealed class InfinityExpression : Expression
 
     public override string ToString()
     {
-        return $"∞_{{{Numerator}}} при {Variable.Name} = {SingularityValue:R}";
+        return $"∞_{{{Numerator}}} when {Variable.Name} = {SingularityValue:R}";
     }
 }
