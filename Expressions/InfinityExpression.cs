@@ -1,18 +1,13 @@
 ﻿using System.Linq.Expressions;
-using Ricis.Core;
 
-public sealed class InfinityExpression : Expression
+namespace Ricis.Core.Expressions;
+
+public sealed class InfinityExpression(Expression numerator, ParameterExpression variable, double value)
+    : Expression
 {
-    public InfinityExpression(Expression numerator, ParameterExpression variable, double value)
-    {
-        Numerator = numerator;
-        Variable = variable;
-        SingularityValue = value;
-    }
-
-    public Expression Numerator { get; } // Индекс бесконечности (0 или C)
-    public ParameterExpression Variable { get; }
-    public double SingularityValue { get; }
+    public Expression Numerator { get; } = numerator; // Индекс бесконечности (0 или C)
+    public new ParameterExpression Variable { get; set; } = variable;
+    public double SingularityValue { get; } = value;
 
     public override ExpressionType NodeType => ExpressionType.Extension;
     public override Type Type => typeof(double); // В классике это число
@@ -39,8 +34,15 @@ public sealed class InfinityExpression : Expression
     {
         if (expr is ConstantExpression c)
         {
-            if (c.Value is int i) return i == 0;
-            if (c.Value is double d) return Math.Abs(d) < double.Epsilon;
+            if (c.Value is int i)
+            {
+                return i == 0;
+            }
+
+            if (c.Value is double d)
+            {
+                return Math.Abs(d) < double.Epsilon;
+            }
         }
         return false;
     }
@@ -48,8 +50,19 @@ public sealed class InfinityExpression : Expression
     {
         if (expr is ConstantExpression c)
         {
-            if (c.Value is int i) return i == 1;
-            if (c.Value is double d) return Math.Abs(d) == 1.0;
+            if (c.Value is int i)
+            {
+                return i == 1;
+            }
+
+            if (c.Value is double d)
+            {
+                return Math.Abs(d) == 1.0;
+            }
+        }
+        else
+        {
+            return expr.AreSelfIdentical(RicisType.InfinityOne);
         }
         return false;
     }

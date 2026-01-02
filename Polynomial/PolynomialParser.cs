@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Ricis.Core
+namespace Ricis.Core.Polynomial
 {
     /// <summary>
     /// Robust quadratic extractor: walks the expression, collects additive terms,
@@ -9,9 +9,12 @@ namespace Ricis.Core
     /// </summary>
     public static class PolynomialParser
     {
-        public static (ParameterExpression, double a, double b, double c)? ParseQuadratic(Expression expr)
+        public static (ParameterExpression, double a, double b, double c)? ParseQuadratic(this Expression expr)
         {
-            if (expr == null) return null;
+            if (expr == null)
+            {
+                return null;
+            }
 
             // collect terms as (degree -> coefficient)
             var terms = new Dictionary<int, double>();
@@ -24,7 +27,11 @@ namespace Ricis.Core
             {
                 if (TryExtractMonomial(term, ref variable, out var degree, out var coeff))
                 {
-                    if (!terms.ContainsKey(degree)) terms[degree] = 0.0;
+                    if (!terms.ContainsKey(degree))
+                    {
+                        terms[degree] = 0.0;
+                    }
+
                     terms[degree] += coeff;
                 }
                 else
@@ -35,13 +42,20 @@ namespace Ricis.Core
             }
 
             // now map degrees to a,b,c
-            double a = terms.ContainsKey(2) ? terms[2] : 0.0;
-            double b = terms.ContainsKey(1) ? terms[1] : 0.0;
-            double c = terms.ContainsKey(0) ? terms[0] : 0.0;
+            var a = terms.ContainsKey(2) ? terms[2] : 0.0;
+            var b = terms.ContainsKey(1) ? terms[1] : 0.0;
+            var c = terms.ContainsKey(0) ? terms[0] : 0.0;
 
             // if no variable found or all zero — return null
-            if (variable == null) return null;
-            if (Math.Abs(a) < double.Epsilon && Math.Abs(b) < double.Epsilon && Math.Abs(c) < double.Epsilon) return null;
+            if (variable == null)
+            {
+                return null;
+            }
+
+            if (Math.Abs(a) < double.Epsilon && Math.Abs(b) < double.Epsilon && Math.Abs(c) < double.Epsilon)
+            {
+                return null;
+            }
 
             return (variable, a, b, c);
         }
@@ -51,7 +65,10 @@ namespace Ricis.Core
             var list = new List<Expression>();
             void Recur(Expression e, double sign = 1.0)
             {
-                if (e == null) return;
+                if (e == null)
+                {
+                    return;
+                }
 
                 if (e.NodeType == ExpressionType.Add)
                 {
@@ -110,15 +127,26 @@ namespace Ricis.Core
             {
                 if (f is ConstantExpression c)
                 {
-                    if (!TryGetNumericConstant(c, out var v)) return false;
+                    if (!TryGetNumericConstant(c, out var v))
+                    {
+                        return false;
+                    }
+
                     coefficient *= v;
                     continue;
                 }
 
                 if (f is ParameterExpression p)
                 {
-                    if (variable == null) variable = p;
-                    else if (variable != p) return false; // multiple different parameters -> fail
+                    if (variable == null)
+                    {
+                        variable = p;
+                    }
+                    else if (variable != p)
+                    {
+                        return false; // multiple different parameters -> fail
+                    }
+
                     degree += 1;
                     continue;
                 }
@@ -127,7 +155,11 @@ namespace Ricis.Core
                 if (f is BinaryExpression be && be.NodeType == ExpressionType.Multiply)
                 {
                     // recursively attempt to extract monomial — flatten should have decomposed it, so this likely won't happen
-                    if (!TryExtractMonomial(f, ref variable, out var d2, out var c2)) return false;
+                    if (!TryExtractMonomial(f, ref variable, out var d2, out var c2))
+                    {
+                        return false;
+                    }
+
                     degree += d2;
                     coefficient *= c2;
                     continue;
@@ -142,7 +174,10 @@ namespace Ricis.Core
 
         private static void CollectMultiplicativeFactors(Expression expr, List<Expression> outFactors)
         {
-            if (expr == null) return;
+            if (expr == null)
+            {
+                return;
+            }
 
             if (expr.NodeType == ExpressionType.Multiply)
             {
@@ -158,7 +193,11 @@ namespace Ricis.Core
         private static bool TryGetNumericConstant(ConstantExpression c, out double value)
         {
             value = 0.0;
-            if (c.Value == null) return false;
+            if (c.Value == null)
+            {
+                return false;
+            }
+
             switch (Type.GetTypeCode(c.Value.GetType()))
             {
                 case TypeCode.Int32:

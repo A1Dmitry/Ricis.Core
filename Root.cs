@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Ricis.Core.Rationals;
+using System.Linq.Expressions;
 
 namespace Ricis.Core;
 

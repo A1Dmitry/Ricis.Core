@@ -1,15 +1,30 @@
 ﻿using System.Linq.Expressions;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Expressions;
 
 public static class ExpressionStructuralComparer
 {
     public static bool AreEqual(Expression a, Expression b)
     {
-        if (ReferenceEquals(a, b)) return true;
-        if (a is null || b is null) return false;
-        if (a.NodeType != b.NodeType) return false;
-        if (a.Type != b.Type) return false;
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        if (a is null || b is null)
+        {
+            return false;
+        }
+
+        if (a.NodeType != b.NodeType)
+        {
+            return false;
+        }
+
+        if (a.Type != b.Type)
+        {
+            return false;
+        }
 
         return a.NodeType switch
         {
@@ -43,22 +58,42 @@ public static class ExpressionStructuralComparer
 
     private static bool CallEqual(MethodCallExpression a, MethodCallExpression b)
     {
-        if (a.Method != b.Method) return false;
-        if (!AreEqual(a.Object, b.Object)) return false;
-        if (a.Arguments.Count != b.Arguments.Count) return false;
+        if (a.Method != b.Method)
+        {
+            return false;
+        }
 
-        for (int i = 0; i < a.Arguments.Count; i++)
-            if (!AreEqual(a.Arguments[i], b.Arguments[i])) return false;
+        if (!AreEqual(a.Object, b.Object))
+        {
+            return false;
+        }
+
+        if (a.Arguments.Count != b.Arguments.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < a.Arguments.Count; i++)
+            if (!AreEqual(a.Arguments[i], b.Arguments[i]))
+            {
+                return false;
+            }
 
         return true;
     }
 
     private static bool LambdaEqual(LambdaExpression a, LambdaExpression b)
     {
-        if (a.Parameters.Count != b.Parameters.Count) return false;
+        if (a.Parameters.Count != b.Parameters.Count)
+        {
+            return false;
+        }
 
-        for (int i = 0; i < a.Parameters.Count; i++)
-            if (!ParameterEqual(a.Parameters[i], b.Parameters[i])) return false;
+        for (var i = 0; i < a.Parameters.Count; i++)
+            if (!ParameterEqual(a.Parameters[i], b.Parameters[i]))
+            {
+                return false;
+            }
 
         return AreEqual(a.Body, b.Body);
     }

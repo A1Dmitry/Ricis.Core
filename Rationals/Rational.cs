@@ -1,10 +1,15 @@
 using System.Numerics;
 using DivideByZeroException = System.DivideByZeroException;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Rationals;
 
 public readonly struct Rational : IEquatable<Rational>
 {
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Numerator, Denominator);
+    }
+
     public static readonly Rational Zero = new(0);
     public static readonly Rational One = new(1);
 
@@ -14,14 +19,20 @@ public readonly struct Rational : IEquatable<Rational>
     public static Rational operator -(Rational a)
     {
         if (a.Numerator.IsZero)
+        {
             return a; // -0 = 0
+        }
 
         return new Rational(-a.Numerator, a.Denominator);
     }
 
     public Rational(BigInteger numerator, BigInteger denominator)
     {
-        if (denominator.IsZero) throw new DivideByZeroException();
+        if (denominator.IsZero)
+        {
+            throw new DivideByZeroException();
+        }
+
         if (denominator.Sign < 0)
         {
             numerator = BigInteger.Negate(numerator);
@@ -52,9 +63,9 @@ public readonly struct Rational : IEquatable<Rational>
         var hi = (uint)bits[2];
         var flags = (uint)bits[3];
         var sign = (flags & 0x80000000) != 0 ? -1 : 1;
-        var scale = (flags >> 16) & 0x7F;
+        var scale = flags >> 16 & 0x7F;
 
-        var numerator = ((BigInteger)hi << 64) | ((BigInteger)mid << 32) | lo;
+        var numerator = (BigInteger)hi << 64 | (BigInteger)mid << 32 | lo;
         numerator *= sign;
         var denominator = BigInteger.Pow(10, (int)scale);
         return new Rational(numerator, denominator);
@@ -82,7 +93,11 @@ public readonly struct Rational : IEquatable<Rational>
 
     public static Rational operator /(Rational a, Rational b)
     {
-        if (b.Numerator.IsZero) throw new DivideByZeroException();
+        if (b.Numerator.IsZero)
+        {
+            throw new DivideByZeroException();
+        }
+
         return new Rational(a.Numerator * b.Denominator, a.Denominator * b.Numerator);
     }
 
@@ -101,7 +116,10 @@ public readonly struct Rational : IEquatable<Rational>
     {
         var floored = r.Numerator / r.Denominator;
         if (r.Numerator < 0 && r.Numerator % r.Denominator != 0)
+        {
             floored -= BigInteger.One;
+        }
+
         return new Rational(floored);
     }
 
@@ -156,13 +174,21 @@ public readonly struct Rational : IEquatable<Rational>
 
     public static Rational operator /(Rational a, int b)
     {
-        if (b == 0) throw new DivideByZeroException();
+        if (b == 0)
+        {
+            throw new DivideByZeroException();
+        }
+
         return a / new Rational(b);
     }
 
     public static Rational operator /(int a, Rational b)
     {
-        if (b.IsZero) throw new DivideByZeroException();
+        if (b.IsZero)
+        {
+            throw new DivideByZeroException();
+        }
+
         return new Rational(a) / b;
     }
 
@@ -175,5 +201,6 @@ public readonly struct Rational : IEquatable<Rational>
 
     public static bool operator !=(Rational a, int b) => !(a == b);
     public static bool operator !=(int a, Rational b) => !(a == b);
-    
+
+    public override bool Equals(object obj) => obj is Rational rational && Equals(rational);
 }

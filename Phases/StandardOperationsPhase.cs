@@ -14,7 +14,11 @@ public static class StandardOperationsPhase
 {
     public static Expression Apply(Expression expr)
     {
-        if (expr == null) return null;
+        if (expr == null)
+        {
+            return null;
+        }
+
         return new StandardOperationsVisitor().Visit(expr);
     }
 
@@ -28,21 +32,37 @@ public static class StandardOperationsPhase
             // 1 * x → x
             if (node.NodeType == ExpressionType.Multiply)
             {
-                if (IsConstantOne(left)) return right;
-                if (IsConstantOne(right)) return left;
+                if (IsConstantOne(left))
+                {
+                    return right;
+                }
+
+                if (IsConstantOne(right))
+                {
+                    return left;
+                }
             }
 
             // 0 + x → x
             if (node.NodeType == ExpressionType.Add)
             {
-                if (IsConstantZero(left)) return right;
-                if (IsConstantZero(right)) return left;
+                if (IsConstantZero(left))
+                {
+                    return right;
+                }
+
+                if (IsConstantZero(right))
+                {
+                    return left;
+                }
             }
 
             // x + 0 → x, x * 1 → x (уже покрыто выше)
 
             if (left == node.Left && right == node.Right)
+            {
                 return node;
+            }
 
             return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }

@@ -1,6 +1,7 @@
 ﻿// TypeConsistencyPhase.cs
 
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Phases;
 
@@ -13,7 +14,10 @@ public static class TypeConsistencyPhase
 {
     public static Expression Apply(Expression expr)
     {
-        if (expr == null) return null;
+        if (expr == null)
+        {
+            return null;
+        }
 
         try
         {

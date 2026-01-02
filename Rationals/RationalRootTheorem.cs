@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Rationals;
 
 internal class RationalRootTheorem
 {
@@ -17,7 +17,10 @@ internal class RationalRootTheorem
         // Если свободный член 0 (например x^2 - 5x), то 0 - корень, 
         // но теорема ищет ненулевые рациональные корни для приведенного.
         // Для x-5 minDegree=0, constant=-5.
-        if (constant.IsZero) return new List<Rational>();
+        if (constant.IsZero)
+        {
+            return new List<Rational>();
+        }
 
         var pFactors = Factorize(constant.Numerator);
         var qFactors = Factorize(leading.Denominator);
@@ -39,16 +42,25 @@ internal class RationalRootTheorem
         n = BigInteger.Abs(n);
         var factors = new List<BigInteger> { BigInteger.One };
 
-        if (n.IsZero) return factors; // Защита
+        if (n.IsZero)
+        {
+            return factors; // Защита
+        }
 
         for (BigInteger i = 2; i * i <= n; i++)
             if (n % i == 0)
             {
                 factors.Add(i);
-                while (n % i == 0) n /= i;
+                while (n % i == 0)
+                {
+                    n = n / i;
+                }
             }
 
-        if (n > 1) factors.Add(n);
+        if (n > 1)
+        {
+            factors.Add(n);
+        }
 
         return factors;
     }

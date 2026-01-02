@@ -1,6 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using Ricis.Core.Expressions;
+using System.Linq.Expressions;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Extensions;
 
 public static class ExpressionComparableExtensions
 {

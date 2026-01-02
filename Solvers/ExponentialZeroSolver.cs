@@ -1,6 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using Ricis.Core.Solvers.ZeroSolver;
+using System.Linq.Expressions;
 
-namespace Ricis.Core.ZeroSolver
+namespace Ricis.Core.Solvers
 {
     /// <summary>
     /// Решатель для exp(g(x)) - 1 = 0  =>  g(x) = 0
@@ -13,7 +14,7 @@ namespace Ricis.Core.ZeroSolver
             var roots = new List<Root>();
 
             // Нормализуем: приводим к виду exp(...) - 1 или exp(...) = 1
-            Expression inner = null;
+            Expression inner;
 
             if (IsExpMinusOne(expr, out var arg))
             {
@@ -27,17 +28,14 @@ namespace Ricis.Core.ZeroSolver
             {
                 var visitor = new ExpFinderVisitor();
                 visitor.Visit(expr);
-                if (visitor.FoundExpArgument != null) inner = visitor.FoundExpArgument;
+                inner = visitor.FoundExpArgument;
             }
 
-            if (inner == null)
-                return roots;
-
             // Делегируем поиск корней внутреннему универсальному солверу
-            var innerRoots = UniversalZeroSolver.FindExactRoots(inner, parameter);
-            if (innerRoots != null)
+            var innerRoots = inner.FindExactRoots(parameter);
+            if (innerRoots.Any())
             {
-                foreach (var r in innerRoots) roots.Add(r);
+                roots.AddRange(innerRoots);
             }
 
             return roots;
@@ -75,7 +73,8 @@ namespace Ricis.Core.ZeroSolver
         {
             argument = null;
             // оставляю заглушку — при необходимости можно распознавать равенства
-            return false;
+            throw new NotImplementedException();
+           // return false;
         }
 
         private static bool IsExpCall(Expression expr)
@@ -105,7 +104,11 @@ namespace Ricis.Core.ZeroSolver
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
-                if (IsExpCall(node) && FoundExpArgument == null) FoundExpArgument = node.Arguments[0];
+                if (IsExpCall(node) && FoundExpArgument == null)
+                {
+                    FoundExpArgument = node.Arguments[0];
+                }
+
                 return base.VisitMethodCall(node);
             }
         }

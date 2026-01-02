@@ -1,12 +1,13 @@
 ﻿// SingularitySolver.cs (финальная версия)
 
 using System.Linq.Expressions;
+using Ricis.Core.Polynomial;
 
-namespace Ricis.Core.ZeroSolver;
+namespace Ricis.Core.Solvers;
 
 public static class SingularitySolver
 {
-    public static List<(ParameterExpression, double)> SolveRoot(Expression denominator)
+    public static List<(ParameterExpression expr, double value)> SolveRoots(this Expression denominator)
     {
         var roots = new HashSet<(ParameterExpression, double)>();
         CollectRoots(denominator, roots);
@@ -19,7 +20,11 @@ public static class SingularitySolver
         {
             case ParameterExpression p:
                 // Только если весь знаменатель — чистая переменная x (1/x)
-                if (ReferenceEquals(expr, p)) roots.Add((p, 0.0));
+                if (ReferenceEquals(expr, p))
+                {
+                    roots.Add((p, 0.0));
+                }
+
                 break;
 
             case BinaryExpression bin:
@@ -33,29 +38,40 @@ public static class SingularitySolver
 
                 if (bin.NodeType == ExpressionType.Subtract)
                     // Обработка x^n - 1 = 0
+                {
                     if (bin.Right is ConstantExpression constRight &&
                         constRight.Value is double rightVal &&
                         Math.Abs(rightVal - 1.0) < double.Epsilon)
                         // Левый операнд — степень x
+                    {
                         if (TryExtractPower(bin.Left, out var baseExpr, out var exponent))
+                        {
                             if (baseExpr is ParameterExpression param && exponent > 1)
                             {
                                 // Корни n-й степени из 1 — только вещественные
                                 // Для чётного n: x = 1 и x = -1
                                 // Для нечётного n: только x = 1
                                 roots.Add((param, 1.0));
-                                if (exponent % 2 == 0) roots.Add((param, -1.0));
+                                if (exponent % 2 == 0)
+                                {
+                                    roots.Add((param, -1.0));
+                                }
                             }
+                        }
+                    }
+                }
 
                 if (bin.NodeType is ExpressionType.Subtract or ExpressionType.Add)
                 {
                     // Линейные формы
                     if (TryExtractLinear(bin, out var paramLinear, out var a, out var b))
+                    {
                         if (Math.Abs(a) > 0)
                         {
                             var rootVal = bin.NodeType == ExpressionType.Subtract ? b / a : -b / a;
                             roots.Add((paramLinear, rootVal));
                         }
+                    }
 
                     // Квадратичные формы x² ± ... = 0
                     if (bin.Right is ConstantExpression constRight && TryGetDouble(constRight, out var cValue))
@@ -63,7 +79,7 @@ public static class SingularitySolver
                         var sign = bin.NodeType == ExpressionType.Subtract ? -1.0 : 1.0;
                         var effectiveC = sign * cValue;
 
-                        if (PolynomialParser.ParseQuadratic(bin.Left) is var quad && quad.HasValue)
+                        if (bin.Left.ParseQuadratic() is var quad && quad.HasValue)
                         {
                             var (param, aQuad, bQuad, _) = quad.Value;
                             if (Math.Abs(aQuad) > 0)
@@ -73,7 +89,10 @@ public static class SingularitySolver
                                 {
                                     var sqrtD = Math.Sqrt(discriminant);
                                     roots.Add((param, (-bQuad + sqrtD) / (2 * aQuad)));
-                                    if (discriminant > 0) roots.Add((param, (-bQuad - sqrtD) / (2 * aQuad)));
+                                    if (discriminant > 0)
+                                    {
+                                        roots.Add((param, (-bQuad - sqrtD) / (2 * aQuad)));
+                                    }
                                 }
                             }
                         }
@@ -85,7 +104,10 @@ public static class SingularitySolver
 
             case MethodCallExpression call when call.Method.Name == "Log":
                 if (call.Arguments.Count == 1 && call.Arguments[0] is ParameterExpression paramLog)
+                {
                     roots.Add((paramLog, 1.0));
+                }
+
                 break;
         }
     }
@@ -121,23 +143,40 @@ public static class SingularitySolver
     private static int CountMultiplications(Expression expr)
     {
         if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
+        {
             return CountMultiplications(bin.Left) + CountMultiplications(bin.Right);
+        }
+
         return expr is ParameterExpression ? 1 : 0;
     }
 
     private static bool IsParameterMultiplication(Expression expr)
     {
-        if (expr is ParameterExpression) return true;
+        if (expr is ParameterExpression)
+        {
+            return true;
+        }
+
         if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
+        {
             return IsParameterMultiplication(bin.Left) && IsParameterMultiplication(bin.Right);
+        }
+
         return false;
     }
 
     private static ParameterExpression GetParameterFromMultiplication(Expression expr)
     {
-        if (expr is ParameterExpression p) return p;
+        if (expr is ParameterExpression p)
+        {
+            return p;
+        }
+
         if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
+        {
             return GetParameterFromMultiplication(bin.Left) ?? GetParameterFromMultiplication(bin.Right);
+        }
+
         return null;
     }
 
@@ -152,12 +191,16 @@ public static class SingularitySolver
         // 2*x - 6
         if (expr.Left is BinaryExpression mul && mul.NodeType == ExpressionType.Multiply &&
             mul.Left is ConstantExpression c && mul.Right is ParameterExpression p)
+        {
             if (TryGetDouble(c, out a))
             {
                 param = p;
                 if (TryGetDouble(expr.Right as ConstantExpression, out b))
+                {
                     return true;
+                }
             }
+        }
 
         // x - 2
         if (expr.Left is ParameterExpression p2 && expr.Right is ConstantExpression c2)
@@ -165,7 +208,9 @@ public static class SingularitySolver
             param = p2;
             a = 1.0;
             if (TryGetDouble(c2, out b))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -174,7 +219,11 @@ public static class SingularitySolver
     private static bool TryGetDouble(ConstantExpression c, out double val)
     {
         val = 0.0;
-        if (c?.Value == null) return false;
+        if (c?.Value == null)
+        {
+            return false;
+        }
+
         if (c.Value is double d)
         {
             val = d;

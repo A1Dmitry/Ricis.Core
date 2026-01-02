@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
-using Ricis.Core.ZeroSolver;
+using Ricis.Core.Rationals;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Polynomial;
 
 public static class PolynomialLongDivision
 {
@@ -12,13 +12,17 @@ public static class PolynomialLongDivision
 
         // ИСПРАВЛЕНИЕ:
         if (!numCollector.IsPolynomial || numCollector.Coefficients.Count == 0)
+        {
             return null;
+        }
 
         var denCollector = new PolynomialCoefficientCollector(param);
         denCollector.Visit(denominator);
 
         if (!denCollector.IsPolynomial || denCollector.Coefficients.Count == 0)
+        {
             return null;
+        }
 
         // Используем SortedDictionary с обратным порядком для удобства
         var dividend = new SortedDictionary<int, Rational>(numCollector.Coefficients,
@@ -26,14 +30,23 @@ public static class PolynomialLongDivision
         var divisor = new SortedDictionary<int, Rational>(denCollector.Coefficients,
             Comparer<int>.Create((x, y) => y.CompareTo(x)));
 
-        if (divisor.Count == 0) return null;
+        if (divisor.Count == 0)
+        {
+            return null;
+        }
 
         var divisorDegree = divisor.Keys.First(); // максимальная степень
         var leadingDivisor = divisor[divisorDegree];
-        if (leadingDivisor.IsZero) return null;
+        if (leadingDivisor.IsZero)
+        {
+            return null;
+        }
 
         var quotient = Divide(dividend, divisor, divisorDegree, leadingDivisor);
-        if (quotient == null) return null;
+        if (quotient == null)
+        {
+            return null;
+        }
 
         return BuildExpressionFromCoefficients(quotient, param);
     }
@@ -66,9 +79,13 @@ public static class PolynomialLongDivision
                 {
                     var newCoeff = current - subtract;
                     if (newCoeff.IsZero)
+                    {
                         remainder.Remove(degResult);
+                    }
                     else
+                    {
                         remainder[degResult] = newCoeff;
+                    }
                 }
                 else
                 {
@@ -89,19 +106,23 @@ public static class PolynomialLongDivision
     private static Expression BuildExpressionFromCoefficients(Dictionary<int, Rational> coeffs, ParameterExpression param)
     {
         if (coeffs == null || coeffs.Count == 0)
+        {
             return RicisType.InfinityZero;
+        }
 
         Expression result = null;
 
         // Сортируем по убыванию степени для правильного порядка (опционально, но красиво)
         foreach (var kv in coeffs.OrderByDescending(k => k.Key))
         {
-            int degree = kv.Key;
-            Rational coeff = kv.Value;
+            var degree = kv.Key;
+            var coeff = kv.Value;
 
             // Пропускаем нулевые коэффициенты — они не влияют на полином
             if (coeff.IsZero)
+            {
                 continue;
+            }
 
             Expression coeffExpr = ConstantFromRational(coeff);
 
@@ -119,7 +140,7 @@ public static class PolynomialLongDivision
             {
                 // Строим x^degree = x * x * ... * x (degree раз)
                 Expression power = param;
-                for (int i = 1; i < degree; i++)
+                for (var i = 1; i < degree; i++)
                 {
                     power = Expression.Multiply(power, param);
                 }
@@ -137,7 +158,7 @@ public static class PolynomialLongDivision
     private static ConstantExpression ConstantFromRational(Rational r)
     {
         // Rational.ToDouble() уже есть в твоём проекте
-        double value = r.ToDouble();
+        var value = r.ToDouble();
         return Expression.Constant(value, typeof(double));
     }
 }

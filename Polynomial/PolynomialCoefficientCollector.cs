@@ -1,23 +1,19 @@
 ﻿using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Rationals;
 
-namespace Ricis.Core.ZeroSolver;
+namespace Ricis.Core.Polynomial;
 
-public class PolynomialCoefficientCollector : ExpressionVisitor
+public class PolynomialCoefficientCollector(ParameterExpression parameterExpression) : ExpressionVisitor
 {
-    private readonly ParameterExpression _parameter;
+    private readonly ParameterExpression _parameter = parameterExpression ?? throw new ArgumentNullException(nameof(parameterExpression));
     private Rational _currentMultiplier = Rational.One; // Текущий коэффициент перед параметром
     private int _currentPower = -1; // Текущая степень (при умножении)
-
-    public PolynomialCoefficientCollector(ParameterExpression parameterExpression)
-    {
-        _parameter = parameterExpression ?? throw new ArgumentNullException(nameof(parameterExpression));
-    }
 
     public bool IsPolynomial { get; private set; } = true;
     public Dictionary<int, Rational> Coefficients { get; } = new();
 
-    public void Visit(Expression expr)
+    public new void Visit(Expression expr)
     {
         IsPolynomial = true;
         Coefficients.Clear();
@@ -25,7 +21,9 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
 
         // Если в процессе посещения что-то сломало IsPolynomial, оставляем пустой результат
         if (!IsPolynomial)
+        {
             Coefficients.Clear();
+        }
     }
 
     protected override Expression VisitParameter(ParameterExpression node)
@@ -33,7 +31,10 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
         if (node == _parameter)
         {
             // Параметр в степени _currentPower с коэффициентом _currentMultiplier
-            if (_currentPower < 0) _currentPower = 1; // одиночный x → x^1
+            if (_currentPower < 0)
+            {
+                _currentPower = 1; // одиночный x → x^1
+            }
 
             AddToCoefficients(_currentPower, _currentMultiplier);
         }
@@ -52,17 +53,24 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
 
         if (_currentPower < 0)
             // Константа сама по себе — степень 0
+        {
             AddToCoefficients(0, value);
+        }
         else
             // Константа умножается на текущую степень параметра
+        {
             AddToCoefficients(_currentPower, _currentMultiplier * value);
+        }
 
         return node;
     }
 
     protected override Expression VisitBinary(BinaryExpression node)
     {
-        if (!IsPolynomial) return node;
+        if (!IsPolynomial)
+        {
+            return node;
+        }
 
         switch (node.NodeType)
         {
@@ -78,7 +86,9 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
 
                 // Для правой части учитываем знак
                 if (node.NodeType == ExpressionType.Subtract)
+                {
                     _currentMultiplier = -_currentMultiplier;
+                }
 
                 Visit(node.Right);
 
@@ -105,19 +115,22 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
 
         // Собираем левую часть как отдельный полином
         Visit(node.Left);
-        if (!IsPolynomial) return;
+        if (!IsPolynomial)
+        {
+            return;
+        }
 
         var leftCoeffs = new Dictionary<int, Rational>(Coefficients);
-        var leftPower = _currentPower;
-        var leftMult = _currentMultiplier;
-
         // Восстанавливаем состояние
         RestoreState(outerState);
         Coefficients.Clear();
 
         // Собираем правую часть
         Visit(node.Right);
-        if (!IsPolynomial) return;
+        if (!IsPolynomial)
+        {
+            return;
+        }
 
         var rightCoeffs = new Dictionary<int, Rational>(Coefficients);
 
@@ -164,15 +177,24 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
 
     private void AddToCoefficients(int power, Rational coeff)
     {
-        if (coeff.IsZero) return; // не добавляем нулевые коэффициенты
+        if (coeff.IsZero)
+        {
+            return; // не добавляем нулевые коэффициенты
+        }
 
         if (Coefficients.TryGetValue(power, out var existing))
+        {
             coeff += existing;
+        }
 
         if (coeff.IsZero)
+        {
             Coefficients.Remove(power);
+        }
         else
+        {
             Coefficients[power] = coeff;
+        }
     }
 
     private Rational ConvertConstantToRational(object value)
@@ -199,7 +221,7 @@ public class PolynomialCoefficientCollector : ExpressionVisitor
             BigInteger bi => new Rational(bi),
             decimal d => Rational.FromDecimal(d),
             null => throw new ArgumentNullException(nameof(value)),
-            _ => throw new ArgumentException($"Unsupported constant type: {value?.GetType()}")
+            _ => throw new ArgumentException($"Unsupported constant type: {value.GetType()}")
         };
     }
 

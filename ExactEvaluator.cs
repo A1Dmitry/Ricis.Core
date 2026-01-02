@@ -1,28 +1,23 @@
-using Ricis.Core;
 using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Rationals;
+
+namespace Ricis.Core;
 
 public static class ExactEvaluator
 {
-    public static bool TryEvaluate(Expression expr, string paramName, Rational paramValue, out Rational result)
+    public static bool TryEvaluate(this Expression expr, string paramName, Rational paramValue, out Rational result)
     {
         result = Rational.Zero;
         var visitor = new EvalVisitor(paramName, paramValue);
-        return visitor.TryEvaluate(expr, out result);
+        var tryEvaluate = visitor.TryEvaluate(expr, out result);
+        return tryEvaluate;
     }
 
-    private class EvalVisitor : ExpressionVisitor
+    private class EvalVisitor(string paramName, Rational paramValue) : ExpressionVisitor
     {
-        private readonly string _paramName;
-        private readonly Rational _paramValue;
         private Rational _last;
         private bool _ok;
-
-        public EvalVisitor(string paramName, Rational paramValue)
-        {
-            _paramName = paramName;
-            _paramValue = paramValue;
-        }
 
         public bool TryEvaluate(Expression expr, out Rational result)
         {
@@ -34,11 +29,15 @@ public static class ExactEvaluator
 
         public override Expression Visit(Expression node)
         {
-            if (!_ok) return node;
+            if (!_ok)
+            {
+                return node;
+            }
+
             if (node == null)
             {
                 _ok = false;
-                return node;
+                return null;
             }
 
             switch (node.NodeType)
@@ -68,42 +67,76 @@ public static class ExactEvaluator
             }
         }
 
-        private void VisitConstant(ConstantExpression c)
+        private new void VisitConstant(ConstantExpression c)
         {
             var v = c.Value;
-            if (v is int i) _last = Rational.Create(i);
-            else if (v is long l) _last = Rational.Create(l);
-            else if (v is decimal dec) _last = Rational.FromDecimal(dec);
-            else if (v is BigInteger bi) _last = new Rational(bi);
-            else if (v is double d)
+            switch (v)
             {
-                if (Math.Abs(d % 1) < double.Epsilon) _last = Rational.Create((long)d);
-                else _ok = false;
+                case int i:
+                    _last = Rational.Create(i);
+                    break;
+                case long l:
+                    _last = Rational.Create(l);
+                    break;
+                case decimal dec:
+                    _last = Rational.FromDecimal(dec);
+                    break;
+                case BigInteger bi:
+                    _last = new Rational(bi);
+                    break;
+                case double d when Math.Abs(d % 1) < double.Epsilon:
+                    _last = Rational.Create((long)d);
+                    break;
+                case double:
+                    _ok = false;
+                    break;
+                default:
+                    _ok = false;
+                    break;
             }
-            else _ok = false;
         }
 
-        private void VisitParameter(ParameterExpression p)
+        private new void VisitParameter(ParameterExpression p)
         {
-            if (p.Name == _paramName) _last = _paramValue;
-            else _ok = false;
+            if (p.Name == paramName)
+            {
+                _last = paramValue;
+            }
+            else
+            {
+                _ok = false;
+            }
         }
 
-        private void VisitUnary(UnaryExpression u)
+        private new void VisitUnary(UnaryExpression u)
         {
             Visit(u.Operand);
-            if (!_ok) return;
+            if (!_ok)
+            {
+                return;
+            }
+
             if (u.NodeType == ExpressionType.Negate || u.NodeType == ExpressionType.NegateChecked)
+            {
                 _last = -_last; // Используем перегрузку унарного минуса
+            }
         }
 
-        private void VisitBinary(BinaryExpression b)
+        private new void VisitBinary(BinaryExpression b)
         {
             Visit(b.Left);
-            if (!_ok) return;
+            if (!_ok)
+            {
+                return;
+            }
+
             var left = _last;
             Visit(b.Right);
-            if (!_ok) return;
+            if (!_ok)
+            {
+                return;
+            }
+
             var right = _last;
 
             try
@@ -130,23 +163,31 @@ public static class ExactEvaluator
             {
                 // Вычисляем основание
                 Visit(call.Arguments[0]);
-                if (!_ok) return;
+                if (!_ok)
+                {
+                    return;
+                }
+
                 var baseVal = _last;
 
                 // Вычисляем степень
                 Visit(call.Arguments[1]);
-                if (!_ok) return;
+                if (!_ok)
+                {
+                    return;
+                }
+
                 var expVal = _last;
 
                 // Rational -> Double для проверки целостности степени
-                double dExp = expVal.ToDouble();
+                var dExp = expVal.ToDouble();
 
                 // Поддерживаем только целые положительные степени для Rational
                 if (Math.Abs(dExp % 1) < double.Epsilon && dExp >= 0)
                 {
-                    int n = (int)dExp;
-                    Rational res = Rational.One;
-                    for (int i = 0; i < n; i++) res = res * baseVal;
+                    var n = (int)dExp;
+                    var res = Rational.One;
+                    for (var i = 0; i < n; i++) res = res * baseVal;
                     _last = res;
                     return;
                 }
@@ -159,7 +200,11 @@ public static class ExactEvaluator
             if (call.Method.DeclaringType == typeof(Math) && call.Arguments.Count == 1)
             {
                 Visit(call.Arguments[0]);
-                if (!_ok) return;
+                if (!_ok)
+                {
+                    return;
+                }
+
                 if (_last.IsZero)
                 {
                     switch (call.Method.Name)

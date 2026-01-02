@@ -1,6 +1,7 @@
 ﻿// RicisCore/PolarConverter.cs
 
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core;
 
@@ -13,6 +14,7 @@ public static class PolarConverter
     /// </summary>
     public static string ToPolarSector(InfinityExpression monolith, int totalSectors = 8, int maxDenominator = 100)
     {
+        
         throw new NotImplementedException();
     }
 
@@ -31,10 +33,12 @@ public static class PolarConverter
             var substituted = visitor.Visit(inf.Numerator);
 
             var lambda = Expression.Lambda<Func<double>>(Expression.Convert(substituted, typeof(double)));
-            double value = lambda.Compile()();
+            var value = lambda.Compile()();
 
             if (double.IsNaN(value) || double.IsInfinity(value))
+            {
                 return null;
+            }
 
             return value;
         }

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using Ricis.Core.Rationals;
+using System.Numerics;
 
 namespace Ricis.Core;
 
@@ -12,13 +13,17 @@ public readonly struct CircleSectors
         var floor = Rational.Floor(fraction);
         Fraction = fraction - floor;
         if (Fraction < Rational.Zero)
+        {
             Fraction += Rational.One;
+        }
     }
 
     public static CircleSectors FromRadians(double radians, int maxDenominator = 100)
     {
         if (double.IsNaN(radians) || double.IsInfinity(radians))
+        {
             throw new ArgumentException("Invalid angle");
+        }
 
         var normalized = (radians % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
         var fractionDouble = normalized / (2 * Math.PI);
@@ -54,7 +59,10 @@ public readonly struct CircleSectors
 
         while (q0 <= maxDenominator)
         {
-            if (Math.Abs(f) < 1e-12) break;
+            if (Math.Abs(f) < 1e-12)
+            {
+                break;
+            }
 
             var reciprocal = 1.0 / f;
             var a = (BigInteger)Math.Floor(reciprocal);
@@ -62,7 +70,10 @@ public readonly struct CircleSectors
             var pNew = a * p0 + p1;
             var qNew = a * q0 + q1;
 
-            if (qNew > maxDenominator) break;
+            if (qNew > maxDenominator)
+            {
+                break;
+            }
 
             var approx = (double)pNew / (double)qNew;
             var error = Math.Abs(value - approx);
@@ -88,7 +99,10 @@ public readonly struct CircleSectors
 
     public string InSectors(int totalSectors)
     {
-        if (totalSectors <= 0) throw new ArgumentOutOfRangeException(nameof(totalSectors));
+        if (totalSectors <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(totalSectors));
+        }
 
         var sectorsPassed = Fraction * Rational.Create(totalSectors);
         var whole = Rational.Floor(sectorsPassed);
@@ -96,8 +110,16 @@ public readonly struct CircleSectors
 
         if (frac.IsZero)
         {
-            if (whole.IsZero) return "0 секторов";
-            if (whole == Rational.Create(totalSectors)) return "полный круг";
+            if (whole.IsZero)
+            {
+                return "0 секторов";
+            }
+
+            if (whole == Rational.Create(totalSectors))
+            {
+                return "полный круг";
+            }
+
             return $"ровно {whole} секторов из {totalSectors}";
         }
 
@@ -106,8 +128,16 @@ public readonly struct CircleSectors
 
     public override string ToString()
     {
-        if (Fraction.IsZero) return "0 круга";
-        if (Fraction.Denominator.IsOne) return $"{Fraction.Numerator} полных кругов";
+        if (Fraction.IsZero)
+        {
+            return "0 круга";
+        }
+
+        if (Fraction.Denominator.IsOne)
+        {
+            return $"{Fraction.Numerator} полных кругов";
+        }
+
         return $"{Fraction} полного круга";
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Ricis.Core.ZeroSolver
+namespace Ricis.Core.Solvers.ZeroSolver
 {
     /// <summary>
     /// Общие вспомогательные методы для zero‑solvers:
@@ -10,9 +10,8 @@ namespace Ricis.Core.ZeroSolver
     /// </summary>
     public static class ZeroSolverUtils
     {
-        public static ParameterExpression FindFirstParameter(Expression expr)
+        public static ParameterExpression FindFirstParameter(this Expression expr)
         {
-            if (expr == null) return null;
             var pf = new ParamFinder();
             pf.Visit(expr);
             return pf.Parameter;
@@ -26,13 +25,22 @@ namespace Ricis.Core.ZeroSolver
         /// </summary>
         public static (ParameterExpression, double)? FindFirstRootFromFindRoots(Func<Expression, ParameterExpression, ICollection<Root>> findRootsFunc, Expression expr)
         {
-            if (expr == null || findRootsFunc == null) return null;
+            if (expr == null || findRootsFunc == null)
+            {
+                return null;
+            }
 
-            var param = FindFirstParameter(expr);
-            if (param == null) return null;
+            var param = expr.FindFirstParameter();
+            if (param == null)
+            {
+                return null;
+            }
 
             var roots = findRootsFunc(expr, param);
-            if (roots == null || roots.Count == 0) return null;
+            if (roots == null || roots.Count == 0)
+            {
+                return null;
+            }
 
             var first = roots.First();
             return (first.Parameter, NormalizeZero(first.DoubleValue));
@@ -44,7 +52,11 @@ namespace Ricis.Core.ZeroSolver
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                if (Parameter == null) Parameter = node;
+                if (Parameter == null)
+                {
+                    Parameter = node;
+                }
+
                 return base.VisitParameter(node);
             }
         }

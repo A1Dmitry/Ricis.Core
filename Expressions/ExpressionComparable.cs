@@ -1,20 +1,15 @@
 ﻿using System.Linq.Expressions;
 
-namespace Ricis.Core;
+namespace Ricis.Core.Expressions;
 
 /// <summary>
 /// Универсальная дженерик-обёртка для Expression-потомков.
 /// Даёт оператор ==, != и строгую структурную идентичность.
 /// </summary>
-public readonly struct ExpressionComparable<T> : IEquatable<ExpressionComparable<T>>
+public readonly struct ExpressionComparable<T>(T expr) : IEquatable<ExpressionComparable<T>>
     where T : Expression
 {
-    public T Expr { get; }
-
-    public ExpressionComparable(T expr)
-    {
-        Expr = expr;
-    }
+    public T Expr { get; } = expr;
 
     public static implicit operator ExpressionComparable<T>(T expr)
         => new(expr);
@@ -32,5 +27,5 @@ public readonly struct ExpressionComparable<T> : IEquatable<ExpressionComparable
         => obj is ExpressionComparable<T> other && Equals(other);
 
     public override int GetHashCode()
-        => Expr?.ToString()?.GetHashCode() ?? 0;
+        => Expr?.ToString().GetHashCode() ?? 0;
 }

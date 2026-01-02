@@ -1,7 +1,8 @@
-﻿using Ricis.Core;
-using Ricis.Core.Simplifiers;
-using Ricis.Core.ZeroSolver;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Ricis.Core.Expressions;
+using Ricis.Core.Polynomial;
+
+namespace Ricis.Core.Simplifiers;
 
 public static class AlgebraicSimplifier
 {
@@ -50,35 +51,35 @@ public static class AlgebraicSimplifier
             }
 
             if (left == node.Left && right == node.Right)
+            {
                 return node;
+            }
 
             return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
-        private Expression DetectInfinityZero(Expression numerator, Expression denominator, ParameterExpression param)
+        private static Expression DetectInfinityZero(Expression numerator, Expression denominator, ParameterExpression param)
         {
             // ШАГ 1: Находим корни знаменателя через Solver
             // (Solver внутри использует ExactEvaluator, который теперь поддерживает Pow)
-            var roots = PolynomialZeroSolver.FindRoots(denominator, param);
+            var roots = denominator.FindPolynomialRoots(param);
 
-            if (roots == null || roots.Count == 0) return null;
+            if (roots == null || roots.Count == 0)
+            {
+                return null;
+            }
 
             // ШАГ 2: Проверяем числитель в этих точках
-            foreach (var root in roots)
+            var valuesOnly = roots.Where(root => root.RationalValue.HasValue);
+            foreach (var root in valuesOnly)
             {
-                if (!root.RationalValue.HasValue) continue;
-
                 // Используем ExactEvaluator напрямую для проверки числителя
                 // Это самый надежный способ (DRY)
-                if (ExactEvaluator.TryEvaluate(numerator, param.Name, root.RationalValue.Value, out var result))
-                {
-                    if (result.IsZero)
-                    {
-                        // 0/0 DETECTED -> ∞_0
-                        var indexZero = RicisType.InfinityZero;
-                        return new InfinityExpression(indexZero, param, root.DoubleValue);
-                    }
-                }
+                if (!numerator.TryEvaluate(param.Name, root.RationalValue.Value, out var result)) continue;
+                if (!result.IsZero) continue;
+                // 0/0 DETECTED -> ∞_0
+                var indexZero = RicisType.InfinityZero;
+                return new InfinityExpression(indexZero, param, root.DoubleValue);
             }
 
             return null;
@@ -88,7 +89,11 @@ public static class AlgebraicSimplifier
         {
             var obj = Visit(node.Object);
             var args = node.Arguments.Select(Visit);
-            if (obj == node.Object && args.SequenceEqual(node.Arguments)) return node;
+            if (obj == node.Object && args.SequenceEqual(node.Arguments))
+            {
+                return node;
+            }
+
             return Expression.Call(obj, node.Method, args);
         }
 
@@ -96,7 +101,7 @@ public static class AlgebraicSimplifier
 
         private static ParameterExpression FindSingleParameter(Expression expr)
         {
-            var finder = new ParameterFinder();
+            var finder = new ParameterVisitor();
             finder.Visit(expr);
             return finder.FoundParameter;
         }

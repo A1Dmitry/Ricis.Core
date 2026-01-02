@@ -1,6 +1,7 @@
 ﻿using Ricis.Core;
-using Ricis.Core.ZeroSolver;
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
+using Ricis.Core.Solvers;
 
 public static class RicisTransformPhase
 {
@@ -25,10 +26,10 @@ public static class RicisTransformPhase
             var singularities = new List<InfinityExpression>();
 
             // 1. Полиномиальные корни
-            var polyRoots = SingularitySolver.SolveRoot(denominator);
+            var polyRoots = denominator.SolveRoots();
             foreach (var root in polyRoots)
             {
-                AddSingularityIfValid(numerator, denominator, root.Item1, root.Item2, singularities);
+                AddSingularityIfValid(numerator, denominator, root.expr, root.value, singularities);
             }
 
             // 2. Тригонометрические корни
@@ -40,7 +41,9 @@ public static class RicisTransformPhase
             }
 
             if (singularities.Count == 0)
+            {
                 return Expression.Divide(numerator, denominator);
+            }
 
             return singularities.Count == 1
                 ? singularities[0]
@@ -54,7 +57,7 @@ public static class RicisTransformPhase
             double value,
             List<InfinityExpression> singularities)
         {
-            double numAtRoot = EvaluateAtPoint(numerator, param.Name, value);
+            var numAtRoot = EvaluateAtPoint(numerator, param.Name, value);
 
             InfinityExpression infinity;
             if (numAtRoot == 0.0) // 0/0 DETECTED

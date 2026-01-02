@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
+using Ricis.Core.Polynomial;
+using Ricis.Core.Solvers;
 
-namespace Ricis.Core.ZeroSolver;
+namespace Ricis.Core.Solvers.ZeroSolver;
 
 /// <summary>
 ///     Универсальный точный решатель уравнения expr = 0
@@ -12,12 +14,12 @@ public static class UniversalZeroSolver
     /// <summary>
     ///     Находит все точные конечные корни уравнения expr = 0 для заданного параметра
     /// </summary>
-    public static List<Root> FindExactRoots(Expression expr, ParameterExpression param)
+    public static List<Root> FindExactRoots(this Expression expr, ParameterExpression param)
     {
         var roots = new List<Root>();
 
         // 1. Полиномы любой степени — приоритет №1 (самые точные)
-        var polyRoots = PolynomialZeroSolver.FindRoots(expr, param);
+        var polyRoots = expr.FindPolynomialRoots(param);
         if (polyRoots.Count > 0)
         {
             roots.AddRange(polyRoots);
@@ -25,12 +27,18 @@ public static class UniversalZeroSolver
         }
 
         // 2. Тригонометрические функции (sin, cos, tan)
-        var trigRoots = TrigonometricZeroSolver.FindRoots(expr, param);
-        if (trigRoots.Count > 0) roots.AddRange(trigRoots);
+        var trigRoots = expr.FindTrigonometricRoots(param);
+        if (trigRoots.Count > 0)
+        {
+            roots.AddRange(trigRoots);
+        }
 
         // 3. Экспонента: exp(expr) = 1 ⇒ expr = 0 (если встретим exp(...) - 1)
         var expRoots = ExponentialZeroSolver.FindRoots(expr, param);
-        if (expRoots.Count > 0) roots.AddRange(expRoots);
+        if (expRoots.Count > 0)
+        {
+            roots.AddRange(expRoots);
+        }
 
         // Удаляем дубликаты
         return roots.Distinct().ToList();
