@@ -15,13 +15,13 @@ public readonly struct ExpressionComparable<T>(T expr) : IEquatable<ExpressionCo
         => new(expr);
 
     public static bool operator ==(ExpressionComparable<T> a, ExpressionComparable<T> b)
-        => ExpressionStructuralComparer.AreEqual(a.Expr, b.Expr);
+        => a.Expr.AreEqual(b.Expr);
 
     public static bool operator !=(ExpressionComparable<T> a, ExpressionComparable<T> b)
-        => !ExpressionStructuralComparer.AreEqual(a.Expr, b.Expr);
+        => !a.Expr.AreEqual(b.Expr);
 
     public bool Equals(ExpressionComparable<T> other)
-        => ExpressionStructuralComparer.AreEqual(Expr, other.Expr);
+        => Expr.AreEqual(other.Expr);
 
     public override bool Equals(object obj)
         => obj is ExpressionComparable<T> other && Equals(other);

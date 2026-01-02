@@ -3,7 +3,7 @@
 namespace Ricis.Core.Expressions;
 
 public sealed class InfinityExpression(Expression numerator, ParameterExpression variable, double value)
-    : Expression
+    : RicisExpression
 {
     public Expression Numerator { get; } = numerator; // Индекс бесконечности (0 или C)
     public new ParameterExpression Variable { get; set; } = variable;
@@ -27,7 +27,7 @@ public sealed class InfinityExpression(Expression numerator, ParameterExpression
         }
 
         // Аксиома: OO_C -> double.PositiveInfinity
-        return Expression.Constant(double.PositiveInfinity);
+        return Expression.Constant(Numerator);
     }
 
     private static bool IsZero(Expression expr)

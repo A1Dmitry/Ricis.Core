@@ -4,18 +4,16 @@ namespace Ricis.Core.Expressions;
 
 public abstract class RicisExpression : Expression
 {
-    public abstract override ExpressionType NodeType { get; }
-    public abstract override Type Type { get; }
 
     // Универсальный структурный оператор
     public static bool operator ==(RicisExpression a, RicisExpression b)
-        => ExpressionStructuralComparer.AreEqual(a, b);
+        => a.AreEqual(b);
 
     public static bool operator !=(RicisExpression a, RicisExpression b)
-        => !ExpressionStructuralComparer.AreEqual(a, b);
+        => !a.AreEqual(b);
 
     public override bool Equals(object obj)
-        => obj is RicisExpression other && ExpressionStructuralComparer.AreEqual(this, other);
+        => obj is RicisExpression other && this.AreEqual(other);
 
     public override int GetHashCode()
         => ToString()?.GetHashCode() ?? 0;

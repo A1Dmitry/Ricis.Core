@@ -18,11 +18,8 @@ public class RicisType(string signature, bool isComposite = false) : IEquatable<
 
     public override bool Equals(object obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (!(obj is RicisType rt)) return false;
-        if (!Signature.Equals(rt.Signature)) return false;
-        return true;
+        return obj is RicisType rt && Signature.Equals(rt.Signature);
     }
 
     public override int GetHashCode()
