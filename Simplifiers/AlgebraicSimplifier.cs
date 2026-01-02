@@ -26,7 +26,7 @@ public static class AlgebraicSimplifier
 
             if (node.NodeType == ExpressionType.Divide)
             {
-                if (ExpressionIdentityComparer.AreSelfIdentical(left, right))
+                if (left.AreEqual(right))
                 {
                     return RicisType.InfinityOne;
                 }
@@ -58,7 +58,7 @@ public static class AlgebraicSimplifier
             return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
-        private static Expression DetectInfinityZero(Expression numerator, Expression denominator, ParameterExpression param)
+        private static InfinityExpression DetectInfinityZero(Expression numerator, Expression denominator, ParameterExpression param)
         {
             // ШАГ 1: Находим корни знаменателя через Solver
             // (Solver внутри использует ExactEvaluator, который теперь поддерживает Pow)

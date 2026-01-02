@@ -30,7 +30,7 @@ public sealed class InfinityExpression(Expression numerator, ParameterExpression
         return Expression.Constant(double.PositiveInfinity);
     }
 
-    private bool IsZero(Expression expr)
+    private static bool IsZero(Expression expr)
     {
         if (expr is ConstantExpression c)
         {
@@ -46,27 +46,7 @@ public sealed class InfinityExpression(Expression numerator, ParameterExpression
         }
         return false;
     }
-    private bool IsOne(Expression expr)
-    {
-        if (expr is ConstantExpression c)
-        {
-            if (c.Value is int i)
-            {
-                return i == 1;
-            }
-
-            if (c.Value is double d)
-            {
-                return Math.Abs(d) == 1.0;
-            }
-        }
-        else
-        {
-            return expr.AreSelfIdentical(RicisType.InfinityOne);
-        }
-        return false;
-    }
-    // --- FIX END ---
+    
 
     public override string ToString()
     {

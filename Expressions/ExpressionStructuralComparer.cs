@@ -4,7 +4,7 @@ namespace Ricis.Core.Expressions;
 
 public static class ExpressionStructuralComparer
 {
-    public static bool AreEqual(Expression a, Expression b)
+    public static bool AreEqual(this Expression a, Expression b)
     {
         if (ReferenceEquals(a, b))
         {
