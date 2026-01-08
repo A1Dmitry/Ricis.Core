@@ -12,34 +12,37 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         var left = Visit(node.Left);
         var right = Visit(node.Right);
 
-        if (node.NodeType == ExpressionType.Divide)
+        if (node.NodeType != ExpressionType.Divide)
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        if (left.AreEqual(right)) return RicisType.InfinityOne;
+
+        var parameter = FindSingleParameter(node);
+        if (parameter == null)
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        // ✅ КЭШ: один вызов FindRoots на denominator
+        var cache = AnalyzeDenominator(right, parameter);
+
+        // 1. 0/0 detection  
+        var roots = cache.roots.Where(root => root.RationalValue.HasValue);
+        foreach (var root in roots)
         {
-            if (left.AreEqual(right)) return RicisType.InfinityOne;
-
-            var parameter = FindSingleParameter(node);
-            if (parameter != null)
+            if (left.TryEvaluate(parameter.Name, root.RationalValue.Value, out var res) && res.IsZero)
             {
-                // ✅ КЭШ: один вызов FindRoots на denominator
-                var cache = AnalyzeDenominator(right, parameter);
-
-                // 1. 0/0 detection  
-                var roots = cache.roots.Where(root => root.RationalValue.HasValue);
-                foreach (var root in roots)
-                {
-                    if (left.TryEvaluate(parameter.Name, root.RationalValue.Value, out var res) && res.IsZero)
-                    {
-                        return RicisType.InfinityZero;
-                    }
-                }
-
-                // 2. LongDivision (только если полином)
-                if (cache.isPolynomial)
-                {
-                    var divided = left.TryDivide(right, parameter);
-                    if (divided != null) return Visit(divided);
-                }
+                return RicisType.InfinityZero;
             }
         }
+
+        // 2. LongDivision (только если полином)
+        if (!cache.isPolynomial)
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        var divided = left.TryDivide(right, parameter);
+        if (divided != null) return Visit(divided);
 
         return left == node.Left && right == node.Right ? node :
             Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);

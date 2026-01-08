@@ -10,9 +10,112 @@ public static class SingularitySolver
     public static List<(ParameterExpression expr, double value)> SolveRoots(this Expression denominator)
     {
         var roots = new HashSet<(ParameterExpression, double)>();
+
+        // 1. Стандартный аналитический поиск (Линейные, Квадратичные, Степенные)
         CollectRoots(denominator, roots);
+
+        // 2. БЕЗОПАСНЫЙ ФОЛБЭК (L25 Fix)
+        // Заходим сюда только если аналитика не справилась И выражение похоже на трансцендентное уравнение
+        if (roots.Count != 0 || !IsTranscendentalComposite(denominator)) return roots.ToList();
+        var param = FindParameter(denominator);
+        if (param == null) return roots.ToList();
+        // Вызываем численный солвер (Бисекция)
+        var numericalRoots = denominator.FindNumericalRoots(param);
+
+        foreach (var root in numericalRoots)
+        {
+            roots.Add((root.Parameter, root.DoubleValue));
+        }
+
         return roots.ToList();
     }
+
+    // --- Хелперы для безопасного определения условий ---
+
+    /// <summary>
+    /// Проверяет, содержит ли выражение трансцендентные функции (Sin, Cos, Sinh...) 
+    /// в сочетании с арифметикой. Исключает простые случаи.
+    /// </summary>
+    private static bool IsTranscendentalComposite(Expression expr)
+    {
+        bool hasTrig = false;
+        bool hasArithmetic = false;
+
+        void Visit(Expression node)
+        {
+            if (node is MethodCallExpression call)
+            {
+                // Проверяем методы Math.*
+                if (call.Method.DeclaringType == typeof(Math))
+                {
+                    var name = call.Method.Name;
+                    if (name.StartsWith("Sin") || name.StartsWith("Cos") ||
+                        name.StartsWith("Tan") || name.StartsWith("Exp") || name == "Log")
+                    {
+                        hasTrig = true;
+                    }
+                }
+            }
+            else if (node is BinaryExpression)
+            {
+                // Если есть сложение, вычитание или умножение - это композитное выражение
+                if (node.NodeType is ExpressionType.Add or ExpressionType.Subtract or ExpressionType.Multiply)
+                {
+                    hasArithmetic = true;
+                }
+            }
+
+            // Рекурсивный обход (упрощенный)
+            if (node is BinaryExpression b) { Visit(b.Left); Visit(b.Right); }
+            else if (node is UnaryExpression u) { Visit(u.Operand); }
+            else if (node is MethodCallExpression m) { foreach (var a in m.Arguments) Visit(a); }
+        }
+
+        Visit(expr);
+
+        // Условие срабатывания: Есть тригонометрия И есть арифметика (например, Cos(x)*Sinh(x) - 1)
+        // Просто Cos(x) обработается TrigSolver-ом (если он подключен) или вернет null здесь, 
+        // но для L25 нам важна именно комбинация.
+        return hasTrig && hasArithmetic;
+    }
+
+    private static ParameterExpression FindParameter(Expression expr)
+    {
+        while (true)
+        {
+            switch (expr)
+            {
+                case ParameterExpression pe:
+                    return pe;
+                case BinaryExpression b:
+                    var parameterExpression = FindParameter(b.Left);
+                    if (parameterExpression != null)
+                    {
+                        return parameterExpression;
+                    }
+
+                    expr = b.Right;
+                    continue;
+                case UnaryExpression u:
+                    expr = u.Operand;
+                    continue;
+                case MethodCallExpression m:
+                {
+                    foreach (var arg in m.Arguments)
+                    {
+                        var p = FindParameter(arg);
+                        if (p != null) return p;
+                    }
+
+                    break;
+                }
+            }
+
+            return null;
+            break;
+        }
+    }
+
 
     private static void CollectRoots(Expression expr, HashSet<(ParameterExpression Parameter, double Value)> roots)
     {

@@ -17,33 +17,111 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
-        var singularities = new List<InfinityExpression>();
+        // Временный список для сбора отдельных сингулярностей (как у вас сейчас)
+        var tempSingularities = new List<InfinityExpression>();
 
-        // 1. Полиномиальные корни
+        // 1. Полиномиальные корни (через SingularitySolver, который теперь включает численный метод)
         var polyRoots = denominator.SolveRoots();
         foreach (var root in polyRoots)
         {
-            AddSingularityIfValid(numerator, denominator, root.expr, root.value, singularities);
+            AddSingularityIfValid(numerator, denominator, root.expr, root.value, tempSingularities);
         }
 
-        // 2. Тригонометрические корни
+        // 2. Тригонометрические корни (Простые)
         var trigRoot = TrigSolver.Solve(denominator);
         if (trigRoot.HasValue)
         {
             var (param, value) = trigRoot.Value;
-            AddSingularityIfValid(numerator, denominator, param, value, singularities);
+            AddSingularityIfValid(numerator, denominator, param, value, tempSingularities);
         }
-        // 2. *** НОВОЕ: Универсальные корни L25 ***
-        
-        if (singularities.Count == 0)
+
+        // 3. Фолбэк для трансцендентных (если SingularitySolver не справился, хотя он должен)
+        if (tempSingularities.Count == 0 && IsTranscendentalCandidate(denominator))
+        {
+            var param = FindParameter(denominator);
+            if (param != null)
+            {
+                // Возвращаем абстрактную бесконечность (без конкретного корня)
+                return new InfinityExpression(denominator, param, double.NaN);
+            }
+        }
+
+        // Если ничего не нашли - возвращаем деление
+        if (tempSingularities.Count == 0)
         {
             return Expression.Divide(numerator, denominator);
         }
 
-        return singularities.Count == 1
-            ? singularities[0]
-            : singularities[0];
+        // --- ФИНАЛЬНАЯ СБОРКА (RICIS-III) ---
+
+        // Если нашли одну - возвращаем её (она уже InfinityExpression)
+        if (tempSingularities.Count == 1)
+        {
+            return tempSingularities[0];
+        }
+
+        // Если нашли МНОГО - объединяем их в один InfinityExpression со списком корней.
+        // Берем Индекс (Идентичность) из первой сингулярности (они все от одного знаменателя).
+        var primaryIndex = tempSingularities[0].Numerator;
+
+        // Собираем все корни из всех найденных сингулярностей
+        var allRoots = tempSingularities
+            .SelectMany(s => s.Roots)
+            .GroupBy(r => Math.Round(r.Value, 4)) // Группируем корни, совпадающие до 4 знака
+            .Select(g => g.First())               // Берем один из группы
+            .OrderBy(r => r.Value)
+            .ToList(); 
+
+        // Создаем Монолит
+        return new InfinityExpression(primaryIndex, allRoots);
     }
+
+    // Проверка: содержит ли выражение трансцендентные функции в сложной структуре
+    private bool IsTranscendentalCandidate(Expression expr)
+    {
+        var hasTrig = false;
+        var isComplex = false;
+
+        // Простой обход дерева выражения
+        new ExpressionTraverser(node =>
+        {
+            if (node is MethodCallExpression call)
+            {
+                if (call.Method.DeclaringType == typeof(Math))
+                {
+                    var name = call.Method.Name;
+                    if (name == "Cos" || name == "Sin" || name == "Tan" ||
+                        name == "Cosh" || name == "Sinh" || name == "Tanh")
+                    {
+                        hasTrig = true;
+                    }
+                }
+            }
+            else if (node is BinaryExpression)
+            {
+                isComplex = true; // Есть операции (+, -, *)
+            }
+        }).Visit(expr);
+
+        return hasTrig && isComplex;
+    }
+
+    // Хелпер для поиска параметра (x)
+    private ParameterExpression FindParameter(Expression expr)
+    {
+        ParameterExpression found = null;
+        IExpressionVisitor visitor = new ExpressionTraverser(node =>
+        {
+            if (found == null && node is ParameterExpression p)
+            {
+                found = p;
+            }
+        });
+        visitor.Visit(expr);
+        return found;
+    }
+
+    
 
     private void AddSingularityIfValid(
         Expression numerator,

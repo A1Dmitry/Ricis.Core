@@ -20,6 +20,20 @@ public static class RicisPhasePipeline
     ];
     public static Expression Simplify(Expression expr)
     {
-        return _visitors.Aggregate(expr, (current, visitor) => visitor.Visit(current));
+        try
+        {
+            Expression result = expr;
+            foreach (var visitor in _visitors)
+            {
+                result = visitor.Visit(result);
+            }
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
