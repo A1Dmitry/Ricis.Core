@@ -27,10 +27,7 @@ namespace Ricis.Core.Polynomial
             {
                 if (TryExtractMonomial(term, ref variable, out var degree, out var coeff))
                 {
-                    if (!terms.ContainsKey(degree))
-                    {
-                        terms[degree] = 0.0;
-                    }
+                    terms.TryAdd(degree, 0.0);
 
                     terms[degree] += coeff;
                 }
@@ -42,9 +39,9 @@ namespace Ricis.Core.Polynomial
             }
 
             // now map degrees to a,b,c
-            var a = terms.ContainsKey(2) ? terms[2] : 0.0;
-            var b = terms.ContainsKey(1) ? terms[1] : 0.0;
-            var c = terms.ContainsKey(0) ? terms[0] : 0.0;
+            var a = terms.GetValueOrDefault(2, 0.0);
+            var b = terms.GetValueOrDefault(1, 0.0);
+            var c = terms.GetValueOrDefault(0, 0.0);
 
             // if no variable found or all zero — return null
             if (variable == null)
@@ -70,31 +67,29 @@ namespace Ricis.Core.Polynomial
                     return;
                 }
 
-                if (e.NodeType == ExpressionType.Add)
+                if (e.NodeType != ExpressionType.Add)
+                {
+                    switch (e.NodeType)
+                    {
+                        case ExpressionType.Subtract:
+                        {
+                            var b = (BinaryExpression)e;
+                            Recur(b.Left, sign);
+                            Recur(b.Right, -sign);
+                            return;
+                        }
+                    }
+
+                    // preserve sign by creating Constant multiply if sign == -1
+                    // create -1 * e
+                    list.Add(sign == -1.0 ? Expression.Multiply(Expression.Constant(-1.0), e) : e);
+                }
+                else
                 {
                     var b = (BinaryExpression)e;
                     Recur(b.Left, sign);
                     Recur(b.Right, sign);
                     return;
-                }
-
-                if (e.NodeType == ExpressionType.Subtract)
-                {
-                    var b = (BinaryExpression)e;
-                    Recur(b.Left, sign);
-                    Recur(b.Right, -sign);
-                    return;
-                }
-
-                // preserve sign by creating Constant multiply if sign == -1
-                if (sign == -1.0)
-                {
-                    // create -1 * e
-                    list.Add(Expression.Multiply(Expression.Constant(-1.0), e));
-                }
-                else
-                {
-                    list.Add(e);
                 }
             }
 

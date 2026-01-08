@@ -1,10 +1,11 @@
 ﻿using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Rationals;
+using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Polynomial;
 
-public class PolynomialCoefficientCollector(ParameterExpression parameterExpression) : ExpressionVisitor
+public class PolynomialCoefficientCollector(ParameterExpression parameterExpression) : ExpressionVisitor, IExpressionVisitor
 {
     private readonly ParameterExpression _parameter = parameterExpression ?? throw new ArgumentNullException(nameof(parameterExpression));
     private Rational _currentMultiplier = Rational.One; // Текущий коэффициент перед параметром

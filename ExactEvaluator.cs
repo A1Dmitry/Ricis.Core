@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Rationals;
+using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core;
 
@@ -14,7 +15,7 @@ public static class ExactEvaluator
         return tryEvaluate;
     }
 
-    private class EvalVisitor(string paramName, Rational paramValue) : ExpressionVisitor
+    private class EvalVisitor(string paramName, Rational paramValue) : ExpressionVisitor, IExpressionVisitor
     {
         private Rational _last;
         private bool _ok;
@@ -210,7 +211,8 @@ public static class ExactEvaluator
                     switch (call.Method.Name)
                     {
                         case "Sin":
-                        case "Tan": _last = Rational.Zero; return;
+                        case "Tan":
+                        case "Sinh": _last = Rational.Zero; return;
                         case "Cos": _last = Rational.One; return;
                     }
                 }

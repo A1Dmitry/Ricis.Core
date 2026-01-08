@@ -19,7 +19,7 @@ public static class UniversalZeroSolver
         var roots = new List<Root>();
 
         // 1. Полиномы любой степени — приоритет №1 (самые точные)
-        var polyRoots = expr.FindPolynomialRoots(param);
+        var polyRoots = expr.FindRoots(param);
         if (polyRoots.Count > 0)
         {
             roots.AddRange(polyRoots);

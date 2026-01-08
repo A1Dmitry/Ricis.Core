@@ -22,12 +22,13 @@ internal static class LinearExtractor
             if (node.NodeType == ExpressionType.Add || node.NodeType == ExpressionType.Subtract)
             {
                 // Ищем param-содержащую часть и константу
-                double coeff = 0, constant = 0;
+                double coeff = 0;
+                double constant = 0;
                 ExtractLinear(node.Left, ref coeff, ref constant);
                 double sign = node.NodeType == ExpressionType.Subtract ? -1 : 1;
                 ExtractLinear(node.Right, sign, ref coeff, ref constant);
 
-                if (Success == true)
+                if (Success)
                 {
                     Result = (coeff, constant);
                 }
@@ -46,13 +47,14 @@ internal static class LinearExtractor
 
         private void ExtractLinear(Expression ex, double sign, ref double coeff, ref double constant)
         {
-            if (ex is ParameterExpression p && p == param)
+            switch (ex)
             {
-                coeff += sign;
-            }
-            else if (ex is ConstantExpression c)
-            {
-                constant += sign * Convert.ToDouble(c.Value);
+                case ParameterExpression p when p == param:
+                    coeff += sign;
+                    break;
+                case ConstantExpression c:
+                    constant += sign * Convert.ToDouble(c.Value);
+                    break;
             }
         }
 

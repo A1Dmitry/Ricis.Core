@@ -5,7 +5,7 @@ namespace Ricis.Core.Polynomial;
 
 public static class PolynomialLongDivision
 {
-    public static Expression TryDivide(Expression numerator, Expression denominator, ParameterExpression param)
+    public static Expression TryDivide(this Expression numerator, Expression denominator, ParameterExpression param)
     {
         var numCollector = new PolynomialCoefficientCollector(param);
         numCollector.Visit(numerator);

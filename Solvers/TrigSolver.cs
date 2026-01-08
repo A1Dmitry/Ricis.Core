@@ -29,6 +29,8 @@ public static class TrigSolver
                     return (param, 0.0);
                 case "Tan":
                     return (param, 0.0);
+                case "Sinh":
+                    return (param, 0.0);
             }
         }
 

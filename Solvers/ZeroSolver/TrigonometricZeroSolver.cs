@@ -29,6 +29,7 @@ public static class TrigonometricZeroSolver
             "Sin" => 0.0 + Math.PI, // sin(θ) = 0 ⇒ θ = kπ (главное — π)
             "Cos" => Math.PI / 2, // cos(θ) = 0 ⇒ θ = π/2 + kπ
             "Tan" => Math.PI, // tan(θ) = 0 ⇒ θ = kπ (но tan имеет полюса!)
+            "Sinh" => 0.0, // sinh(θ) = 0 ⇒ θ = 0 (единственное решение)
             _ => double.NaN
         };
 
