@@ -7,7 +7,11 @@ public class ExpressionTraverser : ExpressionVisitor, IExpressionVisitor
     public ExpressionTraverser(Action<Expression> action) => _action = action;
     public override Expression Visit(Expression node)
     {
-        if (node != null) _action(node);
+        if (node != null)
+        {
+            _action(node);
+        }
+
         return base.Visit(node);
     }
 }

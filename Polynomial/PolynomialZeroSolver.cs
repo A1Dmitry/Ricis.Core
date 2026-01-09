@@ -28,7 +28,10 @@ public static class PolynomialZeroSolver
                         roots.Add(new Root(param, candidate));
                     }
                 }
-                if (roots.Any()) return roots;
+                if (roots.Any())
+                {
+                    return roots;
+                }
             }
         }
 
@@ -51,7 +54,10 @@ public static class PolynomialZeroSolver
             if (fx * fx1 < 0)
             {
                 var root = expr.Bisection(param, x, x + step, 1e-10);
-                if (root.HasValue) roots.Add(new Root(param, root.Value));
+                if (root.HasValue)
+                {
+                    roots.Add(new Root(param, root.Value));
+                }
             }
         }
         return roots;
@@ -70,14 +76,21 @@ public static class PolynomialZeroSolver
         var fa = expr.Evaluate(param, a);
         var fb = expr.Evaluate(param, b);
 
-        if (fa * fb >= 0) return null;
+        if (fa * fb >= 0)
+        {
+            return null;
+        }
 
         while (Math.Abs(b - a) > tol)
         {
             var c = (a + b) / 2;
             var fc = expr.Evaluate(param, c);
 
-            if (Math.Abs(fc) < tol) return c;
+            if (Math.Abs(fc) < tol)
+            {
+                return c;
+            }
+
             if (fa * fc < 0) { b = c; }
             else { a = c; fa = fc; }
         }
@@ -101,7 +114,10 @@ public static class PolynomialZeroSolver
             if (f1 * f2 < 0) // ЗНАК МЕНЯЕТСЯ
             {
                 var root = Bisection(expr, x, x1, x2);
-                if (root.HasValue) roots.Add(root.Value);
+                if (root.HasValue)
+                {
+                    roots.Add(root.Value);
+                }
             }
         }
         return roots.Distinct().OrderBy(Math.Abs).ToArray();

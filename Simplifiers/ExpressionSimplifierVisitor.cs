@@ -28,33 +28,43 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
         // Нормализация: x+x → 2*x, x*x → Pow(x,2)
         if (AreIdentical(left, right))
+        {
             return node.NodeType switch
             {
                 ExpressionType.Add => Expression.Multiply(Expression.Constant(2, node.Type), left),
                 ExpressionType.Multiply => CreatePower(left, 2),
                 _ => node.Update(left, node.Conversion, right)
             };
+        }
 
         // Коммутивность (нормализация порядка)
         if (node.IsCommutative() && ShouldCommute(left, right))
+        {
             return node.Update(right, node.Conversion, left);
+        }
 
         // Константы
         if (left is ConstantExpression lc && right is ConstantExpression rc)
+        {
             return SimplifyConstants(node.NodeType, lc.Value, rc.Value);
+        }
 
         // Сложение/умножение дробей
         if (IsFraction(left) && IsFraction(right))
+        {
             return node.NodeType switch
             {
                 ExpressionType.Add => SimplifyFractionSum(GetFraction(left), GetFraction(right)),
                 ExpressionType.Multiply => SimplifyFractionProduct(GetFraction(left), GetFraction(right)),
                 _ => node.Update(left, node.Conversion, right)
             };
+        }
 
         // Распределительный закон: (a+b)*c → a*c + b*c
         if (node.NodeType == ExpressionType.Multiply && IsSum(left))
+        {
             return DistributeMultiplySum(node);
+        }
 
         return node.Update(left, node.Conversion, right);
     }
@@ -66,10 +76,14 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         // Двойное отрицание
         if (node.NodeType == ExpressionType.Negate && operand is UnaryExpression innerNegate &&
             innerNegate.NodeType == ExpressionType.Negate)
+        {
             return innerNegate.Operand;
+        }
 
         if (operand is ConstantExpression c)
+        {
             return SimplifyConstantsUnary(node.NodeType, c.Value);
+        }
 
         return node.Update(operand);
     }
@@ -102,8 +116,15 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         var ifTrue = Visit(node.IfTrue);
         var ifFalse = Visit(node.IfFalse);
 
-        if (test is ConstantExpression tc && (bool)tc.Value) return ifTrue;
-        if (test is ConstantExpression tf && !(bool)tf.Value) return ifFalse;
+        if (test is ConstantExpression tc && (bool)tc.Value)
+        {
+            return ifTrue;
+        }
+
+        if (test is ConstantExpression tf && !(bool)tf.Value)
+        {
+            return ifFalse;
+        }
 
         return node.Update(test, ifTrue, ifFalse);
     }
@@ -115,18 +136,34 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
         // Идемпотентность: x && x → x, x || x → x
         if (AreIdentical(left, right))
+        {
             return node.NodeType == ExpressionType.AndAlso ? left : right;
+        }
 
         // x && true → x, x || false → x
         if (node.NodeType == ExpressionType.AndAlso)
         {
-            if (IsTrue(right)) return left;
-            if (IsFalse(right)) return Expression.Constant(false, node.Type);
+            if (IsTrue(right))
+            {
+                return left;
+            }
+
+            if (IsFalse(right))
+            {
+                return Expression.Constant(false, node.Type);
+            }
         }
         else
         {
-            if (IsTrue(right)) return right;
-            if (IsFalse(right)) return left;
+            if (IsTrue(right))
+            {
+                return right;
+            }
+
+            if (IsFalse(right))
+            {
+                return left;
+            }
         }
 
         return node.Update(left, node.Conversion, right);
@@ -208,8 +245,15 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
     private static Expression SimplifyFraction(BigInteger num, BigInteger den)
     {
-        if (den == 0) throw new DivideByZeroException();
-        if (num == 0) return Expression.Constant(BigInteger.Zero);
+        if (den == 0)
+        {
+            throw new DivideByZeroException();
+        }
+
+        if (num == 0)
+        {
+            return Expression.Constant(BigInteger.Zero);
+        }
 
         var gcd = BigInteger.GreatestCommonDivisor(num < 0 ? -num : num, den);
         return Expression.Divide(

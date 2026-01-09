@@ -18,7 +18,11 @@ public class RicisType(string signature, bool isComposite = false) : IEquatable<
 
     public override bool Equals(object obj)
     {
-        if (ReferenceEquals(this, obj)) return true;
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
         return obj is RicisType rt && Signature.Equals(rt.Signature);
     }
 
@@ -30,7 +34,10 @@ public class RicisType(string signature, bool isComposite = false) : IEquatable<
     // Логика совместимости (L1 Identity)
     public bool IsCompatibleWith(RicisType other)
     {
-        if (Signature == "Scalar" || other.Signature == "Scalar") return true; // Скаляры универсальны
+        if (Signature == "Scalar" || other.Signature == "Scalar")
+        {
+            return true; // Скаляры универсальны
+        }
 
         return Signature == other.Signature;
     }
@@ -38,12 +45,21 @@ public class RicisType(string signature, bool isComposite = false) : IEquatable<
     // Алгебра типов: Умножение/Деление
     public static RicisType Operate(RicisType a, RicisType b, string op)
     {
-        if (a.Signature == "Scalar") return b;
+        if (a.Signature == "Scalar")
+        {
+            return b;
+        }
 
-        if (b.Signature == "Scalar") return a;
+        if (b.Signature == "Scalar")
+        {
+            return a;
+        }
 
         // Упрощение: x/x = Scalar
-        if (op == "/" && a.Signature == b.Signature) return Scalar;
+        if (op == "/" && a.Signature == b.Signature)
+        {
+            return Scalar;
+        }
 
         return new RicisType($"({a.Signature}{op}{b.Signature})", true);
     }

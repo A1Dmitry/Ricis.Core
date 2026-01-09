@@ -1,6 +1,8 @@
 ﻿// RicisPhasePipeline.cs
 
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
 using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Phases;
@@ -25,7 +27,19 @@ public static class RicisPhasePipeline
             Expression result = expr;
             foreach (var visitor in _visitors)
             {
-                result = visitor.Visit(result);
+                try
+                {
+                    if (visitor is RicisTransformVisitor && result is LambdaExpression { Body: LazyInfinityExpression { CanReduce: true } })
+                    {
+                        continue;
+                    }
+
+                    result = visitor.Visit(result);
+                }
+                catch (Exception ve)
+                {
+                    Console.WriteLine(ve.Message);
+                }
             }
 
             return result;

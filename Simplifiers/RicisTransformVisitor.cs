@@ -42,7 +42,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             if (param != null)
             {
                 // Возвращаем абстрактную бесконечность (без конкретного корня)
-                return new InfinityExpression(denominator, param, double.NaN);
+                return InfinityExpression.CreateLazy(denominator, param, double.NaN);
             }
         }
 
@@ -73,7 +73,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             .ToList(); 
 
         // Создаем Монолит
-        return new InfinityExpression(primaryIndex, allRoots);
+        return InfinityExpression.CreateLazy(primaryIndex, allRoots);
     }
 
     // Проверка: содержит ли выражение трансцендентные функции в сложной структуре
@@ -137,12 +137,12 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         {
             // --- FIX: Индекс 0 для состояния 0/0 ---
             var indexZero = RicisType.InfinityZero;
-            infinity = new InfinityExpression(indexZero, param, value);
+            infinity = InfinityExpression.CreateLazy(indexZero, param, value);
         }
         else
         {
             // Полюс C/0 -> Индекс C (числитель)
-            infinity = new InfinityExpression(numerator, param, value);
+            infinity = InfinityExpression.CreateLazy(numerator, param, value);
         }
 
         singularities.Add(infinity);

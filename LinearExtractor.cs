@@ -36,9 +36,16 @@ internal static class LinearExtractor
                 return node;
             }
 
-            if (node.NodeType != ExpressionType.Multiply) return base.VisitBinary(node);
-            if (node.Left is not ConstantExpression c || node.Right is not ParameterExpression p || p != param)
+            if (node.NodeType != ExpressionType.Multiply)
+            {
                 return base.VisitBinary(node);
+            }
+
+            if (node.Left is not ConstantExpression c || node.Right is not ParameterExpression p || p != param)
+            {
+                return base.VisitBinary(node);
+            }
+
             Success = true;
             Result = (Convert.ToDouble(c.Value), 0);
             return node;

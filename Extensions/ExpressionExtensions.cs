@@ -5,17 +5,40 @@ namespace Ricis.Core.Extensions;
 
 public static class ExpressionExtensions
 {
-    public static double Evaluate(this Expression expr, string paramName, double value)
-    {
-        var param = Expression.Parameter(typeof(double), paramName);
-        var lambda = Expression.Lambda<Func<double, double>>(expr, param);
-        return lambda.Compile()(value);
-    }
+    
     public static double Evaluate(this Expression expr, ParameterExpression param, double value)
     {
         var lambda = Expression.Lambda<Func<double, double>>(expr, param);
         return lambda.Compile()(value);
     }
+    public static double Evaluate(this Expression expr, string paramName, double value)
+    {
+        // Используем SubstitutionVisitor для безопасной подмены параметра
+        var visitor = new SubstitutionVisitor(paramName, value);
+        var body = visitor.Visit(expr);
+
+        // Оптимизация: если выражение стало константой
+        if (body is ConstantExpression c)
+        {
+            if (c.Value is double d)
+            {
+                return d;
+            }
+
+            if (c.Value is int i)
+            {
+                return i;
+            }
+
+            try { return Convert.ToDouble(c.Value); } catch { return double.NaN; }
+        }
+
+        var lambda = Expression.Lambda<Func<double>>(Expression.Convert(body, typeof(double)));
+        return lambda.Compile()();
+    }
+
+    
+
     /// <summary>
     /// Определяет, является ли бинарная операция коммутативной (a+b = b+a)
     /// </summary>
@@ -33,6 +56,7 @@ public static class ExpressionExtensions
             ExpressionType.And => true,
             ExpressionType.Or => true,
             ExpressionType.Power => true,
+            
             _ => false
         };
     }
@@ -60,6 +84,20 @@ public static class ExpressionExtensions
         MethodCallExpression m => 10 + m.Arguments.Sum(a => a.GetComplexityScore()),
         _ => 20
     };
+    public static bool TryEvaluate(this Expression expr, string paramName, double value, out double result)
+    {
+        try
+        {
+            result = expr.Evaluate(paramName, value);
+            // Отсеиваем NaN и бесконечности, чтобы не ломать логику упрощения
+            return !double.IsNaN(result) && !double.IsInfinity(result);
+        }
+        catch
+        {
+            result = double.NaN;
+            return false;
+        }
+    }
 
     /// <summary>
     /// Является ли выражение нулем (поддержка всех числовых типов)

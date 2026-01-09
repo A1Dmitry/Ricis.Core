@@ -10,7 +10,11 @@ public static class TrigonometricZeroSolver
 
         if (expr is not MethodCallExpression call ||
             call.Method.DeclaringType != typeof(Math) ||
-            call.Arguments.Count != 1) return roots;
+            call.Arguments.Count != 1)
+        {
+            return roots;
+        }
+
         var arg = call.Arguments[0];
 
         // Извлекаем линейный коэффициент: k*x + b
@@ -40,7 +44,11 @@ public static class TrigonometricZeroSolver
 
         // Главное значение (k=0)
         var theta = baseAngle - offset;
-        if (!(Math.Abs(multiplier) > 0)) return roots;
+        if (!(Math.Abs(multiplier) > 0))
+        {
+            return roots;
+        }
+
         var x = theta / multiplier;
         roots.Add(new Root(param, x));
 

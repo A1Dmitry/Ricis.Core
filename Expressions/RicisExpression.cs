@@ -4,7 +4,8 @@ namespace Ricis.Core.Expressions;
 
 public abstract class RicisExpression : Expression
 {
-
+    
+    public abstract Expression Numerator { get; }
     // Универсальный структурный оператор
     public static bool operator ==(RicisExpression a, RicisExpression b)
         => a.AreEqual(b);

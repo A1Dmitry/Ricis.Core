@@ -11,17 +11,22 @@ public static class SingularitySolver
     {
         var roots = new HashSet<(ParameterExpression, double)>();
 
-        // 1. Стандартный аналитический поиск (Линейные, Квадратичные, Степенные)
+        // 1. Аналитический поиск
         CollectRoots(denominator, roots);
 
-        // 2. БЕЗОПАСНЫЙ ФОЛБЭК (L25 Fix)
-        // Заходим сюда только если аналитика не справилась И выражение похоже на трансцендентное уравнение
-        if (roots.Count != 0 || !IsTranscendentalComposite(denominator)) return roots.ToList();
-        var param = FindParameter(denominator);
-        if (param == null) return roots.ToList();
-        // Вызываем численный солвер (Бисекция)
-        var numericalRoots = denominator.FindNumericalRoots(param);
+        // 2. Численный фолбэк (L25)
+        if (roots.Count != 0 || !IsTranscendentalComposite(denominator))
+        {
+            return roots.ToList();
+        }
 
+        var param = FindParameter(denominator);
+        if (param == null)
+        {
+            return roots.ToList();
+        }
+
+        var numericalRoots = denominator.FindNumericalRoots(param);
         foreach (var root in numericalRoots)
         {
             roots.Add((root.Parameter, root.DoubleValue));
@@ -30,130 +35,75 @@ public static class SingularitySolver
         return roots.ToList();
     }
 
-    // --- Хелперы для безопасного определения условий ---
-
-    /// <summary>
-    /// Проверяет, содержит ли выражение трансцендентные функции (Sin, Cos, Sinh...) 
-    /// в сочетании с арифметикой. Исключает простые случаи.
-    /// </summary>
-    private static bool IsTranscendentalComposite(Expression expr)
-    {
-        bool hasTrig = false;
-        bool hasArithmetic = false;
-
-        void Visit(Expression node)
-        {
-            if (node is MethodCallExpression call)
-            {
-                // Проверяем методы Math.*
-                if (call.Method.DeclaringType == typeof(Math))
-                {
-                    var name = call.Method.Name;
-                    if (name.StartsWith("Sin") || name.StartsWith("Cos") ||
-                        name.StartsWith("Tan") || name.StartsWith("Exp") || name == "Log")
-                    {
-                        hasTrig = true;
-                    }
-                }
-            }
-            else if (node is BinaryExpression)
-            {
-                // Если есть сложение, вычитание или умножение - это композитное выражение
-                if (node.NodeType is ExpressionType.Add or ExpressionType.Subtract or ExpressionType.Multiply)
-                {
-                    hasArithmetic = true;
-                }
-            }
-
-            // Рекурсивный обход (упрощенный)
-            if (node is BinaryExpression b) { Visit(b.Left); Visit(b.Right); }
-            else if (node is UnaryExpression u) { Visit(u.Operand); }
-            else if (node is MethodCallExpression m) { foreach (var a in m.Arguments) Visit(a); }
-        }
-
-        Visit(expr);
-
-        // Условие срабатывания: Есть тригонометрия И есть арифметика (например, Cos(x)*Sinh(x) - 1)
-        // Просто Cos(x) обработается TrigSolver-ом (если он подключен) или вернет null здесь, 
-        // но для L25 нам важна именно комбинация.
-        return hasTrig && hasArithmetic;
-    }
-
-    private static ParameterExpression FindParameter(Expression expr)
-    {
-        while (true)
-        {
-            switch (expr)
-            {
-                case ParameterExpression pe:
-                    return pe;
-                case BinaryExpression b:
-                    var parameterExpression = FindParameter(b.Left);
-                    if (parameterExpression != null)
-                    {
-                        return parameterExpression;
-                    }
-
-                    expr = b.Right;
-                    continue;
-                case UnaryExpression u:
-                    expr = u.Operand;
-                    continue;
-                case MethodCallExpression m:
-                {
-                    foreach (var arg in m.Arguments)
-                    {
-                        var p = FindParameter(arg);
-                        if (p != null) return p;
-                    }
-
-                    break;
-                }
-            }
-
-            return null;
-            break;
-        }
-    }
-
-
     private static void CollectRoots(Expression expr, HashSet<(ParameterExpression Parameter, double Value)> roots)
     {
+        // 1. Попытка распарсить как полином (ax^2 + bx + c)
+        var quad = expr.ParseQuadratic();
+        if (quad.HasValue)
+        {
+            var (param, a, b, c) = quad.Value;
+
+            // Квадратное: ax^2 + bx + c = 0
+            if (Math.Abs(a) > 1e-10)
+            {
+                var discriminant = b * b - 4 * a * c;
+                if (discriminant >= -1e-10)
+                {
+                    var sqrtD = Math.Sqrt(Math.Max(0, discriminant));
+                    roots.Add((param, (-b + sqrtD) / (2 * a)));
+                    roots.Add((param, (-b - sqrtD) / (2 * a)));
+                }
+                return;
+            }
+            // Линейное: bx + c = 0 => x = -c/b
+            else if (Math.Abs(b) > 1e-10)
+            {
+                roots.Add((param, -c / b));
+                return;
+            }
+        }
+
+        // 2. Структурный разбор (если парсер не справился или для специфических форм)
         switch (expr)
         {
             case ParameterExpression p:
-                // Только если весь знаменатель — чистая переменная x (1/x)
-                if (ReferenceEquals(expr, p))
-                {
-                    roots.Add((p, 0.0));
-                }
-
+                roots.Add((p, 0.0));
                 break;
 
             case BinaryExpression bin:
                 if (bin.NodeType == ExpressionType.Multiply)
                 {
-                    // Только для произведений рекурсивно ищем факторы
                     CollectRoots(bin.Left, roots);
                     CollectRoots(bin.Right, roots);
-                    return;
                 }
-
-                if (bin.NodeType == ExpressionType.Subtract)
-                    // Обработка x^n - 1 = 0
+                // Явная обработка вычитания (Subtract)
+                else if (bin.NodeType == ExpressionType.Subtract)
                 {
-                    if (bin.Right is ConstantExpression constRight &&
+                    // Случай: C - x (например, 1 - x)
+                    if (bin.Left is ConstantExpression cLeft && bin.Right is ParameterExpression pRight)
+                    {
+                        if (TryGetDouble(cLeft, out var val))
+                        {
+                            roots.Add((pRight, val));
+                        }
+                    }
+                    // Случай: x - C
+                    else if (bin.Left is ParameterExpression pLeft && bin.Right is ConstantExpression cRight)
+                    {
+                        if (TryGetDouble(cRight, out var val))
+                        {
+                            roots.Add((pLeft, val));
+                        }
+                    }
+                    // Случай: x^n - 1 (если не взялось парсером)
+                    else if (bin.Right is ConstantExpression constRight &&
                         constRight.Value is double rightVal &&
                         Math.Abs(rightVal - 1.0) < double.Epsilon)
-                        // Левый операнд — степень x
                     {
                         if (TryExtractPower(bin.Left, out var baseExpr, out var exponent))
                         {
                             if (baseExpr is ParameterExpression param && exponent > 1)
                             {
-                                // Корни n-й степени из 1 — только вещественные
-                                // Для чётного n: x = 1 и x = -1
-                                // Для нечётного n: только x = 1
                                 roots.Add((param, 1.0));
                                 if (exponent % 2 == 0)
                                 {
@@ -163,46 +113,18 @@ public static class SingularitySolver
                         }
                     }
                 }
-
-                if (bin.NodeType is ExpressionType.Subtract or ExpressionType.Add)
+                // Явная обработка сложения (Add)
+                else if (bin.NodeType == ExpressionType.Add)
                 {
-                    // Линейные формы
-                    if (TryExtractLinear(bin, out var paramLinear, out var a, out var b))
+                    // x + C = 0 => x = -C
+                    if (bin.Left is ParameterExpression pLeft && bin.Right is ConstantExpression cRight)
                     {
-                        if (Math.Abs(a) > 0)
+                        if (TryGetDouble(cRight, out var val))
                         {
-                            var rootVal = bin.NodeType == ExpressionType.Subtract ? b / a : -b / a;
-                            roots.Add((paramLinear, rootVal));
-                        }
-                    }
-
-                    // Квадратичные формы x² ± ... = 0
-                    if (bin.Right is ConstantExpression constRight && TryGetDouble(constRight, out var cValue))
-                    {
-                        var sign = bin.NodeType == ExpressionType.Subtract ? -1.0 : 1.0;
-                        var effectiveC = sign * cValue;
-
-                        if (bin.Left.ParseQuadratic() is var quad && quad.HasValue)
-                        {
-                            var (param, aQuad, bQuad, _) = quad.Value;
-                            if (Math.Abs(aQuad) > 0)
-                            {
-                                var discriminant = bQuad * bQuad - 4 * aQuad * effectiveC;
-                                if (discriminant >= 0)
-                                {
-                                    var sqrtD = Math.Sqrt(discriminant);
-                                    roots.Add((param, (-bQuad + sqrtD) / (2 * aQuad)));
-                                    if (discriminant > 0)
-                                    {
-                                        roots.Add((param, (-bQuad - sqrtD) / (2 * aQuad)));
-                                    }
-                                }
-                            }
+                            roots.Add((pLeft, -val));
                         }
                     }
                 }
-
-                // Рекурсия убрана — лишние x=0 больше не добавляются
                 break;
 
             case MethodCallExpression call when call.Method.Name == "Log":
@@ -210,115 +132,11 @@ public static class SingularitySolver
                 {
                     roots.Add((paramLog, 1.0));
                 }
-
                 break;
         }
     }
 
-    private static bool TryExtractPower(Expression expr, out Expression baseExpr, out int exponent)
-    {
-        baseExpr = null;
-        exponent = 0;
-
-        // Math.Pow(x, n)
-        if (expr is MethodCallExpression pow && pow.Method.Name == "Pow" && pow.Arguments.Count == 2)
-        {
-            baseExpr = pow.Arguments[0];
-            if (pow.Arguments[1] is ConstantExpression constExp && constExp.Value is double d)
-            {
-                exponent = (int)d;
-                return exponent == d && exponent > 0;
-            }
-        }
-
-        // Развёрнутая степень (x * x * x * x) — считаем количество умножений
-        var count = CountMultiplications(expr);
-        if (count > 1 && IsParameterMultiplication(expr))
-        {
-            baseExpr = GetParameterFromMultiplication(expr);
-            exponent = count;
-            return true;
-        }
-
-        return false;
-    }
-
-    private static int CountMultiplications(Expression expr)
-    {
-        if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
-        {
-            return CountMultiplications(bin.Left) + CountMultiplications(bin.Right);
-        }
-
-        return expr is ParameterExpression ? 1 : 0;
-    }
-
-    private static bool IsParameterMultiplication(Expression expr)
-    {
-        if (expr is ParameterExpression)
-        {
-            return true;
-        }
-
-        if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
-        {
-            return IsParameterMultiplication(bin.Left) && IsParameterMultiplication(bin.Right);
-        }
-
-        return false;
-    }
-
-    private static ParameterExpression GetParameterFromMultiplication(Expression expr)
-    {
-        if (expr is ParameterExpression p)
-        {
-            return p;
-        }
-
-        if (expr is BinaryExpression bin && bin.NodeType == ExpressionType.Multiply)
-        {
-            return GetParameterFromMultiplication(bin.Left) ?? GetParameterFromMultiplication(bin.Right);
-        }
-
-        return null;
-    }
-
-
-    private static bool TryExtractLinear(BinaryExpression expr, out ParameterExpression param, out double a,
-        out double b)
-    {
-        param = null;
-        a = 1.0;
-        b = 0.0;
-
-        // 2*x - 6
-        if (expr.Left is BinaryExpression mul && mul.NodeType == ExpressionType.Multiply &&
-            mul.Left is ConstantExpression c && mul.Right is ParameterExpression p)
-        {
-            if (TryGetDouble(c, out a))
-            {
-                param = p;
-                if (TryGetDouble(expr.Right as ConstantExpression, out b))
-                {
-                    return true;
-                }
-            }
-        }
-
-        // x - 2
-        if (expr.Left is ParameterExpression p2 && expr.Right is ConstantExpression c2)
-        {
-            param = p2;
-            a = 1.0;
-            if (TryGetDouble(c2, out b))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    // --- Хелперы ---
     private static bool TryGetDouble(ConstantExpression c, out double val)
     {
         val = 0.0;
@@ -327,24 +145,46 @@ public static class SingularitySolver
             return false;
         }
 
-        if (c.Value is double d)
-        {
-            val = d;
-            return true;
-        }
+        try { val = Convert.ToDouble(c.Value); return true; } catch { return false; }
+    }
 
-        if (c.Value is int i)
+    private static bool IsTranscendentalComposite(Expression expr)
+    {
+        bool hasTrig = false;
+        bool hasArithmetic = false;
+        new ExpressionTraverser(node =>
         {
-            val = i;
-            return true;
-        }
+            if (node is MethodCallExpression call && call.Method.DeclaringType == typeof(Math))
+            {
+                hasTrig = true;
+            }
+            else if (node is BinaryExpression)
+            {
+                hasArithmetic = true;
+            }
+        }).Visit(expr);
+        return hasTrig && hasArithmetic;
+    }
 
-        if (c.Value is float f)
+    private static ParameterExpression FindParameter(Expression expr)
+    {
+        ParameterExpression found = null;
+        new ExpressionTraverser(node => { if (found == null && node is ParameterExpression p)
+            {
+                found = p;
+            }
+        }).Visit(expr);
+        return found;
+    }
+
+    private static bool TryExtractPower(Expression expr, out Expression baseExpr, out int exponent)
+    {
+        baseExpr = null; exponent = 0;
+        if (expr is MethodCallExpression pow && pow.Method.Name == "Pow" && pow.Arguments.Count == 2)
         {
-            val = f;
-            return true;
+            baseExpr = pow.Arguments[0];
+            if (pow.Arguments[1] is ConstantExpression c && c.Value is double d) { exponent = (int)d; return true; }
         }
-
         return false;
     }
 }
