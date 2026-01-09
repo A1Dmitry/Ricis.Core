@@ -34,7 +34,7 @@ public sealed class LazyInfinityExpression : InfinityExpression
                 return CreatePole(_numerator);
             }
 
-            double val = _numerator.Evaluate(root.Param.Name, root.Value);
+            var val = _numerator.Evaluate(root.Param.Name, root.Value);
 
             if (double.IsNaN(val))
             {

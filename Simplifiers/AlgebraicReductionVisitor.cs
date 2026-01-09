@@ -39,7 +39,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         var roots = cache.roots.Where(root => root.RationalValue.HasValue);
         foreach (var root in roots)
         {
-            if (left.TryEvaluate(parameter.Name, (double)root.RationalValue.Value, out var res) && Math.Abs(res) < 1e-10)
+            if (left.TryEvaluate(parameter.Name, (double)root.RationalValue.Value, out var res) && Math.Abs(res) < double.Epsilon)
             {
                 // DRY FIX: Используем RicisType.InfinityZero вместо new Constant(0.0)
                 return InfinityExpression.CreateLazy(

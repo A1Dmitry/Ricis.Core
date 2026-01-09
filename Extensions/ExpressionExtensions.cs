@@ -1,43 +1,62 @@
-﻿using System.Linq.Expressions;
+﻿using Ricis.Core.Expressions;
+using Ricis.Core.Simplifiers;
+using System.Linq.Expressions;
 using System.Numerics;
 
 namespace Ricis.Core.Extensions;
 
 public static class ExpressionExtensions
 {
-    
+
+    public static Expression<Func<double, double>> Prepare(this Expression expr, ParameterExpression param)
+    {
+        return Expression.Lambda<Func<double, double>>(expr, param);
+    }
     public static double Evaluate(this Expression expr, ParameterExpression param, double value)
     {
-        var lambda = Expression.Lambda<Func<double, double>>(expr, param);
-        return lambda.Compile()(value);
+        return expr.Prepare(param).Compile()(value);
     }
+
     public static double Evaluate(this Expression expr, string paramName, double value)
     {
+        var lambda = expr.Evaluate( value, paramName);
+        return lambda.Compile()();
+    }
+
+    public static Expression<Func<double>> Evaluate(this Expression expr, double value, string paramName = null)
+    {
         // Используем SubstitutionVisitor для безопасной подмены параметра
-        var visitor = new SubstitutionVisitor(paramName, value);
+        var visitor = new SubstitutionVisitor(value, paramName);
         var body = visitor.Visit(expr);
 
         // Оптимизация: если выражение стало константой
         if (body is ConstantExpression c)
         {
-            if (c.Value is double d)
+            switch (c.Value)
             {
-                return d;
-            }
+                case double d:
+                    return Expression.Lambda<Func<double>>(Expression.Constant(Convert.ToDouble(d)));
+                case int i:
+                    return Expression.Lambda<Func<double>>(Expression.Constant(Convert.ToDouble(i)));
+                //default:
+                //    try
+                //    {
+                //        return Expression.Lambda<Func<double>>(Expression.Constant(Convert.ToDouble(c.Value))); ;
+                //    }
+                //    catch
+                //    {
+                //        return Expression.Lambda<Func<double>>(Expression.Constant(double.NaN));
+                //    }
 
-            if (c.Value is int i)
-            {
-                return i;
+                //    break;
             }
-
-            try { return Convert.ToDouble(c.Value); } catch { return double.NaN; }
+            return Expression.Lambda<Func<double>>(Expression.Convert(body, typeof(double)));
         }
 
-        var lambda = Expression.Lambda<Func<double>>(Expression.Convert(body, typeof(double)));
-        return lambda.Compile()();
+        return Expression.Lambda<Func<double>>(Expression.Convert(body, typeof(double)));
     }
 
-    
+
 
     /// <summary>
     /// Определяет, является ли бинарная операция коммутативной (a+b = b+a)
@@ -99,6 +118,40 @@ public static class ExpressionExtensions
         }
     }
 
+
+    public static double EvaluateAtPoint(this Expression expr, double value, string paramName = null)
+    {
+        try
+        {
+            var visitor = new SubstitutionVisitor(value, paramName);
+            var substituted = visitor.Visit(expr);
+            var lambda = Expression.Lambda<Func<double>>(Expression.Convert(substituted, typeof(double)));
+            return lambda.Compile()();
+        }
+        catch
+        {
+            return 1.0;
+        }
+    }
+
+    public static void AddSingularityIfValid(this
+        Expression numerator,
+        ParameterExpression param,
+        double value,
+        List<InfinityExpression> singularities)
+    {
+        var numAtRoot = numerator.EvaluateAtPoint(value, param.Name);
+
+        var infinity =
+            // Полюс C/0 -> Индекс C (числитель)
+            InfinityExpression.CreateLazy(numAtRoot == 0.0
+                    ? RicisType.InfinityZero
+                    : numerator,
+                param, value);
+
+        singularities.Add(infinity);
+    }
+
     /// <summary>
     /// Является ли выражение нулем (поддержка всех числовых типов)
     /// </summary>
@@ -107,6 +160,54 @@ public static class ExpressionExtensions
         ConstantExpression c => IsZeroValue(c.Value),
         _ => false
     };
+
+    // Хелпер для поиска параметра (x)
+    public static ParameterExpression FindParameter(this Expression expr)
+    {
+        ParameterExpression found = null;
+        IExpressionVisitor visitor = new ExpressionTraverser(node =>
+        {
+            if (found == null && node is ParameterExpression p)
+            {
+                found = p;
+            }
+        });
+        visitor.Visit(expr);
+        return found;
+    }
+
+    public static bool IsTranscendentalCandidate(this Expression expr)
+    {
+        var hasTrig = false;
+        var isComplex = false;
+
+        // Простой обход дерева выражения
+        var expressionTraverser = new ExpressionTraverser(node =>
+        {
+            switch (node)
+            {
+                case MethodCallExpression call when call.Method.DeclaringType != typeof(Math):
+                    return;
+                case MethodCallExpression call:
+                {
+                    var name = call.Method.Name;
+                    if (name == "Cos" || name == "Sin" || name == "Tan" ||
+                        name == "Cosh" || name == "Sinh" || name == "Tanh")
+                    {
+                        hasTrig = true;
+                    }
+
+                    break;
+                }
+                case BinaryExpression:
+                    isComplex = true; // Есть операции (+, -, *)
+                    break;
+            }
+        });
+        expressionTraverser.Visit(expr);
+
+        return hasTrig && isComplex;
+    }
 
     /// <summary>
     /// Является ли выражение единицей

@@ -44,10 +44,10 @@ public static class SingularitySolver
             var (param, a, b, c) = quad.Value;
 
             // Квадратное: ax^2 + bx + c = 0
-            if (Math.Abs(a) > 1e-10)
+            if (Math.Abs(a) > double.Epsilon)
             {
                 var discriminant = b * b - 4 * a * c;
-                if (discriminant >= -1e-10)
+                if (discriminant >= -double.Epsilon)
                 {
                     var sqrtD = Math.Sqrt(Math.Max(0, discriminant));
                     roots.Add((param, (-b + sqrtD) / (2 * a)));
@@ -56,7 +56,7 @@ public static class SingularitySolver
                 return;
             }
             // Линейное: bx + c = 0 => x = -c/b
-            else if (Math.Abs(b) > 1e-10)
+            else if (Math.Abs(b) > double.Epsilon)
             {
                 roots.Add((param, -c / b));
                 return;
@@ -150,8 +150,8 @@ public static class SingularitySolver
 
     private static bool IsTranscendentalComposite(Expression expr)
     {
-        bool hasTrig = false;
-        bool hasArithmetic = false;
+        var hasTrig = false;
+        var hasArithmetic = false;
         new ExpressionTraverser(node =>
         {
             if (node is MethodCallExpression call && call.Method.DeclaringType == typeof(Math))

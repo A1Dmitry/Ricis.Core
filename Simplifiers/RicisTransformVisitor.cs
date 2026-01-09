@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ricis.Core;
 using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
 using Ricis.Core.Simplifiers;
 using Ricis.Core.Solvers;
 
@@ -24,7 +25,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         var polyRoots = denominator.SolveRoots();
         foreach (var root in polyRoots)
         {
-            AddSingularityIfValid(numerator, denominator, root.expr, root.value, tempSingularities);
+            numerator.AddSingularityIfValid(root.expr, root.value, tempSingularities);
         }
 
         // 2. Тригонометрические корни (Простые)
@@ -32,13 +33,13 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         if (trigRoot.HasValue)
         {
             var (param, value) = trigRoot.Value;
-            AddSingularityIfValid(numerator, denominator, param, value, tempSingularities);
+            numerator.AddSingularityIfValid(param, value, tempSingularities);
         }
 
         // 3. Фолбэк для трансцендентных (если SingularitySolver не справился, хотя он должен)
-        if (tempSingularities.Count == 0 && IsTranscendentalCandidate(denominator))
+        if (tempSingularities.Count == 0 && denominator.IsTranscendentalCandidate())
         {
-            var param = FindParameter(denominator);
+            var param = denominator.FindParameter();
             if (param != null)
             {
                 // Возвращаем абстрактную бесконечность (без конкретного корня)
@@ -77,89 +78,13 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
     }
 
     // Проверка: содержит ли выражение трансцендентные функции в сложной структуре
-    private bool IsTranscendentalCandidate(Expression expr)
-    {
-        var hasTrig = false;
-        var isComplex = false;
-
-        // Простой обход дерева выражения
-        new ExpressionTraverser(node =>
-        {
-            if (node is MethodCallExpression call)
-            {
-                if (call.Method.DeclaringType == typeof(Math))
-                {
-                    var name = call.Method.Name;
-                    if (name == "Cos" || name == "Sin" || name == "Tan" ||
-                        name == "Cosh" || name == "Sinh" || name == "Tanh")
-                    {
-                        hasTrig = true;
-                    }
-                }
-            }
-            else if (node is BinaryExpression)
-            {
-                isComplex = true; // Есть операции (+, -, *)
-            }
-        }).Visit(expr);
-
-        return hasTrig && isComplex;
-    }
-
-    // Хелпер для поиска параметра (x)
-    private ParameterExpression FindParameter(Expression expr)
-    {
-        ParameterExpression found = null;
-        IExpressionVisitor visitor = new ExpressionTraverser(node =>
-        {
-            if (found == null && node is ParameterExpression p)
-            {
-                found = p;
-            }
-        });
-        visitor.Visit(expr);
-        return found;
-    }
+   
 
     
 
-    private void AddSingularityIfValid(
-        Expression numerator,
-        Expression denominator,
-        ParameterExpression param,
-        double value,
-        List<InfinityExpression> singularities)
-    {
-        var numAtRoot = EvaluateAtPoint(numerator, param.Name, value);
+    
 
-        InfinityExpression infinity;
-        if (numAtRoot == 0.0) // 0/0 DETECTED
-        {
-            // --- FIX: Индекс 0 для состояния 0/0 ---
-            var indexZero = RicisType.InfinityZero;
-            infinity = InfinityExpression.CreateLazy(indexZero, param, value);
-        }
-        else
-        {
-            // Полюс C/0 -> Индекс C (числитель)
-            infinity = InfinityExpression.CreateLazy(numerator, param, value);
-        }
+    
 
-        singularities.Add(infinity);
-    }
-
-    private static double EvaluateAtPoint(Expression expr, string paramName, double value)
-    {
-        try
-        {
-            var visitor = new SubstitutionVisitor(paramName, value);
-            var substituted = visitor.Visit(expr);
-            var lambda = Expression.Lambda<Func<double>>(Expression.Convert(substituted, typeof(double)));
-            return lambda.Compile()();
-        }
-        catch
-        {
-            return 1.0;
-        }
-    }
+    
 }

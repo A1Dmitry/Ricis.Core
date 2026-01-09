@@ -29,7 +29,7 @@ public static class PolarConverter
     {
         try
         {
-            var visitor = new SubstitutionVisitor(inf.Variable.Name, inf.SingularityValue);
+            var visitor = new SubstitutionVisitor(inf.SingularityValue, inf.Variable.Name);
             var substituted = visitor.Visit(inf.Numerator);
 
             var lambda = Expression.Lambda<Func<double>>(Expression.Convert(substituted, typeof(double)));

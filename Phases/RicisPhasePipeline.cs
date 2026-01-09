@@ -24,7 +24,7 @@ public static class RicisPhasePipeline
     {
         try
         {
-            Expression result = expr;
+            var result = expr;
             foreach (var visitor in _visitors)
             {
                 try

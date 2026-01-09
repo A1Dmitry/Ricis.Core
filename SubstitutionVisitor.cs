@@ -2,7 +2,7 @@
 
 namespace Ricis.Core;
 
-public class SubstitutionVisitor(string paramName, double value) : ExpressionVisitor
+public class SubstitutionVisitor(double value, string paramName = null) : ExpressionVisitor
 {
     protected override Expression VisitParameter(ParameterExpression node)
     {

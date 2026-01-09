@@ -63,9 +63,9 @@ public readonly struct Rational : IEquatable<Rational>
         var hi = (uint)bits[2];
         var flags = (uint)bits[3];
         var sign = (flags & 0x80000000) != 0 ? -1 : 1;
-        var scale = flags >> 16 & 0x7F;
+        var scale = (flags >> 16) & 0x7F;
 
-        var numerator = (BigInteger)hi << 64 | (BigInteger)mid << 32 | lo;
+        var numerator = ((BigInteger)hi << 64) | ((BigInteger)mid << 32) | lo;
         numerator *= sign;
         var denominator = BigInteger.Pow(10, (int)scale);
         return new Rational(numerator, denominator);
@@ -75,7 +75,7 @@ public readonly struct Rational : IEquatable<Rational>
     {
         return (double)Numerator / (double)Denominator;
     }
-    
+
     public static Rational operator +(Rational a, Rational b)
     {
         return new Rational(a.Numerator * b.Denominator + b.Numerator * a.Denominator, a.Denominator * b.Denominator);
@@ -153,24 +153,58 @@ public readonly struct Rational : IEquatable<Rational>
     {
         return left.Numerator * right.Denominator >= right.Numerator * left.Denominator;
     }
-    public static implicit operator Rational(int value) => new Rational(value, BigInteger.One);
 
-    public static implicit operator Rational(long value) => new Rational(value, BigInteger.One);
+    public static implicit operator Rational(int value)
+    {
+        return new Rational(value, BigInteger.One);
+    }
 
-    public static implicit operator Rational(BigInteger value) => new Rational(value, BigInteger.One);
+    public static implicit operator Rational(long value)
+    {
+        return new Rational(value, BigInteger.One);
+    }
+
+    public static implicit operator Rational(BigInteger value)
+    {
+        return new Rational(value, BigInteger.One);
+    }
 
     // === ßÂÍÀß ÊÎÍÂÅÐÑÈß Â DOUBLE (äëÿ fallback è âûâîäà) ===
-    public static explicit operator double(Rational r) => r.ToDouble();
-    
+    public static explicit operator double(Rational r)
+    {
+        return r.ToDouble();
+    }
+
     // === ÎÏÅÐÀÒÎÐÛ Ñ INT ===
-    public static Rational operator +(Rational a, int b) => a + new Rational(b);
-    public static Rational operator +(int a, Rational b) => new Rational(a) + b;
+    public static Rational operator +(Rational a, int b)
+    {
+        return a + new Rational(b);
+    }
 
-    public static Rational operator -(Rational a, int b) => a - new Rational(b);
-    public static Rational operator -(int a, Rational b) => new Rational(a) - b;
+    public static Rational operator +(int a, Rational b)
+    {
+        return new Rational(a) + b;
+    }
 
-    public static Rational operator *(Rational a, int b) => a * new Rational(b);
-    public static Rational operator *(int a, Rational b) => new Rational(a) * b;
+    public static Rational operator -(Rational a, int b)
+    {
+        return a - new Rational(b);
+    }
+
+    public static Rational operator -(int a, Rational b)
+    {
+        return new Rational(a) - b;
+    }
+
+    public static Rational operator *(Rational a, int b)
+    {
+        return a * new Rational(b);
+    }
+
+    public static Rational operator *(int a, Rational b)
+    {
+        return new Rational(a) * b;
+    }
 
     public static Rational operator /(Rational a, int b)
     {
@@ -196,11 +230,28 @@ public readonly struct Rational : IEquatable<Rational>
     //public static Rational operator -(Rational a) => new Rational(-a.Numerator, a.Denominator);
 
     // === ÑÐÀÂÍÅÍÈÅ Ñ INT (åñëè íóæíî) ===
-    public static bool operator ==(Rational a, int b) => a == new Rational(b);
-    public static bool operator ==(int a, Rational b) => new Rational(a) == b;
+    public static bool operator ==(Rational a, int b)
+    {
+        return a == new Rational(b);
+    }
 
-    public static bool operator !=(Rational a, int b) => !(a == b);
-    public static bool operator !=(int a, Rational b) => !(a == b);
+    public static bool operator ==(int a, Rational b)
+    {
+        return new Rational(a) == b;
+    }
 
-    public override bool Equals(object obj) => obj is Rational rational && Equals(rational);
+    public static bool operator !=(Rational a, int b)
+    {
+        return !(a == b);
+    }
+
+    public static bool operator !=(int a, Rational b)
+    {
+        return !(a == b);
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Rational rational && Equals(rational);
+    }
 }

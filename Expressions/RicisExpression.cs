@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Ricis.Core.Phases;
+using System.Linq.Expressions;
 
 namespace Ricis.Core.Expressions;
 
@@ -18,4 +19,6 @@ public abstract class RicisExpression : Expression
 
     public override int GetHashCode()
         => ToString()?.GetHashCode() ?? 0;
+    
+   
 }
