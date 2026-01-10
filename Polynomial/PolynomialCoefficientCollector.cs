@@ -1,50 +1,42 @@
-﻿using System.Linq.Expressions;
-using System.Numerics;
-using Ricis.Core.Rationals;
+﻿using Ricis.Core.Rationals;
 using Ricis.Core.Simplifiers;
+using System.Linq.Expressions;
+using System.Numerics;
+using System.Text;
 
-namespace Ricis.Core.Polynomial;
-
-public class PolynomialCoefficientCollector(ParameterExpression parameterExpression) : ExpressionVisitor, IExpressionVisitor
+public class PolynomialCoefficientCollector(ParameterExpression parameterExpression)
+    : ExpressionVisitor, IExpressionVisitor
 {
-    private readonly ParameterExpression _parameter = parameterExpression ?? throw new ArgumentNullException(nameof(parameterExpression));
+    private readonly ParameterExpression _parameter =
+        parameterExpression ?? throw new ArgumentNullException(nameof(parameterExpression));
+
     private Rational _currentMultiplier = Rational.One; // Текущий коэффициент перед параметром
     private int _currentPower = -1; // Текущая степень (при умножении)
 
     public bool IsPolynomial { get; private set; } = true;
     public Dictionary<int, Rational> Coefficients { get; } = new();
 
+    // Точка входа (очищает состояние)
     public new void Visit(Expression expr)
     {
         IsPolynomial = true;
         Coefficients.Clear();
-        base.Visit(expr);
+        base.Visit(expr); // Запускает обход
 
-        // Если в процессе посещения что-то сломало IsPolynomial, оставляем пустой результат
-        if (!IsPolynomial)
-        {
-            Coefficients.Clear();
-        }
+        if (!IsPolynomial) Coefficients.Clear();
     }
 
     protected override Expression VisitParameter(ParameterExpression node)
     {
         if (node == _parameter)
         {
-            // Параметр в степени _currentPower с коэффициентом _currentMultiplier
-            if (_currentPower < 0)
-            {
-                _currentPower = 1; // одиночный x → x^1
-            }
-
+            if (_currentPower < 0) _currentPower = 1;
             AddToCoefficients(_currentPower, _currentMultiplier);
         }
         else
         {
-            // Параметр с другим именем — не полином по нашему x
             IsPolynomial = false;
         }
-
         return node;
     }
 
@@ -52,52 +44,48 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
     {
         var value = ConvertConstantToRational(node.Value);
 
+        // FIX: Учитываем знак (_currentMultiplier)
         if (_currentPower < 0)
-            // Константа сама по себе — степень 0
-        {
-            AddToCoefficients(0, value);
-        }
+            AddToCoefficients(0, value * _currentMultiplier);
         else
-            // Константа умножается на текущую степень параметра
-        {
             AddToCoefficients(_currentPower, _currentMultiplier * value);
-        }
 
         return node;
     }
 
     protected override Expression VisitBinary(BinaryExpression node)
     {
-        if (!IsPolynomial)
-        {
-            return node;
-        }
+        if (!IsPolynomial) return node;
 
         switch (node.NodeType)
         {
             case ExpressionType.Add:
             case ExpressionType.Subtract:
-                // Обрабатываем как (левая часть) + (правая часть)
-                var savedState = SaveState();
+                // FIX: Накапливаем коэффициенты без очистки.
 
-                Visit(node.Left);
+                var multBefore = _currentMultiplier;
+                var powBefore = _currentPower;
 
-                var leftState = SaveState();
-                RestoreState(savedState);
+                // ВАЖНО: Используем base.Visit для рекурсии, чтобы НЕ вызывать this.Visit и НЕ очищать Coefficients
+                base.Visit(node.Left);
 
-                // Для правой части учитываем знак
+                // Восстанавливаем контекст
+                _currentMultiplier = multBefore;
+                _currentPower = powBefore;
+
                 if (node.NodeType == ExpressionType.Subtract)
                 {
                     _currentMultiplier = -_currentMultiplier;
                 }
 
-                Visit(node.Right);
+                base.Visit(node.Right);
 
-                RestoreState(leftState); // не обязательно, но для чистоты
+                // Восстанавливаем контекст
+                _currentMultiplier = multBefore;
+                _currentPower = powBefore;
                 break;
 
             case ExpressionType.Multiply:
-                // Умножение полиномов: собираем степени
                 VisitMultiply(node);
                 break;
 
@@ -111,44 +99,48 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
 
     private void VisitMultiply(BinaryExpression node)
     {
-        // Сохраняем состояние перед левой частью
         var outerState = SaveState();
 
-        // Собираем левую часть как отдельный полином
-        Visit(node.Left);
+        // --- ЛЕВЫЙ МНОЖИТЕЛЬ ---
+        _currentMultiplier = Rational.One;
+        _currentPower = -1;
+        Coefficients.Clear(); // Локальная очистка для множителя допустима
+
+        base.Visit(node.Left); // Используем base.Visit
         if (!IsPolynomial)
         {
+            RestoreState(outerState);
             return;
         }
-
         var leftCoeffs = new Dictionary<int, Rational>(Coefficients);
-        // Восстанавливаем состояние
-        RestoreState(outerState);
+
+        // --- ПРАВЫЙ МНОЖИТЕЛЬ ---
+        _currentMultiplier = Rational.One;
+        _currentPower = -1;
         Coefficients.Clear();
 
-        // Собираем правую часть
-        Visit(node.Right);
+        base.Visit(node.Right); // Используем base.Visit
         if (!IsPolynomial)
         {
+            RestoreState(outerState);
             return;
         }
-
         var rightCoeffs = new Dictionary<int, Rational>(Coefficients);
 
-        // Теперь перемножаем два полинома
-        Coefficients.Clear();
+        // --- СБОРКА ---
+        // Восстанавливаем коэффициенты, накопленные ДО умножения
+        RestoreState(outerState);
 
+        // Перемножаем
         foreach (var left in leftCoeffs)
-        foreach (var right in rightCoeffs)
         {
-            var newPower = left.Key + right.Key;
-            var newCoeff = left.Value * right.Value;
-            AddToCoefficients(newPower, newCoeff);
+            foreach (var right in rightCoeffs)
+            {
+                var newPower = left.Key + right.Key;
+                var newCoeff = left.Value * right.Value * _currentMultiplier;
+                AddToCoefficients(newPower, newCoeff);
+            }
         }
-
-        // Сбрасываем временные состояния
-        _currentPower = -1;
-        _currentMultiplier = Rational.One;
     }
 
     protected override Expression VisitUnary(UnaryExpression node)
@@ -156,8 +148,8 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
         if (node.NodeType == ExpressionType.Negate)
         {
             _currentMultiplier = -_currentMultiplier;
-            Visit(node.Operand);
-            _currentMultiplier = -_currentMultiplier; // восстановить знак
+            base.Visit(node.Operand); // Используем base.Visit
+            _currentMultiplier = -_currentMultiplier;
             return node;
         }
 
@@ -167,62 +159,48 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        // Любые вызовы методов (Sin, Cos, Pow и т.д.) — не полином
+        if (node.Method.DeclaringType == typeof(Math) && node.Method.Name == "Pow")
+        {
+            if (node.Arguments[0] is ParameterExpression p && p == _parameter &&
+                node.Arguments[1] is ConstantExpression c && ConvertConstantToRational(c.Value) is Rational r && r.Denominator == 1)
+            {
+                var power = (int)r.Numerator;
+                if (power >= 0)
+                {
+                    AddToCoefficients(power, _currentMultiplier);
+                    return node;
+                }
+            }
+        }
+
         IsPolynomial = false;
         return node;
     }
 
-    // ===================================================================
-    // Вспомогательные методы
-    // ===================================================================
-
     private void AddToCoefficients(int power, Rational coeff)
     {
-        if (coeff.IsZero)
-        {
-            return; // не добавляем нулевые коэффициенты
-        }
+        if (coeff.IsZero) return;
+        if (Coefficients.TryGetValue(power, out var existing)) coeff += existing;
 
-        if (Coefficients.TryGetValue(power, out var existing))
-        {
-            coeff += existing;
-        }
-
-        if (coeff.IsZero)
-        {
-            Coefficients.Remove(power);
-        }
-        else
-        {
-            Coefficients[power] = coeff;
-        }
+        if (coeff.IsZero) Coefficients.Remove(power);
+        else Coefficients[power] = coeff;
     }
 
     private Rational ConvertConstantToRational(object value)
     {
         if (value is double db)
         {
-            // Обработка double отдельно
             var intValue = (long)Math.Round(db);
-            if (Math.Abs(db - intValue) == 0)
-            {
-                return Rational.Create(intValue);
-            }
-
-            // Нецелый double — запрещаем в полиномах
-            IsPolynomial = false;
-            return Rational.Zero; // заглушка, полином уже невалиден
+            if (Math.Abs(db - intValue) < double.Epsilon) return Rational.Create(intValue);
+            IsPolynomial = false; return Rational.Zero;
         }
-
-        // Остальные типы — через switch expression (без блоков {})
         return value switch
         {
             int i => Rational.Create(i),
             long l => Rational.Create(l),
             BigInteger bi => new Rational(bi),
             decimal d => Rational.FromDecimal(d),
-            null => throw new ArgumentNullException(nameof(value)),
-            _ => throw new ArgumentException($"Unsupported constant type: {value.GetType()}")
+            _ => throw new ArgumentException($"Unsupported constant type: {value?.GetType()}")
         };
     }
 
@@ -230,7 +208,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
     {
         return (_currentPower, _currentMultiplier, new Dictionary<int, Rational>(Coefficients));
     }
-    
+
     private void RestoreState((int power, Rational mult, Dictionary<int, Rational> coeffs) state)
     {
         _currentPower = state.power;

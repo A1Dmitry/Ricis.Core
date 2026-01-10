@@ -130,7 +130,7 @@ public static class ExpressionExtensions
         }
         catch
         {
-            return 1.0;
+            return Double.NaN;
         }
     }
 
@@ -178,8 +178,7 @@ public static class ExpressionExtensions
 
     public static bool IsTranscendentalCandidate(this Expression expr)
     {
-        var hasTrig = false;
-        var isComplex = false;
+        var hasTranscendental = false;
 
         // Простой обход дерева выражения
         var expressionTraverser = new ExpressionTraverser(node =>
@@ -191,22 +190,26 @@ public static class ExpressionExtensions
                 case MethodCallExpression call:
                 {
                     var name = call.Method.Name;
+                    // FIX: Добавлены Exp, Log, Log10, Sqrt, Pow (если степень не целая)
                     if (name == "Cos" || name == "Sin" || name == "Tan" ||
-                        name == "Cosh" || name == "Sinh" || name == "Tanh")
+                        name == "Cosh" || name == "Sinh" || name == "Tanh" ||
+                        name == "Exp" || name == "Log" || name == "Log10" ||
+                        name == "Sqrt" || name == "Pow")
                     {
-                        hasTrig = true;
+                        hasTranscendental = true;
                     }
 
                     break;
                 }
                 case BinaryExpression:
-                    isComplex = true; // Есть операции (+, -, *)
+                    _ = true; // Есть операции (+, -, *)
                     break;
             }
         });
         expressionTraverser.Visit(expr);
 
-        return hasTrig && isComplex;
+        // Если есть трансцендентная функция, считаем кандидатом
+        return hasTranscendental;
     }
 
     /// <summary>
