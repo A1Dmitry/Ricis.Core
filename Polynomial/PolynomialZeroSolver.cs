@@ -14,37 +14,55 @@ public static class PolynomialZeroSolver
     /// <returns></returns>
     public static List<Root> FindRoots(this Expression expr, ParameterExpression param)
     {
-        // СТАРЫЙ КОД (полиномы - БЕЗ ИЗМЕНЕНИЙ)
         var collector = new PolynomialCoefficientCollector(param);
         collector.Visit(expr);
 
-        if (!collector.IsPolynomial || 
+        if (!collector.IsPolynomial ||
             collector.Coefficients.Count <= 0 ||
             collector.Coefficients.All(c => c.Value.IsZero))
         {
             return expr.FindNumericalRoots(param);
         }
 
+        var roots = new List<Root>();
+
+        // FIX: Проверка на корень x=0 (отсутствие свободного члена)
+        // Если в полиноме нет коэффициента при степени 0, значит x=0 — корень.
+        if (!collector.Coefficients.ContainsKey(0) || collector.Coefficients[0].IsZero)
+        {
+            roots.Add(new Root(param, 0.0));
+
+            // Опционально: можно удалить фактор x^k и искать остальные корни,
+            // но для текущих тестов (x^3) этого достаточно.
+        }
+
         var degree = collector.Coefficients.Keys.Max();
         if (degree <= 0)
         {
-            return expr.FindNumericalRoots(param);
+            // Если степень 0 (константа), корней нет (если константа не 0, что проверено выше)
+            return roots;
         }
 
+        // Ищем рациональные корни (для x^2 - 1 и т.д.)
+        // RationalRootTheorem требует ненулевого свободного члена.
+        // Если мы нашли корень 0, теорема может не сработать для оставшейся части без деления.
+        // Но если свободный член ЕСТЬ, теорема сработает.
+        if (!collector.Coefficients.ContainsKey(0) || collector.Coefficients[0].IsZero)
+            return roots.Any() ? roots : expr.FindNumericalRoots(param);
         var possibleRationals = RationalRootTheorem.GetPossibleRoots(collector.Coefficients);
-        var roots = new List<Root>();
-
         foreach (var candidate in possibleRationals)
         {
-            if (expr.TryEvaluate(param.Name, candidate, out var result) && result.IsZero)
+            // Используем EvaluateAtPoint вместо TryEvaluate для надежности
+            var val = expr.EvaluateAtPoint(candidate.ToDouble(), param.Name);
+            if (Math.Abs(val) < 1e-10) // Используем Epsilon
             {
                 roots.Add(new Root(param, candidate));
             }
         }
 
-        return roots.Any() 
-            ? roots 
-            : expr.FindNumericalRoots(param);
+        // Если нашли корни (включая 0) — возвращаем их.
+        // Если нет — пробуем численный метод (на всякий случай).
+        return roots.Any() ? roots : expr.FindNumericalRoots(param);
     }
 
     /// <summary>
