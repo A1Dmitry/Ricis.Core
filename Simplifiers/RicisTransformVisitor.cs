@@ -1,10 +1,20 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Solvers;
 
 namespace Ricis.Core.Simplifiers;
 
+/// <summary>
+/// RICIS Phase 2 — pure singularity transform.
+/// NO limits. NO L'Hôpital. NO ε-δ.
+///
+/// Theory v7.7:
+///   SP2 already applied upstream (AlgebraicReductionVisitor).
+///   A1:  F/0  → ∞_F     (F ≠ 0)
+///   A4:  0_F/0_G = F/G  (structural ratio of indices; 1 iff F≡G via SP2)
+///   SP4: index by expression, not numerical value.
+/// </summary>
 public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 {
     protected override Expression VisitBinary(BinaryExpression node)
@@ -16,131 +26,70 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         return base.VisitBinary(node);
     }
 
-    // --- SP3: Реализация правила Лопиталя ---
-    private double ApplyLHopital(Expression num, Expression den, ParameterExpression param, double point)
-    {
-        try
-        {
-            var currNum = num;
-            var currDen = den;
-
-            for (int i = 0; i < 3; i++) // Максимум 3 итерации (производные)
-            {
-                // Используем Extension Method из SymbolicDerivator
-                currNum = currNum.Derive(param);
-                currDen = currDen.Derive(param);
-
-                var nVal = currNum.EvaluateAtPoint(point, param.Name);
-                var dVal = currDen.EvaluateAtPoint(point, param.Name);
-
-                if (double.IsNaN(nVal) || double.IsNaN(dVal)) return double.NaN;
-
-                // Если знаменатель != 0, предел найден
-                if (Math.Abs(dVal) > 1e-10)
-                {
-                    return nVal / dVal;
-                }
-
-                // Если знаменатель 0, а числитель != 0 -> Полюс (бесконечность)
-                if (Math.Abs(nVal) > 1e-10)
-                {
-                    return double.NaN; // Лопиталь не применим, это не 0/0
-                }
-
-                // Иначе 0/0 -> продолжаем брать производные
-            }
-        }
-        catch
-        {
-            // ignored
-        }
-
-        return double.NaN;
-    }
-
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
+        // SP2 / L1: identical expressions → 1 (already mostly done upstream;
+        // keep as safety net).
+        if (numerator.AreEqual(denominator))
+        {
+            return RicisType.InfinityOne;
+        }
+
         var tempSingularities = new List<InfinityExpression>();
 
-        // 1. Полиномиальные корни
-        var polyRoots = denominator.SolveRoots();
-        foreach (var root in polyRoots)
+        // 1. Polynomial roots of denominator
+        foreach (var root in denominator.SolveRoots())
         {
-            // Игнорируем корни, которые сами по себе NaN
             if (double.IsNaN(root.value)) continue;
 
-            // Вычисляем значение числителя в точке корня
             var numVal = numerator.EvaluateAtPoint(root.value, root.expr.Name);
-
-            // Если числитель не вычислим — пропускаем
             if (double.IsNaN(numVal)) continue;
 
-            // --- SP3 INTEGRATION START ---
-            // Если числитель тоже 0 (ситуация 0/0), пробуем правило Лопиталя
             if (Math.Abs(numVal) < 1e-10)
             {
-                var limit = ApplyLHopital(numerator, denominator, root.expr, root.value);
-                if (!double.IsNaN(limit))
-                {
-                    // Устранимая сингулярность найдена! Возвращаем предел как константу.
-                    // Для простых случаев (один корень) это идеальное решение.
-                    return Expression.Constant(limit);
-                }
+                // A4: 0_F / 0_G = F/G
+                // Indices are the parent expressions (SP4). No limit, no derivatives.
+                // If SP2 canceled identical factors, we would not reach here with 0/0.
+                // Remaining case: different identities → keep structural ratio F/G.
+                return Expression.Divide(numerator, denominator);
             }
-            // --- SP3 INTEGRATION END ---
 
+            // A1: F ≠ 0, den = 0 → ∞_F (index = numerator expression)
             numerator.AddSingularityIfValid(root.expr, root.value, tempSingularities);
         }
 
-        // 2. Тригонометрические корни
+        // 2. Trigonometric roots
         var trigRoot = TrigSolver.Solve(denominator);
         if (trigRoot.HasValue)
         {
             var (param, value) = trigRoot.Value;
-
             if (!double.IsNaN(value))
             {
                 var numVal = numerator.EvaluateAtPoint(value, param.Name);
 
-                // --- SP3 INTEGRATION START ---
-                // Проверка 0/0 для тригонометрии (например, sin(x)/x)
                 if (Math.Abs(numVal) < 1e-10)
                 {
-                    var limit = ApplyLHopital(numerator, denominator, param, value);
-                    if (!double.IsNaN(limit))
-                    {
-                        return Expression.Constant(limit);
-                    }
+                    // A4 again: 0_F/0_G = F/G (e.g. sin(x)/x keeps structural ratio;
+                    // SP2/series are NOT applied here — pure index law).
+                    return Expression.Divide(numerator, denominator);
                 }
-                // --- SP3 INTEGRATION END ---
 
                 numerator.AddSingularityIfValid(param, value, tempSingularities);
             }
         }
 
-        // 3. Фолбэк для трансцендентных (Exp, Log, Sqrt...)
-        if (tempSingularities.Count == 0 && denominator.IsTranscendentalCandidate())
-        {
-            // Пока оставляем пустым
-        }
-
-        // Если ничего не нашли
         if (tempSingularities.Count == 0)
         {
             return Expression.Divide(numerator, denominator);
         }
 
-        // --- ФИНАЛЬНАЯ СБОРКА ---
-
-        // Если нашли одну
         if (tempSingularities.Count == 1)
         {
             return tempSingularities[0];
         }
 
-        // Если нашли много — собираем Монолит
+        // Multiple poles → monolith
         var primaryIndex = tempSingularities[0].Numerator;
-
         var allRoots = tempSingularities
             .SelectMany(s => s.Roots)
             .Where(r => !double.IsNaN(r.Value))
@@ -149,7 +98,10 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             .OrderBy(r => r.Value)
             .ToList();
 
-        if (allRoots.Count == 0) return Expression.Divide(numerator, denominator);
+        if (allRoots.Count == 0)
+        {
+            return Expression.Divide(numerator, denominator);
+        }
 
         return InfinityExpression.CreateLazy(primaryIndex, allRoots);
     }
