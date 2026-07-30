@@ -8,15 +8,17 @@ using Ricis.Core.Simplifiers;
 namespace Ricis.Core.Phases;
 
 /// <summary>
-/// Phase order (theory COMPUTATION_ALGORITHM):
-///   Phase 1  SP2  AlgebraicReductionVisitor  — cancel identical factors first
-///   Phase 2  A4/A1 RicisTransformVisitor     — 0_F/0_G=F/G, F/0=∞_F (no L'Hôpital)
-///   Phase 5  StandardOperationsVisitor      — ∞ algebra (A5/A6/A7)
+/// Phase order (theory COMPUTATION_ALGORITHM + polar):
+///   Phase 0.5 PolarTrigVisitor          — trig → polar sector → exact collapse
+///   Phase 1   AlgebraicReductionVisitor — SP2 cancel identical factors
+///   Phase 2   RicisTransformVisitor     — A4/A1 0_F/0_G=F/G, F/0=∞_F
+///   Phase 5   StandardOperationsVisitor — ∞ algebra (A5/A6/A7)
 /// </summary>
 public static class RicisPhasePipeline
 {
     private static readonly List<IExpressionVisitor> _visitors =
     [
+        new PolarTrigVisitor(),
         new AlgebraicReductionVisitor(),
         new RicisTransformVisitor(),
         new StandardOperationsVisitor(),
