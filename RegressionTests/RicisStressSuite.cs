@@ -47,6 +47,7 @@ internal static class RicisStressSuite
         ("N04: одинаковые функции с теми же параметрами сокращаются по F/F", IdenticalFunctionIndicesCancel),
         ("N05: одинаковые составные выражения сокращаются по F/F", IdenticalCompositeIndicesCancel),
         ("N06: uint (a·a)/a сокращается до a до переполнения", UIntOverflowIsAvoidedBySp2),
+        ("N07: int.MaxValue (a·a)/a сокращается до a до переполнения", IntMaxOverflowIsAvoidedBySp2),
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
@@ -278,6 +279,31 @@ internal static class RicisStressSuite
 
         Require(derived.Body is ConstantExpression { Type: var type, Value: uint result } &&
                 type == typeof(uint) && result == a,
+            $"SP2 должен вернуть типизированную константу a={a}, получено {derived.Body} ({derived.Body.Type}).");
+        Require(derived.Compile()() == a,
+            "Производное RICIS-выражение должно исполняться без переполнения.");
+    }
+
+    private static void IntMaxOverflowIsAvoidedBySp2()
+    {
+        // a = int.MaxValue. Native unchecked multiplication yields
+        // a² ≡ 1 (mod 2³²), then 1 / a = 0. SP2 must run before it.
+        const int a = int.MaxValue;
+        var factor = Expression.Constant(a);
+        var source = Expression.Divide(Expression.Multiply(factor, factor), factor);
+
+        var classical = Expression.Lambda<Func<int>>(source).Compile()();
+        Require(classical == 0,
+            $"Несокращённое int-выражение должно показать машинное переполнение; получено {classical}.");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<int>>(source));
+        if (output is not Expression<Func<int>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<int>, получено: {output.GetType().Name}.");
+        }
+
+        Require(derived.Body is ConstantExpression { Type: var type, Value: int result } &&
+                type == typeof(int) && result == a,
             $"SP2 должен вернуть типизированную константу a={a}, получено {derived.Body} ({derived.Body.Type}).");
         Require(derived.Compile()() == a,
             "Производное RICIS-выражение должно исполняться без переполнения.");
