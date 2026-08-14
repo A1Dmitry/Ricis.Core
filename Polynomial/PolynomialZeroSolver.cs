@@ -74,28 +74,53 @@ public static class PolynomialZeroSolver
     public static List<Root> FindNumericalRoots(this Expression expr, ParameterExpression param)
     {
         var roots = new List<Root>();
-        const double step = 0.05;  // Точнее
-        var paramName = param.Name;
-        var prepare = expr.Prepare(param);
-        var compiled = prepare.Compile();
+        const double step = 0.05;
+        const double zeroTolerance = 1e-8;
+        var compiled = expr.Prepare(param).Compile();
+
         for (double x = -10; x < 10; x += step)
         {
-            // ✅ Evaluate() уже работает!
             var fx = compiled(x);
-            var fx1 = compiled(x + step);
+            var next = x + step;
+            var fx1 = compiled(next);
 
-            if (!(fx * fx1 < 0))
+            if (double.IsFinite(fx) && Math.Abs(fx) <= zeroTolerance)
+            {
+                AddDistinctRoot(roots, param, x);
+            }
+
+            // A sign flip alone is not proof of a zero: it can be caused by a
+            // pole of a nested function such as Tan(x). Bisection must certify
+            // that the candidate is a finite value whose residual is near zero.
+            if (!double.IsFinite(fx) || !double.IsFinite(fx1) || !(fx * fx1 < 0))
             {
                 continue;
             }
 
-            var root = expr.Bisection(param, x, x + step);
+            var root = expr.Bisection(param, x, next, zeroTolerance);
             if (root.HasValue)
             {
-                roots.Add(new Root(param, root.Value));
+                var residual = compiled(root.Value);
+                if (double.IsFinite(residual) && Math.Abs(residual) <= zeroTolerance)
+                {
+                    AddDistinctRoot(roots, param, root.Value);
+                }
             }
         }
-        return roots;
+
+        return roots.OrderBy(root => root.DoubleValue).ToList();
+    }
+
+    private static void AddDistinctRoot(List<Root> roots, ParameterExpression parameter, double value)
+    {
+        // Preserve genuinely distinct close roots (for example 1 and 1.0000001)
+        // while discarding repeated samples of the same numerical root.
+        const double deduplicationTolerance = 1e-8;
+        if (!roots.Any(root => root.Parameter == parameter &&
+                               Math.Abs(root.DoubleValue - value) <= deduplicationTolerance))
+        {
+            roots.Add(new Root(parameter, value));
+        }
     }
     /// <summary>
     /// 
@@ -112,7 +137,7 @@ public static class PolynomialZeroSolver
         var fa = compiled(a);
         var fb = compiled(b);
 
-        if (fa * fb >= 0)
+        if (!double.IsFinite(fa) || !double.IsFinite(fb) || fa * fb >= 0)
         {
             return null;
         }
@@ -122,7 +147,12 @@ public static class PolynomialZeroSolver
             var c = (a + b) / 2;
             var fc = compiled(c);
 
-            if (Math.Abs(fc) < tol)
+            if (!double.IsFinite(fc))
+            {
+                return null;
+            }
+
+            if (Math.Abs(fc) <= tol)
             {
                 return c;
             }
@@ -130,7 +160,10 @@ public static class PolynomialZeroSolver
             if (fa * fc < 0) { b = c; }
             else { a = c; fa = fc; }
         }
-        return (a + b) / 2;
+
+        var candidate = (a + b) / 2;
+        var residual = compiled(candidate);
+        return double.IsFinite(residual) && Math.Abs(residual) <= tol ? candidate : null;
     }
 
     public static double[] FindRootsInRange(this Expression expr, ParameterExpression x,

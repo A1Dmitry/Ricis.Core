@@ -127,11 +127,20 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         var primaryIndex = tempSingularities[0].Numerator;
         var allRoots = tempSingularities
             .SelectMany(s => s.Roots)
-            .Where(r => !double.IsNaN(r.Value))
-            .GroupBy(r => Math.Round(r.Value, 4))
-            .Select(g => g.First())
-            .OrderBy(r => r.Value)
-            .ToList();
+            .Where(root => double.IsFinite(root.Value))
+            .OrderBy(root => root.Value)
+            .Aggregate(new List<(ParameterExpression Param, double Value)>(), (distinct, root) =>
+            {
+                // SP4 preserves every expression key. Only numerically identical
+                // discovery duplicates are merged; close roots remain distinct.
+                if (!distinct.Any(existing => existing.Param == root.Param &&
+                                             Math.Abs(existing.Value - root.Value) <= 1e-8))
+                {
+                    distinct.Add(root);
+                }
+
+                return distinct;
+            });
 
         if (allRoots.Count == 0)
         {

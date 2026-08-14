@@ -34,6 +34,11 @@ internal static class RicisRuleContractSuite
         ("RC21: POL — tan(π/2) даёт ∞₁", PolarTanPole),
         ("RC22: ROOT — разные наборы корней не объединяются", DifferentRootSetsRemainSeparate),
         ("RC23: SP2 — (x²−25)/(x−5) даёт x+5", DifferenceOfSquaresCancellation),
+        ("RC24: A1 — 1/(x²−4) хранит оба ключа", PowerPolynomialRoots),
+        ("RC25: A1 — 1/(1−x)^(2/3) хранит x=1", FractionalPowerRoot),
+        ("RC26: SP2/A1 — 1/(1−2/x) даёт ∞_x при x=2", NestedRatioPole),
+        ("RC27: A1 — 1/(1−tan x) не получает полюса tan", CertifiedTrigRoots),
+        ("RC28: SP4 — близкие корни не сливаются", CloseRootsRemainDistinct),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -239,6 +244,60 @@ internal static class RicisRuleContractSuite
             "Производное выражение x+5 должно исполняться как 7 при x=2.");
     }
 
+    private static void PowerPolynomialRoots()
+    {
+        var x = X();
+        var source = Expression.Divide(C(1), Expression.Subtract(Expression.Power(x, C(2)), C(4)));
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(1), [-2, 2],
+            "A1 для x²−4");
+    }
+
+    private static void FractionalPowerRoot()
+    {
+        var x = X();
+        var pow = Expression.Call(typeof(Math).GetMethod(nameof(Math.Pow), [typeof(double), typeof(double)])!,
+            Expression.Subtract(C(1), x), Expression.Divide(C(2), C(3)));
+        var source = Expression.Divide(C(1), pow);
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(1), [1],
+            "A1 для степени 2/3");
+    }
+
+    private static void NestedRatioPole()
+    {
+        var x = X();
+        var source = Expression.Divide(C(1), Expression.Subtract(C(1), Expression.Divide(C(2), x)));
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), x, [2],
+            "SP2/A1 для вложенной дроби");
+    }
+
+    private static void CertifiedTrigRoots()
+    {
+        var x = X();
+        var tan = Expression.Call(typeof(Math).GetMethod(nameof(Math.Tan), [typeof(double)])!, x);
+        var source = Expression.Divide(C(1), Expression.Subtract(C(1), tan));
+        var derived = ExtractDerived(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)));
+        if (derived.Body is not InfinityExpression infinity || infinity.Roots.Count == 0)
+        {
+            throw new InvalidOperationException("A1 для 1/(1−tan x): ожидалась индексированная бесконечность с ключами.");
+        }
+
+        foreach (var (_, root) in infinity.Roots)
+        {
+            Require(Math.Abs(1 - Math.Tan(root)) <= 1e-6,
+                $"Ключ {root:R} не является нулём 1−tan(x), поэтому нарушает A1/SP4.");
+            Require(Math.Abs(Math.Cos(root)) > 1e-6,
+                $"Ключ {root:R} является полюсом tan(x), а не нулём знаменателя.");
+        }
+    }
+
+    private static void CloseRootsRemainDistinct()
+    {
+        var x = X();
+        var source = Expression.Divide(C(1), Expression.Multiply(Expression.Subtract(x, C(1)), Expression.Subtract(x, C(1.0000001))));
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(1), [1, 1.0000001],
+            "SP4 для близких корней");
+    }
+
     private static void DifferentRootSetsRemainSeparate()
     {
         var x = X();
@@ -248,6 +307,30 @@ internal static class RicisRuleContractSuite
 
         Require(result is BinaryExpression { NodeType: ExpressionType.Add },
             "Сингулярности с разными полными наборами корней не должны объединяться.");
+    }
+
+    private static Expression<Func<double, double>> ExtractDerived(Expression expression)
+    {
+        return expression as Expression<Func<double, double>>
+               ?? throw new InvalidOperationException($"Ожидалась лямбда Func<double,double>, получено {expression.GetType().Name}.");
+    }
+
+    private static void AssertInfinityRoots(Expression expression, Expression expectedIndex, IReadOnlyList<double> expectedRoots, string rule)
+    {
+        var derived = ExtractDerived(expression);
+        if (derived.Body is not InfinityExpression infinity)
+        {
+            throw new InvalidOperationException($"{rule}: ожидалась индексированная бесконечность, получено {derived.Body}.");
+        }
+
+        AssertEqual(infinity.Numerator, expectedIndex, $"{rule}: неверный индекс бесконечности.");
+        Require(infinity.Roots.Count == expectedRoots.Count,
+            $"{rule}: ожидалось {expectedRoots.Count} ключей, получено {infinity.Roots.Count}.");
+        foreach (var expectedRoot in expectedRoots)
+        {
+            Require(infinity.Roots.Any(actual => Math.Abs(actual.Value - expectedRoot) <= 1e-8),
+                $"{rule}: отсутствует ключ {expectedRoot:R}.");
+        }
     }
 
     private static void AssertInfinityMerge(ExpressionType operation, string rule)

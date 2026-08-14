@@ -43,12 +43,12 @@ public abstract class InfinityExpression : RicisExpression
 
         if (roots.Count == 1)
         {
-            sb.Append($" when {roots[0].Param?.Name ?? "?"}={roots[0].Value:F4}");
+            sb.Append($" when {roots[0].Param?.Name ?? "?"}={roots[0].Value:G17}");
         }
         else if (roots.Count > 1)
         {
             sb.Append(" at {");
-            sb.Append(string.Join(", ", roots.Select(r => $"{r.Param?.Name ?? "?"}={r.Value:F4}")));
+            sb.Append(string.Join(", ", roots.Select(r => $"{r.Param?.Name ?? "?"}={r.Value:G17}")));
             sb.Append("}");
         }
 

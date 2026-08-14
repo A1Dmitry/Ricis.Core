@@ -11,25 +11,23 @@ public static class SingularitySolver
     {
         var roots = new HashSet<(ParameterExpression, double)>();
 
-        // 1. Аналитический поиск
+        // SP2/SP4: preserve exact structural factors first. This prevents a
+        // broad numerical tolerance from merging close but distinct factors.
         CollectRoots(denominator, roots);
-
-        // 2. Численный фолбэк (L25)
-        if (roots.Count != 0 || !IsTranscendentalComposite(denominator))
+        if (roots.Count != 0)
         {
             return roots.ToList();
         }
 
-        var param = FindParameter(denominator);
-        if (param == null)
+        var parameter = FindParameter(denominator);
+        // Then use the common polynomial/numerical solver for forms that are
+        // not directly decomposed, such as x²−4 or 1−Tan(x).
+        if (parameter is not null)
         {
-            return roots.ToList();
-        }
-
-        var numericalRoots = denominator.FindNumericalRoots(param);
-        foreach (var root in numericalRoots)
-        {
-            roots.Add((root.Parameter, root.DoubleValue));
+            foreach (var root in PolynomialZeroSolver.FindRoots(denominator, parameter))
+            {
+                roots.Add((root.Parameter, root.DoubleValue));
+            }
         }
 
         return roots.ToList();
@@ -68,6 +66,17 @@ public static class SingularitySolver
         {
             case ParameterExpression p:
                 roots.Add((p, 0.0));
+                break;
+
+            case BinaryExpression { NodeType: ExpressionType.Power } power when
+                power.Right is ConstantExpression exponent && TryGetDouble(exponent, out var powerValue) && powerValue > 0:
+                // A positive real power vanishes exactly where its base vanishes.
+                CollectRoots(power.Left, roots);
+                break;
+
+            case MethodCallExpression { Method.Name: "Pow", Arguments.Count: 2 } pow when
+                TryGetPositiveConstant(pow.Arguments[1], out _):
+                CollectRoots(pow.Arguments[0], roots);
                 break;
 
             case BinaryExpression bin:
@@ -127,6 +136,18 @@ public static class SingularitySolver
                 }
                 break;
 
+            case MethodCallExpression call when call.Method.Name is "Sin" or "Cos" or "Tan" &&
+                                                call.Arguments.Count == 1 && call.Arguments[0] is ParameterExpression:
+                // Preserve the established principal-key contract for a pure
+                // trigonometric denominator. Composite arguments fall through
+                // to the certified numerical solver and retain their root set.
+                var trigRoot = TrigSolver.Solve(call);
+                if (trigRoot.HasValue)
+                {
+                    roots.Add(trigRoot.Value);
+                }
+                break;
+
             case MethodCallExpression call when call.Method.Name == "Log":
                 if (call.Arguments.Count == 1 && call.Arguments[0] is ParameterExpression paramLog)
                 {
@@ -137,6 +158,26 @@ public static class SingularitySolver
     }
 
     // --- Хелперы ---
+    private static bool TryGetPositiveConstant(Expression expression, out double value)
+    {
+        if (expression is ConstantExpression constant && TryGetDouble(constant, out value))
+        {
+            return value > 0;
+        }
+
+        if (expression is BinaryExpression { NodeType: ExpressionType.Divide } ratio &&
+            ratio.Left is ConstantExpression numerator && TryGetDouble(numerator, out var numeratorValue) &&
+            ratio.Right is ConstantExpression denominator && TryGetDouble(denominator, out var denominatorValue) &&
+            denominatorValue != 0)
+        {
+            value = numeratorValue / denominatorValue;
+            return double.IsFinite(value) && value > 0;
+        }
+
+        value = 0;
+        return false;
+    }
+
     private static bool TryGetDouble(ConstantExpression c, out double val)
     {
         val = 0.0;

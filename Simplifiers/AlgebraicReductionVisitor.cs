@@ -24,6 +24,15 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 
         if (node.NodeType != ExpressionType.Divide)
         {
+            // Safe structural units. Deliberately do not reduce F·0 here:
+            // the later O(1) bridge must retain the parent index 0_F.
+            if (node.NodeType == ExpressionType.Multiply &&
+                (node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)))
+            {
+                if (left.IsOne()) return right;
+                if (right.IsOne()) return left;
+            }
+
             return left == node.Left && right == node.Right
                 ? node
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
@@ -39,13 +48,27 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
-        // SP2: (F/A) / (G/A) → F/G. This must run before the limit bridge
-        // can replace either inner ratio by 0_F or ∞_F.
+        // Structural units are simplified before any singularity analysis.
+        if (right.IsOne())
+        {
+            return left;
+        }
+
+        // SP2: (F/A) / (G/A) → F/G. This must run before any generic
+        // nested-ratio normalisation and before a bridge can create ∞_F.
         if (left is BinaryExpression { NodeType: ExpressionType.Divide } leftRatio &&
             right is BinaryExpression { NodeType: ExpressionType.Divide } rightRatio &&
             leftRatio.Right.AreEqual(rightRatio.Right))
         {
             return Visit(Expression.Divide(leftRatio.Left, rightRatio.Left));
+        }
+
+        // SP2 normalisation of nested ratios: F/(G/H) → (F·H)/G.
+        // It exposes ordinary factors for later structural cancellation.
+        var nestedRatio = TryNormalizeNestedRatio(left, right);
+        if (nestedRatio is not null)
+        {
+            return Visit(nestedRatio);
         }
 
         // SP2 / L1: identical subtrees → 1
@@ -122,6 +145,31 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return left == node.Left && right == node.Right
             ? node
             : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+    }
+
+    /// <summary>
+    /// Clears one explicit nested denominator without numerical evaluation.
+    /// F/(G/H) becomes (F·H)/G; F/(A±B/C) becomes (F·C)/(A·C±B).
+    /// </summary>
+    private static Expression TryNormalizeNestedRatio(Expression numerator, Expression denominator)
+    {
+        if (denominator is BinaryExpression { NodeType: ExpressionType.Divide } ratio)
+        {
+            return Expression.Divide(Expression.Multiply(numerator, ratio.Right), ratio.Left);
+        }
+
+        if (denominator is not BinaryExpression { NodeType: ExpressionType.Add or ExpressionType.Subtract } sum ||
+            sum.Right is not BinaryExpression { NodeType: ExpressionType.Divide } rightRatio)
+        {
+            return null;
+        }
+
+        var commonDenominator = rightRatio.Right;
+        var clearedLeft = Expression.Multiply(sum.Left, commonDenominator);
+        var clearedDenominator = sum.NodeType == ExpressionType.Add
+            ? Expression.Add(clearedLeft, rightRatio.Left)
+            : Expression.Subtract(clearedLeft, rightRatio.Left);
+        return Expression.Divide(Expression.Multiply(numerator, commonDenominator), clearedDenominator);
     }
 
     /// <summary>

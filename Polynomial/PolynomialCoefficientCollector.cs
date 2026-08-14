@@ -77,11 +77,35 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
                 VisitMultiply(node);
                 break;
 
+            case ExpressionType.Power:
+                VisitPower(node.Left, node.Right);
+                break;
+
             default:
                 IsPolynomial = false;
                 break;
         }
         return node;
+    }
+
+    private void VisitPower(Expression baseExpression, Expression exponentExpression)
+    {
+        var unwrappedBase = Unwrap(baseExpression);
+        var unwrappedExponent = Unwrap(exponentExpression);
+        var isParameter = unwrappedBase is ParameterExpression parameter &&
+                          (parameter == _parameter || parameter.Name == _parameter.Name);
+
+        if (isParameter && unwrappedExponent is ConstantExpression constant)
+        {
+            var exponent = ConvertConstantToRational(constant.Value);
+            if (exponent.Denominator == 1 && exponent.Numerator >= 0 && exponent.Numerator <= int.MaxValue)
+            {
+                AddToCoefficients((int)exponent.Numerator, _currentMultiplier);
+                return;
+            }
+        }
+
+        IsPolynomial = false;
     }
 
     private void VisitMultiply(BinaryExpression node)
