@@ -35,6 +35,7 @@ var tests = new List<(string Name, Action Body)>
 tests.AddRange(RicisStressSuite.Tests);
 tests.AddRange(KnownRicisLimitsSuite.Tests);
 tests.AddRange(RicisClassicalComparisonSuite.Tests);
+tests.AddRange(RicisRuleContractSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)
