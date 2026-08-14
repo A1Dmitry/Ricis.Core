@@ -19,7 +19,10 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 {
     protected override Expression VisitBinary(BinaryExpression node)
     {
-        if (node.NodeType == ExpressionType.Divide)
+        // A1/A4 redefine only built-in division. Overloaded operators belong to
+        // their scalar type and therefore follow classical evaluation exactly.
+        if (node.NodeType == ExpressionType.Divide &&
+            (node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)))
         {
             return SimplifyDivision(node.Left, node.Right);
         }

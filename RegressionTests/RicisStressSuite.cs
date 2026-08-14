@@ -53,6 +53,7 @@ internal static class RicisStressSuite
         ("N07: int.MaxValue (a·a)/a сокращается до a до переполнения", IntMaxOverflowIsAvoidedBySp2),
         ("N08: 10!/9! сокращается до 10 до вычисления факториалов", AdjacentFactorialsCancel),
         ("N09: все 70 ассоциативных вариантов a⁵/a⁴ сокращаются до a", AllParenthesizationsCancel),
+        ("N10: пользовательские * и / строго наследуют классику", CustomOperatorsRemainClassical),
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
@@ -396,6 +397,32 @@ internal static class RicisStressSuite
         }
     }
 
+    private static void CustomOperatorsRemainClassical()
+    {
+        var a = Expression.Parameter(typeof(ClassicalOnlyScalar), "a");
+        var source = Expression.Divide(
+            Expression.Multiply(Expression.Multiply(a, a), a),
+            Expression.Multiply(a, a));
+        var input = new ClassicalOnlyScalar(2);
+
+        var classical = Expression.Lambda<Func<ClassicalOnlyScalar, ClassicalOnlyScalar>>(source, a).Compile()(input);
+        Require(classical.Value == 2198,
+            $"Контрольный классический результат должен быть 2198, получено {classical.Value}.");
+
+        var output = RicisPhasePipeline.Simplify(
+            Expression.Lambda<Func<ClassicalOnlyScalar, ClassicalOnlyScalar>>(source, a));
+        if (output is not Expression<Func<ClassicalOnlyScalar, ClassicalOnlyScalar>> derived)
+        {
+            throw new InvalidOperationException(
+                $"Конвейер должен вернуть Func<ClassicalOnlyScalar,ClassicalOnlyScalar>, получено: {output.GetType().Name}.");
+        }
+
+        Require(derived.Body.AreEqual(source),
+            $"Пользовательские операторы не должны сокращаться по SP2; получено {derived.Body}.");
+        Require(derived.Compile()(input).Equals(classical),
+            "Производное выражение с пользовательскими операторами должно совпасть с классическим исполнением.");
+    }
+
     private static void LimitToZeroPreservesDeferredIndex()
     {
         var x = X();
@@ -532,4 +559,17 @@ internal static class RicisStressSuite
             throw new InvalidOperationException(message);
         }
     }
+}
+
+/// <summary>
+/// Demonstrates an algebra whose overloaded operators are deliberately not
+/// ordinary arithmetic. RICIS must preserve this classical implementation.
+/// </summary>
+internal readonly record struct ClassicalOnlyScalar(int Value)
+{
+    public static ClassicalOnlyScalar operator *(ClassicalOnlyScalar left, ClassicalOnlyScalar right) =>
+        new(left.Value * 10 + right.Value);
+
+    public static ClassicalOnlyScalar operator /(ClassicalOnlyScalar left, ClassicalOnlyScalar right) =>
+        new(left.Value * 10 - right.Value);
 }

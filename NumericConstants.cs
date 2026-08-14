@@ -62,6 +62,23 @@ public static class NumericConstants
         return Expression.Constant(Get(type).One, type);
     }
 
+    /// <summary>
+    /// Indicates whether a type belongs to the intrinsic .NET numeric domain
+    /// whose arithmetic is covered by RICIS scalar rules. User-defined
+    /// overloaded operators remain classical unless a separate RICIS rule
+    /// explicitly supports their semantic domain.
+    /// </summary>
+    public static bool IsIntrinsicNumeric(Type type) =>
+        type == typeof(byte) || type == typeof(sbyte) ||
+        type == typeof(short) || type == typeof(ushort) ||
+        type == typeof(int) || type == typeof(uint) ||
+        type == typeof(long) || type == typeof(ulong) ||
+        type == typeof(nint) || type == typeof(nuint) ||
+        type == typeof(Int128) || type == typeof(UInt128) ||
+        type == typeof(Half) || type == typeof(float) ||
+        type == typeof(double) || type == typeof(decimal) ||
+        type == typeof(BigInteger);
+
     /// <summary>Returns whether the supplied registered scalar is <c>T.Zero</c>.</summary>
     public static bool IsZero(object value)
     {

@@ -23,6 +23,15 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         var left = Visit(node.Left);
         var right = Visit(node.Right);
 
+        // RICIS standard operations redefine only built-in arithmetic. Preserve
+        // custom operator semantics exactly as supplied by the scalar type.
+        if (node.Method is not null && !NumericConstants.IsIntrinsicNumeric(node.Type))
+        {
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        }
+
         // A6_GENERAL: 0_F × ∞_G = F·G. The operands retain their deferred
         // indices, so no numerical evaluation is allowed at this stage.
         if (node.NodeType == ExpressionType.Multiply)

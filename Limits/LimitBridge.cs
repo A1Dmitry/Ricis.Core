@@ -17,8 +17,11 @@ public static class LimitBridge
     /// </summary>
     public static bool TryApply(Expression expression, out Expression bridge)
     {
-        if (expression is not BinaryExpression binary)
+        if (expression is not BinaryExpression binary ||
+            (binary.Method is not null && !NumericConstants.IsIntrinsicNumeric(binary.Type)))
         {
+            // RICIS bridges redefine only built-in arithmetic. A user-defined
+            // operator retains the exact classical semantics supplied by its type.
             bridge = expression;
             return false;
         }

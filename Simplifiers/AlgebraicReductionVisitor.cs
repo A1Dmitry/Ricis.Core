@@ -29,6 +29,16 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
+        // RICIS only overrides the built-in arithmetic algebra. A custom
+        // operator may have non-classical side effects or semantics, so it
+        // remains an untouched classical expression.
+        if (node.Method is not null && !NumericConstants.IsIntrinsicNumeric(node.Type))
+        {
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        }
+
         // SP2: (F/A) / (G/A) → F/G. This must run before the limit bridge
         // can replace either inner ratio by 0_F or ∞_F.
         if (left is BinaryExpression { NodeType: ExpressionType.Divide } leftRatio &&
@@ -189,7 +199,8 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 
     private static void CollectBuiltInMultiplicationFactors(Expression expression, List<Expression> factors)
     {
-        if (expression is BinaryExpression { NodeType: ExpressionType.Multiply, Method: null } product)
+        if (expression is BinaryExpression { NodeType: ExpressionType.Multiply } product &&
+            (product.Method is null || NumericConstants.IsIntrinsicNumeric(product.Type)))
         {
             CollectBuiltInMultiplicationFactors(product.Left, factors);
             CollectBuiltInMultiplicationFactors(product.Right, factors);
