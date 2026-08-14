@@ -11,6 +11,7 @@ namespace Ricis.Core.Phases;
 /// Phase order (theory COMPUTATION_ALGORITHM + polar):
 ///   Phase 0.5 PolarTrigVisitor          — trig → polar sector → exact collapse
 ///   Phase 1   AlgebraicReductionVisitor — SP2 cancel identical factors
+///   Phase 1.5 LimitBridgeVisitor        — O(1) bridges F·0→0_F, F/0→∞_F
 ///   Phase 2   RicisTransformVisitor     — A4/A1 0_F/0_G=F/G, F/0=∞_F
 ///   Phase 5   StandardOperationsVisitor — ∞ algebra (A5/A6/A7)
 /// </summary>
@@ -20,6 +21,7 @@ public static class RicisPhasePipeline
     [
         new PolarTrigVisitor(),
         new AlgebraicReductionVisitor(),
+        new LimitBridgeVisitor(),
         new RicisTransformVisitor(),
         new StandardOperationsVisitor(),
     ];

@@ -28,6 +28,15 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
+        // SP2: (F/A) / (G/A) → F/G. This must run before the limit bridge
+        // can replace either inner ratio by 0_F or ∞_F.
+        if (left is BinaryExpression { NodeType: ExpressionType.Divide } leftRatio &&
+            right is BinaryExpression { NodeType: ExpressionType.Divide } rightRatio &&
+            leftRatio.Right.AreEqual(rightRatio.Right))
+        {
+            return Visit(Expression.Divide(leftRatio.Left, rightRatio.Left));
+        }
+
         // SP2 / L1: identical subtrees → 1
         if (left.AreEqual(right))
         {
@@ -38,6 +47,15 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         if (cancelled is not null)
         {
             return Visit(cancelled);
+        }
+
+        // A constant denominator is a usable deferred ratio, not a request to
+        // rewrite F/C as a floating-point coefficient. Preserve Divide(F, C).
+        if (right is ConstantExpression)
+        {
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
         var parameter = FindSingleParameter(node);

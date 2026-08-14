@@ -26,6 +26,8 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         return base.VisitBinary(node);
     }
 
+    protected override Expression VisitExtension(Expression node) => node;
+
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
         // Limit form: F/0 → ∞_F. The index F stays deferred; an explicit

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Ricis.Core.Expressions;
+using Ricis.Core.Limits;
 using Ricis.Core.Phases;
 
 internal static class RicisStressSuite
@@ -48,6 +49,10 @@ internal static class RicisStressSuite
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
+        ("B01: O(1)-детектор заменяет F·0 мостом 0_F", DetectsZeroLimitBridge),
+        ("B02: O(1)-детектор заменяет 0·F мостом 0_F", DetectsReversedZeroLimitBridge),
+        ("B03: O(1)-детектор заменяет F/0 мостом ∞_F", DetectsInfinityLimitBridge),
+        ("B04: O(1)-детектор не меняет не-предельную форму", DoesNotBridgeNonLimitForm),
     ];
 
     private static void S01BasicPole()
@@ -274,6 +279,43 @@ internal static class RicisStressSuite
         AssertInfinity(output, f, [], "∞_{(x + 1)}");
         Require(output is LazyInfinityExpression,
             $"F/0 должен вернуть ленивое ∞_F для следующей фазы, получено: {output.GetType().Name}.");
+    }
+
+    private static void DetectsZeroLimitBridge()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        Require(LimitBridge.TryApply(Expression.Multiply(f, C(0)), out var bridge),
+            "Детектор должен распознать F·0.");
+        AssertIndexedZero(bridge, f, "0_{(x + 1)}");
+    }
+
+    private static void DetectsReversedZeroLimitBridge()
+    {
+        var x = X();
+        var f = Expression.Call(Sin, x);
+        Require(LimitBridge.TryApply(Expression.Multiply(C(0), f), out var bridge),
+            "Детектор должен распознать 0·F.");
+        AssertIndexedZero(bridge, f, "0_{Sin(x)}");
+    }
+
+    private static void DetectsInfinityLimitBridge()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        Require(LimitBridge.TryApply(Expression.Divide(f, C(0)), out var bridge),
+            "Детектор должен распознать F/0.");
+        AssertInfinity(bridge, f, [], "∞_{(x + 1)}");
+    }
+
+    private static void DoesNotBridgeNonLimitForm()
+    {
+        var x = X();
+        var ordinary = Expression.Add(x, C(0));
+        Require(!LimitBridge.TryApply(ordinary, out var result),
+            "Сложение F+0 не является предельным мостом.");
+        Require(ReferenceEquals(ordinary, result),
+            "Не-ограниченная форма должна вернуться без замены.");
     }
 
     private static void S26FourthPowerPoles()
