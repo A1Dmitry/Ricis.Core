@@ -11,9 +11,9 @@ namespace Ricis.Core.Simplifiers;
 ///
 /// Theory v7.7:
 ///   SP2 already applied upstream (AlgebraicReductionVisitor).
-///   A1:  F/0  → ∞_F     (F ≠ 0)
-///   A4:  0_F/0_G = F/G  (structural ratio of indices; 1 iff F≡G via SP2)
-///   SP4: index by expression, not numerical value.
+///   A1:  F(a)/0  → ∞_{F(a)} at every certified key a (F(a) ≠ 0)
+///   A4:  0_F/0_G = F/G  (structural ratio of deferred indices; 1 iff F≡G via SP2)
+///   SP4: preserve every certified key while applying the index in that key.
 /// </summary>
 public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 {
@@ -89,7 +89,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
                 return Expression.Divide(numerator, denominator);
             }
 
-            // A1: F ≠ 0, den = 0 → ∞_F (index = numerator expression)
+            // A1: F(a) ≠ 0 and den(a) = 0 → ∞_{F(a)}.
             numerator.AddSingularityIfValid(root.expr, root.value, tempSingularities);
         }
 
@@ -123,15 +123,37 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             return tempSingularities[0];
         }
 
-        // Multiple poles → monolith
-        var primaryIndex = tempSingularities[0].Numerator;
-        var allRoots = tempSingularities
-            .SelectMany(s => s.Roots)
+        // Multiple A1 poles are grouped only when their reduced indices F(a)
+        // are identical. Selecting the first index for every root would lose
+        // the key-to-index correspondence required by A1.
+        var branches = tempSingularities
+            .OfType<PoleInfinityExpression>()
+            .GroupBy(pole => pole.Numerator.ToString(), StringComparer.Ordinal)
+            .Select(group => new PoleInfinityExpression(
+                group.First().Numerator,
+                DistinctSortedRoots(group.SelectMany(pole => pole.Roots)),
+                []))
+            .Where(branch => branch.Roots.Count > 0)
+            .ToList();
+
+        if (branches.Count == 0)
+        {
+            return Expression.Divide(numerator, denominator);
+        }
+
+        return branches.Count == 1
+            ? branches[0]
+            : new KeyedInfinityExpression(branches);
+    }
+
+    private static List<(ParameterExpression Param, double Value)> DistinctSortedRoots(
+        IEnumerable<(ParameterExpression Param, double Value)> roots) =>
+        roots
             .Where(root => double.IsFinite(root.Value))
             .OrderBy(root => root.Value)
             .Aggregate(new List<(ParameterExpression Param, double Value)>(), (distinct, root) =>
             {
-                // SP4 preserves every expression key. Only numerically identical
+                // SP4 preserves every certified key. Only numerically identical
                 // discovery duplicates are merged; close roots remain distinct.
                 if (!distinct.Any(existing => existing.Param == root.Param &&
                                              Math.Abs(existing.Value - root.Value) <= 1e-8))
@@ -141,12 +163,4 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 
                 return distinct;
             });
-
-        if (allRoots.Count == 0)
-        {
-            return Expression.Divide(numerator, denominator);
-        }
-
-        return InfinityExpression.CreateLazy(primaryIndex, allRoots);
-    }
 }

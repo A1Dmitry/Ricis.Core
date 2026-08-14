@@ -22,9 +22,9 @@ internal static class RicisStressSuite
         ("S02: SP2 сокращает (x²-25)/(x-5) до отложенного хвоста", S02RemovableSquares),
         ("S03: 1/(2x-6) создаёт индексированную бесконечность", S03LinearDenominator),
         ("S04: 1/(x²-4) сохраняет все корни", S04QuadraticDenominator),
-        ("S05: sin(x)/cos(x) использует отложенный тригонометрический индекс", S05SimpleTrig),
+        ("S05: sin(x)/cos(x) даёт ∞₁ после подстановки ключа", S05SimpleTrig),
         ("S06: sin(x)/x остаётся отношением отложенных F/G", S06Sinc),
-        ("S07: sin(2x)/cos(2x) сохраняет составной тригонометрический индекс", S07CompositeTrig),
+        ("S07: sin(2x)/cos(2x) сохраняет ветви ∞₁ и ∞_{−1} по ключам", S07CompositeTrig),
         ("S08: SP2 раскрывает частное x⁴-1 над x-1", S08QuarticCancellation),
         ("S09: 1/log(x) создаёт ∞_1 в корне логарифма", S09LogarithmicDenominator),
         ("S10: (exp(x)-1)/x остаётся отложенным F/G", S10ExponentialRatio),
@@ -97,7 +97,7 @@ internal static class RicisStressSuite
     {
         var x = X();
         var f = Expression.Call(Sin, x);
-        AssertInfinity(Run(Expression.Divide(f, Expression.Call(Cos, x)), x), f, [Math.PI / 2], "∞_{Sin(x)}", "x=");
+        AssertInfinity(Run(Expression.Divide(f, Expression.Call(Cos, x)), x), C(1), [Math.PI / 2], "∞_{1}", "x=");
     }
 
     private static void S06Sinc()
@@ -113,8 +113,19 @@ internal static class RicisStressSuite
         var twoX = Expression.Multiply(C(2), x);
         var f = Expression.Call(Sin, twoX);
         var output = Run(Expression.Divide(f, Expression.Call(Cos, twoX)), x);
-        AssertInfinity(output, f, null, "∞_{Sin((2 * x))}", "x=");
-        Require(((InfinityExpression)output).Roots.Count > 1, "S07 должен сохранить несколько тригонометрических полюсов.");
+        if (output is not KeyedInfinityExpression keyed || keyed.Branches.Count != 2)
+        {
+            throw new InvalidOperationException($"S07: ожидались ветви ∞₁ и ∞_{{−1}}, получено {output}.");
+        }
+
+        var positive = keyed.Branches.SingleOrDefault(branch =>
+            branch.Numerator is ConstantExpression { Value: double value } && Math.Abs(value - 1) <= 1e-10);
+        var negative = keyed.Branches.SingleOrDefault(branch =>
+            branch.Numerator is ConstantExpression { Value: double value } && Math.Abs(value + 1) <= 1e-10);
+        Require(positive is not null && positive.Roots.Count > 1,
+            "S07 должен сохранить несколько ключей ветви ∞₁.");
+        Require(negative is not null && negative.Roots.Count > 1,
+            "S07 должен сохранить несколько ключей ветви ∞_{−1}.");
     }
 
     private static void S08QuarticCancellation()

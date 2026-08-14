@@ -32,6 +32,16 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
+        // A keyed pole has different F(a) values on different roots. Until a
+        // branch-wise operation is defined, it must not be collapsed into one
+        // A5–A7 index; keep the surrounding classical tree untouched.
+        if (left is KeyedInfinityExpression || right is KeyedInfinityExpression)
+        {
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        }
+
         // A6_GENERAL: 0_F × ∞_G = F·G. The operands retain their deferred
         // indices, so no numerical evaluation is allowed at this stage.
         if (node.NodeType == ExpressionType.Multiply)

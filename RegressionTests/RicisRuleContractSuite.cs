@@ -36,12 +36,13 @@ internal static class RicisRuleContractSuite
         ("RC23: SP2 — (x²−25)/(x−5) даёт x+5", DifferenceOfSquaresCancellation),
         ("RC24: A1 — 1/(x²−4) хранит оба ключа", PowerPolynomialRoots),
         ("RC25: A1 — 1/(1−x)^(2/3) хранит x=1", FractionalPowerRoot),
-        ("RC26: SP2/A1 — 1/(1−2/x) даёт ∞_x при x=2", NestedRatioPole),
+        ("RC26: SP2/A1 — 1/(1−2/x) даёт ∞₂ при x=2", NestedRatioPole),
         ("RC27: A1 — 1/(1−tan x) не получает полюса tan", CertifiedTrigRoots),
         ("RC28: SP4 — близкие корни не сливаются", CloseRootsRemainDistinct),
-        ("RC29: A1 — x²/(a·x²+a·b+c) хранит оба действительных ключа", ParameterizedQuadraticPole),
+        ("RC29: A1 — x²/(a·x²+a·b+c) даёт ∞₁ для обоих ключей", ParameterizedQuadraticPole),
         ("RC30: ID — параметризованная форма x²/x² даёт 1", ParameterizedQuadraticIdentity),
         ("RC31: SP2 — x²/(2x²) оставляет точное 1/2", ParameterizedQuadraticResidualRatio),
+        ("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах", DistinctKeyIndicesRemainAssociated),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -269,8 +270,8 @@ internal static class RicisRuleContractSuite
     {
         var x = X();
         var source = Expression.Divide(C(1), Expression.Subtract(C(1), Expression.Divide(C(2), x)));
-        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), x, [2],
-            "SP2/A1 для вложенной дроби");
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(2), [2],
+            "SP2/A1 для вложенной дроби: подстановка ключа даёт индекс 2");
     }
 
     private static void CertifiedTrigRoots()
@@ -309,8 +310,31 @@ internal static class RicisRuleContractSuite
         var denominator = Expression.Subtract(xSquared, C(1));
         var source = Expression.Divide(xSquared, denominator);
 
-        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), xSquared, [-1, 1],
-            "A1 для a=1, b=1, c=−2");
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(1), [-1, 1],
+            "A1 для a=1, b=1, c=−2: x²(±1)=1");
+    }
+
+    private static void DistinctKeyIndicesRemainAssociated()
+    {
+        var x = X();
+        var source = Expression.Divide(x, Expression.Subtract(Expression.Power(x, C(2)), C(1)));
+        var derived = ExtractDerived(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)));
+
+        if (derived.Body is not KeyedInfinityExpression keyed || keyed.Branches.Count != 2)
+        {
+            throw new InvalidOperationException(
+                $"A1 для x/(x²−1): ожидались две ветви ∞_{{F(a)}}, получено {derived.Body}.");
+        }
+
+        var negative = keyed.Branches.SingleOrDefault(branch =>
+            branch.Numerator is ConstantExpression { Value: double value } && Math.Abs(value + 1) <= 1e-10);
+        var positive = keyed.Branches.SingleOrDefault(branch =>
+            branch.Numerator is ConstantExpression { Value: double value } && Math.Abs(value - 1) <= 1e-10);
+
+        Require(negative is not null && negative.Roots.Any(root => Math.Abs(root.Value + 1) <= 1e-8),
+            "A1 должна сохранить пару x=−1 → ∞_{−1}.");
+        Require(positive is not null && positive.Roots.Any(root => Math.Abs(root.Value - 1) <= 1e-8),
+            "A1 должна сохранить пару x=1 → ∞_{1}.");
     }
 
     private static void ParameterizedQuadraticIdentity()

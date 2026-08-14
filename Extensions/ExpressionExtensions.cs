@@ -166,10 +166,26 @@ public static class ExpressionExtensions
         double value,
         List<InfinityExpression> singularities)
     {
-        // SP4: the index is always the parent expression F, never the
-        // numerical value F(a). F remains deferred for later SP2/A4/A6 operations.
-        var infinity = InfinityExpression.CreateLazy(numerator, param, value);
+        // A1 is applied at a concrete key. Substitute that key into F and
+        // reduce its finite value before it becomes the infinity index:
+        // F(a) / 0 -> ∞_{F(a)}. The original expression remains available
+        // upstream; this node represents its independent derived result.
+        if (!numerator.TryEvaluate(param.Name, value, out var indexValue) ||
+            Math.Abs(indexValue) < 1e-10)
+        {
+            return;
+        }
 
+        // Root solvers work in double precision. Canonicalise an integer index
+        // within the solver tolerance so all keys with F(a)=1 share exactly
+        // the same structural constant instead of adjacent binary values.
+        if (Math.Abs(indexValue - Math.Round(indexValue)) <= 1e-10)
+        {
+            indexValue = Math.Round(indexValue);
+        }
+
+        var index = Expression.Constant(indexValue);
+        var infinity = new PoleInfinityExpression(index, [(param, value)], []);
         singularities.Add(infinity);
     }
 
