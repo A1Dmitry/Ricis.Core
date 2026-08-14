@@ -11,6 +11,10 @@ var tests = new (string Name, Action Body)[]
     ("SP4: коммутативно эквивалентные суммы имеют одну идентичность", CommutativeStructuralIdentity),
     ("SP2: (x + 1) / (1 + x) сокращается до 1", CommutativeDivisionReduction),
     ("A5: одинаковые индексированные бесконечности при делении дают 1", SameInfinityDivision),
+    ("SP4: индексированный ноль сохраняет отложенное F", ZeroIndexPreservesDeferredExpression),
+    ("A6: 0_F × ∞_G возвращает F·G", ZeroTimesInfinityReturnsIndexProduct),
+    ("Полярная фаза точно сворачивает постоянную тригонометрию", PolarPhaseCollapsesConstantTrig),
+    ("Полярная фаза сохраняет символическую тригонометрию отложенной", PolarPhasePreservesDeferredTrig),
     ("Операции не смешивают сингулярности с разными наборами корней", DistinctRootSetsAreNotCompatible),
     ("Полиномиальный решатель: x = 0 даёт корень x = 0", LinearPolynomialRoot),
     ("Решатель экспоненты: exp(x) = 1 даёт корень x = 0", DirectExpEquality),
@@ -77,6 +81,52 @@ static void SameInfinityDivision()
 
     Assert(result is ConstantExpression { Value: double value } && value == 1.0,
         $"A5 требует ∞_F / ∞_F = 1, получено: {result}.");
+}
+
+static void ZeroIndexPreservesDeferredExpression()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var f = Expression.Subtract(Expression.Multiply(x, x), Expression.Constant(4.0));
+    var reduced = InfinityExpression.CreateLazy(f, x, 2.0).Reduce();
+
+    Assert(reduced is ZeroInfinityExpression zero && zero.Numerator.AreEqual(f),
+        $"SP4 требует сохранить отложенный индекс F; получено: {reduced}.");
+}
+
+static void ZeroTimesInfinityReturnsIndexProduct()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var f = Expression.Subtract(Expression.Multiply(x, x), Expression.Constant(4.0));
+    var g = Expression.Add(x, Expression.Constant(3.0));
+    var zeroF = new ZeroInfinityExpression(f, [(x, 2.0)]);
+    var infinityG = InfinityExpression.CreateLazy(g, x, 2.0);
+
+    var result = StandardOperationsPhase.Apply(Expression.Multiply(zeroF, infinityG));
+    var expected = Expression.Multiply(f, g);
+
+    Assert(result.AreEqual(expected),
+        $"A6 требует F·G, получено: {result}.");
+}
+
+static void PolarPhaseCollapsesConstantTrig()
+{
+    var sin = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!,
+        Expression.Constant(Math.PI / 2));
+    var result = new PolarTrigVisitor().Visit(sin);
+
+    Assert(result is ConstantExpression { Value: double value } && Math.Abs(value - 1.0) < 1e-12,
+        $"Полярная фаза должна свернуть sin(π/2) в 1, получено: {result}.");
+}
+
+static void PolarPhasePreservesDeferredTrig()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var sin = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, x);
+    var result = new PolarTrigVisitor().Visit(sin);
+
+    Assert(result is MethodCallExpression { Method.Name: nameof(Math.Sin) } call &&
+           call.Arguments.Count == 1 && call.Arguments[0].AreEqual(x),
+        $"Символическая sin(F) должна оставаться отложенным F до конкретизации сектора; получено: {result}.");
 }
 
 static void DistinctRootSetsAreNotCompatible()

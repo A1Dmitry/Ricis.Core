@@ -44,7 +44,7 @@ public sealed class LazyInfinityExpression : InfinityExpression
             // СТРОГИЙ НОЛЬ -> Identity
             if (val == 0.0)
             {
-                return new ZeroInfinityExpression(Roots);
+                return new ZeroInfinityExpression(_numerator, Roots);
             }
 
             // НЕ НОЛЬ -> Pole

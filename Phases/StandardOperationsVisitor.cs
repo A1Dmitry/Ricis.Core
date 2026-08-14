@@ -23,6 +23,21 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         var left = Visit(node.Left);
         var right = Visit(node.Right);
 
+        // A6_GENERAL: 0_F × ∞_G = F·G. The operands retain their deferred
+        // indices, so no numerical evaluation is allowed at this stage.
+        if (node.NodeType == ExpressionType.Multiply)
+        {
+            if (left is ZeroInfinityExpression zeroLeft && right is InfinityExpression rightInfinity)
+            {
+                return Expression.Multiply(zeroLeft.Numerator, rightInfinity.Numerator);
+            }
+
+            if (right is ZeroInfinityExpression zeroRight && left is InfinityExpression leftInfinity)
+            {
+                return Expression.Multiply(leftInfinity.Numerator, zeroRight.Numerator);
+            }
+        }
+
         // --- RICIS ALGEBRA: Операции над сингулярностями (∞ + ∞, ∞ * ∞) ---
         if (left is InfinityExpression infLeft && right is InfinityExpression infRight)
         {

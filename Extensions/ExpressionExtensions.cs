@@ -129,14 +129,9 @@ public static class ExpressionExtensions
         double value,
         List<InfinityExpression> singularities)
     {
-        var numAtRoot = numerator.EvaluateAtPoint(value, param.Name);
-
-        var infinity =
-            // Полюс C/0 -> Индекс C (числитель)
-            InfinityExpression.CreateLazy(numAtRoot == 0.0
-                    ? RicisType.InfinityZero
-                    : numerator,
-                param, value);
+        // SP4: the index is always the parent expression F, never the
+        // numerical value F(a). F remains deferred for later SP2/A4/A6 operations.
+        var infinity = InfinityExpression.CreateLazy(numerator, param, value);
 
         singularities.Add(infinity);
     }
