@@ -52,6 +52,7 @@ internal static class RicisStressSuite
         ("N06: uint (a·a)/a сокращается до a до переполнения", UIntOverflowIsAvoidedBySp2),
         ("N07: int.MaxValue (a·a)/a сокращается до a до переполнения", IntMaxOverflowIsAvoidedBySp2),
         ("N08: 10!/9! сокращается до 10 до вычисления факториалов", AdjacentFactorialsCancel),
+        ("N09: все 70 ассоциативных вариантов a⁵/a⁴ сокращаются до a", AllParenthesizationsCancel),
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
@@ -336,6 +337,63 @@ internal static class RicisStressSuite
             $"SP2 должен сократить 10!/9! до BigInteger 10, получено {derived.Body} ({derived.Body.Type}).");
         Require(derived.Compile()() == ten,
             "Производное RICIS-выражение должно вернуть 10 без вычисления факториалов.");
+    }
+
+    private static void AllParenthesizationsCancel()
+    {
+        var a = Expression.Parameter(typeof(int), "a");
+        var numerators = BuildAllProductShapes(a, 5).ToArray();
+        var denominators = BuildAllProductShapes(a, 4).ToArray();
+
+        Require(numerators.Length == 14 && denominators.Length == 5,
+            $"Ожидались числа Каталана C₄=14 и C₃=5, получено {numerators.Length} и {denominators.Length}.");
+
+        var tested = 0;
+        foreach (var numerator in numerators)
+        {
+            foreach (var denominator in denominators)
+            {
+                var source = Expression.Divide(numerator, denominator);
+                var classical = Expression.Lambda<Func<int, int>>(source, a).Compile()(7);
+                Require(classical == 7,
+                    $"Классический вариант a⁵/a⁴ должен вернуть 7, получено {classical}.");
+
+                var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<int, int>>(source, a));
+                if (output is not Expression<Func<int, int>> derived)
+                {
+                    throw new InvalidOperationException(
+                        $"Конвейер должен вернуть Func<int,int>, получено: {output.GetType().Name}.");
+                }
+
+                Require(derived.Body.AreEqual(a),
+                    $"SP2 должен сократить вариант {tested + 1} до a, получено {derived.Body}.");
+                Require(derived.Compile()(7) == 7,
+                    $"Производное выражение варианта {tested + 1} должно вернуть 7.");
+                tested++;
+            }
+        }
+
+        Require(tested == 70, $"Должны быть проверены все 70 вариантов, проверено {tested}.");
+    }
+
+    private static IEnumerable<Expression> BuildAllProductShapes(Expression factor, int count)
+    {
+        if (count == 1)
+        {
+            yield return factor;
+            yield break;
+        }
+
+        for (var leftCount = 1; leftCount < count; leftCount++)
+        {
+            foreach (var left in BuildAllProductShapes(factor, leftCount))
+            {
+                foreach (var right in BuildAllProductShapes(factor, count - leftCount))
+                {
+                    yield return Expression.Multiply(left, right);
+                }
+            }
+        }
     }
 
     private static void LimitToZeroPreservesDeferredIndex()
