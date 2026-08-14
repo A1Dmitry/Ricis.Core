@@ -33,6 +33,7 @@ internal static class RicisRuleContractSuite
         ("RC20: POL — sin(π/2) даёт 1", PolarSinConstant),
         ("RC21: POL — tan(π/2) даёт ∞₁", PolarTanPole),
         ("RC22: ROOT — разные наборы корней не объединяются", DifferentRootSetsRemainSeparate),
+        ("RC23: SP2 — (x²−25)/(x−5) даёт x+5", DifferenceOfSquaresCancellation),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -216,6 +217,26 @@ internal static class RicisRuleContractSuite
         var result = new PolarTrigVisitor().Visit(source);
 
         Require(result is InfinityExpression, "POL: tan(π/2) должна стать индексированной бесконечностью.");
+    }
+
+    private static void DifferenceOfSquaresCancellation()
+    {
+        var x = X();
+        var source = Expression.Divide(
+            Expression.Subtract(Expression.Power(x, C(2)), C(25)),
+            Expression.Subtract(x, C(5)));
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+
+        if (output is not Expression<Func<double, double>> derived)
+        {
+            throw new InvalidOperationException(
+                $"Конвейер должен вернуть Func<double,double>, получено {output.GetType().Name}.");
+        }
+
+        AssertEqual(derived.Body, Expression.Add(x, C(5)),
+            "SP2 должен разложить разность квадратов и сократить x−5.");
+        Require(derived.Compile()(2) == 7,
+            "Производное выражение x+5 должно исполняться как 7 при x=2.");
     }
 
     private static void DifferentRootSetsRemainSeparate()

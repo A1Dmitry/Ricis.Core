@@ -54,6 +54,15 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             return NumericConstants.OneOf(left.Type);
         }
 
+        // SP2 factorization: (A²−B²)/(A−B) → A+B. This exact structural
+        // identity is evaluated before generic factor cancellation and before
+        // polynomial division, so string-parsed powers receive the same result.
+        var differenceOfSquares = TryReduceDifferenceOfSquares(left, right);
+        if (differenceOfSquares is not null)
+        {
+            return Visit(differenceOfSquares);
+        }
+
         // SP2 extension for factorials: n! / (n-1)! → n. The rule is
         // applied structurally, before a delegate can materialize n!.
         var factorialRatio = TryReduceAdjacentFactorials(left, right);
@@ -113,6 +122,87 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return left == node.Left && right == node.Right
             ? node
             : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+    }
+
+    /// <summary>
+    /// Exact structural factorization of a difference of squares. The
+    /// denominator supplies the two deferred factors, so a constant square
+    /// such as 25 is accepted as the normalised square of its factor 5.
+    /// </summary>
+    private static Expression TryReduceDifferenceOfSquares(Expression numerator, Expression denominator)
+    {
+        if (numerator is not BinaryExpression { NodeType: ExpressionType.Subtract } difference ||
+            denominator is not BinaryExpression denominatorBinary)
+        {
+            return null;
+        }
+
+        if (denominatorBinary.NodeType == ExpressionType.Subtract &&
+            IsSquareOf(difference.Left, denominatorBinary.Left) &&
+            IsSquareOf(difference.Right, denominatorBinary.Right))
+        {
+            return Expression.Add(denominatorBinary.Left, denominatorBinary.Right);
+        }
+
+        if (denominatorBinary.NodeType == ExpressionType.Add &&
+            IsSquareOf(difference.Left, denominatorBinary.Left) &&
+            IsSquareOf(difference.Right, denominatorBinary.Right))
+        {
+            return Expression.Subtract(denominatorBinary.Left, denominatorBinary.Right);
+        }
+
+        return null;
+    }
+
+    private static bool IsSquareOf(Expression square, Expression factor)
+    {
+        if (square is BinaryExpression { NodeType: ExpressionType.Multiply } multiplication &&
+            multiplication.Left.AreEqual(factor) && multiplication.Right.AreEqual(factor))
+        {
+            return true;
+        }
+
+        if (square is BinaryExpression { NodeType: ExpressionType.Power } power &&
+            power.Left.AreEqual(factor) && TryGetIntegralConstant(power.Right, out var exponent) && exponent == 2)
+        {
+            return true;
+        }
+
+        return TryGetFiniteDouble(square, out var squareValue) &&
+               TryGetFiniteDouble(factor, out var factorValue) &&
+               squareValue == factorValue * factorValue;
+    }
+
+    private static bool TryGetIntegralConstant(Expression expression, out int value)
+    {
+        value = 0;
+        if (!TryGetFiniteDouble(expression, out var number) || number != Math.Truncate(number) ||
+            number < int.MinValue || number > int.MaxValue)
+        {
+            return false;
+        }
+
+        value = (int)number;
+        return true;
+    }
+
+    private static bool TryGetFiniteDouble(Expression expression, out double value)
+    {
+        value = 0.0;
+        if (expression is not ConstantExpression constant || constant.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            value = Convert.ToDouble(constant.Value, System.Globalization.CultureInfo.InvariantCulture);
+            return double.IsFinite(value);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     /// <summary>
