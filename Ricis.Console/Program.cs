@@ -6,16 +6,6 @@ namespace Ricis.ConsoleApp;
 
 internal static class Program
 {
-    private static readonly string[] Examples =
-    [
-        "x => (x*x - 9) / (x - 3)",
-        "x => sin(x) / x",
-        "x => 1 / (x * (x + 1))",
-        "x => (exp(x) - 1) / x",
-        "x => 1 / (1 - x^2)",
-        "x => pow(x, 3) - 8",
-    ];
-
     private static int Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
@@ -24,6 +14,11 @@ internal static class Program
         if (args.Length > 0 && string.Equals(args[0], "--self-test", StringComparison.OrdinalIgnoreCase))
         {
             return RunSelfTest();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--all", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunAllExamples();
         }
 
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
@@ -78,6 +73,12 @@ internal static class Program
             if (input.Equals("selftest", StringComparison.OrdinalIgnoreCase))
             {
                 RunSelfTest();
+                continue;
+            }
+
+            if (input.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                RunAllExamples();
                 continue;
             }
 
@@ -152,6 +153,38 @@ internal static class Program
         }
     }
 
+    private static int RunAllExamples()
+    {
+        var parser = new LambdaTextParser();
+        var failures = 0;
+        Console.WriteLine($"Пакетный прогон: {ExampleCatalog.All.Count} входных выражений.");
+        Console.WriteLine();
+
+        foreach (var example in ExampleCatalog.All)
+        {
+            try
+            {
+                var source = parser.Parse(example.Input);
+                var transformed = RicisPhasePipeline.Simplify(source);
+                Console.WriteLine($"{example.Id,-3} | {example.Title}");
+                Console.WriteLine($"  input:   {source}");
+                Console.WriteLine($"  RICIS:   {transformed}");
+            }
+            catch (Exception error)
+            {
+                failures++;
+                Console.WriteLine($"{example.Id,-3} | {example.Title}");
+                Console.WriteLine($"  ERROR:   {error.Message}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine(failures == 0
+            ? $"Пакетный прогон завершён: {ExampleCatalog.All.Count}/{ExampleCatalog.All.Count} выражений обработано."
+            : $"Пакетный прогон завершён: сбоев {failures} из {ExampleCatalog.All.Count}.");
+        return failures == 0 ? 0 : 1;
+    }
+
     private static int RunSelfTest()
     {
         var parser = new LambdaTextParser();
@@ -194,7 +227,7 @@ internal static class Program
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("RICIS Console — интерактивный разбор и преобразование лямбд");
         Console.ResetColor();
-        Console.WriteLine("Введите help для синтаксиса, examples для готовых выражений, exit для выхода.");
+        Console.WriteLine("Введите help для синтаксиса, examples для каталога, all для пакетного прогона, exit для выхода.");
         Console.WriteLine();
     }
 
@@ -208,6 +241,7 @@ internal static class Program
         Console.WriteLine("  Допустимы варианты Math.Sin(x) и sin(x); имена регистронезависимы.");
         Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2).");
         Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
+        Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
         Console.WriteLine();
         PrintExamples();
     }
@@ -215,9 +249,9 @@ internal static class Program
     private static void PrintExamples()
     {
         Console.WriteLine("Примеры:");
-        foreach (var example in Examples)
+        foreach (var example in ExampleCatalog.All)
         {
-            Console.WriteLine($"  {example}");
+            Console.WriteLine($"  {example.Id}: {example.Input} — {example.Title}");
         }
 
         Console.WriteLine();
