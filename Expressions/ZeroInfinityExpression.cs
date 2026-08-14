@@ -27,5 +27,5 @@ public sealed class ZeroInfinityExpression : InfinityExpression
     {
     }
 
-    public override string ToString() => FormatInfinity(_index.ToString(), Roots);
+    public override string ToString() => FormatZero(_index.ToString(), Roots);
 }

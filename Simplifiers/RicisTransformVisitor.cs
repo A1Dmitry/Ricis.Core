@@ -28,6 +28,13 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
+        // Limit form: F/0 → ∞_F. The index F stays deferred; an explicit
+        // limit point is not required for this symbolic representation.
+        if (denominator.IsZero())
+        {
+            return InfinityExpression.CreateLazy(numerator, []);
+        }
+
         // SP2: (F/A) / (G/A) → F/G. The common factor A is syntactic and
         // deferred, so it is cancelled before A1/A5 even when A is zero.
         if (numerator is BinaryExpression { NodeType: ExpressionType.Divide } leftRatio &&

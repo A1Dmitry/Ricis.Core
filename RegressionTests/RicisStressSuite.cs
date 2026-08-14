@@ -45,6 +45,9 @@ internal static class RicisStressSuite
         ("N03: (1/0)/(2/0) сохраняет несократимую дробь 1/2", FractionalNestedZeroFactorCancellation),
         ("N04: одинаковые функции с теми же параметрами сокращаются по F/F", IdenticalFunctionIndicesCancel),
         ("N05: одинаковые составные выражения сокращаются по F/F", IdenticalCompositeIndicesCancel),
+        ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
+        ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
+        ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
     ];
 
     private static void S01BasicPole()
@@ -249,6 +252,30 @@ internal static class RicisStressSuite
         AssertExpression(Run(input, x), C(1), "1");
     }
 
+    private static void LimitToZeroPreservesDeferredIndex()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        AssertIndexedZero(Run(Expression.Multiply(f, C(0)), x), f, "0_{(x + 1)}");
+    }
+
+    private static void ZeroTimesFunctionPreservesDeferredIndex()
+    {
+        var x = X();
+        var f = Expression.Call(Sin, x);
+        AssertIndexedZero(Run(Expression.Multiply(C(0), f), x), f, "0_{Sin(x)}");
+    }
+
+    private static void LimitToInfinityPreservesDeferredIndex()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        var output = Run(Expression.Divide(f, C(0)), x);
+        AssertInfinity(output, f, [], "∞_{(x + 1)}");
+        Require(output is LazyInfinityExpression,
+            $"F/0 должен вернуть ленивое ∞_F для следующей фазы, получено: {output.GetType().Name}.");
+    }
+
     private static void S26FourthPowerPoles()
     {
         var x = X();
@@ -264,6 +291,22 @@ internal static class RicisStressSuite
             throw new InvalidOperationException($"Конвейер должен вернуть LambdaExpression, получено {output.GetType().Name}.");
         }
         return lambda.Body;
+    }
+
+    private static void AssertIndexedZero(Expression output, Expression expectedIndex, params string[] keyParts)
+    {
+        if (output is not ZeroInfinityExpression zero)
+        {
+            throw new InvalidOperationException($"Ожидалось индексированное нулевое дерево 0_F, получено: {output}.");
+        }
+
+        Require(zero.Numerator.AreEqual(expectedIndex),
+            $"Индекс F не сохранён. Ожидалось {expectedIndex}, получено {zero.Numerator}.");
+        foreach (var part in keyParts)
+        {
+            Require(zero.ToString().Contains(part),
+                $"ToString должен содержать ключ '{part}', получено: {zero}.");
+        }
     }
 
     private static void AssertInfinity(Expression output, Expression expectedIndex, IReadOnlyCollection<double>? expectedRoots, params string[] keyParts)

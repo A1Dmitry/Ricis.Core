@@ -30,10 +30,16 @@ public abstract class InfinityExpression : RicisExpression
         return new LazyInfinityExpression(numerator, [(param, value)]);
     }
 
-    protected static string FormatInfinity(string index, List<(ParameterExpression Param, double Value)> roots)
+    protected static string FormatInfinity(string index, List<(ParameterExpression Param, double Value)> roots) =>
+        FormatIndexedSymbol("∞", index, roots);
+
+    protected static string FormatZero(string index, List<(ParameterExpression Param, double Value)> roots) =>
+        FormatIndexedSymbol("0", index, roots);
+
+    private static string FormatIndexedSymbol(string symbol, string index, List<(ParameterExpression Param, double Value)> roots)
     {
         var sb = new StringBuilder();
-        sb.Append($"∞_{{{index.Replace("\"", "")}}}");
+        sb.Append($"{symbol}_{{{index.Replace("\"", "")}}}");
 
         if (roots.Count == 1)
         {

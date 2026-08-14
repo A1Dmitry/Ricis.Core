@@ -36,6 +36,18 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             {
                 return Expression.Multiply(leftInfinity.Numerator, zeroRight.Numerator);
             }
+
+            // Limit form: F·0 → 0_F. A numeric zero is not allowed to erase
+            // the deferred identity of F before subsequent RICIS operations.
+            if (left.IsZero())
+            {
+                return new ZeroInfinityExpression(right, []);
+            }
+
+            if (right.IsZero())
+            {
+                return new ZeroInfinityExpression(left, []);
+            }
         }
 
         // --- RICIS ALGEBRA: Операции над сингулярностями (∞ + ∞, ∞ * ∞) ---
