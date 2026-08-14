@@ -22,6 +22,7 @@ internal static class KnownRicisLimitsSuite
         ("K08: sin(π/2) — полярная фаза возвращает 1", PolarSine),
         ("K09: tan(π/2) — полярная фаза возвращает ∞₁", PolarTangentPole),
         ("K10: sin(x)/x — неизвестная форма остаётся отношением F/G", DeferredSincRatio),
+        ("K11: 0_F·∞_G — A6 возвращает отложенное произведение F·G", InfinitesimalTimesInfinite),
     ];
 
     private static void RemovableQuadratic()
@@ -126,6 +127,18 @@ internal static class KnownRicisLimitsSuite
         var x = X();
         var f = Expression.Call(Sin, x);
         AssertTree(Run(Expression.Divide(f, x), x), Expression.Divide(f, x), "Sin(x)", "/ x");
+    }
+
+    private static void InfinitesimalTimesInfinite()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        var g = Expression.Call(Sin, x);
+        var zeroF = new ZeroInfinityExpression(f, [(x, 0.0)]);
+        var infinityG = InfinityExpression.CreateLazy(g, x, 0.0);
+
+        var result = StandardOperationsPhase.Apply(Expression.Multiply(zeroF, infinityG));
+        AssertTree(result, Expression.Multiply(f, g), "x + 1", "Sin(x)");
     }
 
     private static Expression Run(Expression input, ParameterExpression parameter)
