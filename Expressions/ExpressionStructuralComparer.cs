@@ -48,9 +48,25 @@ public static class ExpressionStructuralComparer
         => a.Name == b.Name && a.Type == b.Type;
 
     private static bool BinaryEqual(BinaryExpression a, BinaryExpression b)
-        => a.Method == b.Method &&
-           AreEqual(a.Left, b.Left) &&
-           AreEqual(a.Right, b.Right);
+    {
+        if (a.Method != b.Method)
+        {
+            return false;
+        }
+
+        var sameOrder = AreEqual(a.Left, b.Left) && AreEqual(a.Right, b.Right);
+        if (sameOrder)
+        {
+            return true;
+        }
+
+        // SP4 normalizes only the built-in commutative arithmetic operations.
+        // User-defined operators can have arbitrary semantics and must keep their order.
+        return a.Method is null &&
+               a.NodeType is ExpressionType.Add or ExpressionType.Multiply &&
+               AreEqual(a.Left, b.Right) &&
+               AreEqual(a.Right, b.Left);
+    }
 
     private static bool UnaryEqual(UnaryExpression a, UnaryExpression b)
         => a.Method == b.Method &&
@@ -118,9 +134,16 @@ public static class ExpressionStructuralComparer
     }
 
     private static bool InfinityEqual(InfinityExpression a, InfinityExpression b)
-        => a.SingularityValue == b.SingularityValue &&
-           ParameterEqual(a.Variable, b.Variable) &&
-           AreEqual(a.Numerator, b.Numerator);
+    {
+        if (!AreEqual(a.Numerator, b.Numerator) || a.Roots.Count != b.Roots.Count)
+        {
+            return false;
+        }
+
+        return a.Roots.All(rootA => b.Roots.Any(rootB =>
+            ParameterEqual(rootA.Param, rootB.Param) &&
+            rootA.Value.Equals(rootB.Value)));
+    }
 
    
 

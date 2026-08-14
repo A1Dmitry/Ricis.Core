@@ -63,21 +63,10 @@ public static class ExpressionExtensions
     /// </summary>
     public static bool IsCommutative(this Expression node)
     {
-        var nodeType  = node.NodeType;
-        return nodeType switch
-        {
-            ExpressionType.Add => true,
-            ExpressionType.Multiply => true,
-            ExpressionType.Equal => true,
-            ExpressionType.NotEqual => true,
-            ExpressionType.AndAlso => true,
-            ExpressionType.OrElse => true,
-            ExpressionType.And => true,
-            ExpressionType.Or => true,
-            ExpressionType.Power => true,
-            
-            _ => false
-        };
+        // Reordering is sound only for built-in arithmetic operations. User-defined
+        // operators and logical nodes may carry side effects or custom semantics.
+        return node is BinaryExpression { Method: null } binary &&
+               binary.NodeType is ExpressionType.Add or ExpressionType.Multiply;
     }
 
     /// <summary>

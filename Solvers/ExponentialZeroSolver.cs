@@ -31,6 +31,13 @@ namespace Ricis.Core.Solvers
                 inner = visitor.FoundExpArgument;
             }
 
+            // Выражение не содержит exp(...): этот специализированный решатель
+            // не должен вмешиваться или выбрасывать исключение.
+            if (inner is null)
+            {
+                return roots;
+            }
+
             // Делегируем поиск корней внутреннему универсальному солверу
             var innerRoots = inner.FindExactRoots(parameter);
             if (innerRoots.Any())
@@ -72,9 +79,24 @@ namespace Ricis.Core.Solvers
         private static bool IsDirectExpEqualsOne(Expression expr, out Expression argument)
         {
             argument = null;
-            // оставляю заглушку — при необходимости можно распознавать равенства
-            throw new NotImplementedException();
-           // return false;
+            if (expr is not BinaryExpression { NodeType: ExpressionType.Equal } equality)
+            {
+                return false;
+            }
+
+            if (IsExpCall(equality.Left) && equality.Right is ConstantExpression right && IsOneLike(right.Value))
+            {
+                argument = ((MethodCallExpression)equality.Left).Arguments[0];
+                return true;
+            }
+
+            if (IsExpCall(equality.Right) && equality.Left is ConstantExpression left && IsOneLike(left.Value))
+            {
+                argument = ((MethodCallExpression)equality.Right).Arguments[0];
+                return true;
+            }
+
+            return false;
         }
 
         private static bool IsExpCall(Expression expr)

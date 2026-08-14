@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 
 namespace Ricis.Core.Simplifiers;
@@ -31,7 +32,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         {
             return node.NodeType switch
             {
-                ExpressionType.Add => Expression.Multiply(Expression.Constant(2, node.Type), left),
+                ExpressionType.Add => Expression.Multiply(CreateNumericConstant(2, node.Type), left),
                 ExpressionType.Multiply => CreatePower(left, 2),
                 _ => node.Update(left, node.Conversion, right)
             };
@@ -46,7 +47,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         // Константы
         if (left is ConstantExpression lc && right is ConstantExpression rc)
         {
-            return SimplifyConstants(node.NodeType, lc.Value, rc.Value);
+            return SimplifyConstants(node, lc, rc);
         }
 
         // Сложение/умножение дробей
@@ -179,20 +180,9 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return Visit(Expression.Add(term1, term2));
     }
 
-    private bool AreIdentical(Expression a, Expression b)
+    private static bool AreIdentical(Expression a, Expression b)
     {
-        // Простое сравнение с кэшированием для одинаковых поддеревьев
-        return ReferenceEquals(a, b) || NormalizeForComparison(a) == NormalizeForComparison(b);
-    }
-
-    private string NormalizeForComparison(Expression node)
-    {
-        return node switch
-        {
-            ParameterExpression p => $"P{p.Name}",
-            ConstantExpression c => $"C{c.Value}",
-            _ => $"{node.NodeType}"
-        };
+        return ReferenceEquals(a, b) || a.AreEqual(b);
     }
 
     private bool ShouldCommute(Expression left, Expression right)
@@ -228,19 +218,22 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return expr is BinaryExpression b && b.NodeType == ExpressionType.Add;
     }
 
-    private Expression SimplifyConstants(ExpressionType op, object l, object r)
+    private static Expression SimplifyConstants(BinaryExpression node, ConstantExpression left, ConstantExpression right)
     {
-        var left = ToBigInteger(l);
-        var right = ToBigInteger(r);
-        return op switch
+        try
         {
-            ExpressionType.Add => Expression.Constant(left + right),
-            ExpressionType.Subtract => Expression.Constant(left - right),
-            ExpressionType.Multiply => Expression.Constant(left * right),
-            ExpressionType.Divide => SimplifyFraction(left, right),
-            ExpressionType.Power => Expression.Constant(BigInteger.Pow(left, (int)right)),
-            _ => throw new ArgumentException()
-        };
+            // Fold using the original expression-tree operator, then retain its
+            // declared type. This avoids truncating doubles/decimals to BigInteger.
+            var folded = Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+            var boxed = Expression.Convert(folded, typeof(object));
+            var value = Expression.Lambda<Func<object>>(boxed).Compile()();
+            return Expression.Constant(value, node.Type);
+        }
+        catch
+        {
+            // Preserve the valid tree when an operator cannot be folded safely.
+            return node.Update(left, node.Conversion, right);
+        }
     }
 
     private static Expression SimplifyFraction(BigInteger num, BigInteger den)
@@ -286,12 +279,39 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
     private static bool IsZero(Expression e)
     {
-        return e is ConstantExpression c && ToBigInteger(c.Value) == 0;
+        return e is ConstantExpression c && IsNumericValue(c.Value, 0);
     }
 
     private static bool IsOne(Expression e)
     {
-        return e is ConstantExpression c && ToBigInteger(c.Value) == 1;
+        return e is ConstantExpression c && IsNumericValue(c.Value, 1);
+    }
+
+    private static bool IsNumericValue(object value, int expected) => value switch
+    {
+        byte v => v == expected,
+        sbyte v => v == expected,
+        short v => v == expected,
+        ushort v => v == expected,
+        int v => v == expected,
+        uint v => v == expected,
+        long v => v == expected,
+        ulong v => expected >= 0 && v == (ulong)expected,
+        float v => v == expected,
+        double v => v == expected,
+        decimal v => v == expected,
+        BigInteger v => v == expected,
+        _ => false,
+    };
+
+    private static Expression CreateNumericConstant(int value, Type type)
+    {
+        if (type == typeof(double)) return Expression.Constant((double)value);
+        if (type == typeof(float)) return Expression.Constant((float)value);
+        if (type == typeof(decimal)) return Expression.Constant((decimal)value);
+        if (type == typeof(long)) return Expression.Constant((long)value);
+        if (type == typeof(BigInteger)) return Expression.Constant(new BigInteger(value));
+        return Expression.Constant(value, type);
     }
 
     private static bool IsTrue(Expression e)

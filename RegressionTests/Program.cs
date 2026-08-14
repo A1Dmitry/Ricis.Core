@@ -1,0 +1,204 @@
+using System.Linq.Expressions;
+using Ricis.Core.Expressions;
+using Ricis.Core.Phases;
+using Ricis.Core.Polynomial;
+using Ricis.Core.Rationals;
+using Ricis.Core.Simplifiers;
+using Ricis.Core.Solvers;
+
+var tests = new (string Name, Action Body)[]
+{
+    ("SP4: коммутативно эквивалентные суммы имеют одну идентичность", CommutativeStructuralIdentity),
+    ("SP2: (x + 1) / (1 + x) сокращается до 1", CommutativeDivisionReduction),
+    ("A5: одинаковые индексированные бесконечности при делении дают 1", SameInfinityDivision),
+    ("Операции не смешивают сингулярности с разными наборами корней", DistinctRootSetsAreNotCompatible),
+    ("Полиномиальный решатель: x = 0 даёт корень x = 0", LinearPolynomialRoot),
+    ("Решатель экспоненты: exp(x) = 1 даёт корень x = 0", DirectExpEquality),
+    ("Решатель экспоненты: выражение без exp не выбрасывает исключение", NonExponentialInput),
+    ("Решатель логарифма: log(x + 1) даёт корень x = 0", CompoundLogarithmArgument),
+    ("Упрощатель не переставляет основание и показатель степени", PowerOrderIsPreserved),
+    ("Упрощатель не склеивает разные составные слагаемые", DistinctCompoundAddendsArePreserved),
+    ("Упрощатель сохраняет дробный коэффициент", FractionalCoefficientIsPreserved),
+    ("Упрощатель точно сворачивает вещественные константы", FloatingPointConstantFolding),
+    ("Упрощатель корректно преобразует x + x", DuplicateAddendIsTypedCorrectly),
+    ("Рациональная арифметика сохраняет каноническую форму", RationalCanonicalForm),
+};
+
+var failures = new List<string>();
+foreach (var (name, body) in tests)
+{
+    try
+    {
+        body();
+        Console.WriteLine($"PASS: {name}");
+    }
+    catch (Exception ex)
+    {
+        failures.Add($"FAIL: {name}\n  {ex}");
+        Console.WriteLine(failures[^1]);
+    }
+}
+
+if (failures.Count > 0)
+{
+    Console.Error.WriteLine($"\n{failures.Count} regression test(s) failed.");
+    Environment.Exit(1);
+}
+
+Console.WriteLine($"\nAll {tests.Length} regression tests passed.");
+
+static void CommutativeStructuralIdentity()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var left = Expression.Add(x, Expression.Constant(1.0));
+    var right = Expression.Add(Expression.Constant(1.0), x);
+
+    Assert(left.AreEqual(right), "x + 1 и 1 + x должны иметь одинаковую нормализованную идентичность.");
+}
+
+static void CommutativeDivisionReduction()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var numerator = Expression.Add(x, Expression.Constant(1.0));
+    var denominator = Expression.Add(Expression.Constant(1.0), x);
+
+    var result = new AlgebraicReductionVisitor().Visit(Expression.Divide(numerator, denominator));
+
+    Assert(result is ConstantExpression { Value: double value } && value == 1.0,
+        $"Ожидалась единица после SP2, получено: {result}.");
+}
+
+static void SameInfinityDivision()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var infinity = InfinityExpression.CreateLazy(Expression.Add(x, Expression.Constant(2.0)), x, 0.0);
+
+    var result = StandardOperationsPhase.Apply(Expression.Divide(infinity, infinity));
+
+    Assert(result is ConstantExpression { Value: double value } && value == 1.0,
+        $"A5 требует ∞_F / ∞_F = 1, получено: {result}.");
+}
+
+static void DistinctRootSetsAreNotCompatible()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var left = InfinityExpression.CreateLazy(Expression.Constant(1.0), [(x, 0.0), (x, 1.0)]);
+    var right = InfinityExpression.CreateLazy(Expression.Constant(2.0), [(x, 0.0), (x, 2.0)]);
+
+    var result = StandardOperationsPhase.Apply(Expression.Add(left, right));
+
+    Assert(result is BinaryExpression,
+        $"Сингулярности с разными наборами корней не должны объединяться; получено: {result}.");
+}
+
+static void LinearPolynomialRoot()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var roots = PolynomialZeroSolver.FindRoots(x, x);
+
+    Assert(roots.Count == 1 && Math.Abs(roots[0].DoubleValue) < 1e-12,
+        $"Ожидался единственный корень x = 0, получено: {string.Join(", ", roots)}.");
+}
+
+static void DirectExpEquality()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var exp = Expression.Call(typeof(Math).GetMethod(nameof(Math.Exp), [typeof(double)])!, x);
+    var equality = Expression.Equal(exp, Expression.Constant(1.0));
+
+    var roots = ExponentialZeroSolver.FindRoots(equality, x);
+
+    Assert(roots.Count == 1 && Math.Abs(roots.First().DoubleValue) < 1e-12,
+        $"Ожидался единственный корень x = 0, получено: {string.Join(", ", roots)}.");
+}
+
+static void NonExponentialInput()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var sqrt = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sqrt), [typeof(double)])!, x);
+
+    var roots = ExponentialZeroSolver.FindRoots(sqrt, x);
+
+    Assert(roots.Count == 0, "Для выражения без exp решатель должен вернуть пустой набор корней.");
+}
+
+static void CompoundLogarithmArgument()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var argument = Expression.Add(x, Expression.Constant(1.0));
+    var log = Expression.Call(typeof(Math).GetMethod(nameof(Math.Log), [typeof(double)])!, argument);
+
+    var roots = LogSolver.FindRoots(log, x);
+
+    Assert(roots.Count == 1 && Math.Abs(roots.First().DoubleValue) < 1e-12,
+        $"Ожидался единственный корень x = 0, получено: {string.Join(", ", roots)}.");
+}
+
+static void PowerOrderIsPreserved()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var source = Expression.Power(Expression.Constant(2.0), x);
+    var result = new ExpressionSimplifierVisitor().Visit(source);
+    var value = Expression.Lambda<Func<double, double>>(result, x).Compile()(3.0);
+
+    Assert(Math.Abs(value - 8.0) < 1e-12,
+        $"Упрощатель не должен превращать 2^x в x^2; получено значение {value} при x = 3.");
+}
+
+static void DistinctCompoundAddendsArePreserved()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var source = Expression.Add(
+        Expression.Add(x, Expression.Constant(1.0)),
+        Expression.Add(x, Expression.Constant(2.0)));
+    var result = new ExpressionSimplifierVisitor().Visit(source);
+    var value = Expression.Lambda<Func<double, double>>(result, x).Compile()(3.0);
+
+    Assert(Math.Abs(value - 9.0) < 1e-12,
+        $"Разные поддеревья x + 1 и x + 2 нельзя считать идентичными; получено {value}.");
+}
+
+static void FractionalCoefficientIsPreserved()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var source = Expression.Multiply(Expression.Constant(1.5), x);
+    var result = new ExpressionSimplifierVisitor().Visit(source);
+    var value = Expression.Lambda<Func<double, double>>(result, x).Compile()(2.0);
+
+    Assert(Math.Abs(value - 3.0) < 1e-12,
+        $"Коэффициент 1.5 не равен единице; получено {value}.");
+}
+
+static void FloatingPointConstantFolding()
+{
+    var source = Expression.Add(Expression.Constant(0.25), Expression.Constant(0.5));
+    var result = new ExpressionSimplifierVisitor().Visit(source);
+
+    Assert(result is ConstantExpression { Type: var type, Value: double value } &&
+           type == typeof(double) && Math.Abs(value - 0.75) < 1e-12,
+        $"Ожидалась константа double 0.75, получено: {result} ({result.Type}).");
+}
+
+static void DuplicateAddendIsTypedCorrectly()
+{
+    var x = Expression.Parameter(typeof(double), "x");
+    var result = new ExpressionSimplifierVisitor().Visit(Expression.Add(x, x));
+    var value = Expression.Lambda<Func<double, double>>(result, x).Compile()(3.0);
+
+    Assert(Math.Abs(value - 6.0) < 1e-12,
+        $"Преобразование x + x должно сохранять тип double и значение 6; получено {value}.");
+}
+
+static void RationalCanonicalForm()
+{
+    var value = new Rational(6, -8);
+    Assert(value.Numerator == -3 && value.Denominator == 4, $"Ожидалось -3/4, получено {value}.");
+}
+
+static void Assert(bool condition, string message)
+{
+    if (!condition)
+    {
+        throw new InvalidOperationException(message);
+    }
+}

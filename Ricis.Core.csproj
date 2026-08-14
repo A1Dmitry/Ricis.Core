@@ -8,5 +8,8 @@
   <PropertyGroup>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="RegressionTests/**/*.cs" />
+  </ItemGroup>
 
 </Project>

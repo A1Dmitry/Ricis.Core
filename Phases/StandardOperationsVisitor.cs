@@ -44,9 +44,12 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                         return MergeSingularities(infLeft, infRight, ExpressionType.Multiply);
 
                     case ExpressionType.Divide:
-                        // A5: ∞_A / ∞_B = A / B
-                        // Сингулярности сокращаются, остаются индексы.
-                        // Возвращаем обычное деление индексов.
+                        // A5: ∞_A / ∞_B = 1 only when the normalized indices are equal;
+                        // otherwise preserve the structural ratio A / B.
+                        if (infLeft.Numerator.AreEqual(infRight.Numerator))
+                        {
+                            return RicisType.InfinityOne;
+                        }
                         return Expression.Divide(infLeft.Numerator, infRight.Numerator);
                 }
             }
@@ -137,19 +140,18 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         return InfinityExpression.CreateLazy(newNumerator, a.Roots);
     }
 
-    private bool AreRootsCompatible(InfinityExpression a, InfinityExpression b)
+    private static bool AreRootsCompatible(InfinityExpression a, InfinityExpression b)
     {
-        if (a.Roots.Count == 0 || b.Roots.Count == 0)
+        if (a.Roots.Count == 0 || a.Roots.Count != b.Roots.Count)
         {
             return false;
         }
 
-        // Сравниваем первую точку сингулярности
-        var rootA = a.Roots[0];
-        var rootB = b.Roots[0];
-
-        return rootA.Param == rootB.Param &&
-               Math.Abs(rootA.Value - rootB.Value) < 1e-9;
+        // A monolith is tied to its complete set of singular points. Comparing
+        // only the first point silently loses information about the other poles.
+        return a.Roots.All(rootA => b.Roots.Any(rootB =>
+            rootA.Param == rootB.Param &&
+            Math.Abs(rootA.Value - rootB.Value) < 1e-9));
     }
 
     private static bool IsScalar(Expression expr)
