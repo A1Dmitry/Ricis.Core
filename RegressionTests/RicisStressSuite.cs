@@ -63,6 +63,8 @@ internal static class RicisStressSuite
         ("B04: O(1)-детектор не меняет не-предельную форму", DoesNotBridgeNonLimitForm),
         ("B05: константный 0/0 возвращает 1 до A1", ConstantZeroOverZeroBridge),
         ("B06: ∞_C/∞_C возвращает 1 по A5", ConstantInfinityOverInfinityBridge),
+        ("B07: тождество F/F предшествует полярной фазе", IdentityPrecedesPolarPhase),
+        ("B08: тождество ∞/∞ предшествует A5", IdentityPrecedesSingularityRules),
     ];
 
     private static void S01BasicPole()
@@ -513,6 +515,44 @@ internal static class RicisStressSuite
         AssertExpression(output, C(1), "1");
         Require(Expression.Lambda<Func<double>>(output).Compile()() == 1.0,
             "Константный мост ∞_C/∞_C должен исполняться как точная единица.");
+    }
+
+    private static void IdentityPrecedesPolarPhase()
+    {
+        var x = X();
+        var f = Expression.Call(Sin, x);
+        var source = Expression.Divide(f, f);
+
+        var identity = new IdentityReductionVisitor().Visit(source);
+        AssertExpression(identity, C(1), "1");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        if (output is not Expression<Func<double, double>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<double,double>, получено: {output.GetType().Name}.");
+        }
+
+        AssertExpression(derived.Body, C(1), "1");
+        Require(derived.Compile()(0.0) == 1.0,
+            "Тождество Sin(x)/Sin(x) должно вернуть 1 до полярной фазы.");
+    }
+
+    private static void IdentityPrecedesSingularityRules()
+    {
+        var x = X();
+        var infinity = InfinityExpression.CreateLazy(C(7), x, 0.0);
+        var source = Expression.Divide(infinity, infinity);
+
+        var identity = new IdentityReductionVisitor().Visit(source);
+        AssertExpression(identity, C(1), "1");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double>>(source));
+        if (output is not Expression<Func<double>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<double>, получено: {output.GetType().Name}.");
+        }
+
+        AssertExpression(derived.Body, C(1), "1");
     }
 
     private static void S26FourthPowerPoles()

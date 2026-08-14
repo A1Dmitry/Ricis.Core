@@ -63,6 +63,23 @@ public static class NumericConstants
     }
 
     /// <summary>
+    /// Attempts to obtain the typed multiplicative identity for a scalar. This
+    /// lets the highest-priority F/F rule fall back safely when an arbitrary
+    /// user type has not supplied a numeric identity to RICIS.
+    /// </summary>
+    public static bool TryOneOf(Type type, out ConstantExpression one)
+    {
+        if (Registered.TryGetValue(type, out var info))
+        {
+            one = Expression.Constant(info.One, type);
+            return true;
+        }
+
+        one = null;
+        return false;
+    }
+
+    /// <summary>
     /// Indicates whether a type belongs to the intrinsic .NET numeric domain
     /// whose arithmetic is covered by RICIS scalar rules. User-defined
     /// overloaded operators remain classical unless a separate RICIS rule
