@@ -1,8 +1,10 @@
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using Ricis.Core.Expressions;
 using Ricis.Core.Limits;
 using Ricis.Core.Phases;
+using Ricis.Core.SpecialFunctions;
 
 internal static class RicisStressSuite
 {
@@ -12,6 +14,7 @@ internal static class RicisStressSuite
     private static readonly MethodInfo Log = typeof(Math).GetMethod(nameof(Math.Log), [typeof(double)])!;
     private static readonly MethodInfo Exp = typeof(Math).GetMethod(nameof(Math.Exp), [typeof(double)])!;
     private static readonly MethodInfo Pow = typeof(Math).GetMethod(nameof(Math.Pow), [typeof(double), typeof(double)])!;
+    private static readonly MethodInfo BigIntegerFactorial = typeof(Factorial).GetMethod(nameof(Factorial.Of), [typeof(BigInteger)])!;
 
     public static IEnumerable<(string Name, Action Body)> Tests =>
     [
@@ -48,6 +51,7 @@ internal static class RicisStressSuite
         ("N05: одинаковые составные выражения сокращаются по F/F", IdenticalCompositeIndicesCancel),
         ("N06: uint (a·a)/a сокращается до a до переполнения", UIntOverflowIsAvoidedBySp2),
         ("N07: int.MaxValue (a·a)/a сокращается до a до переполнения", IntMaxOverflowIsAvoidedBySp2),
+        ("N08: 10!/9! сокращается до 10 до вычисления факториалов", AdjacentFactorialsCancel),
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
@@ -307,6 +311,31 @@ internal static class RicisStressSuite
             $"SP2 должен вернуть типизированную константу a={a}, получено {derived.Body} ({derived.Body.Type}).");
         Require(derived.Compile()() == a,
             "Производное RICIS-выражение должно исполняться без переполнения.");
+    }
+
+    private static void AdjacentFactorialsCancel()
+    {
+        var ten = new BigInteger(10);
+        var nine = new BigInteger(9);
+        var source = Expression.Divide(
+            Expression.Call(BigIntegerFactorial, Expression.Constant(ten)),
+            Expression.Call(BigIntegerFactorial, Expression.Constant(nine)));
+
+        var classical = Expression.Lambda<Func<BigInteger>>(source).Compile()();
+        Require(classical == ten,
+            $"Классический BigInteger-делегат 10!/9! должен вернуть 10, получено {classical}.");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<BigInteger>>(source));
+        if (output is not Expression<Func<BigInteger>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<BigInteger>, получено: {output.GetType().Name}.");
+        }
+
+        Require(derived.Body is ConstantExpression { Type: var type, Value: BigInteger result } &&
+                type == typeof(BigInteger) && result == ten,
+            $"SP2 должен сократить 10!/9! до BigInteger 10, получено {derived.Body} ({derived.Body.Type}).");
+        Require(derived.Compile()() == ten,
+            "Производное RICIS-выражение должно вернуть 10 без вычисления факториалов.");
     }
 
     private static void LimitToZeroPreservesDeferredIndex()

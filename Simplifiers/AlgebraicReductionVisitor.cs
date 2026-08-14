@@ -1,6 +1,7 @@
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Polynomial;
+using Ricis.Core.SpecialFunctions;
 using System.Linq.Expressions;
 
 namespace Ricis.Core.Simplifiers;
@@ -41,6 +42,14 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         if (left.AreEqual(right))
         {
             return NumericConstants.OneOf(left.Type);
+        }
+
+        // SP2 extension for factorials: n! / (n-1)! → n. The rule is
+        // applied structurally, before a delegate can materialize n!.
+        var factorialRatio = TryReduceAdjacentFactorials(left, right);
+        if (factorialRatio is not null)
+        {
+            return Visit(factorialRatio);
         }
 
         var cancelled = TryCancelCommonFactor(left, right);
@@ -94,6 +103,39 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
     /// SP2 cancellation for a single common deferred factor. This covers ratios
     /// such as F/(F·G) → 1/G and (F·G)/F → G before polynomial division runs.
     /// </summary>
+    private static Expression TryReduceAdjacentFactorials(Expression numerator, Expression denominator)
+    {
+        if (numerator is not MethodCallExpression { Method: var numeratorMethod, Arguments.Count: 1 } numeratorFactorial ||
+            denominator is not MethodCallExpression { Method: var denominatorMethod, Arguments.Count: 1 } denominatorFactorial ||
+            numeratorMethod != typeof(Factorial).GetMethod(nameof(Factorial.Of)) ||
+            denominatorMethod != typeof(Factorial).GetMethod(nameof(Factorial.Of)))
+        {
+            return null;
+        }
+
+        var n = numeratorFactorial.Arguments[0];
+        var predecessor = denominatorFactorial.Arguments[0];
+
+        // Concrete BigInteger inputs preserve the familiar notation 10!/9!
+        // while retaining exact arithmetic; no calculation of either factorial
+        // occurs in the RICIS phase.
+        if (n is ConstantExpression { Value: System.Numerics.BigInteger nValue } &&
+            predecessor is ConstantExpression { Value: System.Numerics.BigInteger predecessorValue })
+        {
+            return nValue >= System.Numerics.BigInteger.One && predecessorValue == nValue - System.Numerics.BigInteger.One
+                ? n
+                : null;
+        }
+
+        if (n.Type != predecessor.Type)
+        {
+            return null;
+        }
+
+        var expectedPredecessor = Expression.Subtract(n, NumericConstants.OneOf(n.Type));
+        return predecessor.AreEqual(expectedPredecessor) ? n : null;
+    }
+
     private static Expression TryCancelCommonFactor(Expression numerator, Expression denominator)
     {
         if (denominator is BinaryExpression { NodeType: ExpressionType.Multiply } denProduct)
