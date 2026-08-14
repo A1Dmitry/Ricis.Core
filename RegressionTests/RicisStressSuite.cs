@@ -46,6 +46,7 @@ internal static class RicisStressSuite
         ("N03: (1/0)/(2/0) сохраняет несократимую дробь 1/2", FractionalNestedZeroFactorCancellation),
         ("N04: одинаковые функции с теми же параметрами сокращаются по F/F", IdenticalFunctionIndicesCancel),
         ("N05: одинаковые составные выражения сокращаются по F/F", IdenticalCompositeIndicesCancel),
+        ("N06: uint (a·a)/a сокращается до a до переполнения", UIntOverflowIsAvoidedBySp2),
         ("L01: F·0 возвращает индексированный ноль 0_F", LimitToZeroPreservesDeferredIndex),
         ("L02: 0·F возвращает индексированный ноль 0_F", ZeroTimesFunctionPreservesDeferredIndex),
         ("L03: F/0 возвращает индексированную бесконечность ∞_F", LimitToInfinityPreservesDeferredIndex),
@@ -255,6 +256,31 @@ internal static class RicisStressSuite
         var input = Expression.Divide(Expression.Divide(f, zero), Expression.Divide(f, zero));
 
         AssertExpression(Run(input, x), C(1), "1");
+    }
+
+    private static void UIntOverflowIsAvoidedBySp2()
+    {
+        // a = uint.MaxValue - 1. Native unchecked multiplication overflows:
+        // a² ≡ 4 (mod 2³²), and then 4 / a = 0. RICIS must apply SP2 first.
+        const uint a = uint.MaxValue - 1;
+        var factor = Expression.Constant(a);
+        var source = Expression.Divide(Expression.Multiply(factor, factor), factor);
+
+        var classical = Expression.Lambda<Func<uint>>(source).Compile()();
+        Require(classical == 0,
+            $"Несокращённое uint-выражение должно показать машинное переполнение; получено {classical}.");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<uint>>(source));
+        if (output is not Expression<Func<uint>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<uint>, получено: {output.GetType().Name}.");
+        }
+
+        Require(derived.Body is ConstantExpression { Type: var type, Value: uint result } &&
+                type == typeof(uint) && result == a,
+            $"SP2 должен вернуть типизированную константу a={a}, получено {derived.Body} ({derived.Body.Type}).");
+        Require(derived.Compile()() == a,
+            "Производное RICIS-выражение должно исполняться без переполнения.");
     }
 
     private static void LimitToZeroPreservesDeferredIndex()
