@@ -34,7 +34,15 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             denominator is BinaryExpression { NodeType: ExpressionType.Divide } rightRatio &&
             leftRatio.Right.AreEqual(rightRatio.Right))
         {
-            return Expression.Divide(leftRatio.Left, rightRatio.Left);
+            return SimplifyDivision(leftRatio.Left, rightRatio.Left);
+        }
+
+        // Algebraic cleanup of a fully constant ratio produced by SP2.
+        if (numerator is ConstantExpression { Value: double leftConstant } &&
+            denominator is ConstantExpression { Value: double rightConstant } &&
+            rightConstant != 0.0)
+        {
+            return Expression.Constant(leftConstant / rightConstant);
         }
 
         // SP2 / L1: identical expressions → 1 (already mostly done upstream;
