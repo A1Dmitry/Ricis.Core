@@ -40,6 +40,7 @@ internal static class RicisStressSuite
         ("S24: SP2 сокращает x/(x²), а A1 возвращает ∞₁", S24NestedCancellation),
         ("S25: SP2 сокращает 2x/x до 2", S25CoefficientCancellation),
         ("S26: 1/(x⁴-1) сохраняет действительные полюса", S26FourthPowerPoles),
+        ("N01: (x/0)/(2/0) сокращает общий нулевой фактор до x/2", NestedZeroFactorCancellation),
     ];
 
     private static void S01BasicPole()
@@ -195,6 +196,15 @@ internal static class RicisStressSuite
     {
         var x = X();
         AssertExpression(Run(Expression.Divide(Expression.Multiply(x, C(2)), x), x), C(2), "2");
+    }
+
+    private static void NestedZeroFactorCancellation()
+    {
+        var x = X();
+        var zero = C(0);
+        var input = Expression.Divide(Expression.Divide(x, zero), Expression.Divide(C(2), zero));
+
+        AssertExpression(Run(input, x), Expression.Divide(x, C(2)), "x / 2");
     }
 
     private static void S26FourthPowerPoles()

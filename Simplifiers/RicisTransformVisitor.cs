@@ -28,6 +28,15 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
+        // SP2: (F/A) / (G/A) → F/G. The common factor A is syntactic and
+        // deferred, so it is cancelled before A1/A5 even when A is zero.
+        if (numerator is BinaryExpression { NodeType: ExpressionType.Divide } leftRatio &&
+            denominator is BinaryExpression { NodeType: ExpressionType.Divide } rightRatio &&
+            leftRatio.Right.AreEqual(rightRatio.Right))
+        {
+            return Expression.Divide(leftRatio.Left, rightRatio.Left);
+        }
+
         // SP2 / L1: identical expressions → 1 (already mostly done upstream;
         // keep as safety net).
         if (numerator.AreEqual(denominator))
