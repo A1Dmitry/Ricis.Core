@@ -40,7 +40,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         // SP2 / L1: identical subtrees → 1
         if (left.AreEqual(right))
         {
-            return RicisType.InfinityOne;
+            return NumericConstants.OneOf(left.Type);
         }
 
         var cancelled = TryCancelCommonFactor(left, right);
@@ -125,14 +125,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return null;
     }
 
-    private static Expression OneOf(Type type) => type switch
-    {
-        _ when type == typeof(double) => Expression.Constant(1.0),
-        _ when type == typeof(float) => Expression.Constant(1.0f),
-        _ when type == typeof(decimal) => Expression.Constant(1m),
-        _ when type == typeof(long) => Expression.Constant(1L),
-        _ => Expression.Constant(1, type),
-    };
+    private static Expression OneOf(Type type) => NumericConstants.OneOf(type);
 
     private static (List<Root> roots, bool isPolynomial) AnalyzeDenominator(Expression denominator, ParameterExpression param)
     {

@@ -12,10 +12,47 @@ public static class ExpressionExtensions
     {
         return Expression.Lambda<Func<double, double>>(expr, param);
     }
+
+    /// <summary>
+    /// Creates a typed lambda for an ordinary finite RICIS expression. The
+    /// constraint permits <see cref="System.Numerics.BigInteger"/> and user
+    /// scalar types that implement .NET generic math.
+    /// </summary>
+    public static Expression<Func<T, T>> Prepare<T>(this Expression expr, ParameterExpression param)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(expr);
+        ArgumentNullException.ThrowIfNull(param);
+        NumericConstants.Register<T>();
+
+        if (expr.Type != typeof(T) || param.Type != typeof(T))
+        {
+            throw new ArgumentException(
+                $"Выражение и параметр должны иметь один тип {typeof(T).FullName}.");
+        }
+
+        return Expression.Lambda<Func<T, T>>(expr, param);
+    }
+
+    /// <summary>
+    /// Compiles an already derived, finite RICIS expression without converting
+    /// it to <see cref="double"/>. This preserves arbitrary precision and the
+    /// semantics of custom <c>INumber&lt;TSelf&gt;</c> scalar types.
+    /// </summary>
+    public static Func<T, T> CompileFinite<T>(this Expression expr, ParameterExpression param)
+        where T : INumber<T> => expr.Prepare<T>(param).Compile();
+
     public static double Evaluate(this Expression expr, ParameterExpression param, double value)
     {
         return expr.Prepare(param).Compile()(value);
     }
+
+    /// <summary>
+    /// Evaluates a finite expression with a generic-math value. This API is
+    /// intentionally separate from double-based singularity/root discovery.
+    /// </summary>
+    public static T EvaluateFinite<T>(this Expression expr, ParameterExpression param, T value)
+        where T : INumber<T> => expr.CompileFinite<T>(param)(value);
 
     public static double Evaluate(this Expression expr, string paramName, double value)
     {
@@ -231,7 +268,7 @@ public static class ExpressionExtensions
         0 or 0L or 0.0 or 0m or 0f => true,
         BigInteger b => b == 0,
         string s => s == "0",
-        _ => false
+        _ => NumericConstants.IsZero(value)
     };
 
     private static bool IsOneValue(object value) => value switch
@@ -239,6 +276,6 @@ public static class ExpressionExtensions
         1 or 1L or 1.0 or 1m or 1f => true,
         BigInteger b => b == 1,
         string s => s == "1",
-        _ => false
+        _ => NumericConstants.IsOne(value)
     };
 }

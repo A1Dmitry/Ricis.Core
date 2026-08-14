@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
+using System.Numerics;
 using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
 using Ricis.Core.Polynomial;
 using Ricis.Core.Rationals;
@@ -26,6 +28,8 @@ var tests = new List<(string Name, Action Body)>
     ("Упрощатель точно сворачивает вещественные константы", FloatingPointConstantFolding),
     ("Упрощатель корректно преобразует x + x", DuplicateAddendIsTypedCorrectly),
     ("Рациональная арифметика сохраняет каноническую форму", RationalCanonicalForm),
+    ("Generic INumber: BigInteger сохраняется в SP2 и конечном делегате", GenericBigIntegerFiniteExecution),
+    ("Generic INumber: X/X возвращает типизированную единицу", GenericBigIntegerIdentityReduction),
 };
 
 tests.AddRange(RicisStressSuite.Tests);
@@ -247,6 +251,32 @@ static void RationalCanonicalForm()
 {
     var value = new Rational(6, -8);
     Assert(value.Numerator == -3 && value.Denominator == 4, $"Ожидалось -3/4, получено {value}.");
+}
+
+static void GenericBigIntegerFiniteExecution()
+{
+    var x = Expression.Parameter(typeof(BigInteger), "x");
+    var enormous = BigInteger.Parse("1234567890123456789012345678901234567890123456789012345678901234567890");
+    var source = Expression.Divide(Expression.Multiply(x, Expression.Constant(enormous)), x);
+
+    var derived = RicisPhasePipeline.Simplify(source);
+    var result = derived.EvaluateFinite<BigInteger>(x, BigInteger.Parse("999999999999999999999999999999999999"));
+
+    Assert(result == enormous,
+        $"SP2 должен сохранить BigInteger без double; получено {result}.");
+}
+
+static void GenericBigIntegerIdentityReduction()
+{
+    var x = Expression.Parameter(typeof(BigInteger), "x");
+    var derived = RicisPhasePipeline.Simplify(Expression.Divide(x, x));
+
+    Assert(derived is ConstantExpression { Value: BigInteger value } && value == BigInteger.One,
+        $"X/X для BigInteger должен вернуть BigInteger.One; получено {derived} ({derived.Type}).");
+
+    var result = derived.EvaluateFinite<BigInteger>(x, BigInteger.Zero);
+    Assert(result == BigInteger.One,
+        $"Типизированная единица должна исполняться без double; получено {result}.");
 }
 
 static void Assert(bool condition, string message)

@@ -75,7 +75,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                         // otherwise preserve the structural ratio A / B.
                         if (infLeft.Numerator.AreEqual(infRight.Numerator))
                         {
-                            return RicisType.InfinityOne;
+                            return NumericConstants.OneOf(infLeft.Numerator.Type);
                         }
                         return Expression.Divide(infLeft.Numerator, infRight.Numerator);
                 }

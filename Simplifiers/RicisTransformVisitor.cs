@@ -64,7 +64,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         // keep as safety net).
         if (numerator.AreEqual(denominator))
         {
-            return RicisType.InfinityOne;
+            return NumericConstants.OneOf(numerator.Type);
         }
 
         var tempSingularities = new List<InfinityExpression>();
