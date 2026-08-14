@@ -42,6 +42,9 @@ internal static class RicisStressSuite
         ("S26: 1/(x⁴-1) сохраняет действительные полюса", S26FourthPowerPoles),
         ("N01: (x/0)/(2/0) сокращает общий нулевой фактор до x/2", NestedZeroFactorCancellation),
         ("N02: (8/0)/(4/0) сокращает общий нулевой фактор до 2", ConstantNestedZeroFactorCancellation),
+        ("N03: (1/0)/(2/0) сохраняет несократимую дробь 1/2", FractionalNestedZeroFactorCancellation),
+        ("N04: одинаковые функции с теми же параметрами сокращаются по F/F", IdenticalFunctionIndicesCancel),
+        ("N05: одинаковые составные выражения сокращаются по F/F", IdenticalCompositeIndicesCancel),
     ];
 
     private static void S01BasicPole()
@@ -215,6 +218,35 @@ internal static class RicisStressSuite
         var input = Expression.Divide(Expression.Divide(C(8), zero), Expression.Divide(C(4), zero));
 
         AssertExpression(Run(input, x), C(2), "2");
+    }
+
+    private static void FractionalNestedZeroFactorCancellation()
+    {
+        var x = X();
+        var zero = C(0);
+        var input = Expression.Divide(Expression.Divide(C(1), zero), Expression.Divide(C(2), zero));
+
+        AssertExpression(Run(input, x), Expression.Divide(C(1), C(2)), "1 / 2");
+    }
+
+    private static void IdenticalFunctionIndicesCancel()
+    {
+        var x = X();
+        var zero = C(0);
+        var sinX = Expression.Call(Sin, x);
+        var input = Expression.Divide(Expression.Divide(sinX, zero), Expression.Divide(sinX, zero));
+
+        AssertExpression(Run(input, x), C(1), "1");
+    }
+
+    private static void IdenticalCompositeIndicesCancel()
+    {
+        var x = X();
+        var zero = C(0);
+        var f = Expression.Add(x, C(1));
+        var input = Expression.Divide(Expression.Divide(f, zero), Expression.Divide(f, zero));
+
+        AssertExpression(Run(input, x), C(1), "1");
     }
 
     private static void S26FourthPowerPoles()

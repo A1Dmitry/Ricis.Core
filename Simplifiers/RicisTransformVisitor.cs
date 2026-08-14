@@ -42,7 +42,13 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             denominator is ConstantExpression { Value: double rightConstant } &&
             rightConstant != 0.0)
         {
-            return Expression.Constant(leftConstant / rightConstant);
+            var quotient = leftConstant / rightConstant;
+            // Keep a non-integral rational form as an expression for later
+            // RICIS phases. Only a completed integral result becomes a scalar.
+            if (double.IsFinite(quotient) && Math.Abs(quotient - Math.Round(quotient)) < 1e-12)
+            {
+                return Expression.Constant(quotient);
+            }
         }
 
         // SP2 / L1: identical expressions → 1 (already mostly done upstream;
