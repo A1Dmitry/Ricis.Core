@@ -29,6 +29,7 @@ var tests = new List<(string Name, Action Body)>
 };
 
 tests.AddRange(RicisStressSuite.Tests);
+tests.AddRange(KnownRicisLimitsSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)
