@@ -9,6 +9,9 @@ namespace Ricis.Core.Phases;
 
 /// <summary>
 /// Phase order (theory COMPUTATION_ALGORITHM + polar):
+///   Priority contract: explicit RICIS rules and structural algebra always run
+///   before a permitted classical bridge. Operations outside an explicit RICIS
+///   rule preserve their classical expression semantics unchanged.
 ///   Phase 0.5 PolarTrigVisitor          — trig → polar sector → exact collapse
 ///   Phase 1   AlgebraicReductionVisitor — SP2 cancel identical factors
 ///   Phase 1.5 LimitBridgeVisitor        — O(1) bridges F·0→0_F, F/0→∞_F

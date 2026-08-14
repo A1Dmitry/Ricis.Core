@@ -61,6 +61,8 @@ internal static class RicisStressSuite
         ("B02: O(1)-детектор заменяет 0·F мостом 0_F", DetectsReversedZeroLimitBridge),
         ("B03: O(1)-детектор заменяет F/0 мостом ∞_F", DetectsInfinityLimitBridge),
         ("B04: O(1)-детектор не меняет не-предельную форму", DoesNotBridgeNonLimitForm),
+        ("B05: константный 0/0 возвращает 1 до A1", ConstantZeroOverZeroBridge),
+        ("B06: ∞_C/∞_C возвращает 1 по A5", ConstantInfinityOverInfinityBridge),
     ];
 
     private static void S01BasicPole()
@@ -482,6 +484,35 @@ internal static class RicisStressSuite
             "Сложение F+0 не является предельным мостом.");
         Require(ReferenceEquals(ordinary, result),
             "Не-ограниченная форма должна вернуться без замены.");
+    }
+
+    private static void ConstantZeroOverZeroBridge()
+    {
+        var source = Expression.Divide(C(0), C(0));
+        var afterSp2 = new Ricis.Core.Simplifiers.AlgebraicReductionVisitor().Visit(source);
+        AssertExpression(afterSp2, C(1), "1");
+
+        var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double>>(source));
+        if (output is not Expression<Func<double>> derived)
+        {
+            throw new InvalidOperationException($"Конвейер должен вернуть Func<double>, получено: {output.GetType().Name}.");
+        }
+
+        AssertExpression(derived.Body, C(1), "1");
+        Require(derived.Compile()() == 1.0,
+            "Константный мост 0/0 должен исполняться как точная единица.");
+    }
+
+    private static void ConstantInfinityOverInfinityBridge()
+    {
+        var x = X();
+        var constantIndex = C(7);
+        var infinity = InfinityExpression.CreateLazy(constantIndex, x, 0.0);
+        var output = StandardOperationsPhase.Apply(Expression.Divide(infinity, infinity));
+
+        AssertExpression(output, C(1), "1");
+        Require(Expression.Lambda<Func<double>>(output).Compile()() == 1.0,
+            "Константный мост ∞_C/∞_C должен исполняться как точная единица.");
     }
 
     private static void S26FourthPowerPoles()
