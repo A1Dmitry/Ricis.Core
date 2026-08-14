@@ -301,22 +301,29 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         var numeratorFactors = FlattenBuiltInMultiplication(numerator);
         var denominatorFactors = FlattenBuiltInMultiplication(denominator);
 
-        if (numeratorFactors.Count < 2 || denominatorFactors.Count < 2)
+        if (numeratorFactors.Count < 2 && denominatorFactors.Count < 2)
         {
             return null;
         }
 
         var remainingNumerator = numeratorFactors.ToList();
+        var remainingDenominator = denominatorFactors.ToList();
         var cancelledCount = 0;
-        foreach (var denominatorFactor in denominatorFactors)
+
+        // SP2 is cancellation of the common multiset, not a requirement that
+        // the denominator be wholly contained in the numerator. The uncancelled
+        // tail remains an exact deferred quotient.
+        for (var denominatorIndex = remainingDenominator.Count - 1; denominatorIndex >= 0; denominatorIndex--)
         {
-            var matchIndex = remainingNumerator.FindIndex(factor => factor.AreEqual(denominatorFactor));
+            var matchIndex = remainingNumerator.FindIndex(factor =>
+                factor.AreEqual(remainingDenominator[denominatorIndex]));
             if (matchIndex < 0)
             {
-                return null;
+                continue;
             }
 
             remainingNumerator.RemoveAt(matchIndex);
+            remainingDenominator.RemoveAt(denominatorIndex);
             cancelledCount++;
         }
 
@@ -325,7 +332,11 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             return null;
         }
 
-        return BuildProduct(remainingNumerator, numerator.Type);
+        var reducedNumerator = BuildProduct(remainingNumerator, numerator.Type);
+        var reducedDenominator = BuildProduct(remainingDenominator, denominator.Type);
+        return reducedDenominator.IsOne()
+            ? reducedNumerator
+            : Expression.Divide(reducedNumerator, reducedDenominator);
     }
 
     private static List<Expression> FlattenBuiltInMultiplication(Expression expression)

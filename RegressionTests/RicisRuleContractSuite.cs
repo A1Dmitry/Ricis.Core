@@ -39,6 +39,9 @@ internal static class RicisRuleContractSuite
         ("RC26: SP2/A1 — 1/(1−2/x) даёт ∞_x при x=2", NestedRatioPole),
         ("RC27: A1 — 1/(1−tan x) не получает полюса tan", CertifiedTrigRoots),
         ("RC28: SP4 — близкие корни не сливаются", CloseRootsRemainDistinct),
+        ("RC29: A1 — x²/(a·x²+a·b+c) хранит оба действительных ключа", ParameterizedQuadraticPole),
+        ("RC30: ID — параметризованная форма x²/x² даёт 1", ParameterizedQuadraticIdentity),
+        ("RC31: SP2 — x²/(2x²) оставляет точное 1/2", ParameterizedQuadraticResidualRatio),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -296,6 +299,42 @@ internal static class RicisRuleContractSuite
         var source = Expression.Divide(C(1), Expression.Multiply(Expression.Subtract(x, C(1)), Expression.Subtract(x, C(1.0000001))));
         AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), C(1), [1, 1.0000001],
             "SP4 для близких корней");
+    }
+
+    private static void ParameterizedQuadraticPole()
+    {
+        // a=1, b=1, c=−2: a·x²+a·b+c = x²+1−2 = x²−1.
+        var x = X();
+        var xSquared = Expression.Power(x, C(2));
+        var denominator = Expression.Subtract(xSquared, C(1));
+        var source = Expression.Divide(xSquared, denominator);
+
+        AssertInfinityRoots(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)), xSquared, [-1, 1],
+            "A1 для a=1, b=1, c=−2");
+    }
+
+    private static void ParameterizedQuadraticIdentity()
+    {
+        // a=1, b=1, c=−1: a·x²+a·b+c = x².
+        var x = X();
+        var xSquared = Expression.Power(x, C(2));
+        var result = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(Expression.Divide(xSquared, xSquared), x));
+        var derived = ExtractDerived(result);
+
+        AssertEqual(derived.Body, C(1), "L1 должна сократить x²/x² до единицы раньше A1.");
+    }
+
+    private static void ParameterizedQuadraticResidualRatio()
+    {
+        // a=2, b=3, c=−6: a·x²+a·b+c = 2x².
+        var x = X();
+        var xSquared = Expression.Power(x, C(2));
+        var source = Expression.Divide(xSquared, Expression.Multiply(C(2), xSquared));
+        var result = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        var derived = ExtractDerived(result);
+
+        AssertEqual(derived.Body, Expression.Divide(C(1), C(2)),
+            "SP2 должна отменить x² и сохранить несократимое точное отношение 1/2.");
     }
 
     private static void DifferentRootSetsRemainSeparate()
