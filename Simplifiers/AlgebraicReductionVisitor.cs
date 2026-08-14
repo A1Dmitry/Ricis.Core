@@ -34,6 +34,12 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             return RicisType.InfinityOne;
         }
 
+        var cancelled = TryCancelCommonFactor(left, right);
+        if (cancelled is not null)
+        {
+            return Visit(cancelled);
+        }
+
         var parameter = FindSingleParameter(node);
         if (parameter == null)
         {
@@ -65,6 +71,50 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             ? node
             : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
     }
+
+    /// <summary>
+    /// SP2 cancellation for a single common deferred factor. This covers ratios
+    /// such as F/(F·G) → 1/G and (F·G)/F → G before polynomial division runs.
+    /// </summary>
+    private static Expression TryCancelCommonFactor(Expression numerator, Expression denominator)
+    {
+        if (denominator is BinaryExpression { NodeType: ExpressionType.Multiply } denProduct)
+        {
+            if (numerator.AreEqual(denProduct.Left))
+            {
+                return Expression.Divide(OneOf(numerator.Type), denProduct.Right);
+            }
+
+            if (numerator.AreEqual(denProduct.Right))
+            {
+                return Expression.Divide(OneOf(numerator.Type), denProduct.Left);
+            }
+        }
+
+        if (numerator is BinaryExpression { NodeType: ExpressionType.Multiply } numProduct)
+        {
+            if (denominator.AreEqual(numProduct.Left))
+            {
+                return numProduct.Right;
+            }
+
+            if (denominator.AreEqual(numProduct.Right))
+            {
+                return numProduct.Left;
+            }
+        }
+
+        return null;
+    }
+
+    private static Expression OneOf(Type type) => type switch
+    {
+        _ when type == typeof(double) => Expression.Constant(1.0),
+        _ when type == typeof(float) => Expression.Constant(1.0f),
+        _ when type == typeof(decimal) => Expression.Constant(1m),
+        _ when type == typeof(long) => Expression.Constant(1L),
+        _ => Expression.Constant(1, type),
+    };
 
     private static (List<Root> roots, bool isPolynomial) AnalyzeDenominator(Expression denominator, ParameterExpression param)
     {

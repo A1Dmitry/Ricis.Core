@@ -6,7 +6,7 @@ using Ricis.Core.Rationals;
 using Ricis.Core.Simplifiers;
 using Ricis.Core.Solvers;
 
-var tests = new (string Name, Action Body)[]
+var tests = new List<(string Name, Action Body)>
 {
     ("SP4: коммутативно эквивалентные суммы имеют одну идентичность", CommutativeStructuralIdentity),
     ("SP2: (x + 1) / (1 + x) сокращается до 1", CommutativeDivisionReduction),
@@ -27,6 +27,8 @@ var tests = new (string Name, Action Body)[]
     ("Упрощатель корректно преобразует x + x", DuplicateAddendIsTypedCorrectly),
     ("Рациональная арифметика сохраняет каноническую форму", RationalCanonicalForm),
 };
+
+tests.AddRange(RicisStressSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)
@@ -49,7 +51,7 @@ if (failures.Count > 0)
     Environment.Exit(1);
 }
 
-Console.WriteLine($"\nAll {tests.Length} regression tests passed.");
+Console.WriteLine($"\nAll {tests.Count} regression tests passed.");
 
 static void CommutativeStructuralIdentity()
 {
