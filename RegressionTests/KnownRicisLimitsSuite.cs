@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
+using Ricis.Core.Execution;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
@@ -23,6 +24,7 @@ internal static class KnownRicisLimitsSuite
         ("K09: tan(π/2) — полярная фаза возвращает ∞₁", PolarTangentPole),
         ("K10: sin(x)/x — неизвестная форма остаётся отношением F/G", DeferredSincRatio),
         ("K11: 0_F·∞_G — A6 возвращает отложенное произведение F·G", InfinitesimalTimesInfinite),
+        ("K12: эталон с нулевым знаменателем падает, производное x/2 выполняется", ReferenceThrowsAndDerivedExecutes),
     ];
 
     private static void RemovableQuadratic()
@@ -141,6 +143,28 @@ internal static class KnownRicisLimitsSuite
         AssertTree(result, Expression.Multiply(f, g), "x + 1", "Sin(x)");
     }
 
+    private static void ReferenceThrowsAndDerivedExecutes()
+    {
+        var x = X();
+        var zero = C(0);
+        var reference = Expression.Lambda<Func<double, double>>(
+            Expression.Divide(Expression.Divide(x, zero), Expression.Divide(C(2), zero)), x);
+
+        ExpectThrows<DivideByZeroException>(() => StrictExpressionExecutor.Compile(reference)(4.0));
+
+        var derived = RicisPhasePipeline.Simplify(reference);
+        if (derived is not LambdaExpression derivedLambda)
+        {
+            throw new InvalidOperationException($"Ожидалась производная лямбда, получено: {derived.GetType().Name}.");
+        }
+
+        AssertTree(derivedLambda.Body, Expression.Divide(x, C(2)), "x / 2");
+        var executable = Expression.Lambda<Func<double, double>>(derivedLambda.Body, x);
+        var value = StrictExpressionExecutor.Compile(executable)(4.0);
+        Require(Math.Abs(value - 2.0) < 1e-12,
+            $"Производное x/2 должно исполняться без исключения и дать 2; получено {value}.");
+    }
+
     private static Expression Run(Expression input, ParameterExpression parameter)
     {
         var output = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(input, parameter));
@@ -167,6 +191,20 @@ internal static class KnownRicisLimitsSuite
 
     private static ParameterExpression X() => Expression.Parameter(typeof(double), "x");
     private static ConstantExpression C(double value) => Expression.Constant(value);
+
+    private static void ExpectThrows<TException>(Action action) where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"Ожидалось исключение {typeof(TException).Name}, но оно не было выброшено.");
+    }
 
     private static void Require(bool condition, string message)
     {
