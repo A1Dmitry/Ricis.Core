@@ -45,6 +45,7 @@ internal static class RicisRuleContractSuite
         ("RC31: SP2 — x²/(2x²) оставляет точное 1/2", ParameterizedQuadraticResidualRatio),
         ("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах", DistinctKeyIndicesRemainAssociated),
         ("RC33: META — захваченный about добавляет SEO-профиль автора", CapturedAboutAddsAuthorSeo),
+        ("RC34: META — профиль about сохраняет все подтверждённые источники", AuthorSeoProfileKeepsVerifiedSources),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -363,6 +364,39 @@ internal static class RicisRuleContractSuite
         Require(plain.Body is not AuthorAnnotatedExpression &&
                 !plain.ToString().Contains("[SEO AUTHOR]", StringComparison.Ordinal),
             "META: лямбда без захваченного about не должна получать SEO-блок.");
+    }
+
+    private static void AuthorSeoProfileKeepsVerifiedSources()
+    {
+        var profile = AuthorSeoProfile.RicisAuthor;
+        var display = profile.ToDisplayBlock();
+        var jsonLd = profile.ToJsonLd();
+        var expectedUrls = new[]
+        {
+            "https://dzen.ru/a/aJYMMYwpLDzBCcQN",
+            "https://doi.org/10.5281/zenodo.18116204",
+            "https://doi.org/10.5281/zenodo.21309650",
+            "https://zenodo.org/records/17872755",
+            "https://doi.org/10.5281/zenodo.21836220",
+            "https://doi.org/10.5281/zenodo.21869668",
+            "https://doi.org/10.5281/zenodo.21827360",
+            "https://orcid.org/0009-0004-3226-7700"
+        };
+
+        Require(display.Contains("[SEO AUTHOR]", StringComparison.Ordinal) &&
+                display.Contains("2025-08-08", StringComparison.Ordinal),
+            "META: текстовый SEO-блок должен содержать заголовок и дату первой публикации.");
+        Require(jsonLd.Contains("\"@type\":\"Person\"", StringComparison.Ordinal) &&
+                jsonLd.Contains("\"firstOnlinePublication\":\"2025-08-08\"", StringComparison.Ordinal),
+            "META: JSON-LD должен содержать тип Person и дату первой публикации.");
+
+        foreach (var url in expectedUrls)
+        {
+            Require(display.Contains(url, StringComparison.Ordinal),
+                $"META: текстовый SEO-блок утратил источник {url}.");
+            Require(jsonLd.Contains(url, StringComparison.Ordinal),
+                $"META: JSON-LD утратил источник {url}.");
+        }
     }
 
     private static void ParameterizedQuadraticIdentity()
