@@ -96,7 +96,20 @@ internal static class Program
                 return 2;
             }
 
-            return ProcessExpression(string.Join(' ', args[1..])) ? 0 : 1;
+            return ProcessInput(string.Join(' ', args[1..])) ? 0 : 1;
+        }
+
+        // A non-option argument is a one-shot lambda expression or a semicolon-separated system.
+        // Each expression is parsed and returned without entering the interactive ReadLine loop.
+        if (args.Length > 0)
+        {
+            if (args[0].StartsWith("-", StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine($"Неизвестный аргумент: {args[0]}. Используйте --help через интерактивный режим или --expr.");
+                return 2;
+            }
+
+            return ProcessInput(string.Join(' ', args)) ? 0 : 1;
         }
 
         PrintBanner();
@@ -149,8 +162,36 @@ internal static class Program
                 continue;
             }
 
-            ProcessExpression(input);
+            ProcessInput(input);
         }
+    }
+
+    private static bool ProcessInput(string input)
+    {
+        var parts = input.Split(';', StringSplitOptions.TrimEntries);
+        if (parts.Length == 1)
+        {
+            return ProcessExpression(parts[0]);
+        }
+
+        if (parts.Any(string.IsNullOrWhiteSpace))
+        {
+            Console.Error.WriteLine("Система выражений содержит пустой элемент между разделителями ';'.");
+            return false;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"Система RICIS: {parts.Length} выражений.");
+        Console.ResetColor();
+
+        var success = true;
+        for (var index = 0; index < parts.Length; index++)
+        {
+            Console.WriteLine($"\n[{index + 1}/{parts.Length}] {parts[index]}");
+            success &= ProcessExpression(parts[index]);
+        }
+
+        return success;
     }
 
     private static bool ProcessExpression(string input)
@@ -623,6 +664,12 @@ internal static class Program
             ("sin(pi / 2)", 0, 1),
             ("x => pow(x, 2) + 1", 3, 10),
             ("x => exp(x) - 1", 0, 0),
+            ("x => derivative(x ^ 3)", 2, 12),
+            ("x => integral(x + 1, 5)", 2, 15),
+            ("x => sum(x, 1)", 2, 3),
+            ("x => compoundInterest(100, 10, 2)", 0, 121),
+            ("x => distance(x, 5)", 2, 3),
+            ("x => max(x, 0)", -2, 0),
         };
 
         var failures = 0;
@@ -664,11 +711,16 @@ internal static class Program
     {
         Console.WriteLine("Поддерживаемый безопасный синтаксис:");
         Console.WriteLine("  [x =>] выражение");
+        Console.WriteLine("  Система выражений: lambda1; lambda2; ...; lambdaN");
         Console.WriteLine("  Операторы: +, -, *, /, ^ и круглые скобки.");
         Console.WriteLine("  Константы: pi, e.");
         Console.WriteLine("  Функции: sin, cos, tan, sinh, cosh, tanh, exp, log, log10, sqrt, abs, sign, clamp, mod, pow.");
+        Console.WriteLine("  RICIS-функции: min, max, positivePart, negativePart, distance, sum, integral, derivative/dxdt.");
+        Console.WriteLine("  Финансовая expression-функция: compoundInterest(S, r, n) или interest(S, r, n), где r — процент.");
         Console.WriteLine("  Допустимы варианты Math.Sin(x) и sin(x); имена регистронезависимы.");
-        Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2).");
+        Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2); parser не использует оператор **.");
+        Console.WriteLine("  Примеры новых функций: derivative(x^3), integral(x+1, 5), sum(x, 1), distance(x, 5), compoundInterest(100, 10, 2).");
+        Console.WriteLine("  Пример системы: x => x + 1; x => derivative(x ^ 3); x => integral(x, 5).");
         Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
         Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
         Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");

@@ -1,77 +1,64 @@
-﻿// TypeConsistencyPhase.cs
-
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Ricis.Core.Expressions;
+using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Phases;
 
 /// <summary>
-/// Phase 4: Type Consistency Protocol (SP3 из RICIS 7.3)
-/// Проверяет совместимость типов в ∞_F и Monolith
-/// НЕ бросает исключения и НЕ ломает пайплайн
+/// Phase 4: Type Consistency Protocol (SP3).
+/// Validates indexed RICIS nodes without reducing or rewriting their payload.
 /// </summary>
 public static class TypeConsistencyPhase
 {
     /// <summary>
-    /// Executes <c>Apply</c> for the RICIS expression model.
+    /// Validates type consistency for the supplied RICIS expression and returns
+    /// the original expression unchanged.
     /// </summary>
+    /// <param name="expr">The expression to validate.</param>
+    /// <returns>The same expression instance after validation.</returns>
+    /// <exception cref="ArgumentException">Thrown when an indexed node has an invalid payload or key.</exception>
     public static Expression Apply(Expression expr)
     {
-        if (expr == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            var visitor = new TypeConsistencyVisitor();
-            visitor.Visit(expr);
-        }
-        catch (Exception ex)
-        {
-            // Логируем, но не прерываем упрощение
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine($"[Phase 4 Warning] Type check error: {ex.Message}");
-            Console.ResetColor();
-        }
-
-        // ВСЕГДА возвращаем исходное выражение
-        return expr;
+        ArgumentNullException.ThrowIfNull(expr);
+        return new TypeConsistencyVisitor().Visit(expr)
+            ?? throw new InvalidOperationException("Type consistency visitor returned null.");
     }
+}
 
-    private class TypeConsistencyVisitor : ExpressionVisitor
+/// <summary>
+/// Non-reducing SP3 visitor for indexed RICIS nodes.
+/// </summary>
+public sealed class TypeConsistencyVisitor : ExpressionVisitor, IExpressionVisitor
+{
+    /// <inheritdoc />
+    protected override Expression VisitExtension(Expression node)
     {
-        // КРИТИЧНО: переопределяем VisitExtension для кастомных узлов
-        protected override Expression VisitExtension(Expression node)
+        if (node is not InfinityExpression singularity)
         {
-            switch (node)
-            {
-                case InfinityExpression inf:
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine($"[Phase 4] ∞_F detected at {inf.Variable.Name} = {inf.SingularityValue:R} — type check passed (stub)");
-                    Console.ResetColor();
-                    return node; // возвращаем узел без изменений
+            return node;
+        }
 
-                default:
-                    // Для всех остальных Extension — просто пропускаем
-                    return node;
+        ArgumentNullException.ThrowIfNull(singularity.Numerator);
+        if (singularity.Numerator.Type != singularity.Type)
+        {
+            throw new ArgumentException(
+                "Индексированный RICIS-узел обязан сохранять тип исходного payload.",
+                nameof(node));
+        }
+
+        foreach (var (parameter, value) in singularity.Roots)
+        {
+            ArgumentNullException.ThrowIfNull(parameter);
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException(
+                    "Сертифицированный ключ RICIS должен быть конечным.",
+                    nameof(node));
             }
         }
 
-        // Защита от падения на других узлах
-        protected override Expression VisitBinary(BinaryExpression node)
-        {
-            return base.VisitBinary(node);
-        }
-
-        protected override Expression VisitMethodCall(MethodCallExpression node)
-        {
-            return base.VisitMethodCall(node);
-        }
-
-        protected override Expression VisitUnary(UnaryExpression node)
-        {
-            return base.VisitUnary(node);
-        }
+        // Do not call base.VisitExtension: it may reduce CanReduce nodes and
+        // destroy indexed payload. SP3 validates the node in place.
+        return node;
     }
 }

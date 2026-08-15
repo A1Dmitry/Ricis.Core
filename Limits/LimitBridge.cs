@@ -28,20 +28,26 @@ public static class LimitBridge
 
         if (binary.NodeType == ExpressionType.Multiply)
         {
-            if (binary.Left.IsZero())
+            // An indexed zero is already a RICIS node. Do not re-index it as
+            // the parent of a new zero: A6 must receive 0_F·∞_G intact.
+            if (binary.Left.IsZero() && binary.Left is not ZeroInfinityExpression)
             {
                 bridge = new ZeroInfinityExpression(binary.Right, []);
                 return true;
             }
 
-            if (binary.Right.IsZero())
+            if (binary.Right.IsZero() && binary.Right is not ZeroInfinityExpression)
             {
                 bridge = new ZeroInfinityExpression(binary.Left, []);
                 return true;
             }
         }
 
-        if (binary.NodeType == ExpressionType.Divide && binary.Right.IsZero())
+        // Preserve 0_F/0_G for A4. A direct F/0 bridge is valid only when
+        // the numerator is not already an indexed RICIS zero.
+        if (binary.NodeType == ExpressionType.Divide &&
+            binary.Right.IsZero() &&
+            binary.Left is not ZeroInfinityExpression)
         {
             bridge = InfinityExpression.CreateLazy(binary.Left, []);
             return true;

@@ -50,6 +50,15 @@ tests.AddRange(RicisModernClassicalComparisonSuite.Tests);
 tests.AddRange(RicisQaRepairSuite.Tests);
 tests.AddRange(RicisRuleContractSuite.Tests);
 tests.AddRange(RicisCsharpInvariantSuite.Tests);
+tests.AddRange(RicisVectorSuite.Tests);
+tests.AddRange(RicisVectorExpressionSuite.Tests);
+tests.AddRange(ExpressionSystemSuite.Tests);
+tests.AddRange(RicisMatrixExpressionSuite.Tests);
+tests.AddRange(RicisJacobianSingularitySuite.Tests);
+tests.AddRange(RicisPrioritySuite.Tests);
+tests.AddRange(RicisVectorVisitorSuite.Tests);
+tests.AddRange(RicisTypeConsistencySuite.Tests);
+tests.AddRange(RicisCheckedProofSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)

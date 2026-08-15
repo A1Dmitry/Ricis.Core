@@ -23,6 +23,7 @@ public static class RicisPhasePipeline
         new AlgebraicReductionVisitor(),
         new LimitBridgeVisitor(),
         new RicisTransformVisitor(),
+        new TypeConsistencyVisitor(),
         new StandardOperationsVisitor(),
     ];
 
@@ -123,6 +124,7 @@ public static class RicisPhasePipeline
         AlgebraicReductionVisitor => ("Фаза 1 — структурная алгебра", "SP2: сокращение до сингулярностей"),
         LimitBridgeVisitor => ("Фаза 1.5 — мосты O(1)", "LIM: F·0 → 0_F, F/0 → ∞_F"),
         RicisTransformVisitor => ("Фаза 2 — сингулярное преобразование", "A1/A4: индексирование и отношение нулей"),
+        TypeConsistencyVisitor => ("Фаза 4 — согласованность типов", "SP3: сохранение типа и ключей payload"),
         StandardOperationsVisitor => ("Фаза 5 — стандартные операции", "Z-01/Z-02, A5/A6/A7"),
         _ => (visitor.GetType().Name, "Нормативная фаза RICIS")
     };

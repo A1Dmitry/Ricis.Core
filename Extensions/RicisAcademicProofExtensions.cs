@@ -77,6 +77,94 @@ public static class RicisAcademicProofExtensions
     }
 
     /// <summary>
+    /// Proves a real unary lambda claim and structurally checks it against a real
+    /// expected lambda expression. Conditions and constraints remain expression
+    /// trees and are never compiled or evaluated.
+    /// </summary>
+    /// <typeparam name="T">The intrinsic or generic-math scalar type.</typeparam>
+    /// <param name="conditions">Actual unary lambda assumptions.</param>
+    /// <param name="constraints">Actual unary lambda domain constraints.</param>
+    /// <param name="claim">The actual deferred claim expression.</param>
+    /// <param name="expected">The actual deferred expression expected after RICIS normalization.</param>
+    /// <param name="proof">The buffer receiving the derivation and verification record.</param>
+    /// <returns>A result containing derived, expected and verification expression trees.</returns>
+    public static RicisCheckedProofResult<T> Prove<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        Expression<Func<T, T>> expected,
+        StringBuilder proof)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        var conditionList = conditions?.ToList() ?? throw new ArgumentNullException(nameof(conditions));
+        var constraintList = constraints?.ToList() ?? throw new ArgumentNullException(nameof(constraints));
+        var derived = conditionList.Prove(constraintList, claim, proof);
+        var normalizedExpected = RicisPhasePipeline.Simplify(expected) as Expression<Func<T, T>>
+            ?? throw new InvalidOperationException("RICIS-конвейер должен сохранить expected lambda.");
+        var reboundExpectedBody = new ParameterSubstitutionVisitor(
+            normalizedExpected.Parameters[0], derived.Parameters[0]).Visit(normalizedExpected.Body)
+            ?? throw new InvalidOperationException("Не удалось связать expected expression с claim parameter.");
+        var reboundExpected = Expression.Lambda<Func<T, T>>(reboundExpectedBody, derived.Parameters);
+        var verification = Expression.Lambda<Func<T, bool>>(
+            Expression.Equal(derived.Body, reboundExpected.Body), derived.Parameters);
+        var isVerified = derived.Body.AreEqual(reboundExpected.Body);
+
+        proof.AppendLine("## Проверочное выражение");
+        proof.AppendLine($"- Derived: `{derived}`");
+        proof.AppendLine($"- Expected: `{reboundExpected}`");
+        proof.AppendLine($"- Verification: `{verification}`");
+        proof.AppendLine($"- Structural status: `{isVerified}`");
+
+        return new RicisCheckedProofResult<T>(derived, reboundExpected, verification,
+            isVerified, conditionList, constraintList);
+    }
+
+    /// <summary>
+    /// Backward-compatible named alias for the extended <see cref="Prove{T}(IEnumerable{Expression{Func{T, Boolean}}}, IEnumerable{Expression{Func{T, Boolean}}}, Expression{Func{T, T}}, Expression{Func{T, T}}, StringBuilder)"/> overload.
+    /// </summary>
+    public static RicisCheckedProofResult<T> ProveChecked<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        Expression<Func<T, T>> expected,
+        StringBuilder proof)
+        where T : INumber<T> => conditions.Prove(constraints, claim, expected, proof);
+
+    /// <summary>
+    /// Builds an academic proof document from real lambda hypotheses and a real
+    /// expected expression, preserving the structural verification expression.
+    /// </summary>
+    public static RicisCheckedProofResult<T> ProveDocument<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        Expression<Func<T, T>> expected,
+        RicisProofDocumentProfile profile,
+        StringBuilder document)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(document);
+        var derivation = new StringBuilder();
+        var result = conditions.Prove(constraints, claim, expected, derivation);
+        AppendProofDocument(document, profile, derivation, result.Derived);
+        return result;
+    }
+
+    /// <summary>
+    /// Backward-compatible named alias for the extended <see cref="ProveDocument{T}(IEnumerable{Expression{Func{T, Boolean}}}, IEnumerable{Expression{Func{T, Boolean}}}, Expression{Func{T, T}}, Expression{Func{T, T}}, RicisProofDocumentProfile, StringBuilder)"/> overload.
+    /// </summary>
+    public static RicisCheckedProofResult<T> ProveDocumentChecked<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        Expression<Func<T, T>> expected,
+        RicisProofDocumentProfile profile,
+        StringBuilder document)
+        where T : INumber<T> => conditions.ProveDocument(constraints, claim, expected, profile, document);
+
+    /// <summary>
     /// Derives a unary scalar expression and writes an academic proof document
     /// with an explicit finite or conditional proof scope. The document records
     /// the supplied hypotheses without evaluating them and embeds the effective

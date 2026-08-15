@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using Ricis.Core.Extensions;
 
 namespace Ricis.ConsoleApp;
 
@@ -224,8 +225,17 @@ public sealed class LambdaTextParser
                 "CLAMP" => ThreeArgumentMath(nameof(Math.Clamp), arguments, function),
                 "MOD" => Modulo(arguments, function),
                 "POW" => TwoArgumentMath(nameof(Math.Pow), arguments, function),
+                "MIN" => Extremum(arguments, function, chooseMaximum: false),
+                "MAX" => Extremum(arguments, function, chooseMaximum: true),
+                "POSITIVE" or "POSITIVEPART" => Part(arguments, function, positive: true),
+                "NEGATIVE" or "NEGATIVEPART" => Part(arguments, function, positive: false),
+                "DISTANCE" => Distance(arguments, function),
+                "SUM" => BinaryArithmetic(arguments, function, Expression.Add),
+                "INTEGRAL" => BinaryArithmetic(arguments, function, Expression.Multiply),
+                "DERIVATIVE" or "DXDT" => Derivative(arguments, function),
+                "COMPOUNDINTEREST" or "INTEREST" => CompoundInterest(arguments, function),
                 _ => throw new LambdaParseException(
-                    $"Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod или Pow.",
+                    $"Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod, Pow, Min, Max, PositivePart, NegativePart, Distance, Sum, Integral, Derivative, CompoundInterest или Interest.",
                     function.Position),
             };
         }
@@ -282,6 +292,107 @@ public sealed class LambdaTextParser
 
             var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double)])!;
             return Expression.Call(method, arguments[0], arguments[1]);
+        }
+
+        private static Expression BinaryArithmetic(
+            IReadOnlyList<Expression> arguments,
+            Token token,
+            Func<Expression, Expression, BinaryExpression> operation)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+            }
+
+            return operation(arguments[0], arguments[1]);
+        }
+
+        private static Expression Extremum(IReadOnlyList<Expression> arguments, Token token, bool chooseMaximum)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+            }
+
+            var test = chooseMaximum
+                ? Expression.GreaterThan(arguments[0], arguments[1])
+                : Expression.LessThan(arguments[0], arguments[1]);
+            return Expression.Condition(test, arguments[0], arguments[1]);
+        }
+
+        private static Expression Part(IReadOnlyList<Expression> arguments, Token token, bool positive)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+            }
+
+            var zero = Expression.Constant(0.0);
+            var test = positive
+                ? Expression.GreaterThan(arguments[0], zero)
+                : Expression.LessThan(arguments[0], zero);
+            return Expression.Condition(test, arguments[0], zero);
+        }
+
+        private static Expression Distance(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+            }
+
+            return Expression.Call(typeof(Math), nameof(Math.Abs), Type.EmptyTypes,
+                Expression.Subtract(arguments[0], arguments[1]));
+        }
+
+        private static Expression Derivative(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+            }
+
+            return SymbolicDerivator.Derive(arguments[0], CurrentParameter(arguments));
+        }
+
+        private static Expression CompoundInterest(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 3)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно три аргумента: S, r и n.", token.Position);
+            }
+
+            var rate = Expression.Divide(arguments[1], Expression.Constant(100.0));
+            var baseValue = Expression.Add(Expression.Constant(1.0), rate);
+            return Expression.Multiply(arguments[0], Expression.Power(baseValue, arguments[2]));
+        }
+
+        private static ParameterExpression CurrentParameter(IReadOnlyList<Expression> arguments)
+        {
+            var parameter = arguments.SelectMany(FindParameters).FirstOrDefault();
+            return parameter ?? throw new InvalidOperationException("Для производной требуется параметр lambda.");
+        }
+
+        private static IEnumerable<ParameterExpression> FindParameters(Expression expression)
+        {
+            var visitor = new ParameterFinder();
+            visitor.Visit(expression);
+            return visitor.Parameters;
+        }
+
+        private sealed class ParameterFinder : ExpressionVisitor
+        {
+            public List<ParameterExpression> Parameters { get; } = [];
+
+            protected override Expression VisitParameter(ParameterExpression node)
+            {
+                if (!Parameters.Contains(node))
+                {
+                    Parameters.Add(node);
+                }
+
+                return base.VisitParameter(node);
+            }
         }
 
         private static string NormaliseName(string name)
