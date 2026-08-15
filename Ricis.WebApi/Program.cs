@@ -3,7 +3,15 @@ using Ricis.ConsoleApp;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
 
+const int MaxRequestBodyBytes = 64 * 1024;
+const int MaxExpressionLength = 4096;
+const int MaxSystemExpressions = 64;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = MaxRequestBodyBytes;
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,9 +44,9 @@ app.Run();
 
 static IResult ProcessSingleExpression(ExpressionRequest request, string operation)
 {
-    if (request is null || string.IsNullOrWhiteSpace(request.Expression))
+    if (!TryValidateExpression(request, out var validationError))
     {
-        return Results.BadRequest(new ErrorResponse("Expression is required."));
+        return Results.BadRequest(new ErrorResponse(validationError!));
     }
 
     try
@@ -59,26 +67,26 @@ static IResult ProcessSingleExpression(ExpressionRequest request, string operati
             exception.Message,
             exception.Position));
     }
-    catch (Exception exception)
+    catch (Exception)
     {
-        return Results.BadRequest(new ErrorResponse(exception.Message));
+        return Results.BadRequest(new ErrorResponse("Expression processing failed."));
     }
 }
 
 static IResult ProcessExpressionSystem(ExpressionRequest request)
 {
-    if (request is null || string.IsNullOrWhiteSpace(request.Expression))
+    if (!TryValidateExpression(request, out var validationError))
     {
-        return Results.BadRequest(new ErrorResponse("Expression is required."));
+        return Results.BadRequest(new ErrorResponse(validationError!));
     }
 
-    var fragments = request.Expression
+    var fragments = request.Expression!
         .Split(';', StringSplitOptions.TrimEntries);
 
-    if (fragments.Length == 0 || fragments.Any(string.IsNullOrWhiteSpace))
+    if (fragments.Length == 0 || fragments.Length > MaxSystemExpressions || fragments.Any(string.IsNullOrWhiteSpace))
     {
         return Results.BadRequest(new ErrorResponse(
-            "Expression system must contain non-empty lambda expressions separated by ';'."));
+            $"Expression system must contain 1 to {MaxSystemExpressions} non-empty lambda expressions separated by ';'."));
     }
 
     try
@@ -106,14 +114,32 @@ static IResult ProcessExpressionSystem(ExpressionRequest request)
             exception.Message,
             exception.Position));
     }
-    catch (ArgumentException exception)
+    catch (ArgumentException)
     {
-        return Results.BadRequest(new ErrorResponse(exception.Message));
+        return Results.BadRequest(new ErrorResponse("Expression system validation failed."));
     }
-    catch (Exception exception)
+    catch (Exception)
     {
-        return Results.BadRequest(new ErrorResponse(exception.Message));
+        return Results.BadRequest(new ErrorResponse("Expression system processing failed."));
     }
+}
+
+static bool TryValidateExpression(ExpressionRequest? request, out string? error)
+{
+    error = null;
+    if (request is null || string.IsNullOrWhiteSpace(request.Expression))
+    {
+        error = "Expression is required.";
+        return false;
+    }
+
+    if (request.Expression.Length > MaxExpressionLength)
+    {
+        error = $"Expression exceeds the maximum length of {MaxExpressionLength} characters.";
+        return false;
+    }
+
+    return true;
 }
 
 public sealed record ExpressionRequest(string Expression);
