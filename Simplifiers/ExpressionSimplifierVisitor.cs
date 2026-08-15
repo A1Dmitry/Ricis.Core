@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 
@@ -14,6 +15,10 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
 
     /// <inheritdoc />
+    protected override Expression VisitExtension(Expression node) =>
+        RicisSpecialExpressionRebinder.Rebind(node, Visit);
+
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
@@ -24,7 +29,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         {
             case ExpressionType.Add when IsZero(left): return right;
             case ExpressionType.Add when IsZero(right): return left;
-            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return Expression.Constant(0, node.Type);
+            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return NumericConstants.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsOne(left): return right;
             case ExpressionType.Multiply when IsOne(right): return left;
             case ExpressionType.Divide when IsZero(left): return left;
@@ -37,7 +42,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
             return node.NodeType switch
             {
                 ExpressionType.Add => Expression.Multiply(CreateNumericConstant(2, node.Type), left),
-                ExpressionType.Multiply => CreatePower(left, 2),
+                ExpressionType.Multiply when node.Method is null => CreatePowerOrProduct(left),
                 _ => node.Update(left, node.Conversion, right)
             };
         }
@@ -278,9 +283,19 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
             Expression.Multiply(b, d));
     }
 
-    private Expression CreatePower(Expression @base, int exponent)
+    private static Expression CreatePowerOrProduct(Expression @base)
     {
-        return Expression.Power(@base, CreateNumericConstant(exponent, @base.Type));
+        try
+        {
+            return Expression.Power(@base, CreateNumericConstant(2, @base.Type));
+        }
+        catch (ArgumentException)
+        {
+            // Expression.Power is not defined for every INumber type (notably
+            // BigInteger). Preserve the exact ordinary product instead of
+            // changing the scalar domain or throwing from a simplifier.
+            return Expression.Multiply(@base, @base);
+        }
     }
 
     private static bool IsZero(Expression e)

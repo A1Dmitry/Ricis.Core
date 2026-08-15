@@ -49,6 +49,7 @@ tests.AddRange(RicisAnalyticSugarSuite.Tests);
 tests.AddRange(RicisModernClassicalComparisonSuite.Tests);
 tests.AddRange(RicisQaRepairSuite.Tests);
 tests.AddRange(RicisRuleContractSuite.Tests);
+tests.AddRange(RicisCsharpInvariantSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)

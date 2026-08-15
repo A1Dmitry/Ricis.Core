@@ -287,6 +287,9 @@ public static class RicisContinuousExtensions
             _to = to;
         }
 
+        protected override Expression VisitExtension(Expression node) =>
+            RicisSpecialExpressionRebinder.Rebind(node, Visit);
+
         protected override Expression VisitParameter(ParameterExpression node) =>
             ReferenceEquals(node, _from) ? _to : base.VisitParameter(node);
     }

@@ -1,5 +1,6 @@
 ﻿using Ricis.Core.Solvers.ZeroSolver;
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Solvers
 {
@@ -129,6 +130,8 @@ namespace Ricis.Core.Solvers
         private class ExpFinderVisitor : ExpressionVisitor
         {
             public Expression FoundExpArgument { get; private set; }
+
+            protected override Expression VisitExtension(Expression node) => node;
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {

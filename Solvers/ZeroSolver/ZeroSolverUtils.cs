@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using Ricis.Core.Expressions;
+
 namespace Ricis.Core.Solvers.ZeroSolver
 {
     /// <summary>
@@ -55,6 +57,8 @@ namespace Ricis.Core.Solvers.ZeroSolver
         private class ParamFinder : ExpressionVisitor
         {
             public ParameterExpression Parameter { get; private set; }
+
+            protected override Expression VisitExtension(Expression node) => node;
 
             protected override Expression VisitParameter(ParameterExpression node)
             {

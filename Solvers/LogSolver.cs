@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Ricis.Core.Solvers.ZeroSolver;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Solvers;
 
@@ -73,6 +74,8 @@ public static class LogSolver
     private class LogFinder : ExpressionVisitor
     {
         public Expression FoundLogArgument { get; private set; }
+
+        protected override Expression VisitExtension(Expression node) => node;
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

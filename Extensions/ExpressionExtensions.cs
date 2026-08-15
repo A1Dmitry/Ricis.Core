@@ -220,6 +220,11 @@ public static class ExpressionExtensions
     public static bool IsZero(this Expression expr) => expr switch
     {
         ZeroInfinityExpression => true,
+        UnaryExpression
+        {
+            NodeType: ExpressionType.Negate or ExpressionType.UnaryPlus,
+            Operand: ZeroInfinityExpression
+        } => true,
         ConstantExpression c => IsZeroValue(c.Value),
         _ => false
     };

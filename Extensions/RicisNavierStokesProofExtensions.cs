@@ -37,6 +37,11 @@ public static class RicisNavierStokesProofExtensions
             throw new ArgumentOutOfRangeException(nameof(viscosity), viscosity, "Вязкость должна быть конечной и неотрицательной.");
         }
 
+        EnsureFiniteConstants(velocity.U, nameof(velocity));
+        EnsureFiniteConstants(velocity.V, nameof(velocity));
+        EnsureFiniteConstants(velocity.W, nameof(velocity));
+        EnsureFiniteConstants(pressure, nameof(pressure));
+
         var divergence = velocity.Divergence();
         var timeDerivative = velocity.TimeDerivative();
         var convection = velocity.ConvectiveDerivative(velocity);
@@ -104,4 +109,32 @@ public static class RicisNavierStokesProofExtensions
 
     private static string FormatField(RicisVectorField3 field) =>
         $"({field.U.Body}, {field.V.Body}, {field.W.Body})";
+
+    private static void EnsureFiniteConstants(LambdaExpression expression, string parameterName)
+    {
+        var visitor = new FiniteConstantValidationVisitor(parameterName);
+        visitor.Visit(expression);
+    }
+
+    private sealed class FiniteConstantValidationVisitor : ExpressionVisitor
+    {
+        private readonly string _parameterName;
+
+        public FiniteConstantValidationVisitor(string parameterName) => _parameterName = parameterName;
+
+        protected override Expression VisitExtension(Expression node) => node;
+
+        protected override Expression VisitConstant(ConstantExpression node)
+        {
+            if (node.Value is double value && !double.IsFinite(value))
+            {
+                throw new ArgumentException(
+                    $"{_parameterName} содержит non-finite double constant {value}; " +
+                    "proof допускает только конечные real-valued expression trees.",
+                    _parameterName);
+            }
+
+            return node;
+        }
+    }
 }

@@ -715,6 +715,9 @@ public static class RicisAcademicProofExtensions
             _replacement = replacement;
         }
 
+        protected override Expression VisitExtension(Expression node) =>
+            RicisSpecialExpressionRebinder.Rebind(node, Visit);
+
         protected override Expression VisitParameter(ParameterExpression node) =>
             ReferenceEquals(node, _parameter) ? _replacement : base.VisitParameter(node);
     }

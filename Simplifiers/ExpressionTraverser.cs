@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ricis.Core.Expressions;
 using Ricis.Core.Simplifiers;
 
 /// <summary>
@@ -11,6 +12,10 @@ public class ExpressionTraverser : ExpressionVisitor, IExpressionVisitor
     /// Initializes a new instance of <c>ExpressionTraverser</c>.
     /// </summary>
     public ExpressionTraverser(Action<Expression> action) => _action = action;
+    /// <inheritdoc />
+    protected override Expression VisitExtension(Expression node) =>
+        RicisSpecialExpressionRebinder.Rebind(node, Visit);
+
     /// <inheritdoc />
     public override Expression Visit(Expression node)
     {

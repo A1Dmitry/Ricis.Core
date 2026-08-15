@@ -36,8 +36,19 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             return Rebuild(node, left, right);
         }
 
+        // O(1): F/∞_G -> 0_F. This must precede the generic keyed-pole guard;
+        // KeyedInfinity is still a true infinity, and its complete root set is
+        // retained on the resulting indexed zero.
+        if (node.NodeType == ExpressionType.Divide &&
+            right is InfinityExpression denominatorInfinity &&
+            IsTrueInfinity(denominatorInfinity) &&
+            left is not InfinityExpression)
+        {
+            return new ZeroInfinityExpression(left, denominatorInfinity.Roots);
+        }
+
         // A keyed pole contains different F(a) values for different keys. It
-        // must remain branch-aware until a matching branchwise operation exists.
+        // must remain branch-aware for operations without a normative branchwise rule.
         if (left is KeyedInfinityExpression || right is KeyedInfinityExpression)
         {
             return Rebuild(node, left, right);
@@ -145,16 +156,6 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             return new ZeroInfinityExpression(index, indexedDividend.Roots);
         }
 
-        // F/∞_G -> 0_F. The finite numerator is retained as the zero index,
-        // while the roots of the infinity preserve the singular context.
-        if (node.NodeType == ExpressionType.Divide &&
-            right is InfinityExpression denominatorInfinity &&
-            IsTrueInfinity(denominatorInfinity) &&
-            left is not InfinityExpression)
-        {
-            return new ZeroInfinityExpression(left, denominatorInfinity.Roots);
-        }
-
         // A5/A7 operate only on true indexed infinities, never on 0_F.
         if (IsTrueInfinity(left) && IsTrueInfinity(right))
         {
@@ -254,10 +255,32 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         }
 
         // Empty root sets represent the same deferred O(1) context. For
-        // concrete keys every key must match; no key is silently discarded.
-        return leftRoots.All(rootLeft => rightRoots.Any(rootRight =>
-            rootLeft.Param == rootRight.Param &&
-            Math.Abs(rootLeft.Value - rootRight.Value) < 1e-9));
+        // concrete keys compare the complete root multiset injectively; no key
+        // may be reused to hide a different certified root.
+        var used = new bool[rightRoots.Count];
+        foreach (var rootLeft in leftRoots)
+        {
+            var match = -1;
+            for (var index = 0; index < rightRoots.Count; index++)
+            {
+                var rootRight = rightRoots[index];
+                if (!used[index] && rootLeft.Param == rootRight.Param &&
+                    Math.Abs(rootLeft.Value - rootRight.Value) < 1e-9)
+                {
+                    match = index;
+                    break;
+                }
+            }
+
+            if (match < 0)
+            {
+                return false;
+            }
+
+            used[match] = true;
+        }
+
+        return true;
     }
 
     private static bool IsScalar(Expression expression) => !IsTrueInfinity(expression) && expression is not ZeroInfinityExpression;

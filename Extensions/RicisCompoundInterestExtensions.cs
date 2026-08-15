@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
 
 namespace Ricis.Core.Extensions;
@@ -243,6 +244,9 @@ public static class RicisCompoundInterestExtensions
             _from = from;
             _to = to;
         }
+
+        protected override Expression VisitExtension(Expression node) =>
+            RicisSpecialExpressionRebinder.Rebind(node, Visit);
 
         protected override Expression VisitParameter(ParameterExpression node) =>
             ReferenceEquals(node, _from) ? _to : base.VisitParameter(node);

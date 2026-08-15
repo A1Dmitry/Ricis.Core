@@ -213,7 +213,30 @@ public static class ExpressionStructuralComparer
             return false;
         }
 
-        return aRoots.All(rootA => bRoots.Any(rootB =>
-            ParameterEqual(rootA.Param, rootB.Param, parameterMap) && rootA.Value.Equals(rootB.Value)));
+        var used = new bool[bRoots.Count];
+        foreach (var rootA in aRoots)
+        {
+            var match = -1;
+            for (var index = 0; index < bRoots.Count; index++)
+            {
+                var rootB = bRoots[index];
+                if (!used[index] &&
+                    ParameterEqual(rootA.Param, rootB.Param, parameterMap) &&
+                    rootA.Value.Equals(rootB.Value))
+                {
+                    match = index;
+                    break;
+                }
+            }
+
+            if (match < 0)
+            {
+                return false;
+            }
+
+            used[match] = true;
+        }
+
+        return true;
     }
 }

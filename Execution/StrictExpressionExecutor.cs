@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Execution;
 
@@ -35,6 +36,19 @@ public static class StrictExpressionExecutor
     {
         private static readonly MethodInfo RequireNonZeroMethod =
             typeof(StrictExpressionExecutor).GetMethod(nameof(RequireNonZero), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        protected override Expression VisitExtension(Expression node)
+        {
+            if (node is ZeroInfinityExpression)
+            {
+                // Compile boundary: 0_F is intentionally projected to native zero
+                // only after all symbolic RICIS phases have completed.
+                return node;
+            }
+
+            throw new InvalidOperationException(
+                $"Нельзя строго скомпилировать нерешённый RICIS-узел {node.GetType().Name}. Сначала примените нормативный pipeline.");
+        }
 
         protected override Expression VisitBinary(BinaryExpression node)
         {
