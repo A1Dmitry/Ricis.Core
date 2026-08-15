@@ -48,9 +48,9 @@ public static class RicisPhasePipeline
     {
         ArgumentNullException.ThrowIfNull(expr);
 
-        // Metadata is opt-in: it appears only when a source lambda captures an
-        // outer variable exactly named "about".
-        var authorProfile = AboutCaptureDetector.IsCaptured(expr)
+        // Metadata is opt-in: it appears when a source lambda captures an
+        // outer variable or uses a parameter exactly named "about".
+        var authorProfile = AboutCaptureDetector.IsAboutOptIn(expr)
             ? AuthorSeoProfile.RicisAuthor
             : null;
 

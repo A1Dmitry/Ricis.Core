@@ -45,12 +45,13 @@ internal static class RicisRuleContractSuite
         ("RC31: SP2 — x²/(2x²) оставляет точное 1/2", ParameterizedQuadraticResidualRatio),
         ("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах", DistinctKeyIndicesRemainAssociated),
         ("RC33: META — захваченный about добавляет SEO-профиль автора", CapturedAboutAddsAuthorSeo),
-        ("RC34: META — профиль about сохраняет все подтверждённые источники", AuthorSeoProfileKeepsVerifiedSources),
-        ("RC35: ID — sign(x)/sign(x) даёт 1", SignIdentity),
-        ("RC36: ID — clamp(x)/clamp(x) даёт 1", ClampIdentity),
-        ("RC37: SP2 — abs(x) сокращается как общий множитель", AbsoluteValueFactorCancellation),
-        ("RC38: ID — x%2/(x%2) даёт 1", ModuloIdentity),
-        ("RC39: ID — условная отсечка F/F даёт 1", ConditionalCutoffIdentity),
+        ("RC34: META — параметр about добавляет SEO-профиль автора", AboutParameterAddsAuthorSeo),
+        ("RC35: META — профиль about сохраняет все подтверждённые источники", AuthorSeoProfileKeepsVerifiedSources),
+        ("RC36: ID — sign(x)/sign(x) даёт 1", SignIdentity),
+        ("RC37: ID — clamp(x)/clamp(x) даёт 1", ClampIdentity),
+        ("RC38: SP2 — abs(x) сокращается как общий множитель", AbsoluteValueFactorCancellation),
+        ("RC39: ID — x%2/(x%2) даёт 1", ModuloIdentity),
+        ("RC40: ID — условная отсечка F/F даёт 1", ConditionalCutoffIdentity),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -369,6 +370,24 @@ internal static class RicisRuleContractSuite
         Require(plain.Body is not AuthorAnnotatedExpression &&
                 !plain.ToString().Contains("[SEO AUTHOR]", StringComparison.Ordinal),
             "META: лямбда без захваченного about не должна получать SEO-блок.");
+    }
+
+    private static void AboutParameterAddsAuthorSeo()
+    {
+        Expression<Func<double, double>> source = about => about + 1;
+
+        Require(!AboutCaptureDetector.IsCaptured(source),
+            "Параметр about не должен ошибочно считаться внешним closure capture.");
+        Require(AboutCaptureDetector.IsAboutOptIn(source),
+            "Параметр about должен активировать opt-in метаданных.");
+
+        var derived = ExtractDerived(RicisPhasePipeline.Simplify(source));
+        Require(derived.Body is AuthorAnnotatedExpression,
+            "META: параметр about должен обернуть производное дерево в SEO-узел автора.");
+        Require(derived.ToString().Contains("[SEO AUTHOR]", StringComparison.Ordinal),
+            "META: параметр about должен добавлять SEO-блок в ToString.");
+        Require(Math.Abs(derived.Compile()(2) - 3) <= 1e-12,
+            "META: SEO-аннотация для параметра about не должна менять вычисление.");
     }
 
     private static void AuthorSeoProfileKeepsVerifiedSources()
