@@ -48,6 +48,11 @@ internal static class Program
             return RunSumDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--proof-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunProofOperationsDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -218,6 +223,34 @@ internal static class Program
         }
 
         return allMatch ? 0 : 1;
+    }
+
+    private static int RunProofOperationsDemo()
+    {
+        Expression<Func<double, double>> f = x => x + 1.0;
+        Expression<Func<double, double>> g = y => y - 1.0;
+        Expression<Func<double, double>> identity = z => z / z;
+
+        var composition = f.Compose(g);
+        var application = f.At(g);
+        var difference = f.Difference(f);
+        var ratio = identity.Ratio(identity);
+        var product = f.Product(g);
+
+        Console.WriteLine("Доказательные expression-операции RICIS:");
+        Console.WriteLine($"F(x):              {f}");
+        Console.WriteLine($"G(y):              {g}");
+        Console.WriteLine($"Compose(F, G):     {composition}");
+        Console.WriteLine($"At(F, G):          {application}");
+        Console.WriteLine($"Difference(F, F):  {difference}");
+        Console.WriteLine($"Ratio(I, I):       {ratio}");
+        Console.WriteLine($"Product(F, G):     {product}");
+        Console.WriteLine();
+        Console.WriteLine($"Compose при x=3:   {composition.Compile()(3.0):G17}");
+        Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
+        Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
+        Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
     }
 
     private static int RunSumDemo()
@@ -398,6 +431,7 @@ internal static class Program
         Console.WriteLine("  В CLI --structural-demo показывает L1/SP2 для sign, clamp, abs и остатка.");
         Console.WriteLine("  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.");
         Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
+        Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
         Console.WriteLine();
         PrintExamples();
     }
