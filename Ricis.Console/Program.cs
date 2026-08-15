@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text;
+using Ricis.Core.Extensions;
 using Ricis.Core.Metadata;
 using Ricis.Core.Phases;
 
@@ -25,6 +26,11 @@ internal static class Program
         if (args.Length > 0 && string.Equals(args[0], "--author-seo-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunAuthorSeoDemo();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--derivative-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunDerivativeDemo();
         }
 
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
@@ -159,6 +165,21 @@ internal static class Program
         }
     }
 
+    private static int RunDerivativeDemo()
+    {
+        Expression<Func<double, double>> source = t => Math.Sin(t * t) + Math.Pow(t, 3.0);
+        var derivative = source.DxDt();
+
+        Console.WriteLine("Исходная лямбда:");
+        Console.WriteLine($"  {source}");
+        Console.WriteLine();
+        Console.WriteLine("Формальная производная RICIS (без lim и Лопиталя):");
+        Console.WriteLine($"  {derivative}");
+        Console.WriteLine();
+        Console.WriteLine($"Проверка исполнения: t=2 → {derivative.Compile()(2.0):G17}");
+        return 0;
+    }
+
     private static int RunAuthorSeoDemo()
     {
         // `about` is deliberately captured from the outer scope. The pipeline
@@ -267,6 +288,7 @@ internal static class Program
         Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
         Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
         Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");
+        Console.WriteLine("  В CLI --derivative-demo показывает DxDt() как символьную перестройку без lim и Лопиталя.");
         Console.WriteLine();
         PrintExamples();
     }

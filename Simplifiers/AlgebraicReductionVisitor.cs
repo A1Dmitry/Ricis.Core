@@ -115,6 +115,17 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
+        // Root certification and polynomial long division are currently a
+        // double-domain facility. Generic INumber expressions still receive
+        // all structural SP2 reductions above, but must not be coerced into a
+        // Func<double,double> merely to inspect a denominator.
+        if (node.Type != typeof(double))
+        {
+            return left == node.Left && right == node.Right
+                ? node
+                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        }
+
         var parameter = FindSingleParameter(node);
         if (parameter == null)
         {

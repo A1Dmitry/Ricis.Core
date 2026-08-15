@@ -54,6 +54,17 @@ public static class RicisPhasePipeline
                         continue;
                     }
 
+                    // Certified roots and key substitution currently operate
+                    // in the double domain. Generic INumber finite algebra is
+                    // still simplified by L1/SP2/O(1), but is not coerced into
+                    // double merely to discover a non-constant pole.
+                    if (visitor is RicisTransformVisitor &&
+                        result is LambdaExpression typedLambda &&
+                        typedLambda.ReturnType != typeof(double))
+                    {
+                        continue;
+                    }
+
                     result = visitor.Visit(result);
                 }
                 catch (Exception ve)

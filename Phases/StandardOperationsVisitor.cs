@@ -11,7 +11,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
     // или не сможет обработать InfinityExpression при рекурсивном обходе.
     protected override Expression VisitExtension(Expression node)
     {
-        if (node is InfinityExpression)
+        if (node is InfinityExpression or DeferredDerivativeExpression)
         {
             return node;
         }
