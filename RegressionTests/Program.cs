@@ -42,6 +42,7 @@ tests.AddRange(RicisProofOperationsSuite.Tests);
 tests.AddRange(RicisContinuousSugarSuite.Tests);
 tests.AddRange(RicisComplexSuite.Tests);
 tests.AddRange(RicisCompoundInterestSuite.Tests);
+tests.AddRange(RicisAnalyticSugarSuite.Tests);
 tests.AddRange(RicisRuleContractSuite.Tests);
 
 var failures = new List<string>();

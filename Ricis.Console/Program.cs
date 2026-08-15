@@ -68,6 +68,11 @@ internal static class Program
             return RunCompoundInterestDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--analytic-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunAnalyticSugarDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -265,6 +270,40 @@ internal static class Program
         Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
         Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
         Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
+    }
+
+    private static int RunAnalyticSugarDemo()
+    {
+        Expression<Func<double, double>> shifted = x => x + 1.0;
+        var sin = shifted.Sin();
+        var exponential = shifted.Exp();
+        var logarithm = shifted.Log();
+        var squareRoot = shifted.Sqrt();
+        var cube = shifted.Pow(3.0);
+        var cubeDerivative = cube.DxDt();
+        var hyperbolic = shifted.Tanh();
+
+        Console.WriteLine("Аналитический математический сахар RICIS:");
+        Console.WriteLine("  Каждый результат — явный Math.* expression-узел над нормализованной лямбдой; исходные делегаты не вызываются при построении.");
+        Console.WriteLine($"F(x):          {shifted}");
+        Console.WriteLine($"Sin(F):        {sin}");
+        Console.WriteLine($"Exp(F):        {exponential}");
+        Console.WriteLine($"Log(F):        {logarithm}");
+        Console.WriteLine($"Sqrt(F):       {squareRoot}");
+        Console.WriteLine($"Pow(F, 3):     {cube}");
+        Console.WriteLine($"d Pow(F,3)/dx:{cubeDerivative}");
+        Console.WriteLine($"Tanh(F):       {hyperbolic}");
+        Console.WriteLine();
+        Console.WriteLine("x       sin(F)      exp(F)      log(F)      sqrt(F)     F³         dF³/dx    tanh(F)");
+
+        foreach (var point in new[] { 0.0, 1.0, 2.0 })
+        {
+            Console.WriteLine($"{point,4:G}  {sin.Compile()(point),10:G6}  {exponential.Compile()(point),10:G6}  " +
+                              $"{logarithm.Compile()(point),10:G6}  {squareRoot.Compile()(point),10:G6}  " +
+                              $"{cube.Compile()(point),8:G6}  {cubeDerivative.Compile()(point),9:G6}  {hyperbolic.Compile()(point),9:G6}");
+        }
+
         return 0;
     }
 
@@ -555,6 +594,7 @@ internal static class Program
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");
+        Console.WriteLine("  В CLI --analytic-demo показывает аналитические Math.*-узлы и производную Pow(F,3).");
         Console.WriteLine();
         PrintExamples();
     }
