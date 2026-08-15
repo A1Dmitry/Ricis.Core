@@ -15,7 +15,10 @@ internal static class RicisDerivativeSuite
         ("D06: Derivative — alias DxDt возвращает то же дерево", DerivativeAliasMatchesDxDt),
         ("D07: DxDt double — Expression.Power с постоянной степенью", DoublePowerDerivative),
         ("D08: DxDt double — цепное правило Math.Sin", SineChainRuleDerivative),
-        ("D09: DxDt double — Math.Pow с постоянной степенью", MathPowDerivative)
+        ("D09: DxDt double — Math.Pow с постоянной степенью", MathPowDerivative),
+        ("D10: DxDt — t³ совпадает с классическим 3t²", CubicMatchesClassicalDerivative),
+        ("D11: DxDt — sin(t²)+t³ совпадает с классическим цепным правилом", CompositeMatchesClassicalDerivative),
+        ("D12: DxDt — t²·sin(t) совпадает с классическим правилом произведения", ProductMatchesClassicalDerivative)
     ];
 
     private static void IntegerSquareDerivative()
@@ -106,6 +109,54 @@ internal static class RicisDerivativeSuite
 
         Require(Math.Abs(actual - 48.0) <= 1e-12,
             $"D09: ожидалось 3·t²=48 при t=4, получено {actual} ({derivative}).");
+    }
+
+    private static void CubicMatchesClassicalDerivative()
+    {
+        Expression<Func<double, double>> function = t => t * t * t;
+        AssertMatchesClassical(
+            function,
+            t => 3.0 * t * t,
+            [-2.0, 0.0, 3.0],
+            "t³");
+    }
+
+    private static void CompositeMatchesClassicalDerivative()
+    {
+        Expression<Func<double, double>> function = t => Math.Sin(t * t) + Math.Pow(t, 3.0);
+        AssertMatchesClassical(
+            function,
+            t => 2.0 * t * Math.Cos(t * t) + 3.0 * t * t,
+            [-1.0, 0.0, 2.0],
+            "sin(t²)+t³");
+    }
+
+    private static void ProductMatchesClassicalDerivative()
+    {
+        Expression<Func<double, double>> function = t => (t * t) * Math.Sin(t);
+        AssertMatchesClassical(
+            function,
+            t => 2.0 * t * Math.Sin(t) + t * t * Math.Cos(t),
+            [-1.0, 0.5, 2.0],
+            "t²·sin(t)");
+    }
+
+    private static void AssertMatchesClassical(
+        Expression<Func<double, double>> function,
+        Func<double, double> knownClassicalDerivative,
+        IReadOnlyList<double> points,
+        string name)
+    {
+        var derived = function.DxDt().Compile();
+        foreach (var point in points)
+        {
+            var actual = derived(point);
+            var expected = knownClassicalDerivative(point);
+            Require(!double.IsNaN(actual) && !double.IsInfinity(actual) &&
+                    Math.Abs(actual - expected) <= 1e-12,
+                $"{name}: при t={point:G17} ожидалось классическое значение {expected:G17}, " +
+                $"RICIS-производная дала {actual:G17}.");
+        }
     }
 
     private static void DerivativeAliasMatchesDxDt()

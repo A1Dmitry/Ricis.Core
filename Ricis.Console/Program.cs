@@ -167,17 +167,42 @@ internal static class Program
 
     private static int RunDerivativeDemo()
     {
-        Expression<Func<double, double>> source = t => Math.Sin(t * t) + Math.Pow(t, 3.0);
-        var derivative = source.DxDt();
+        var cases = new (string Name, Expression<Func<double, double>> Source,
+                         Func<double, double> ClassicalDerivative, double[] Points)[]
+        {
+            ("t³", t => t * t * t, t => 3.0 * t * t, [-2.0, 0.0, 3.0]),
+            ("sin(t²)+t³", t => Math.Sin(t * t) + Math.Pow(t, 3.0),
+                t => 2.0 * t * Math.Cos(t * t) + 3.0 * t * t, [-1.0, 0.0, 2.0]),
+            ("t²·sin(t)", t => (t * t) * Math.Sin(t),
+                t => 2.0 * t * Math.Sin(t) + t * t * Math.Cos(t), [-1.0, 0.5, 2.0])
+        };
 
-        Console.WriteLine("Исходная лямбда:");
-        Console.WriteLine($"  {source}");
-        Console.WriteLine();
-        Console.WriteLine("Формальная производная RICIS (без lim и Лопиталя):");
-        Console.WriteLine($"  {derivative}");
-        Console.WriteLine();
-        Console.WriteLine($"Проверка исполнения: t=2 → {derivative.Compile()(2.0):G17}");
-        return 0;
+        var allMatch = true;
+        Console.WriteLine("Сравнение формальной производной RICIS с известной классической формулой:");
+        Console.WriteLine("Лимиты и Лопиталь не используются; сравниваются исполненные производные.");
+
+        foreach (var item in cases)
+        {
+            var derivative = item.Source.DxDt();
+            var executeRicis = derivative.Compile();
+            Console.WriteLine();
+            Console.WriteLine($"F(t) = {item.Name}");
+            Console.WriteLine($"  Исходное дерево: {item.Source}");
+            Console.WriteLine($"  RICIS dF/dt:    {derivative}");
+            Console.WriteLine("  t                 RICIS               классика            |Δ|");
+
+            foreach (var point in item.Points)
+            {
+                var ricis = executeRicis(point);
+                var classical = item.ClassicalDerivative(point);
+                var delta = Math.Abs(ricis - classical);
+                var match = !double.IsNaN(ricis) && !double.IsInfinity(ricis) && delta <= 1e-12;
+                allMatch &= match;
+                Console.WriteLine($"  {point,8:G4}  {ricis,20:G17}  {classical,20:G17}  {delta,8:G3} {(match ? "OK" : "FAIL")}");
+            }
+        }
+
+        return allMatch ? 0 : 1;
     }
 
     private static int RunAuthorSeoDemo()
