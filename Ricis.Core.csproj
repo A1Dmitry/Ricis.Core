@@ -5,11 +5,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>Ricis.Core</PackageId>
+    <Authors>A1Dmitry</Authors>
+    <Description>RICIS III symbolic algebra and deferred expression engine for .NET.</Description>
+    <PackageTags>RICIS;symbolic-algebra;expression-trees;calculus</PackageTags>
+    <RepositoryUrl>https://github.com/A1Dmitry/Ricis.Core</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <WarningsAsErrors>$(WarningsAsErrors);1591</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="RegressionTests/**/*.cs" />
     <Compile Remove="Ricis.Console/**/*.cs" />
