@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Proofs;
 
 /// <summary>
 /// Regression scenarios inspired by the symmetry of non-trivial zeta zeros.
@@ -41,9 +42,29 @@ internal static class RiemannHypothesisProofSuite
             Expression.Equal(sigma, exactHalf.Body),
             sigma,
             mirrorSigma);
-        var protocol = new StringBuilder();
+        var document = new StringBuilder();
+        var profile = new RicisProofDocumentProfile(
+            title: "Условная RICIS-теорема о типовой симметрии формальной пары",
+            scope: RicisProofScope.ConditionalTheorem,
+            @abstract: "Документирует конечное следствие из двух явно заданных линейных предпосылок для формальной пары действительных частей.",
+            theorem: "При sigma+mirrorSigma=1 и sigma−mirrorSigma=0 следует sigma=1/2.",
+            definitions:
+            [
+                "Формальная пара — две scalar-координаты sigma и mirrorSigma, а не реализация дзета-функции.",
+            ],
+            axioms:
+            [
+                "P1: sigma+mirrorSigma=1 — предпосылка симметрии пары.",
+                "P2: sigma−mirrorSigma=0 — предпосылка равенства её действительных частей.",
+            ],
+            limitations:
+            [
+                "Документ не доказывает, что P1 или P2 истинны для нулей дзета-функции.",
+                "Документ не является доказательством гипотезы Римана и не содержит квантора для всех нетривиальных нулей.",
+            ]);
 
-        var derived = equations.Prove(constraints, claim, protocol);
+        var derived = equations.ProveDocument(constraints, claim, profile, document);
+        var protocol = document;
         var derivedPredicate = derived.Compile();
         var text = protocol.ToString();
 
@@ -57,6 +78,13 @@ internal static class RiemannHypothesisProofSuite
                 text.Contains("(mirrorSigma == (1 / 2))", StringComparison.Ordinal) &&
                 text.Contains("система выводит sigma=(1 / 2) и mirrorSigma=(1 / 2)", StringComparison.Ordinal),
             "Riemann-связанный протокол должен сохранить несократимую дробь 1/2, реальные имена параметров и все четыре шага линейного вывода.");
+        Require(text.Contains("# Условная RICIS-теорема о типовой симметрии формальной пары", StringComparison.Ordinal) &&
+                text.Contains("**Условная теорема.**", StringComparison.Ordinal) &&
+                text.Contains("## Определения", StringComparison.Ordinal) &&
+                text.Contains("## Аксиомы и внешние предпосылки", StringComparison.Ordinal) &&
+                text.Contains("## Теорема или конечный тезис", StringComparison.Ordinal) &&
+                text.Contains("## Границы и непроверенные утверждения", StringComparison.Ordinal),
+            "Документный proof-отчёт обязан публиковать статус, определения, предпосылки, тезис и границы вывода.");
         Require(!text.Contains("доказывает гипотезу Римана", StringComparison.OrdinalIgnoreCase),
             "Конечный proof-сценарий не должен ошибочно объявляться доказательством гипотезы Римана.");
     }

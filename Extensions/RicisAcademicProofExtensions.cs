@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Proofs;
 using Ricis.Core.SpecialFunctions;
 
 namespace Ricis.Core.Extensions;
@@ -72,6 +73,66 @@ public static class RicisAcademicProofExtensions
                 $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> при доказательстве.");
 
         AppendAcademicProtocol(proof, conditionList, constraintList, claim, trace, derived);
+        return derived;
+    }
+
+    /// <summary>
+    /// Derives a unary scalar expression and writes an academic proof document
+    /// with an explicit finite or conditional proof scope. The document records
+    /// the supplied hypotheses without evaluating them and embeds the effective
+    /// RICIS derivation produced by <see cref="Prove{T}(IEnumerable{Expression{Func{T, Boolean}}}, IEnumerable{Expression{Func{T, Boolean}}}, Expression{Func{T, T}}, StringBuilder)"/>.
+    /// </summary>
+    /// <typeparam name="T">The intrinsic or generic-math scalar type of the delayed expression.</typeparam>
+    /// <param name="conditions">The formal unary assumptions.</param>
+    /// <param name="constraints">The formal unary domain restrictions.</param>
+    /// <param name="claim">The delayed scalar expression to derive.</param>
+    /// <param name="profile">Academic metadata, stated premises, and proof boundaries.</param>
+    /// <param name="document">The buffer receiving the complete Markdown proof document.</param>
+    /// <returns>The independent expression tree returned by the underlying symbolic derivation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="profile"/> or <paramref name="document"/> is null.</exception>
+    public static Expression<Func<T, T>> ProveDocument<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        RicisProofDocumentProfile profile,
+        StringBuilder document)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(document);
+
+        var derivation = new StringBuilder();
+        var derived = conditions.Prove(constraints, claim, derivation);
+        AppendProofDocument(document, profile, derivation, derived);
+        return derived;
+    }
+
+    /// <summary>
+    /// Derives a stated coordinate of a supported two-variable linear system and
+    /// writes an academic proof document with an explicit finite or conditional
+    /// proof scope. The system and restrictions remain unevaluated expression trees.
+    /// </summary>
+    /// <param name="equations">The two formal linear equations.</param>
+    /// <param name="constraints">The formal binary domain restrictions.</param>
+    /// <param name="claim">The coordinate equality to derive.</param>
+    /// <param name="profile">Academic metadata, stated premises, and proof boundaries.</param>
+    /// <param name="document">The buffer receiving the complete Markdown proof document.</param>
+    /// <returns>The independent coordinate equality returned by symbolic elimination.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="profile"/> or <paramref name="document"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the linear system or its claim is unsupported or contradictory.</exception>
+    public static Expression<Func<double, double, bool>> ProveDocument(
+        this IEnumerable<Expression<Func<double, double, bool>>> equations,
+        IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        RicisProofDocumentProfile profile,
+        StringBuilder document)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(document);
+
+        var derivation = new StringBuilder();
+        var derived = equations.Prove(constraints, claim, derivation);
+        AppendProofDocument(document, profile, derivation, derived);
         return derived;
     }
 
@@ -165,6 +226,88 @@ public static class RicisAcademicProofExtensions
             coordinate,
             derived);
         return derived;
+    }
+
+    private static void AppendProofDocument(
+        StringBuilder document,
+        RicisProofDocumentProfile profile,
+        StringBuilder derivation,
+        LambdaExpression derived)
+    {
+        if (document.Length > 0 && document[^1] != '\n')
+        {
+            document.AppendLine();
+        }
+
+        document.Append("# ").AppendLine(profile.Title);
+        document.AppendLine();
+        document.AppendLine("## Аннотация");
+        document.AppendLine(profile.Abstract);
+        document.AppendLine();
+        document.AppendLine("## Доказательный статус");
+        document.AppendLine(profile.Scope switch
+        {
+            RicisProofScope.FiniteDerivation =>
+                "**Конечное символическое выведение.** Документ сертифицирует только преобразование явно переданных expression tree.",
+            RicisProofScope.ConditionalTheorem =>
+                "**Условная теорема.** Заключение выводится только при истинности перечисленных формальных предпосылок; RICIS не объявляет их истинными.",
+            _ => throw new ArgumentOutOfRangeException(nameof(profile)),
+        });
+        document.AppendLine();
+        AppendDocumentSection(document, "Определения", profile.Definitions, "Дополнительные определения не заданы.");
+        AppendDocumentSection(document, "Аксиомы и внешние предпосылки", profile.Axioms, "Дополнительные аксиомы не заданы.");
+        document.AppendLine("## Теорема или конечный тезис");
+        document.AppendLine(profile.Theorem);
+        document.AppendLine();
+        document.AppendLine("## Машинно воспроизводимое символическое выведение");
+        document.AppendLine("Следующие шаги получены из expression tree; входные условия и ограничения не компилировались и не исполнялись.");
+        document.AppendLine();
+        AppendNestedMarkdown(document, derivation);
+        document.AppendLine();
+        document.AppendLine("## Воспроизводимый результат");
+        document.Append("Производное expression tree: `").Append(derived).AppendLine("`.");
+        document.AppendLine();
+        AppendDocumentSection(
+            document,
+            "Границы и непроверенные утверждения",
+            profile.Limitations,
+            "Внешняя истинность предпосылок, универсальные кванторы и утверждения вне входных expression tree данным документом не доказываются.");
+    }
+
+    private static void AppendNestedMarkdown(StringBuilder document, StringBuilder derivation)
+    {
+        var lines = derivation.ToString().Split('\n');
+        foreach (var line in lines)
+        {
+            if (line.StartsWith('#'))
+            {
+                document.Append("##");
+            }
+
+            document.AppendLine(line);
+        }
+    }
+
+    private static void AppendDocumentSection(
+        StringBuilder document,
+        string title,
+        IReadOnlyList<string> lines,
+        string emptyMessage)
+    {
+        document.Append("## ").AppendLine(title);
+        if (lines.Count == 0)
+        {
+            document.AppendLine(emptyMessage);
+        }
+        else
+        {
+            for (var index = 0; index < lines.Count; index++)
+            {
+                document.Append(index + 1).Append(". ").AppendLine(lines[index]);
+            }
+        }
+
+        document.AppendLine();
     }
 
     private static void ValidateBinaryHypotheses(

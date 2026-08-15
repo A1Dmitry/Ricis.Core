@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
+using Ricis.Core.Proofs;
 
 internal static class RicisAcademicProofSuite
 {
@@ -26,6 +27,7 @@ internal static class RicisAcademicProofSuite
         ("PROVE14: Prove — ассоциативное сокращение фиксируется в протоколе", AssociativeFactorProof),
         ("PROVE15: Prove — n!/(n−BigInteger.One)! сокращается структурно", AdjacentFactorialProof),
         ("PROVE16: Prove — система отклоняет не-конечные и переполняющиеся double-выводы", UnsafeLinearSystemIsRejected),
+        ("PROVE17: ProveDocument — generic вывод публикует условный статус и границы", ConditionalProofDocument),
     ];
 
     private static void DifferenceOfSquaresProof()
@@ -89,6 +91,57 @@ internal static class RicisAcademicProofSuite
 
         Require(protocol.ToString().StartsWith("Преамбула исследователя.\n# Формальный вывод RICIS III", StringComparison.Ordinal),
             "Prove обязан дописывать отдельный раздел, не стирая существующий StringBuilder.");
+    }
+
+    private static void ConditionalProofDocument()
+    {
+        _conditionCalls = 0;
+        Expression<Func<double, bool>>[] conditions = [x => TrackCondition(x)];
+        Expression<Func<double, bool>>[] constraints = [x => x != 0.0];
+        Expression<Func<double, double>> claim = x => x / x;
+        var profile = new RicisProofDocumentProfile(
+            title: "Условный документный тест",
+            scope: RicisProofScope.ConditionalTheorem,
+            @abstract: "Проверяет структуру академического документа.",
+            theorem: "При формальных предпосылках x/x нормализуется до 1.",
+            definitions: ["x — формальная scalar-переменная."],
+            axioms: ["P1: входная предпосылка остаётся неисполненным expression tree."],
+            limitations: ["Внешняя истинность P1 не доказывается."]);
+        var document = new StringBuilder("Преамбула.\n");
+
+        var derived = conditions.ProveDocument(constraints, claim, profile, document);
+        var text = document.ToString();
+
+        Require(_conditionCalls == 0,
+            "ProveDocument не должен компилировать или исполнять входную предпосылку.");
+        Require(Math.Abs(derived.Compile()(0.0) - 1.0) < 1e-12,
+            "Документный overload должен вернуть то же производное дерево, что и Prove.");
+        Require(text.StartsWith("Преамбула.\n# Условный документный тест", StringComparison.Ordinal) &&
+                text.Contains("**Условная теорема.**", StringComparison.Ordinal) &&
+                text.Contains("## Аксиомы и внешние предпосылки", StringComparison.Ordinal) &&
+                text.Contains("## Машинно воспроизводимое символическое выведение", StringComparison.Ordinal) &&
+                text.Contains("## Границы и непроверенные утверждения", StringComparison.Ordinal) &&
+                text.Contains("Внешняя истинность P1 не доказывается.", StringComparison.Ordinal),
+            "ProveDocument обязан фиксировать документный статус, предпосылки, трассировку и границы результата.");
+        RequireArgumentOutOfRange(
+            () => _ = new RicisProofDocumentProfile(
+                "Некорректный статус",
+                (RicisProofScope)99,
+                "Тест.",
+                "Тест."),
+            "Профиль обязан отвергать неопределённый доказательный статус.");
+    }
+
+    private static void RequireArgumentOutOfRange(Action action, string message)
+    {
+        try
+        {
+            action();
+            throw new InvalidOperationException(message);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+        }
     }
 
     private static void DifferenceOfCubesProof()
