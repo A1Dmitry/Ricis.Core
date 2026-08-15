@@ -63,6 +63,11 @@ internal static class Program
             return RunComplexDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--interest-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunCompoundInterestDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -260,6 +265,34 @@ internal static class Program
         Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
         Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
         Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
+    }
+
+    private static int RunCompoundInterestDemo()
+    {
+        Expression<Func<double, double>> principal = x => 1000.0 * x;
+        Expression<Func<double, double>> rate = y => 2.5 * y;
+        Expression<Func<double, double>> periods = z => z;
+        var annualThreePeriods = principal.CompoundInterest(rate, 3);
+        var deferredPeriods = principal.CompoundInterest(rate, periods);
+
+        Console.WriteLine("Символическая формула сложного процента RICIS:");
+        Console.WriteLine("  P = S · (1 + r/100)^n; S, r и при необходимости n остаются отложенными expression tree.");
+        Console.WriteLine("  Формула строится символически и не является финансовым прогнозом или рекомендацией.");
+        Console.WriteLine();
+        Console.WriteLine($"S(x):                 {principal}");
+        Console.WriteLine($"r(x), в процентах:    {rate}");
+        Console.WriteLine($"P(x), n=3:            {annualThreePeriods}");
+        Console.WriteLine($"P(x), n(x)=x:         {deferredPeriods}");
+        Console.WriteLine();
+        Console.WriteLine("x       S(x)      r(x)      P(x), n=3      P(x), n=x");
+
+        foreach (var point in new[] { 1.0, 2.0, 3.0 })
+        {
+            Console.WriteLine($"{point,4:G}  {principal.Compile()(point),9:G7}  {rate.Compile()(point),8:G5}  " +
+                              $"{annualThreePeriods.Compile()(point),13:G10}  {deferredPeriods.Compile()(point),13:G10}");
+        }
+
         return 0;
     }
 
@@ -521,6 +554,7 @@ internal static class Program
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
+        Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");
         Console.WriteLine();
         PrintExamples();
     }
