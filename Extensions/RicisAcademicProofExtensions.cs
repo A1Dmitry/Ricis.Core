@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.SpecialFunctions;
 
 namespace Ricis.Core.Extensions;
 
@@ -87,7 +88,7 @@ public static class RicisAcademicProofExtensions
     /// <param name="claim">A coordinate claim of the form <c>x=c</c> or <c>y=c</c>.</param>
     /// <param name="proof">The output buffer for the academic derivation.</param>
     /// <returns>An independent derived equality expression for the proved coordinate.</returns>
-    /// <exception cref="ArgumentException">Thrown when the system is not two independent supported linear equations or the claim contradicts its symbolic solution.</exception>
+    /// <exception cref="ArgumentException">Thrown when the system is unsupported, degenerate, non-finite, overflows its finite double derivation, or the claim contradicts its symbolic solution.</exception>
     public static Expression<Func<double, double, bool>> Prove(
         this IEnumerable<Expression<Func<double, double, bool>>> equations,
         IEnumerable<Expression<Func<double, double, bool>>> constraints,
@@ -118,7 +119,19 @@ public static class RicisAcademicProofExtensions
 
         var solutionX = ((first.Constant * second.Y) - (second.Constant * first.Y)) / determinant;
         var solutionY = ((first.X * second.Constant) - (second.X * first.Constant)) / determinant;
+        if (!double.IsFinite(solutionX) || !double.IsFinite(solutionY))
+        {
+            throw new ArgumentException(
+                "Линейная система не допускает конечного double-вывода без переполнения или неопределённости.",
+                nameof(equations));
+        }
+
         var (coordinate, claimedValue) = ReadCoordinateClaim(claim);
+        if (!double.IsFinite(claimedValue))
+        {
+            throw new ArgumentException("Тезис системы должен содержать конечную double-константу.", nameof(claim));
+        }
+
         var provenValue = coordinate == 0 ? solutionX : solutionY;
         if (claimedValue != provenValue)
         {
@@ -173,6 +186,11 @@ public static class RicisAcademicProofExtensions
             throw new ArgumentException(
                 "Каждое линейное уравнение должно содержать обе переменные ровно по одному разу.",
                 parameterName);
+        }
+
+        if (!double.IsFinite(constant))
+        {
+            throw new ArgumentException("Правая часть каждого уравнения должна быть конечной double-константой.", parameterName);
         }
 
         var firstCoefficient = 1.0;
@@ -455,9 +473,30 @@ public static class RicisAcademicProofExtensions
             return cubes;
         }
 
-        if (TryBuildCommonFactorSteps(before.Body, after.Body, out var commonFactor))
+        if (TryBuildSumOfCubesSteps(before.Body, after.Body, out var sumOfCubes))
+        {
+            return sumOfCubes;
+        }
+
+        if (TryBuildNestedRatioSteps(before.Body, after.Body, out var nestedRatio))
+        {
+            return nestedRatio;
+        }
+
+        if (before.Body is not BinaryExpression { NodeType: ExpressionType.Divide, Right: BinaryExpression { NodeType: ExpressionType.Multiply } } &&
+            TryBuildCommonFactorSteps(before.Body, after.Body, out var commonFactor))
         {
             return commonFactor;
+        }
+
+        if (TryBuildAssociativeFactorSteps(before.Body, after.Body, out var associativeFactors))
+        {
+            return associativeFactors;
+        }
+
+        if (TryBuildAdjacentFactorialSteps(before.Body, after.Body, out var factorials))
+        {
+            return factorials;
         }
 
         return [];
@@ -469,18 +508,20 @@ public static class RicisAcademicProofExtensions
         out IReadOnlyList<IntermediateProofStep> steps)
     {
         steps = [];
-        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Subtract } numerator, Right: var denominator } ||
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Subtract } numerator, Right: BinaryExpression denominator } ||
+            denominator.NodeType is not ExpressionType.Subtract and not ExpressionType.Add ||
             !TryReadSquare(numerator.Left, out var leftBase) ||
             !TryReadSquare(numerator.Right, out var rightBase) ||
-            denominator is not BinaryExpression { NodeType: ExpressionType.Subtract } difference ||
-            !difference.Left.AreEqual(leftBase) ||
-            !difference.Right.AreEqual(rightBase))
+            !denominator.Left.AreEqual(leftBase) ||
+            !denominator.Right.AreEqual(rightBase))
         {
             return false;
         }
 
-        var factor = Expression.Subtract(leftBase, rightBase);
-        var quotient = Expression.Add(leftBase, rightBase);
+        var factor = denominator;
+        var quotient = denominator.NodeType == ExpressionType.Subtract
+            ? Expression.Add(leftBase, rightBase)
+            : Expression.Subtract(leftBase, rightBase);
         var factorized = Expression.Divide(Expression.Multiply(factor, quotient), factor);
         if (!quotient.AreEqual(after))
         {
@@ -549,6 +590,237 @@ public static class RicisAcademicProofExtensions
         return true;
     }
 
+    private static bool TryBuildSumOfCubesSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Add } numerator, Right: BinaryExpression { NodeType: ExpressionType.Add } denominator } ||
+            !TryReadCube(numerator.Left, out var leftBase) ||
+            !TryReadCube(numerator.Right, out var rightBase) ||
+            !denominator.Left.AreEqual(leftBase) ||
+            !denominator.Right.AreEqual(rightBase))
+        {
+            return false;
+        }
+
+        var leftSquare = Expression.Multiply(leftBase, leftBase);
+        var negativeProduct = Expression.Multiply(BuildNegated(rightBase), leftBase);
+        var rightSquare = BuildSquare(rightBase);
+        var quotient = Expression.Add(Expression.Add(leftSquare, negativeProduct), rightSquare);
+        var factor = Expression.Add(leftBase, rightBase);
+        var factorized = Expression.Divide(Expression.Multiply(factor, quotient), factor);
+        if (!quotient.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Разложение суммы кубов",
+                "SP2: A³+B³ = (A+B)(A²−A·B+B²)",
+                before,
+                factorized),
+            new IntermediateProofStep(
+                "Сокращение общего множителя",
+                "SP2: (F·G)/F = G",
+                factorized,
+                quotient),
+        ];
+        return true;
+    }
+
+    private static bool TryBuildNestedRatioSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: var numerator, Right: BinaryExpression { NodeType: ExpressionType.Divide } ratio })
+        {
+            return false;
+        }
+
+        var normalized = Expression.Divide(Expression.Multiply(numerator, ratio.Right), ratio.Left);
+        if (normalized.AreEqual(after))
+        {
+            steps =
+            [
+                new IntermediateProofStep(
+                    "Очищение вложенного знаменателя",
+                    "SP2: F/(G/H) = (F·H)/G",
+                    before,
+                    normalized),
+            ];
+            return true;
+        }
+
+        if (TryBuildCommonFactorSteps(normalized, after, out var commonFactor))
+        {
+            steps =
+            [
+                new IntermediateProofStep(
+                    "Очищение вложенного знаменателя",
+                    "SP2: F/(G/H) = (F·H)/G",
+                    before,
+                    normalized),
+                .. commonFactor,
+            ];
+            return true;
+        }
+
+        if (TryBuildAssociativeFactorSteps(normalized, after, out var associativeFactors))
+        {
+            steps =
+            [
+                new IntermediateProofStep(
+                    "Очищение вложенного знаменателя",
+                    "SP2: F/(G/H) = (F·H)/G",
+                    before,
+                    normalized),
+                .. associativeFactors,
+            ];
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryBuildAssociativeFactorSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: var numerator, Right: var denominator })
+        {
+            return false;
+        }
+
+        var numeratorFactors = FlattenBuiltInProduct(numerator);
+        var denominatorFactors = FlattenBuiltInProduct(denominator);
+        if (numeratorFactors.Count < 2 && denominatorFactors.Count < 2)
+        {
+            return false;
+        }
+
+        var remainingNumerator = numeratorFactors.ToList();
+        var remainingDenominator = denominatorFactors.ToList();
+        var cancelled = 0;
+        for (var denominatorIndex = remainingDenominator.Count - 1; denominatorIndex >= 0; denominatorIndex--)
+        {
+            var matchIndex = remainingNumerator.FindIndex(factor => factor.AreEqual(remainingDenominator[denominatorIndex]));
+            if (matchIndex < 0)
+            {
+                continue;
+            }
+
+            remainingNumerator.RemoveAt(matchIndex);
+            remainingDenominator.RemoveAt(denominatorIndex);
+            cancelled++;
+        }
+
+        if (cancelled == 0)
+        {
+            return false;
+        }
+
+        var reducedNumerator = BuildProduct(remainingNumerator, numerator.Type);
+        var reducedDenominator = BuildProduct(remainingDenominator, denominator.Type);
+        var reduced = reducedDenominator.IsOne()
+            ? reducedNumerator
+            : Expression.Divide(reducedNumerator, reducedDenominator);
+        if (!reduced.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Ассоциативное сокращение множителей",
+                "SP2: сокращение общего мультимножества факторов",
+                before,
+                reduced),
+        ];
+        return true;
+    }
+
+    private static List<Expression> FlattenBuiltInProduct(Expression expression)
+    {
+        var factors = new List<Expression>();
+        CollectBuiltInProductFactors(expression, factors);
+        return factors;
+    }
+
+    private static void CollectBuiltInProductFactors(Expression expression, ICollection<Expression> factors)
+    {
+        if (expression is BinaryExpression { NodeType: ExpressionType.Multiply } product &&
+            (product.Method is null || NumericConstants.IsIntrinsicNumeric(product.Type)))
+        {
+            CollectBuiltInProductFactors(product.Left, factors);
+            CollectBuiltInProductFactors(product.Right, factors);
+            return;
+        }
+
+        factors.Add(expression);
+    }
+
+    private static Expression BuildProduct(IReadOnlyList<Expression> factors, Type scalarType) => factors.Count switch
+    {
+        0 => NumericConstants.OneOf(scalarType),
+        1 => factors[0],
+        _ => factors.Aggregate(Expression.Multiply),
+    };
+
+    private static bool TryBuildAdjacentFactorialSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: MethodCallExpression numerator, Right: MethodCallExpression denominator } ||
+            numerator.Method != typeof(Factorial).GetMethod(nameof(Factorial.Of)) ||
+            denominator.Method != typeof(Factorial).GetMethod(nameof(Factorial.Of)) ||
+            numerator.Arguments.Count != 1 || denominator.Arguments.Count != 1)
+        {
+            return false;
+        }
+
+        var value = numerator.Arguments[0];
+        if (denominator.Arguments[0] is not BinaryExpression { NodeType: ExpressionType.Subtract, Left: var predecessorValue, Right: var decrement } ||
+            !predecessorValue.AreEqual(value) ||
+            !IsOneOrStaticOne(decrement, value.Type) ||
+            !value.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Сокращение соседних факториалов",
+                "SP2: n!/(n−1)! = n",
+                before,
+                value),
+        ];
+        return true;
+    }
+
+    private static bool IsOneOrStaticOne(Expression expression, Type scalarType)
+    {
+        if (expression.IsOne())
+        {
+            return true;
+        }
+
+        return expression is MemberExpression { Expression: null, Member: var member } &&
+               member.Name == "One" &&
+               member.DeclaringType == scalarType;
+    }
+
     private static bool TryBuildCommonFactorSteps(
         Expression before,
         Expression after,
@@ -584,6 +856,16 @@ public static class RicisAcademicProofExtensions
                 quotient),
         ];
         return true;
+    }
+
+    private static Expression BuildNegated(Expression expression)
+    {
+        if (expression is ConstantExpression { Type: var type, Value: double value } && type == typeof(double))
+        {
+            return Expression.Constant(-value, typeof(double));
+        }
+
+        return Expression.Negate(expression);
     }
 
     private static Expression BuildSquare(Expression expression)

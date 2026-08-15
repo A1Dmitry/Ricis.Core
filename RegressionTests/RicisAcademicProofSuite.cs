@@ -20,6 +20,12 @@ internal static class RicisAcademicProofSuite
         ("PROVE08: Prove — раскрывает сокращение общего множителя как промежуточный шаг", CommonFactorProof),
         ("PROVE09: Prove — система x+y=5, x−y=1 выводит x=3", LinearSystemProof),
         ("PROVE10: Prove — система отклоняет противоречащий тезис", ContradictorySystemClaimIsRejected),
+        ("PROVE11: Prove — разность квадратов с A+B раскрывает промежуточные шаги", DifferenceOfSquaresWithSumProof),
+        ("PROVE12: Prove — сумма кубов раскрывает промежуточные шаги", SumOfCubesProof),
+        ("PROVE13: Prove — вложенная дробь показывает очищение знаменателя", NestedRatioProof),
+        ("PROVE14: Prove — ассоциативное сокращение фиксируется в протоколе", AssociativeFactorProof),
+        ("PROVE15: Prove — n!/(n−BigInteger.One)! сокращается структурно", AdjacentFactorialProof),
+        ("PROVE16: Prove — система отклоняет не-конечные и переполняющиеся double-выводы", UnsafeLinearSystemIsRejected),
     ];
 
     private static void DifferenceOfSquaresProof()
@@ -187,6 +193,123 @@ internal static class RicisAcademicProofSuite
         {
             _ = equations.Prove(constraints, wrongClaim, new StringBuilder());
             throw new InvalidOperationException("Ожидалось отклонение тезиса, противоречащего символическому решению системы.");
+        }
+        catch (ArgumentException)
+        {
+        }
+    }
+
+    private static void DifferenceOfSquaresWithSumProof()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [x => x != -5.0];
+        Expression<Func<double, double>> claim = x => ((x * x) - 25.0) / (x + 5.0);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(Math.Abs(derived.Compile()(3.0) + 2.0) < 1e-12,
+            $"(x²−25)/(x+5) должно вывести x−5; получено {derived}.");
+        Require(protocol.ToString().Contains("Разложение разности квадратов", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("((x + 5) * (x - 5))", StringComparison.Ordinal),
+            "Протокол должен показать факторизацию по множителю x+5 и последующее сокращение.");
+    }
+
+    private static void SumOfCubesProof()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [x => x != -2.0];
+        Expression<Func<double, double>> claim = x => (((x * x) * x) + 8.0) / (x + 2.0);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(Math.Abs(derived.Compile()(1.0) - 3.0) < 1e-12,
+            $"(x³+8)/(x+2) должно вывести x²−2x+4; получено {derived}.");
+        Require(protocol.ToString().Contains("Разложение суммы кубов", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("A³+B³", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Сокращение общего множителя", StringComparison.Ordinal),
+            "Протокол должен раскрывать факторизацию и сокращение суммы кубов.");
+    }
+
+    private static void NestedRatioProof()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [];
+        Expression<Func<double, double>> claim = x => x / (x / 2.0);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(Math.Abs(derived.Compile()(17.0) - 2.0) < 1e-12,
+            $"x/(x/2) должно вывести 2; получено {derived}.");
+        Require(protocol.ToString().Contains("Очищение вложенного знаменателя", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("((x * 2) / x)", StringComparison.Ordinal),
+            "Протокол должен явно зафиксировать SP2-форму (x·2)/x перед сокращением.");
+    }
+
+    private static void AssociativeFactorProof()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [];
+        Expression<Func<double, double>> claim = a => ((((a * a) * a) * a) * a) / (((a * a) * a) * a);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(Math.Abs(derived.Compile()(7.0) - 7.0) < 1e-12,
+            $"Ассоциативное сокращение пяти и четырёх факторов должно вывести a; получено {derived}.");
+        Require(protocol.ToString().Contains("Ассоциативное сокращение множителей", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("мультимножества факторов", StringComparison.Ordinal),
+            "Протокол должен назвать фактически применённое SP2-мультисетовое сокращение.");
+    }
+
+    private static void AdjacentFactorialProof()
+    {
+        Expression<Func<BigInteger, bool>>[] conditions = [];
+        Expression<Func<BigInteger, bool>>[] constraints = [];
+        Expression<Func<BigInteger, BigInteger>> claim = n =>
+            Ricis.Core.SpecialFunctions.Factorial.Of(n) /
+            Ricis.Core.SpecialFunctions.Factorial.Of(n - BigInteger.One);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(derived.Compile()(new BigInteger(10)) == new BigInteger(10),
+            $"n!/(n−BigInteger.One)! должно структурно вывести n; получено {derived}.");
+        Require(protocol.ToString().Contains("Сокращение соседних факториалов", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("n!/(n−1)! = n", StringComparison.Ordinal),
+            "Протокол должен фиксировать SP2-сокращение соседних факториалов.");
+    }
+
+    private static void UnsafeLinearSystemIsRejected()
+    {
+        Expression<Func<double, double, bool>>[] nonFiniteEquations =
+        [
+            (x, y) => x + y == double.PositiveInfinity,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] overflowEquations =
+        [
+            (x, y) => x + y == double.MaxValue,
+            (x, y) => x - y == double.MaxValue,
+        ];
+        Expression<Func<double, double, bool>>[] constraints = [];
+
+        RequireArgumentException(
+            () => _ = nonFiniteEquations.Prove(constraints, (x, y) => x == 0.0, new StringBuilder()),
+            "Система с бесконечной константой должна быть отклонена до построения доказательства.");
+        RequireArgumentException(
+            () => _ = overflowEquations.Prove(constraints, (x, y) => x == double.MaxValue, new StringBuilder()),
+            "Система с overflow в формуле Крамера должна быть отклонена вместо вывода x=∞.");
+    }
+
+    private static void RequireArgumentException(Action action, string message)
+    {
+        try
+        {
+            action();
+            throw new InvalidOperationException(message);
         }
         catch (ArgumentException)
         {

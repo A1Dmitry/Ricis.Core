@@ -293,13 +293,27 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : null;
         }
 
-        if (n.Type != predecessor.Type)
+        if (n.Type != predecessor.Type ||
+            predecessor is not BinaryExpression { NodeType: ExpressionType.Subtract, Left: var predecessorArgument, Right: var decrement } ||
+            !predecessorArgument.AreEqual(n) ||
+            !IsOneOrStaticOne(decrement, n.Type))
         {
             return null;
         }
 
-        var expectedPredecessor = Expression.Subtract(n, NumericConstants.OneOf(n.Type));
-        return predecessor.AreEqual(expectedPredecessor) ? n : null;
+        return n;
+    }
+
+    private static bool IsOneOrStaticOne(Expression expression, Type scalarType)
+    {
+        if (expression.IsOne())
+        {
+            return true;
+        }
+
+        return expression is MemberExpression { Expression: null, Member: var member } &&
+               member.Name == "One" &&
+               member.DeclaringType == scalarType;
     }
 
     /// <summary>
