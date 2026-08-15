@@ -24,6 +24,8 @@
     <Compile Remove="RegressionTests/**/*.cs" />
     <Compile Remove="Ricis.Console/**/*.cs" />
     <Compile Remove="Ricis.NavierStokes.Console/**/*.cs" />
+    <Compile Remove="Ricis.WebApi/**/*.cs" />
+    <None Remove="Ricis.WebApi/**/*.cs" />
   </ItemGroup>
 
 </Project>
