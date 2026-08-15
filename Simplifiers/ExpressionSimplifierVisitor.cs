@@ -280,7 +280,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 
     private Expression CreatePower(Expression @base, int exponent)
     {
-        return Expression.Power(@base, Expression.Constant(exponent));
+        return Expression.Power(@base, CreateNumericConstant(exponent, @base.Type));
     }
 
     private static bool IsZero(Expression e)

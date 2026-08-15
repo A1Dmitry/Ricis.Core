@@ -214,10 +214,12 @@ public static class ExpressionExtensions
     }
 
     /// <summary>
-    /// Является ли выражение нулем (поддержка всех числовых типов)
+    /// Determines whether an expression denotes zero, including a RICIS indexed
+    /// zero <c>0_F</c> whose deferred index is retained for symbolic work.
     /// </summary>
     public static bool IsZero(this Expression expr) => expr switch
     {
+        ZeroInfinityExpression => true,
         ConstantExpression c => IsZeroValue(c.Value),
         _ => false
     };

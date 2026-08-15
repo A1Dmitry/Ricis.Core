@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Phases;
 
 /// <summary>
 /// Regression scenarios for RICIS vector calculus and the exact Navier-Stokes proof method.
@@ -17,6 +18,8 @@ internal static class RicisNavierStokesProofSuite
         ("NS04: proof отвергает сжимаемое поле", CompressibleFieldIsRejected),
         ("NS05: proof отвергает невалидную вязкость", InvalidViscosityIsRejected),
         ("NS06: стационарная производная канонизирует -0 в 0", StationaryDerivativeCanonicalizesZero),
+        ("NS07: производная F·0 сохраняет индексированный ноль 0_F", DerivativePreservesIndexedZero),
+        ("NS08: конечное F/∞_G даёт индексированный ноль 0_F", FiniteOverInfinityProducesIndexedZero),
     ];
 
     private static void PartialDerivativeIsExact()
@@ -88,6 +91,40 @@ internal static class RicisNavierStokesProofSuite
         Require(timeDerivative.U.Body is ConstantExpression { Value: double value } &&
                 BitConverter.DoubleToInt64Bits(value) == 0L,
             $"Стационарная производная -y по t должна быть каноническим +0, получено {timeDerivative.U.Body}.");
+    }
+
+    private static void DerivativePreservesIndexedZero()
+    {
+        Expression<Func<double, double, double, double, double>> field =
+            (x, y, z, t) => (x * x) * 0.0;
+
+        var derivative = field.PartialDerivative(RicisFieldCoordinate.X);
+
+        Require(derivative.Body is ZeroInfinityExpression indexedZero &&
+                indexedZero.Numerator.ToString().Contains("x", StringComparison.Ordinal) &&
+                derivative.Compile()(3.0, 0.0, 0.0, 0.0) == 0.0,
+            $"Производная F·0 обязана сохранять 0_F и оставаться исполнимой как ноль, получено {derivative.Body}.");
+    }
+
+    private static void FiniteOverInfinityProducesIndexedZero()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var denominator = new PoleInfinityExpression(
+            Expression.Add(x, Expression.Constant(1.0)),
+            [(x, 4.0)],
+            []);
+        var source = Expression.Lambda<Func<double, double>>(
+            Expression.Divide(Expression.Constant(7.0), denominator),
+            x);
+
+        var reduced = RicisPhasePipeline.Simplify(source) as Expression<Func<double, double>>
+            ?? throw new InvalidOperationException("RICIS-конвейер обязан сохранить тип F/∞_G.");
+
+        Require(reduced.Body is ZeroInfinityExpression indexedZero &&
+                indexedZero.Numerator is ConstantExpression { Value: double numerator } && numerator == 7.0 &&
+                indexedZero.Roots is [{ Param: var key, Value: 4.0 }] && key == x &&
+                reduced.Compile()(11.0) == 0.0,
+            $"F/∞_G должно дать 0_F с исходным индексом и ключом G, получено {reduced.Body}.");
     }
 
     private static void InvalidViscosityIsRejected()

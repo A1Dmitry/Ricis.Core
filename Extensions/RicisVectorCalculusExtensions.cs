@@ -208,10 +208,9 @@ public static class RicisVectorCalculusExtensions
         Expression body,
         IReadOnlyList<ParameterExpression> parameters)
     {
-        // A derivative rule may create an ordinary exact coefficient such as
-        // F·0. It is reduced locally before the RICIS O(1) phase, because this
-        // zero is a proven coefficient of the derivative rule rather than a
-        // geometric 0_F bridge supplied by the original field.
+        // A derivative rule may create an exact coefficient F·0. It remains
+        // structurally intact until the normative O(1) phase, which records it
+        // as the indexed zero 0_F rather than erasing its deferred index.
         var finiteBody = new FiniteCalculusReductionVisitor().Visit(body);
         var lambda = Expression.Lambda<Func<double, double, double, double, double>>(
             finiteBody,
@@ -315,11 +314,8 @@ public static class RicisVectorCalculusExtensions
 
                     break;
                 case ExpressionType.Multiply:
-                    if (IsLiteralZero(left) || IsLiteralZero(right))
-                    {
-                        return Expression.Constant(0.0);
-                    }
-
+                    // F·0 is intentionally not reduced here. Standard RICIS
+                    // operations must retain its deferred numerator as 0_F.
                     if (IsLiteralOne(left))
                     {
                         return right;
@@ -392,6 +388,8 @@ public static class RicisVectorCalculusExtensions
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
+        protected override Expression VisitExtension(Expression node) => node;
+
         private static Expression ScaleFinite(Expression expression, double scalar) => scalar switch
         {
             0.0 => Expression.Constant(0.0),
@@ -458,6 +456,24 @@ public static class RicisVectorCalculusExtensions
 
         protected override Expression VisitParameter(ParameterExpression node) =>
             _substitutions.TryGetValue(node, out var replacement) ? replacement : node;
+
+        protected override Expression VisitExtension(Expression node) => node switch
+        {
+            ZeroInfinityExpression zero => new ZeroInfinityExpression(
+                Visit(zero.Numerator),
+                RebindRoots(zero.Roots)),
+            InfinityExpression infinity => InfinityExpression.CreateLazy(
+                Visit(infinity.Numerator),
+                RebindRoots(infinity.Roots)),
+            DeferredDerivativeExpression derivative => new DeferredDerivativeExpression(
+                Visit(derivative.Operand),
+                (ParameterExpression)Visit(derivative.DifferentiationVariable)),
+            _ => node,
+        };
+
+        private List<(ParameterExpression Param, double Value)> RebindRoots(
+            List<(ParameterExpression Param, double Value)> roots) =>
+            roots.Select(root => ((ParameterExpression)Visit(root.Param), root.Value)).ToList();
     }
 
     private sealed class FourVariableDerivativeBuilder

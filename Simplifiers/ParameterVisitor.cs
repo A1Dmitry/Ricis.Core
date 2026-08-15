@@ -13,6 +13,9 @@ public class ParameterVisitor : ExpressionVisitor
     public ParameterExpression FoundParameter { get; private set; }
 
     /// <inheritdoc />
+    protected override Expression VisitExtension(Expression node) => node;
+
+    /// <inheritdoc />
     protected override Expression VisitParameter(ParameterExpression node)
     {
         if (FoundParameter == null)

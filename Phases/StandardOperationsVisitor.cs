@@ -51,6 +51,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             return node.NodeType switch
             {
                 ExpressionType.Add => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Add),
+                ExpressionType.Subtract => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Subtract),
                 ExpressionType.Multiply => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Multiply),
                 // A4: 0_F / 0_G -> F/G; equal identities preserve L1.
                 ExpressionType.Divide when zeroLeft.Numerator.AreEqual(zeroRight.Numerator) =>
@@ -58,6 +59,41 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                 ExpressionType.Divide => Expression.Divide(zeroLeft.Numerator, zeroRight.Numerator),
                 _ => Rebuild(node, left, right)
             };
+        }
+
+        // An indexed zero retains the ordinary additive identity property when
+        // paired with a finite term. The index has already been recorded by
+        // O(1), while Z-01 above retains both indices for 0_F + 0_G.
+        if (node.NodeType == ExpressionType.Add)
+        {
+            if (left is ZeroInfinityExpression)
+            {
+                return right;
+            }
+
+            if (right is ZeroInfinityExpression)
+            {
+                return left;
+            }
+        }
+
+        if (node.NodeType == ExpressionType.Subtract)
+        {
+            if (left is ZeroInfinityExpression subtractZeroLeft && right is ZeroInfinityExpression subtractZeroRight &&
+                AreRootsCompatible(subtractZeroLeft, subtractZeroRight))
+            {
+                return BuildZeroOperation(subtractZeroLeft, subtractZeroRight, ExpressionType.Subtract);
+            }
+
+            if (left is ZeroInfinityExpression)
+            {
+                return Expression.Negate(right);
+            }
+
+            if (right is ZeroInfinityExpression)
+            {
+                return left;
+            }
         }
 
         // A6: 0_F * ∞_G -> F*G. A zero is never accepted as the ∞ operand.
@@ -73,6 +109,18 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                 return Expression.Multiply(((InfinityExpression)left).Numerator, indexedZeroRight.Numerator);
             }
 
+            // Associative O(1) consequence: 0_F·G = (F·0)·G -> 0_{F·G}.
+            // This preserves the zero index in derivative products.
+            if (left is ZeroInfinityExpression zeroFactorLeft && IsScalar(right))
+            {
+                return BuildIndexedZeroProduct(zeroFactorLeft, right);
+            }
+
+            if (right is ZeroInfinityExpression zeroFactorRight && IsScalar(left))
+            {
+                return BuildIndexedZeroProduct(zeroFactorRight, left);
+            }
+
             // O(1): F·0 -> 0_F. The deferred parent index is retained.
             if (left.IsZero())
             {
@@ -83,6 +131,28 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             {
                 return new ZeroInfinityExpression(left, []);
             }
+        }
+
+        // 0_F / G -> 0_F/G for finite non-zero G. The index records the
+        // finite division instead of being collapsed to an unindexed constant.
+        if (node.NodeType == ExpressionType.Divide &&
+            left is ZeroInfinityExpression indexedDividend &&
+            IsScalar(right) &&
+            !right.IsZero())
+        {
+            var rawIndex = Expression.Divide(indexedDividend.Numerator, right);
+            var index = new ExpressionSimplifierVisitor().Visit(rawIndex);
+            return new ZeroInfinityExpression(index, indexedDividend.Roots);
+        }
+
+        // F/∞_G -> 0_F. The finite numerator is retained as the zero index,
+        // while the roots of the infinity preserve the singular context.
+        if (node.NodeType == ExpressionType.Divide &&
+            right is InfinityExpression denominatorInfinity &&
+            IsTrueInfinity(denominatorInfinity) &&
+            left is not InfinityExpression)
+        {
+            return new ZeroInfinityExpression(left, denominatorInfinity.Roots);
         }
 
         // A5/A7 operate only on true indexed infinities, never on 0_F.
@@ -145,6 +215,14 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         }
 
         return Rebuild(node, left, right);
+    }
+
+    private static ZeroInfinityExpression BuildIndexedZeroProduct(
+        ZeroInfinityExpression indexedZero,
+        Expression finiteFactor)
+    {
+        var index = Expression.Multiply(indexedZero.Numerator, finiteFactor);
+        return new ZeroInfinityExpression(index, indexedZero.Roots);
     }
 
     private static Expression BuildZeroOperation(

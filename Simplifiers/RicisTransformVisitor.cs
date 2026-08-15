@@ -20,6 +20,14 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
     /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
+        // A1/A4 derive singularities only from finite denominators. An already
+        // indexed infinity is a completed special form and must reach Phase 5,
+        // where the normative F/∞_G -> 0_F rule preserves its roots.
+        if (node.NodeType == ExpressionType.Divide && node.Right is InfinityExpression)
+        {
+            return node;
+        }
+
         // A1/A4 redefine only built-in division. Overloaded operators belong to
         // their scalar type and therefore follow classical evaluation exactly.
         if (node.NodeType == ExpressionType.Divide &&
