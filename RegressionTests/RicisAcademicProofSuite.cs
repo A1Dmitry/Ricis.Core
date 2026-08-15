@@ -18,6 +18,8 @@ internal static class RicisAcademicProofSuite
         ("PROVE06: Prove — разность кубов выводит x²+2x+4 при x≠2", DifferenceOfCubesProof),
         ("PROVE07: Prove — печатает только эффективные RICIS-шаги", ProofOmitsUnchangedSteps),
         ("PROVE08: Prove — раскрывает сокращение общего множителя как промежуточный шаг", CommonFactorProof),
+        ("PROVE09: Prove — система x+y=5, x−y=1 выводит x=3", LinearSystemProof),
+        ("PROVE10: Prove — система отклоняет противоречащий тезис", ContradictorySystemClaimIsRejected),
     ];
 
     private static void DifferenceOfSquaresProof()
@@ -140,6 +142,55 @@ internal static class RicisAcademicProofSuite
         Require(protocol.ToString().Contains("Сокращение общего множителя", StringComparison.Ordinal) &&
                 protocol.ToString().Contains("SP2: (F·G)/F = G", StringComparison.Ordinal),
             "Протокол должен зафиксировать отдельный промежуточный шаг сокращения общего множителя.");
+    }
+
+    private static void LinearSystemProof()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints =
+        [
+            (x, y) => x >= 0.0 && y >= 0.0,
+        ];
+        Expression<Func<double, double, bool>> claim = (x, y) => x == 3.0;
+        var protocol = new StringBuilder();
+
+        var derived = equations.Prove(constraints, claim, protocol);
+
+        var derivedFunction = derived.Compile();
+        Require(derivedFunction(3.0, 2.0) && !derivedFunction(2.0, 3.0),
+            $"Система должна вернуть независимое доказанное выражение x=3, получено {derived}.");
+        Require(protocol.ToString().Contains("Система уравнений", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Линейная комбинация уравнений системы", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Выделение первой координаты", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Подстановка найденной координаты", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Выделение второй координаты", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("((2 * x) == 6)", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("((3 + y) == 5)", StringComparison.Ordinal),
+            "Протокол системы должен содержать четыре символических шага, 2·x=6 и подстановку 3+y=5.");
+    }
+
+    private static void ContradictorySystemClaimIsRejected()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints = [];
+        Expression<Func<double, double, bool>> wrongClaim = (x, y) => y == 3.0;
+
+        try
+        {
+            _ = equations.Prove(constraints, wrongClaim, new StringBuilder());
+            throw new InvalidOperationException("Ожидалось отклонение тезиса, противоречащего символическому решению системы.");
+        }
+        catch (ArgumentException)
+        {
+        }
     }
 
     private static void PublicPhaseTraceHasOrderedSteps()

@@ -58,6 +58,11 @@ internal static class Program
             return RunAcademicProofDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--system-proof-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunSystemProofDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunContinuousSugarDemo();
@@ -298,6 +303,31 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine(protocol.ToString());
         Console.WriteLine($"Проверка производного дерева при x=2: {derived.Compile()(2.0):G17}");
+        return 0;
+    }
+
+    private static int RunSystemProofDemo()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints =
+        [
+            (x, y) => x >= 0.0 && y >= 0.0,
+        ];
+        Expression<Func<double, double, bool>> claim = (x, y) => x == 3.0;
+        var protocol = new StringBuilder();
+        var derived = equations.Prove(constraints, claim, protocol);
+
+        Console.WriteLine("Академическое доказательство RICIS для системы линейных уравнений:");
+        Console.WriteLine("  x + y = 5");
+        Console.WriteLine("  x - y = 1");
+        Console.WriteLine("  Доказуемое следствие: x = 3");
+        Console.WriteLine();
+        Console.WriteLine(protocol.ToString());
+        Console.WriteLine($"Проверка производного выражения: (x,y)=(3,2) → {derived.Compile()(3.0, 2.0)}; (2,3) → {derived.Compile()(2.0, 3.0)}");
         return 0;
     }
 
@@ -620,6 +650,7 @@ internal static class Program
         Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
         Console.WriteLine("  В CLI --academic-proof-demo записывает пошаговый академический вывод Prove в StringBuilder.");
+        Console.WriteLine("  В CLI --system-proof-demo доказывает следствие из системы двух линейных уравнений.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");

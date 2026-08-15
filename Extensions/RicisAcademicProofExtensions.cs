@@ -74,6 +74,258 @@ public static class RicisAcademicProofExtensions
         return derived;
     }
 
+    /// <summary>
+    /// Derives a stated coordinate of a two-variable linear system through
+    /// symbolic elimination and writes an academic proof protocol to
+    /// <paramref name="proof"/>. The supported system contains exactly two
+    /// independent equations in the forms <c>x+y=c</c>, <c>x-y=c</c>,
+    /// <c>y+x=c</c>, or <c>y-x=c</c>, together with optional two-variable
+    /// boolean domain constraints. No equation or constraint is compiled.
+    /// </summary>
+    /// <param name="equations">The two formal equations of the linear system.</param>
+    /// <param name="constraints">Optional domain constraints over the same pair of variables.</param>
+    /// <param name="claim">A coordinate claim of the form <c>x=c</c> or <c>y=c</c>.</param>
+    /// <param name="proof">The output buffer for the academic derivation.</param>
+    /// <returns>An independent derived equality expression for the proved coordinate.</returns>
+    /// <exception cref="ArgumentException">Thrown when the system is not two independent supported linear equations or the claim contradicts its symbolic solution.</exception>
+    public static Expression<Func<double, double, bool>> Prove(
+        this IEnumerable<Expression<Func<double, double, bool>>> equations,
+        IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        StringBuilder proof)
+    {
+        ArgumentNullException.ThrowIfNull(equations);
+        ArgumentNullException.ThrowIfNull(constraints);
+        ArgumentNullException.ThrowIfNull(claim);
+        ArgumentNullException.ThrowIfNull(proof);
+
+        var equationList = equations.ToList();
+        var constraintList = constraints.ToList();
+        if (equationList.Count != 2)
+        {
+            throw new ArgumentException("Система должна содержать ровно два линейных уравнения.", nameof(equations));
+        }
+
+        ValidateBinaryHypotheses(equationList, nameof(equations));
+        ValidateBinaryHypotheses(constraintList, nameof(constraints));
+        var first = ReadSupportedLinearEquation(equationList[0], nameof(equations));
+        var second = ReadSupportedLinearEquation(equationList[1], nameof(equations));
+        var determinant = (first.X * second.Y) - (second.X * first.Y);
+        if (determinant == 0.0)
+        {
+            throw new ArgumentException("Линейная система вырождена: её determinant равен нулю.", nameof(equations));
+        }
+
+        var solutionX = ((first.Constant * second.Y) - (second.Constant * first.Y)) / determinant;
+        var solutionY = ((first.X * second.Constant) - (second.X * first.Constant)) / determinant;
+        var (coordinate, claimedValue) = ReadCoordinateClaim(claim);
+        var provenValue = coordinate == 0 ? solutionX : solutionY;
+        if (claimedValue != provenValue)
+        {
+            throw new ArgumentException(
+                $"Тезис требует {claim}, но система символически выводит {(coordinate == 0 ? "x" : "y")} = {provenValue:G17}.",
+                nameof(claim));
+        }
+
+        var parameter = claim.Parameters[coordinate];
+        var derived = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(parameter, Expression.Constant(provenValue)),
+            claim.Parameters);
+        AppendLinearSystemProtocol(proof, equationList, constraintList, claim, first, second, solutionX, solutionY, coordinate, derived);
+        return derived;
+    }
+
+    private static void ValidateBinaryHypotheses(
+        IEnumerable<Expression<Func<double, double, bool>>> hypotheses,
+        string parameterName)
+    {
+        foreach (var hypothesis in hypotheses)
+        {
+            if (hypothesis is null || hypothesis.Parameters.Count != 2 ||
+                hypothesis.Parameters[0].Type != typeof(double) ||
+                hypothesis.Parameters[1].Type != typeof(double) ||
+                hypothesis.ReturnType != typeof(bool))
+            {
+                throw new ArgumentException(
+                    "Каждое уравнение или ограничение должно быть лямбдой Func<Double, Double, Boolean> с двумя параметрами.",
+                    parameterName);
+            }
+        }
+    }
+
+    private static LinearEquation ReadSupportedLinearEquation(
+        Expression<Func<double, double, bool>> equation,
+        string parameterName)
+    {
+        if (equation.Body is not BinaryExpression { NodeType: ExpressionType.Equal, Left: var left, Right: ConstantExpression { Value: double constant } } ||
+            left is not BinaryExpression { NodeType: var operation, Left: var firstTerm, Right: var secondTerm } ||
+            operation is not ExpressionType.Add and not ExpressionType.Subtract)
+        {
+            throw new ArgumentException(
+                "Поддерживаются линейные уравнения формы x+y=c, x-y=c, y+x=c или y-x=c, где c — double-константа.",
+                parameterName);
+        }
+
+        var firstIndex = ParameterIndex(firstTerm, equation.Parameters);
+        var secondIndex = ParameterIndex(secondTerm, equation.Parameters);
+        if (firstIndex < 0 || secondIndex < 0 || firstIndex == secondIndex)
+        {
+            throw new ArgumentException(
+                "Каждое линейное уравнение должно содержать обе переменные ровно по одному разу.",
+                parameterName);
+        }
+
+        var firstCoefficient = 1.0;
+        var secondCoefficient = operation == ExpressionType.Add ? 1.0 : -1.0;
+        var xCoefficient = firstIndex == 0 ? firstCoefficient : secondCoefficient;
+        var yCoefficient = firstIndex == 1 ? firstCoefficient : secondCoefficient;
+        return new LinearEquation(xCoefficient, yCoefficient, constant);
+    }
+
+    private static int ParameterIndex(Expression expression, IReadOnlyList<ParameterExpression> parameters) =>
+        expression is ParameterExpression parameter && ReferenceEquals(parameter, parameters[0]) ? 0 :
+        expression is ParameterExpression second && ReferenceEquals(second, parameters[1]) ? 1 : -1;
+
+    private static (int Coordinate, double Value) ReadCoordinateClaim(Expression<Func<double, double, bool>> claim)
+    {
+        if (claim.Body is not BinaryExpression { NodeType: ExpressionType.Equal, Left: var left, Right: var right })
+        {
+            throw new ArgumentException("Тезис системы должен иметь форму x=c или y=c.", nameof(claim));
+        }
+
+        var leftIndex = ParameterIndex(left, claim.Parameters);
+        if (leftIndex >= 0 && right is ConstantExpression { Value: double rightValue })
+        {
+            return (leftIndex, rightValue);
+        }
+
+        var rightIndex = ParameterIndex(right, claim.Parameters);
+        if (rightIndex >= 0 && left is ConstantExpression { Value: double leftValue })
+        {
+            return (rightIndex, leftValue);
+        }
+
+        throw new ArgumentException("Тезис системы должен иметь форму x=c или y=c, где c — double-константа.", nameof(claim));
+    }
+
+    private static void AppendLinearSystemProtocol(
+        StringBuilder proof,
+        IReadOnlyList<Expression<Func<double, double, bool>>> equations,
+        IReadOnlyList<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        LinearEquation first,
+        LinearEquation second,
+        double solutionX,
+        double solutionY,
+        int coordinate,
+        Expression<Func<double, double, bool>> derived)
+    {
+        if (proof.Length > 0 && proof[^1] != '\n')
+        {
+            proof.AppendLine();
+        }
+
+        var x = claim.Parameters[0];
+        var y = claim.Parameters[1];
+        var eliminationCoefficient = (second.X * first.Y) - (first.X * second.Y);
+        var eliminationConstant = (second.Constant * first.Y) - (first.Constant * second.Y);
+        var combined = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(
+                Expression.Multiply(Expression.Constant(eliminationCoefficient), x),
+                Expression.Constant(eliminationConstant)),
+            x,
+            y);
+        var xResult = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(x, Expression.Constant(solutionX)), x, y);
+        var firstWithProofParameters = new ParameterSubstitutionVisitor(equations[0].Parameters[0], x)
+            .Visit(equations[0].Body);
+        firstWithProofParameters = new ParameterSubstitutionVisitor(equations[0].Parameters[1], y)
+            .Visit(firstWithProofParameters);
+        var substituted = Expression.Lambda<Func<double, double, bool>>(
+            new ParameterSubstitutionVisitor(x, Expression.Constant(solutionX)).Visit(firstWithProofParameters),
+            x,
+            y);
+        var yResult = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(y, Expression.Constant(solutionY)), x, y);
+
+        proof.AppendLine("# Формальный вывод RICIS III: система линейных уравнений");
+        proof.AppendLine();
+        proof.AppendLine("## Система уравнений");
+        for (var index = 0; index < equations.Count; index++)
+        {
+            proof.Append(index + 1).Append(". Уравнение: `").Append(equations[index]).AppendLine("`.");
+        }
+
+        proof.AppendLine();
+        proof.AppendLine("## Ограничения области");
+        AppendBinaryHypotheses(proof, constraints);
+        proof.AppendLine();
+        proof.AppendLine("## Тезис");
+        proof.Append("Доказуемое следствие: `").Append(claim).AppendLine("`.");
+        proof.AppendLine();
+        proof.AppendLine("## Символическое исключение");
+        proof.AppendLine("Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.");
+        proof.AppendLine();
+        proof.AppendLine("### Шаг 1: Линейная комбинация уравнений системы");
+        proof.AppendLine("**Основание:** умножение первого равенства на противоположный коэффициент y второго и второго на коэффициент y первого; переменная y исключается по детерминанту.");
+        proof.Append("До: `").Append(equations[0]).Append("`; `").Append(equations[1]).AppendLine("`.");
+        proof.Append("После: `").Append(combined).AppendLine("`.");
+        proof.AppendLine();
+        proof.AppendLine("### Шаг 2: Выделение первой координаты");
+        proof.AppendLine("**Основание:** точное деление обеих частей линейного равенства на ненулевой коэффициент.");
+        proof.Append("До: `").Append(combined).AppendLine("`.");
+        proof.Append("После: `").Append(xResult).AppendLine("`.");
+        proof.AppendLine();
+        proof.AppendLine("### Шаг 3: Подстановка найденной координаты в первое уравнение");
+        proof.AppendLine("**Основание:** подстановка равных выражений в формальное равенство.");
+        proof.Append("До: `").Append(equations[0]).AppendLine("`.");
+        proof.Append("После: `").Append(substituted).AppendLine("`.");
+        proof.AppendLine();
+        proof.AppendLine("### Шаг 4: Выделение второй координаты");
+        proof.AppendLine("**Основание:** точное решение линейного равенства по оставшейся координате.");
+        proof.Append("До: `").Append(substituted).AppendLine("`.");
+        proof.Append("После: `").Append(yResult).AppendLine("`.");
+        proof.AppendLine();
+        proof.AppendLine("## Заключение");
+        proof.Append("Следовательно, система выводит x=").Append(solutionX.ToString("G17"))
+            .Append(" и y=").Append(solutionY.ToString("G17"))
+            .Append("; требуемая координата ").Append(coordinate == 0 ? "x" : "y")
+            .Append(" доказана выражением `").Append(derived).AppendLine("`.");
+    }
+
+    private static void AppendBinaryHypotheses(
+        StringBuilder proof,
+        IReadOnlyList<Expression<Func<double, double, bool>>> constraints)
+    {
+        if (constraints.Count == 0)
+        {
+            proof.AppendLine("Формальные ограничения не заданы.");
+            return;
+        }
+
+        for (var index = 0; index < constraints.Count; index++)
+        {
+            proof.Append(index + 1).Append(". Ограничение: `").Append(constraints[index]).AppendLine("`.");
+        }
+    }
+
+    private sealed record LinearEquation(double X, double Y, double Constant);
+
+    private sealed class ParameterSubstitutionVisitor : ExpressionVisitor
+    {
+        private readonly ParameterExpression _parameter;
+        private readonly Expression _replacement;
+
+        public ParameterSubstitutionVisitor(ParameterExpression parameter, Expression replacement)
+        {
+            _parameter = parameter;
+            _replacement = replacement;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            ReferenceEquals(node, _parameter) ? _replacement : base.VisitParameter(node);
+    }
+
     private static void ValidateHypotheses<T>(
         IEnumerable<Expression<Func<T, bool>>> hypotheses,
         string parameterName)
