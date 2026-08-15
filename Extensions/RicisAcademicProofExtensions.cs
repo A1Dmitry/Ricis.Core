@@ -15,8 +15,8 @@ public static class RicisAcademicProofExtensions
 {
     /// <summary>
     /// Derives a provable unary scalar expression through the normative RICIS
-    /// pipeline and appends an academic, phase-by-phase proof protocol to
-    /// <paramref name="proof"/>. The returned lambda is an independent derived
+    /// pipeline and appends an academic protocol containing only effective
+    /// RICIS transformations to <paramref name="proof"/>. The returned lambda is an independent derived
     /// expression; all conditions and constraints remain unevaluated expression
     /// trees in the written hypotheses.
     /// </summary>
@@ -132,29 +132,23 @@ public static class RicisAcademicProofExtensions
         proof.Append("Доказуемое отложенное выражение: `").Append(claim).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine("## Нормативный вывод");
-        proof.AppendLine("Ни одна предпосылка не исполнялась численно. Каждое преобразование ниже является применением фиксированной фазы RICIS к expression tree.");
+        proof.AppendLine("Ни одна предпосылка не исполнялась численно. Ниже записаны только нормативные фазы, которые действительно изменили expression tree; неизменяющие и неприменённые фазы в текст доказательства не включаются.");
         proof.AppendLine();
 
-        for (var index = 0; index < trace.Count; index++)
+        var effectiveSteps = trace.Where(step => step.Changed).ToList();
+        if (effectiveSteps.Count == 0)
         {
-            var step = trace[index];
+            proof.AppendLine("Ни одна нормативная фаза не изменила тезис: производное выражение структурно совпадает с исходным.");
+            proof.AppendLine();
+        }
+
+        for (var index = 0; index < effectiveSteps.Count; index++)
+        {
+            var step = effectiveSteps[index];
             proof.Append("### Шаг ").Append(index + 1).Append(": ").AppendLine(step.PhaseName);
             proof.Append("**Нормативное основание:** ").AppendLine(step.RuleFamily + ".");
-            if (step.WasSkipped)
-            {
-                proof.AppendLine("Фаза намеренно не применялась: её сертифицированная область требует double-domain root discovery, тогда как текущее дерево сохраняет иной scalar-домен или уже является ленивой сингулярностью.");
-            }
-            else if (step.Changed)
-            {
-                proof.Append("До: `").Append(step.Before).AppendLine("`.");
-                proof.Append("После: `").Append(step.After).AppendLine("`.");
-            }
-            else
-            {
-                proof.Append("Дерево: `").Append(step.After).AppendLine("`.");
-                proof.AppendLine("Заключение шага: предпосылки данной фазы не изменяют структурную форму тезиса.");
-            }
-
+            proof.Append("До: `").Append(step.Before).AppendLine("`.");
+            proof.Append("После: `").Append(step.After).AppendLine("`.");
             proof.AppendLine();
         }
 
