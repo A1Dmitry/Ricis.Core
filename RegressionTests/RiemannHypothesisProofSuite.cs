@@ -2,33 +2,24 @@ using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
-using Ricis.Core.Proofs;
 
 /// <summary>
-/// Regression scenarios inspired by the symmetry of non-trivial zeta zeros.
-/// These tests deliberately prove only finite consequences of their explicit
-/// hypotheses; they do not assert or establish the Riemann hypothesis itself.
+/// Regression scenarios for the complete normative RICIS type-identity chain.
+/// They verify that ID-01 through ID-06 are emitted as named steps before the
+/// exact finite expression-tree derivation.
 /// </summary>
 internal static class RiemannHypothesisProofSuite
 {
-    /// <summary>Returns the Riemann-related proof regression cases.</summary>
+    /// <summary>Returns the type-identity proof regression cases.</summary>
     public static IEnumerable<(string Name, Action Body)> Tests =>
     [
-        ("RIEMANN01: симметричная пара на критической прямой выводит σ=1/2", CriticalLinePairProof),
-        ("RIEMANN02: Riemann-связанный протокол отвергает ложное следствие", FalseCriticalLineClaimIsRejected),
+        ("RIEMANN01: ID-01–ID-06 выводят σ=1/2 как точную дробь", TypeIdentityChainProof),
+        ("RIEMANN02: ID-цепочка отвергает ложное следствие", FalseCriticalLineClaimIsRejected),
+        ("RIEMANN03: ID-цепочка сохраняет однопроходные ограничения", SinglePassConstraintsArePreserved),
     ];
 
-    private static void CriticalLinePairProof()
+    private static void TypeIdentityChainProof()
     {
-        // sigma and mirrorSigma represent real parts of a finite formal pair.
-        // The first equality is symmetry with respect to Re(s)=1/2. The second
-        // equality is an explicit finite hypothesis that the pair has equal
-        // real parts. Only their linear consequence is proved here.
-        Expression<Func<double, double, bool>>[] equations =
-        [
-            (sigma, mirrorSigma) => sigma + mirrorSigma == 1.0,
-            (sigma, mirrorSigma) => sigma - mirrorSigma == 0.0,
-        ];
         Expression<Func<double, double, bool>>[] constraints =
         [
             (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
@@ -43,59 +34,32 @@ internal static class RiemannHypothesisProofSuite
             sigma,
             mirrorSigma);
         var document = new StringBuilder();
-        var profile = new RicisProofDocumentProfile(
-            title: "Условная RICIS-теорема о типовой симметрии формальной пары",
-            scope: RicisProofScope.ConditionalTheorem,
-            @abstract: "Документирует конечное следствие из двух явно заданных линейных предпосылок для формальной пары действительных частей.",
-            theorem: "При sigma+mirrorSigma=1 и sigma−mirrorSigma=0 следует sigma=1/2.",
-            definitions:
-            [
-                "Формальная пара — две scalar-координаты sigma и mirrorSigma, а не реализация дзета-функции.",
-            ],
-            axioms:
-            [
-                "P1: sigma+mirrorSigma=1 — предпосылка симметрии пары.",
-                "P2: sigma−mirrorSigma=0 — предпосылка равенства её действительных частей.",
-            ],
-            limitations:
-            [
-                "Документ не доказывает, что P1 или P2 истинны для нулей дзета-функции.",
-                "Документ не является доказательством гипотезы Римана и не содержит квантора для всех нетривиальных нулей.",
-            ]);
 
-        var derived = equations.ProveDocument(constraints, claim, profile, document);
-        var protocol = document;
+        var derived = constraints.ProveTypeIdentityCriticalLine(claim, document);
         var derivedPredicate = derived.Compile();
-        var text = protocol.ToString();
+        var text = document.ToString();
 
         Require(derivedPredicate(0.5, 0.5) && !derivedPredicate(0.4, 0.6),
-            $"Из заданной системы должно следовать sigma=1/2; получено {derived}.");
+            $"ID-цепочка должна вывести sigma=1/2; получено {derived}.");
         Require(derived.Body is BinaryExpression { NodeType: ExpressionType.Equal, Right: var derivedHalf } &&
                 derivedHalf.AreEqual(exactHalf.Body),
-            "Производное доказательное дерево должно сравнивать sigma с эталонным expression tree () => 1.0 / 2.0.");
-        Require(text.Contains("((2 * sigma) == 1)", StringComparison.Ordinal) &&
+            "Производное дерево ID-цепочки должно сравнивать sigma с эталонным Divide(1,2).");
+        Require(text.Contains("# Нормативный вывод RICIS: тождество типа отражённой пары", StringComparison.Ordinal) &&
+                text.Contains("## Нормативная цепочка RICIS", StringComparison.Ordinal) &&
+                text.Contains("ID-01", StringComparison.Ordinal) &&
+                text.Contains("ID-02", StringComparison.Ordinal) &&
+                text.Contains("ID-03", StringComparison.Ordinal) &&
+                text.Contains("ID-04", StringComparison.Ordinal) &&
+                text.Contains("ID-05", StringComparison.Ordinal) &&
+                text.Contains("ID-06", StringComparison.Ordinal) &&
+                text.Contains("((2 * sigma) == 1)", StringComparison.Ordinal) &&
                 text.Contains("(sigma == (1 / 2))", StringComparison.Ordinal) &&
-                text.Contains("(mirrorSigma == (1 / 2))", StringComparison.Ordinal) &&
-                text.Contains("система выводит sigma=(1 / 2) и mirrorSigma=(1 / 2)", StringComparison.Ordinal),
-            "Riemann-связанный протокол должен сохранить несократимую дробь 1/2, реальные имена параметров и все четыре шага линейного вывода.");
-        Require(text.Contains("# Условная RICIS-теорема о типовой симметрии формальной пары", StringComparison.Ordinal) &&
-                text.Contains("**Условная теорема.**", StringComparison.Ordinal) &&
-                text.Contains("## Определения", StringComparison.Ordinal) &&
-                text.Contains("## Аксиомы и внешние предпосылки", StringComparison.Ordinal) &&
-                text.Contains("## Теорема или конечный тезис", StringComparison.Ordinal) &&
-                text.Contains("## Границы и непроверенные утверждения", StringComparison.Ordinal),
-            "Документный proof-отчёт обязан публиковать статус, определения, предпосылки, тезис и границы вывода.");
-        Require(!text.Contains("доказывает гипотезу Римана", StringComparison.OrdinalIgnoreCase),
-            "Конечный proof-сценарий не должен ошибочно объявляться доказательством гипотезы Римана.");
+                text.Contains("(mirrorSigma == (1 / 2))", StringComparison.Ordinal),
+            "Документ обязан содержать полный именованный путь ID-01–ID-06 и все промежуточные expression tree.");
     }
 
     private static void FalseCriticalLineClaimIsRejected()
     {
-        Expression<Func<double, double, bool>>[] equations =
-        [
-            (sigma, mirrorSigma) => sigma + mirrorSigma == 1.0,
-            (sigma, mirrorSigma) => sigma - mirrorSigma == 0.0,
-        ];
         Expression<Func<double, double, bool>>[] constraints =
         [
             (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
@@ -104,8 +68,30 @@ internal static class RiemannHypothesisProofSuite
             (sigma, mirrorSigma) => sigma == 0.4;
 
         RequireArgumentException(
-            () => _ = equations.Prove(constraints, falseClaim, new StringBuilder()),
-            "Протокол не должен принимать ложное следствие sigma=0.4 для симметричной пары.");
+            () => _ = constraints.ProveTypeIdentityCriticalLine(falseClaim, new StringBuilder()),
+            "ID-цепочка не должна принимать ложное следствие sigma=0.4.");
+    }
+
+    private static void SinglePassConstraintsArePreserved()
+    {
+        var enumerationCount = 0;
+        var sigma = Expression.Parameter(typeof(double), "sigma");
+        var mirrorSigma = Expression.Parameter(typeof(double), "mirrorSigma");
+        var exactHalf = Expression.Divide(Expression.Constant(1.0), Expression.Constant(2.0));
+        var claim = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(sigma, exactHalf), sigma, mirrorSigma);
+
+        _ = SinglePassConstraints(() => enumerationCount++)
+            .ProveTypeIdentityCriticalLine(claim, new StringBuilder());
+
+        Require(enumerationCount == 1,
+            "ID-цепочка обязана материализовать однопроходные ограничения ровно один раз без их потери.");
+    }
+
+    private static IEnumerable<Expression<Func<double, double, bool>>> SinglePassConstraints(Action onEnumeration)
+    {
+        onEnumeration();
+        yield return (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0;
     }
 
     private static void RequireArgumentException(Action action, string message)

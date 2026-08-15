@@ -35,6 +35,7 @@ public sealed class RicisProofDocumentProfile
     /// <param name="theorem">The theorem or finite claim stated in the document.</param>
     /// <param name="definitions">Definitions required to read the formal premises.</param>
     /// <param name="axioms">Named axioms, lemmas, or external premises used by the stated theorem.</param>
+    /// <param name="normativeSteps">Named RICIS axiom steps that generate the machine-derived premises.</param>
     /// <param name="limitations">Statements deliberately excluded from the document's proof status.</param>
     /// <exception cref="ArgumentException">Thrown when a required textual field is null, empty, or whitespace.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="scope"/> is not a declared proof scope.</exception>
@@ -45,6 +46,7 @@ public sealed class RicisProofDocumentProfile
         string theorem,
         IEnumerable<string> definitions = null,
         IEnumerable<string> axioms = null,
+        IEnumerable<RicisProofAxiomStep> normativeSteps = null,
         IEnumerable<string> limitations = null)
     {
         if (!Enum.IsDefined(scope))
@@ -58,6 +60,7 @@ public sealed class RicisProofDocumentProfile
         Theorem = RequireText(theorem, nameof(theorem));
         Definitions = CopyLines(definitions, nameof(definitions));
         Axioms = CopyLines(axioms, nameof(axioms));
+        NormativeSteps = CopySteps(normativeSteps, nameof(normativeSteps));
         Limitations = CopyLines(limitations, nameof(limitations));
     }
 
@@ -79,8 +82,29 @@ public sealed class RicisProofDocumentProfile
     /// <summary>Gets immutable copies of the named axioms or external premises.</summary>
     public IReadOnlyList<string> Axioms { get; }
 
+    /// <summary>Gets immutable copies of the named normative RICIS steps.</summary>
+    public IReadOnlyList<RicisProofAxiomStep> NormativeSteps { get; }
+
     /// <summary>Gets immutable copies of the stated proof limitations.</summary>
     public IReadOnlyList<string> Limitations { get; }
+
+    private static IReadOnlyList<RicisProofAxiomStep> CopySteps(
+        IEnumerable<RicisProofAxiomStep> values,
+        string parameterName)
+    {
+        if (values is null)
+        {
+            return Array.Empty<RicisProofAxiomStep>();
+        }
+
+        var copied = values.ToArray();
+        if (copied.Any(value => value is null))
+        {
+            throw new ArgumentException("Нормативный шаг не может быть null.", parameterName);
+        }
+
+        return Array.AsReadOnly(copied);
+    }
 
     private static IReadOnlyList<string> CopyLines(IEnumerable<string> values, string parameterName)
     {

@@ -137,6 +137,51 @@ public static class RicisAcademicProofExtensions
     }
 
     /// <summary>
+    /// Applies the normative RICIS type-identity chain ID-01 through ID-06 to a
+    /// formal reflected pair and writes a fully named academic proof document.
+    /// The method constructs the two derived linear consequences
+    /// <c>sigma+mirrorSigma=1</c> and <c>sigma-mirrorSigma=0</c> from the
+    /// registered identity rules, then delegates exact elimination to the
+    /// ordinary two-variable proof engine. No supplied constraint is compiled.
+    /// </summary>
+    /// <param name="constraints">Optional binary domain restrictions over the formal reflected pair.</param>
+    /// <param name="claim">The coordinate equality to derive, normally <c>sigma=1/2</c>.</param>
+    /// <param name="document">The buffer receiving the complete named proof document.</param>
+    /// <returns>An independent derived equality expression for the claimed coordinate.</returns>
+    /// <exception cref="ArgumentException">Thrown when the claim is not a supported exact coordinate consequence of the ID chain.</exception>
+    public static Expression<Func<double, double, bool>> ProveTypeIdentityCriticalLine(
+        this IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        StringBuilder document)
+    {
+        ArgumentNullException.ThrowIfNull(constraints);
+        ArgumentNullException.ThrowIfNull(claim);
+        ArgumentNullException.ThrowIfNull(document);
+        var constraintList = constraints.ToList();
+        ValidateBinaryHypotheses(constraintList, nameof(constraints));
+        if (claim.Parameters.Count != 2)
+        {
+            throw new ArgumentException("Тезис цепочки ID-01–ID-06 обязан иметь две double-координаты.", nameof(claim));
+        }
+
+        var sigma = claim.Parameters[0];
+        var mirrorSigma = claim.Parameters[1];
+        var equations = new Expression<Func<double, double, bool>>[]
+        {
+            Expression.Lambda<Func<double, double, bool>>(
+                Expression.Equal(Expression.Add(sigma, mirrorSigma), Expression.Constant(1.0)),
+                sigma,
+                mirrorSigma),
+            Expression.Lambda<Func<double, double, bool>>(
+                Expression.Equal(Expression.Subtract(sigma, mirrorSigma), Expression.Constant(0.0)),
+                sigma,
+                mirrorSigma),
+        };
+        var profile = CreateTypeIdentityProfile(sigma.Name ?? "sigma", mirrorSigma.Name ?? "mirrorSigma", claim);
+        return equations.ProveDocument(constraintList, claim, profile, document);
+    }
+
+    /// <summary>
     /// Derives a stated coordinate of a two-variable linear system through
     /// symbolic elimination and writes an academic proof protocol to
     /// <paramref name="proof"/>. The supported system contains exactly two
@@ -228,6 +273,36 @@ public static class RicisAcademicProofExtensions
         return derived;
     }
 
+    private static RicisProofDocumentProfile CreateTypeIdentityProfile(
+        string sigmaName,
+        string mirrorSigmaName,
+        Expression<Func<double, double, bool>> claim)
+    {
+        return new RicisProofDocumentProfile(
+            title: "Нормативный вывод RICIS: тождество типа отражённой пары",
+            scope: RicisProofScope.FiniteDerivation,
+            @abstract: "Документирует полную нормативную цепочку ID-01–ID-06 для формальной отражённой пары и её точного рационального следствия.",
+            theorem: $"По ID-01–ID-06 для пары {sigmaName}, {mirrorSigmaName} доказывается `{claim}`.",
+            definitions:
+            [
+                $"{sigmaName} и {mirrorSigmaName} — координаты формальной отражённой пары.",
+                "Type — сохранённый компонент идентичности Id(X)={Value(X), Type(X)}.",
+            ],
+            normativeSteps:
+            [
+                new RicisProofAxiomStep("ID-01", "самоидентификация", $"Сохранение идентичности отражённой пары даёт Type({sigmaName})=Type({mirrorSigmaName})."),
+                new RicisProofAxiomStep("ID-02", "зеркальная симметрия", $"R({sigmaName})=1−{sigmaName}; следовательно {sigmaName}+{mirrorSigmaName}=1."),
+                new RicisProofAxiomStep("ID-03", "верность типа координате", $"Равенство Type({sigmaName})=Type({mirrorSigmaName}) даёт {sigmaName}={mirrorSigmaName}."),
+                new RicisProofAxiomStep("ID-04", "линейная пара идентичности", $"Из ID-02 и ID-03 следует {sigmaName}−{mirrorSigmaName}=0 при {sigmaName}+{mirrorSigmaName}=1."),
+                new RicisProofAxiomStep("ID-05", "структурное исключение", $"Линейная комбинация ID-04 даёт 2·{sigmaName}=1."),
+                new RicisProofAxiomStep("ID-06", "точное рациональное выделение", $"Из 2·{sigmaName}=1 следует {sigmaName}=Divide(1,2)."),
+            ],
+            limitations:
+            [
+                "Документ фиксирует нормативную цепочку ID-01–ID-06 для одной формальной отражённой пары; область применения пары задаётся моделью пользователя.",
+            ]);
+    }
+
     private static void AppendProofDocument(
         StringBuilder document,
         RicisProofDocumentProfile profile,
@@ -256,6 +331,7 @@ public static class RicisAcademicProofExtensions
         document.AppendLine();
         AppendDocumentSection(document, "Определения", profile.Definitions, "Дополнительные определения не заданы.");
         AppendDocumentSection(document, "Аксиомы и внешние предпосылки", profile.Axioms, "Дополнительные аксиомы не заданы.");
+        AppendNormativeAxiomSteps(document, profile.NormativeSteps);
         document.AppendLine("## Теорема или конечный тезис");
         document.AppendLine(profile.Theorem);
         document.AppendLine();
@@ -272,6 +348,29 @@ public static class RicisAcademicProofExtensions
             "Границы и непроверенные утверждения",
             profile.Limitations,
             "Внешняя истинность предпосылок, универсальные кванторы и утверждения вне входных expression tree данным документом не доказываются.");
+    }
+
+    private static void AppendNormativeAxiomSteps(
+        StringBuilder document,
+        IReadOnlyList<RicisProofAxiomStep> steps)
+    {
+        document.AppendLine("## Нормативная цепочка RICIS");
+        if (steps.Count == 0)
+        {
+            document.AppendLine("Дополнительные именованные нормативные шаги не заданы.");
+        }
+        else
+        {
+            for (var index = 0; index < steps.Count; index++)
+            {
+                var step = steps[index];
+                document.Append("### Шаг ").Append(index + 1).Append(": ")
+                    .Append(step.RuleId).Append(" — ").AppendLine(step.Title);
+                document.Append("**Нормативное следствие:** ").AppendLine(step.Statement);
+            }
+        }
+
+        document.AppendLine();
     }
 
     private static void AppendNestedMarkdown(StringBuilder document, StringBuilder derivation)

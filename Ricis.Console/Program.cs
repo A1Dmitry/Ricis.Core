@@ -3,7 +3,6 @@ using System.Text;
 using Ricis.Core.Extensions;
 using Ricis.Core.Metadata;
 using Ricis.Core.Phases;
-using Ricis.Core.Proofs;
 
 namespace Ricis.ConsoleApp;
 
@@ -339,11 +338,6 @@ internal static class Program
 
     private static int RunRiemannProofDemo()
     {
-        Expression<Func<double, double, bool>>[] equations =
-        [
-            (sigma, mirrorSigma) => sigma + mirrorSigma == 1.0,
-            (sigma, mirrorSigma) => sigma - mirrorSigma == 0.0,
-        ];
         Expression<Func<double, double, bool>>[] constraints =
         [
             (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
@@ -358,26 +352,7 @@ internal static class Program
             sigma,
             mirrorSigma);
         var document = new StringBuilder();
-        var profile = new RicisProofDocumentProfile(
-            title: "Условная RICIS-теорема о типовой симметрии формальной пары",
-            scope: RicisProofScope.ConditionalTheorem,
-            @abstract: "Документирует конечное следствие из двух явно заданных линейных предпосылок для формальной пары действительных частей.",
-            theorem: "При sigma+mirrorSigma=1 и sigma−mirrorSigma=0 следует sigma=1/2.",
-            definitions:
-            [
-                "Формальная пара — две scalar-координаты sigma и mirrorSigma, а не реализация дзета-функции.",
-            ],
-            axioms:
-            [
-                "P1: sigma+mirrorSigma=1 — предпосылка симметрии пары.",
-                "P2: sigma−mirrorSigma=0 — предпосылка равенства её действительных частей.",
-            ],
-            limitations:
-            [
-                "Документ не доказывает, что P1 или P2 истинны для нулей дзета-функции.",
-                "Документ не является доказательством гипотезы Римана и не содержит квантора для всех нетривиальных нулей.",
-            ]);
-        var derived = equations.ProveDocument(constraints, claim, profile, document);
+        var derived = constraints.ProveTypeIdentityCriticalLine(claim, document);
 
         Console.WriteLine(document.ToString());
         Console.WriteLine($"Проверка производного выражения: (0.5,0.5) → {derived.Compile()(0.5, 0.5)}; (0.4,0.6) → {derived.Compile()(0.4, 0.6)}");

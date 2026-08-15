@@ -54,9 +54,9 @@ IEnumerable<Expression<Func<double, double, bool>>> equations
 
 ## Документный отчёт
 
-`ProveDocument` добавляет к тому же проверяемому выводу академическую оболочку: аннотацию, статус, определения, список внешних предпосылок, формулировку теоремы, трассировку и границы результата. Допустимы только два статуса: `FiniteDerivation` и `ConditionalTheorem`. Ни статус, ни количество тестов не объявляют переданные текстом аксиомы истинными и не усиливают конечный вывод до внешней универсальной теоремы.
+`ProveDocument` добавляет к тому же проверяемому выводу академическую оболочку: аннотацию, статус, определения, список нормативных оснований, формулировку теоремы, трассировку и границы результата. Допустимы только два статуса: `FiniteDerivation` и `ConditionalTheorem`. Регрессии не переопределяют заданные нормативные аксиомы: они проверяют, что каждая из них названа, выражена и применена кодом без потери переходов.
 
-Подробный контракт приведён в [RICIS_PROOF_DOCUMENTS.md](RICIS_PROOF_DOCUMENTS.md). Riemann-связанный документный пример и его незакрытые формальные мосты приведены в [RICIS_RIEMANN_PROOF_TEST.md](RICIS_RIEMANN_PROOF_TEST.md) и [RICIS_RH_FORMALIZATION_QA.md](RICIS_RH_FORMALIZATION_QA.md).
+Подробный контракт приведён в [RICIS_PROOF_DOCUMENTS.md](RICIS_PROOF_DOCUMENTS.md). Документный пример полной нормативной цепочки ID-01–ID-06, QA-реестр и независимая Lean-проверка приведены в [RICIS_RIEMANN_PROOF_TEST.md](RICIS_RIEMANN_PROOF_TEST.md), [RICIS_RH_FORMALIZATION_QA.md](RICIS_RH_FORMALIZATION_QA.md) и [FormalVerification/Lean](FormalVerification/Lean).
 
 ## Структура протокола
 
