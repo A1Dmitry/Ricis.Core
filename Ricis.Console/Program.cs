@@ -58,6 +58,11 @@ internal static class Program
             return RunContinuousSugarDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--complex-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunComplexDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -255,6 +260,43 @@ internal static class Program
         Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
         Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
         Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
+    }
+
+    private static int RunComplexDemo()
+    {
+        Expression<Func<double, double>> real = x => x + 1.0;
+        Expression<Func<double, double>> imaginary = x => 2.0;
+        Expression<Func<double, double>> otherReal = y => y - 1.0;
+        Expression<Func<double, double>> otherImaginary = y => 3.0;
+
+        var first = real.AsComplex(imaginary);
+        var second = otherReal.AsComplex(otherImaginary);
+        var conjugate = first.Conjugate();
+        var product = first.Multiply(second);
+        var squaredNorm = first.SquaredNorm();
+        var norm = first.Norm();
+
+        Console.WriteLine("Комплексные отложенные функции RICIS:");
+        Console.WriteLine("  z(x) хранится как пара expression tree Re(z), Im(z); System.Numerics.Complex и делегаты не используются при построении.");
+        Console.WriteLine($"z.Re(x):             {first.Re()}");
+        Console.WriteLine($"z.Im(x):             {first.Im()}");
+        Console.WriteLine($"conj(z).Re(x):       {conjugate.Re()}");
+        Console.WriteLine($"conj(z).Im(x):       {conjugate.Im()}");
+        Console.WriteLine($"(z·w).Re(x):         {product.Re()}");
+        Console.WriteLine($"(z·w).Im(x):         {product.Im()}");
+        Console.WriteLine($"|z|²:                {squaredNorm}");
+        Console.WriteLine($"|z|:                 {norm}");
+        Console.WriteLine();
+        Console.WriteLine("x       Re(z)    Im(z)    Re(z·w)  Im(z·w)  |z|²     |z|");
+
+        foreach (var point in new[] { -1.0, 0.0, 2.0 })
+        {
+            Console.WriteLine($"{point,4:G}  {first.Re().Compile()(point),8:G5}  {first.Im().Compile()(point),7:G5}  " +
+                              $"{product.Re().Compile()(point),9:G5}  {product.Im().Compile()(point),9:G5}  " +
+                              $"{squaredNorm.Compile()(point),7:G5}  {norm.Compile()(point),6:G5}");
+        }
+
         return 0;
     }
 
@@ -478,6 +520,7 @@ internal static class Program
         Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
+        Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine();
         PrintExamples();
     }
