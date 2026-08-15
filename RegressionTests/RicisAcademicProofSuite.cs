@@ -17,6 +17,7 @@ internal static class RicisAcademicProofSuite
         ("PROVE05: Trace — конвейер публикует все нормативные фазы", PublicPhaseTraceHasOrderedSteps),
         ("PROVE06: Prove — разность кубов выводит x²+2x+4 при x≠2", DifferenceOfCubesProof),
         ("PROVE07: Prove — печатает только эффективные RICIS-шаги", ProofOmitsUnchangedSteps),
+        ("PROVE08: Prove — раскрывает сокращение общего множителя как промежуточный шаг", CommonFactorProof),
     ];
 
     private static void DifferenceOfSquaresProof()
@@ -32,8 +33,10 @@ internal static class RicisAcademicProofSuite
             $"SP2 должен вывести x+5; получено {derived}.");
         Require(protocol.ToString().Contains("# Формальный вывод RICIS III", StringComparison.Ordinal) &&
                 protocol.ToString().Contains("SP2: сокращение до сингулярностей", StringComparison.Ordinal) &&
-                protocol.ToString().Contains("x => (x != 5)", StringComparison.Ordinal),
-            "Протокол должен содержать академические разделы, ограничение и нормативное основание SP2.");
+                protocol.ToString().Contains("x => (x != 5)", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Разложение разности квадратов", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Сокращение общего множителя", StringComparison.Ordinal),
+            "Протокол должен содержать академические разделы, ограничение и промежуточные шаги SP2 разности квадратов.");
     }
 
     private static void HypothesesRemainDeferred()
@@ -99,8 +102,9 @@ internal static class RicisAcademicProofSuite
             $"Разность кубов должна вывести x²+2x+4; получено {derived}.");
         Require(protocol.ToString().Contains("x => (x != 2)", StringComparison.Ordinal) &&
                 protocol.ToString().Contains("SP2: сокращение до сингулярностей", StringComparison.Ordinal) &&
-                protocol.ToString().Contains("После:", StringComparison.Ordinal),
-            "Академический протокол должен зафиксировать ограничение x≠2 и шаг SP2 разности кубов.");
+                protocol.ToString().Contains("Разложение разности кубов", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Сокращение общего множителя", StringComparison.Ordinal),
+            "Академический протокол должен зафиксировать ограничение x≠2, факторизацию и сокращение разности кубов.");
     }
 
     private static void ProofOmitsUnchangedSteps()
@@ -120,6 +124,22 @@ internal static class RicisAcademicProofSuite
                 !text.Contains("Фаза 2 — сингулярное преобразование", StringComparison.Ordinal) &&
                 !text.Contains("Фаза 5 — стандартные операции", StringComparison.Ordinal),
             "StringBuilder-доказательство должно печатать только фактически изменивший дерево шаг SP2.");
+    }
+
+    private static void CommonFactorProof()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [x => x != -1.0];
+        Expression<Func<double, double>> claim = x => ((x + 1.0) * (x - 1.0)) / (x + 1.0);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Require(Math.Abs(derived.Compile()(3.0) - 2.0) < 1e-12,
+            $"Сокращение общего множителя должно вывести x−1, получено {derived}.");
+        Require(protocol.ToString().Contains("Сокращение общего множителя", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("SP2: (F·G)/F = G", StringComparison.Ordinal),
+            "Протокол должен зафиксировать отдельный промежуточный шаг сокращения общего множителя.");
     }
 
     private static void PublicPhaseTraceHasOrderedSteps()

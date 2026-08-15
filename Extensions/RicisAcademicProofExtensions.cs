@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
+using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
 
 namespace Ricis.Core.Extensions;
@@ -147,8 +148,31 @@ public static class RicisAcademicProofExtensions
             var step = effectiveSteps[index];
             proof.Append("### Шаг ").Append(index + 1).Append(": ").AppendLine(step.PhaseName);
             proof.Append("**Нормативное основание:** ").AppendLine(step.RuleFamily + ".");
-            proof.Append("До: `").Append(step.Before).AppendLine("`.");
-            proof.Append("После: `").Append(step.After).AppendLine("`.");
+
+            var intermediateSteps = BuildIntermediateSteps(step);
+            if (intermediateSteps.Count == 0)
+            {
+                proof.Append("До: `").Append(step.Before).AppendLine("`.");
+                proof.Append("После: `").Append(step.After).AppendLine("`.");
+            }
+            else
+            {
+                proof.AppendLine("**Промежуточное выведение:**");
+                for (var detailIndex = 0; detailIndex < intermediateSteps.Count; detailIndex++)
+                {
+                    var detail = intermediateSteps[detailIndex];
+                    proof.Append("#### Шаг ")
+                        .Append(index + 1)
+                        .Append('.')
+                        .Append(detailIndex + 1)
+                        .Append(": ")
+                        .AppendLine(detail.Title);
+                    proof.Append("**Основание:** ").AppendLine(detail.Rule + ".");
+                    proof.Append("До: `").Append(FormatAsLambda(step.Before, detail.Before)).AppendLine("`.");
+                    proof.Append("После: `").Append(FormatAsLambda(step.Before, detail.After)).AppendLine("`.");
+                }
+            }
+
             proof.AppendLine();
         }
 
@@ -158,6 +182,239 @@ public static class RicisAcademicProofExtensions
             .AppendLine("`.");
         proof.AppendLine("Протокол фиксирует символическое выведение и не утверждает истинность внешних предпосылок вне переданных expression tree.");
     }
+
+    private static IReadOnlyList<IntermediateProofStep> BuildIntermediateSteps(RicisPhaseTraceStep step)
+    {
+        if (!step.RuleFamily.StartsWith("SP2", StringComparison.Ordinal) ||
+            step.Before is not LambdaExpression before ||
+            step.After is not LambdaExpression after ||
+            before.Parameters.Count != 1)
+        {
+            return [];
+        }
+
+        if (TryBuildDifferenceOfSquaresSteps(before.Body, after.Body, out var squares))
+        {
+            return squares;
+        }
+
+        if (TryBuildDifferenceOfCubesSteps(before.Body, after.Body, out var cubes))
+        {
+            return cubes;
+        }
+
+        if (TryBuildCommonFactorSteps(before.Body, after.Body, out var commonFactor))
+        {
+            return commonFactor;
+        }
+
+        return [];
+    }
+
+    private static bool TryBuildDifferenceOfSquaresSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Subtract } numerator, Right: var denominator } ||
+            !TryReadSquare(numerator.Left, out var leftBase) ||
+            !TryReadSquare(numerator.Right, out var rightBase) ||
+            denominator is not BinaryExpression { NodeType: ExpressionType.Subtract } difference ||
+            !difference.Left.AreEqual(leftBase) ||
+            !difference.Right.AreEqual(rightBase))
+        {
+            return false;
+        }
+
+        var factor = Expression.Subtract(leftBase, rightBase);
+        var quotient = Expression.Add(leftBase, rightBase);
+        var factorized = Expression.Divide(Expression.Multiply(factor, quotient), factor);
+        if (!quotient.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Разложение разности квадратов",
+                "SP2: A²−B² = (A−B)(A+B)",
+                before,
+                factorized),
+            new IntermediateProofStep(
+                "Сокращение общего множителя",
+                "SP2: (F·G)/F = G",
+                factorized,
+                quotient),
+        ];
+        return true;
+    }
+
+    private static bool TryBuildDifferenceOfCubesSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Subtract } numerator, Right: var denominator } ||
+            !TryReadCube(numerator.Left, out var leftBase) ||
+            !TryReadCube(numerator.Right, out var rightBase) ||
+            denominator is not BinaryExpression { NodeType: ExpressionType.Subtract } difference ||
+            !difference.Left.AreEqual(leftBase) ||
+            !difference.Right.AreEqual(rightBase))
+        {
+            return false;
+        }
+
+        var leftSquare = Expression.Multiply(leftBase, leftBase);
+        // AlgebraicReductionVisitor canonicalizes the mixed term as B·A.
+        // Reproduce that exact expression tree so the proof chain terminates
+        // at the independently derived SP2 result without a fictitious swap.
+        var product = Expression.Multiply(rightBase, leftBase);
+        var rightSquare = BuildSquare(rightBase);
+        var quotient = Expression.Add(Expression.Add(leftSquare, product), rightSquare);
+        var factor = Expression.Subtract(leftBase, rightBase);
+        var factorized = Expression.Divide(Expression.Multiply(factor, quotient), factor);
+        if (!quotient.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Разложение разности кубов",
+                "SP2: A³−B³ = (A−B)(A²+A·B+B²)",
+                before,
+                factorized),
+            new IntermediateProofStep(
+                "Сокращение общего множителя",
+                "SP2: (F·G)/F = G",
+                factorized,
+                quotient),
+        ];
+        return true;
+    }
+
+    private static bool TryBuildCommonFactorSteps(
+        Expression before,
+        Expression after,
+        out IReadOnlyList<IntermediateProofStep> steps)
+    {
+        steps = [];
+        if (before is not BinaryExpression { NodeType: ExpressionType.Divide, Left: BinaryExpression { NodeType: ExpressionType.Multiply } product, Right: var denominator })
+        {
+            return false;
+        }
+
+        var factor = product.Left.AreEqual(denominator)
+            ? product.Left
+            : product.Right.AreEqual(denominator)
+                ? product.Right
+                : null;
+        var quotient = factor is null
+            ? null
+            : product.Left.AreEqual(factor)
+                ? product.Right
+                : product.Left;
+        if (factor is null || quotient is null || !quotient.AreEqual(after))
+        {
+            return false;
+        }
+
+        steps =
+        [
+            new IntermediateProofStep(
+                "Сокращение общего множителя",
+                "SP2: (F·G)/F = G",
+                before,
+                quotient),
+        ];
+        return true;
+    }
+
+    private static Expression BuildSquare(Expression expression)
+    {
+        if (expression is ConstantExpression { Type: var type, Value: double value } && type == typeof(double))
+        {
+            return Expression.Constant(value * value, typeof(double));
+        }
+
+        return Expression.Multiply(expression, expression);
+    }
+
+    private static bool TryReadSquare(Expression expression, out Expression @base)
+    {
+        @base = null;
+        if (expression is BinaryExpression { NodeType: ExpressionType.Multiply, Left: var left, Right: var right } &&
+            left.AreEqual(right))
+        {
+            @base = left;
+            return true;
+        }
+
+        if (expression is BinaryExpression { NodeType: ExpressionType.Power, Left: var powerBase, Right: ConstantExpression { Value: double exponent } } &&
+            exponent == 2.0)
+        {
+            @base = powerBase;
+            return true;
+        }
+
+        return TryReadExactDoublePower(expression, 2, out @base);
+    }
+
+    private static bool TryReadCube(Expression expression, out Expression @base)
+    {
+        @base = null;
+        if (expression is BinaryExpression { NodeType: ExpressionType.Multiply, Left: BinaryExpression { NodeType: ExpressionType.Multiply } square, Right: var third } &&
+            square.Left.AreEqual(square.Right) &&
+            square.Left.AreEqual(third))
+        {
+            @base = square.Left;
+            return true;
+        }
+
+        if (expression is BinaryExpression { NodeType: ExpressionType.Power, Left: var powerBase, Right: ConstantExpression { Value: double exponent } } &&
+            exponent == 3.0)
+        {
+            @base = powerBase;
+            return true;
+        }
+
+        return TryReadExactDoublePower(expression, 3, out @base);
+    }
+
+    private static bool TryReadExactDoublePower(Expression expression, int power, out Expression @base)
+    {
+        @base = null;
+        if (expression is not ConstantExpression { Type: var type, Value: double value } || type != typeof(double))
+        {
+            return false;
+        }
+
+        var root = power == 2 ? Math.Sqrt(value) : Math.Cbrt(value);
+        var rounded = Math.Round(root);
+        if (double.IsNaN(root) || double.IsInfinity(root) || Math.Pow(rounded, power) != value)
+        {
+            return false;
+        }
+
+        @base = Expression.Constant(rounded, typeof(double));
+        return true;
+    }
+
+    private static Expression FormatAsLambda(Expression sourceLambda, Expression body)
+    {
+        if (sourceLambda is LambdaExpression lambda)
+        {
+            return Expression.Lambda(lambda.Type, body, lambda.Parameters);
+        }
+
+        return body;
+    }
+
+    private sealed record IntermediateProofStep(string Title, string Rule, Expression Before, Expression After);
 
     private static void AppendHypotheses<T>(
         StringBuilder proof,
