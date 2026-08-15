@@ -90,12 +90,17 @@ public sealed class LambdaTextParser
         private Expression ParseMultiplication()
         {
             var left = ParseUnary();
-            while (_current.Kind is TokenKind.Star or TokenKind.Slash)
+            while (_current.Kind is TokenKind.Star or TokenKind.Slash or TokenKind.Percent)
             {
                 var operation = _current.Kind;
                 Consume(operation);
                 var right = ParseUnary();
-                left = operation == TokenKind.Star ? Expression.Multiply(left, right) : Expression.Divide(left, right);
+                left = operation switch
+                {
+                    TokenKind.Star => Expression.Multiply(left, right),
+                    TokenKind.Slash => Expression.Divide(left, right),
+                    _ => Expression.Modulo(left, right)
+                };
             }
 
             return left;
@@ -215,9 +220,12 @@ public sealed class LambdaTextParser
                 "LOG10" => OneArgumentMath(nameof(Math.Log10), arguments, function),
                 "SQRT" => OneArgumentMath(nameof(Math.Sqrt), arguments, function),
                 "ABS" => OneArgumentMath(nameof(Math.Abs), arguments, function),
+                "SIGN" => Sign(arguments, function),
+                "CLAMP" => ThreeArgumentMath(nameof(Math.Clamp), arguments, function),
+                "MOD" => Modulo(arguments, function),
                 "POW" => TwoArgumentMath(nameof(Math.Pow), arguments, function),
                 _ => throw new LambdaParseException(
-                    $"Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs или Pow.",
+                    $"Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod или Pow.",
                     function.Position),
             };
         }
@@ -231,6 +239,38 @@ public sealed class LambdaTextParser
 
             var method = typeof(Math).GetMethod(methodName, [typeof(double)])!;
             return Expression.Call(method, arguments[0]);
+        }
+
+        private static Expression Sign(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(nameof(Math.Sign), [typeof(double)])!;
+            return Expression.Convert(Expression.Call(method, arguments[0]), typeof(double));
+        }
+
+        private static Expression Modulo(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+            }
+
+            return Expression.Modulo(arguments[0], arguments[1]);
+        }
+
+        private static Expression ThreeArgumentMath(string methodName, IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 3)
+            {
+                throw new LambdaParseException($"{token.Text} принимает ровно три аргумента.", token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double), typeof(double)])!;
+            return Expression.Call(method, arguments[0], arguments[1], arguments[2]);
         }
 
         private static Expression TwoArgumentMath(string methodName, IReadOnlyList<Expression> arguments, Token token)
@@ -280,6 +320,7 @@ public sealed class LambdaTextParser
                 case '-': _position++; return new Token(TokenKind.Minus, "-", start);
                 case '*': _position++; return new Token(TokenKind.Star, "*", start);
                 case '/': _position++; return new Token(TokenKind.Slash, "/", start);
+                case '%': _position++; return new Token(TokenKind.Percent, "%", start);
                 case '^': _position++; return new Token(TokenKind.Caret, "^", start);
                 case '(': _position++; return new Token(TokenKind.LeftParenthesis, "(", start);
                 case ')': _position++; return new Token(TokenKind.RightParenthesis, ")", start);
@@ -346,6 +387,7 @@ public sealed class LambdaTextParser
             TokenKind.Minus => "-",
             TokenKind.Star => "*",
             TokenKind.Slash => "/",
+            TokenKind.Percent => "%",
             TokenKind.Caret => "^",
             TokenKind.LeftParenthesis => "(",
             TokenKind.RightParenthesis => ")",
@@ -362,6 +404,7 @@ public sealed class LambdaTextParser
         Minus,
         Star,
         Slash,
+        Percent,
         Caret,
         LeftParenthesis,
         RightParenthesis,

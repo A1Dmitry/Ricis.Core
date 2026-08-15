@@ -46,6 +46,11 @@ internal static class RicisRuleContractSuite
         ("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах", DistinctKeyIndicesRemainAssociated),
         ("RC33: META — захваченный about добавляет SEO-профиль автора", CapturedAboutAddsAuthorSeo),
         ("RC34: META — профиль about сохраняет все подтверждённые источники", AuthorSeoProfileKeepsVerifiedSources),
+        ("RC35: ID — sign(x)/sign(x) даёт 1", SignIdentity),
+        ("RC36: ID — clamp(x)/clamp(x) даёт 1", ClampIdentity),
+        ("RC37: SP2 — abs(x) сокращается как общий множитель", AbsoluteValueFactorCancellation),
+        ("RC38: ID — x%2/(x%2) даёт 1", ModuloIdentity),
+        ("RC39: ID — условная отсечка F/F даёт 1", ConditionalCutoffIdentity),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -432,6 +437,65 @@ internal static class RicisRuleContractSuite
 
         Require(result is BinaryExpression { NodeType: ExpressionType.Add },
             "Сингулярности с разными полными наборами корней не должны объединяться.");
+    }
+
+    private static void SignIdentity()
+    {
+        var x = X();
+        var sign = Expression.Convert(
+            Expression.Call(typeof(Math).GetMethod(nameof(Math.Sign), [typeof(double)])!, x),
+            typeof(double));
+        AssertIdentity(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(
+            Expression.Divide(sign, sign), x)), "sign(x)/sign(x)", 0.0);
+    }
+
+    private static void ClampIdentity()
+    {
+        var x = X();
+        var clamp = Expression.Call(typeof(Math).GetMethod(nameof(Math.Clamp), [typeof(double), typeof(double), typeof(double)])!,
+            x, C(-1), C(1));
+        AssertIdentity(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(
+            Expression.Divide(clamp, clamp), x)), "clamp(x,−1,1)/clamp(x,−1,1)", 0.0);
+    }
+
+    private static void AbsoluteValueFactorCancellation()
+    {
+        var x = X();
+        var absolute = Expression.Call(typeof(Math).GetMethod(nameof(Math.Abs), [typeof(double)])!, x);
+        var tail = Expression.Add(x, C(1));
+        var source = Expression.Divide(Expression.Multiply(absolute, tail), absolute);
+        var derived = ExtractDerived(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x)));
+
+        AssertEqual(derived.Body, tail, "SP2 должен отменить общий множитель abs(x) до сингулярностей.");
+        Require(Math.Abs(derived.Compile()(0.0) - 1.0) <= 1e-12,
+            "Производное после сокращения abs(x) должно выполняться в x=0.");
+    }
+
+    private static void ModuloIdentity()
+    {
+        var x = X();
+        var remainder = Expression.Modulo(x, C(2));
+        AssertIdentity(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(
+            Expression.Divide(remainder, remainder), x)), "(x%2)/(x%2)", 0.0);
+    }
+
+    private static void ConditionalCutoffIdentity()
+    {
+        var x = X();
+        var cutoff = Expression.Condition(
+            Expression.GreaterThanOrEqual(x, C(0)),
+            x,
+            C(0));
+        AssertIdentity(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(
+            Expression.Divide(cutoff, cutoff), x)), "cutoff(x)/cutoff(x)", -2.0);
+    }
+
+    private static void AssertIdentity(Expression expression, string form, double point)
+    {
+        var derived = ExtractDerived(expression);
+        AssertEqual(derived.Body, C(1), $"L1 должен сократить {form} до 1.");
+        Require(Math.Abs(derived.Compile()(point) - 1.0) <= 1e-12,
+            $"Производное тождество {form} должно выполняться в x={point:G17}.");
     }
 
     private static Expression<Func<double, double>> ExtractDerived(Expression expression)

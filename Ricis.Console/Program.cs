@@ -33,6 +33,11 @@ internal static class Program
             return RunDerivativeDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--structural-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunStructuralFunctionDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -205,6 +210,36 @@ internal static class Program
         return allMatch ? 0 : 1;
     }
 
+    private static int RunStructuralFunctionDemo()
+    {
+        var inputs = new[]
+        {
+            "x => sign(x) / sign(x)",
+            "x => clamp(x, -1, 1) / clamp(x, -1, 1)",
+            "x => (abs(x) * (x + 1)) / abs(x)",
+            "x => mod(x, 2) / mod(x, 2)",
+            "x => (x % 2) / (x % 2)"
+        };
+
+        Console.WriteLine("Структурное сокращение одинаковых функций по L1/SP2:");
+        Console.WriteLine("Классические нулевые точки не вычисляются до тождества F/F → 1.");
+        Console.WriteLine();
+
+        var failures = 0;
+        foreach (var input in inputs)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"> {input}");
+            Console.ResetColor();
+            if (!ProcessExpression(input))
+            {
+                failures++;
+            }
+        }
+
+        return failures == 0 ? 0 : 1;
+    }
+
     private static int RunAuthorSeoDemo()
     {
         // `about` is deliberately captured from the outer scope. The pipeline
@@ -307,13 +342,14 @@ internal static class Program
         Console.WriteLine("  [x =>] выражение");
         Console.WriteLine("  Операторы: +, -, *, /, ^ и круглые скобки.");
         Console.WriteLine("  Константы: pi, e.");
-        Console.WriteLine("  Функции: sin, cos, tan, sinh, cosh, tanh, exp, log, log10, sqrt, abs, pow.");
+        Console.WriteLine("  Функции: sin, cos, tan, sinh, cosh, tanh, exp, log, log10, sqrt, abs, sign, clamp, mod, pow.");
         Console.WriteLine("  Допустимы варианты Math.Sin(x) и sin(x); имена регистронезависимы.");
         Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2).");
         Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
         Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
         Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");
         Console.WriteLine("  В CLI --derivative-demo показывает DxDt() как символьную перестройку без lim и Лопиталя.");
+        Console.WriteLine("  В CLI --structural-demo показывает L1/SP2 для sign, clamp, abs и остатка.");
         Console.WriteLine();
         PrintExamples();
     }

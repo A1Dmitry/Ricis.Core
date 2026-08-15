@@ -30,11 +30,17 @@ public static class ExpressionStructuralComparer
         {
             ExpressionType.Constant => ConstantEqual((ConstantExpression)a, (ConstantExpression)b),
             ExpressionType.Parameter => ParameterEqual((ParameterExpression)a, (ParameterExpression)b),
-            ExpressionType.Add or ExpressionType.Subtract or ExpressionType.Multiply or ExpressionType.Divide
+            ExpressionType.Add or ExpressionType.Subtract or ExpressionType.Multiply or ExpressionType.Divide or
+            ExpressionType.Modulo or ExpressionType.Power or
+            ExpressionType.Equal or ExpressionType.NotEqual or
+            ExpressionType.GreaterThan or ExpressionType.GreaterThanOrEqual or
+            ExpressionType.LessThan or ExpressionType.LessThanOrEqual or
+            ExpressionType.AndAlso or ExpressionType.OrElse
                 => BinaryEqual((BinaryExpression)a, (BinaryExpression)b),
             ExpressionType.Negate or ExpressionType.UnaryPlus or ExpressionType.Convert
                 => UnaryEqual((UnaryExpression)a, (UnaryExpression)b),
             ExpressionType.Call => CallEqual((MethodCallExpression)a, (MethodCallExpression)b),
+            ExpressionType.Conditional => ConditionalEqual((ConditionalExpression)a, (ConditionalExpression)b),
             ExpressionType.Lambda => LambdaEqual((LambdaExpression)a, (LambdaExpression)b),
             ExpressionType.Extension => ExtensionEqual(a, b),
             _ => false
@@ -97,6 +103,11 @@ public static class ExpressionStructuralComparer
 
         return true;
     }
+
+    private static bool ConditionalEqual(ConditionalExpression a, ConditionalExpression b) =>
+        AreEqual(a.Test, b.Test) &&
+        AreEqual(a.IfTrue, b.IfTrue) &&
+        AreEqual(a.IfFalse, b.IfFalse);
 
     private static bool LambdaEqual(LambdaExpression a, LambdaExpression b)
     {
