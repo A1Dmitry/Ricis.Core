@@ -1,7 +1,68 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
+﻿# Build output
+[Bb]in/
+[Oo]bj/
 
-/.vs
-/bin/Debug/net8.0
-/obj
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# NuGet and package artifacts
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results and coverage
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage-report/
+
+# Generated documentation and symbols
+*.dll
+*.exe
+*.pdb
+*.xml
+*.deps.json
+*.runtimeconfig.json
+
+# Temporary and log files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local task outputs
+console_*.txt
+*._check.txt
+*_regression.txt
+*_build.log
