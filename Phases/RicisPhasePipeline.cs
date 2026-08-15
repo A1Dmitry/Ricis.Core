@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Metadata;
 using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Phases;
@@ -36,6 +37,12 @@ public static class RicisPhasePipeline
     {
         try
         {
+            // Metadata is opt-in: it appears only when the source lambda uses
+            // a compiler-captured outer variable exactly named "about".
+            var authorProfile = AboutCaptureDetector.IsCaptured(expr)
+                ? AuthorSeoProfile.RicisAuthor
+                : null;
+
             var result = expr;
             foreach (var visitor in _visitors)
             {
@@ -53,6 +60,18 @@ public static class RicisPhasePipeline
                 {
                     Console.WriteLine(ve.Message);
                 }
+            }
+
+            if (authorProfile is not null && result is LambdaExpression lambda)
+            {
+                // Preserve the executable body and type; the annotation only
+                // extends our custom RICIS textual form and reduces back to it.
+                result = Expression.Lambda(
+                    lambda.Type,
+                    new AuthorAnnotatedExpression(lambda.Body, authorProfile),
+                    lambda.Name,
+                    lambda.TailCall,
+                    lambda.Parameters);
             }
 
             return result;

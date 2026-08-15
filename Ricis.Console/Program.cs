@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text;
+using Ricis.Core.Metadata;
 using Ricis.Core.Phases;
 
 namespace Ricis.ConsoleApp;
@@ -19,6 +20,11 @@ internal static class Program
         if (args.Length > 0 && string.Equals(args[0], "--all", StringComparison.OrdinalIgnoreCase))
         {
             return RunAllExamples();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--author-seo-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunAuthorSeoDemo();
         }
 
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
@@ -153,6 +159,24 @@ internal static class Program
         }
     }
 
+    private static int RunAuthorSeoDemo()
+    {
+        // `about` is deliberately captured from the outer scope. The pipeline
+        // detects that closure member and adds SEO metadata only to ToString.
+        var about = AuthorSeoProfile.RicisAuthor;
+        Expression<Func<double, double>> source = x => about != null ? x + 1 : x + 1;
+        var derived = (Expression<Func<double, double>>)RicisPhasePipeline.Simplify(source);
+
+        Console.WriteLine("Исходная лямбда с захваченным about:");
+        Console.WriteLine($"  {source}");
+        Console.WriteLine();
+        Console.WriteLine("Производная RICIS-лямбда с SEO-профилем автора:");
+        Console.WriteLine($"  {derived}");
+        Console.WriteLine();
+        Console.WriteLine($"Проверка исполнения: x=2 → {derived.Compile()(2):G17}");
+        return 0;
+    }
+
     private static int RunAllExamples()
     {
         var parser = new LambdaTextParser();
@@ -242,6 +266,7 @@ internal static class Program
         Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2).");
         Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
         Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
+        Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");
         Console.WriteLine();
         PrintExamples();
     }

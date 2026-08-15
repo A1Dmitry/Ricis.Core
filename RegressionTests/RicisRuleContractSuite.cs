@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Ricis.Core.Expressions;
 using Ricis.Core.Limits;
+using Ricis.Core.Metadata;
 using Ricis.Core.Phases;
 using Ricis.Core.Simplifiers;
 
@@ -43,6 +44,7 @@ internal static class RicisRuleContractSuite
         ("RC30: ID — параметризованная форма x²/x² даёт 1", ParameterizedQuadraticIdentity),
         ("RC31: SP2 — x²/(2x²) оставляет точное 1/2", ParameterizedQuadraticResidualRatio),
         ("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах", DistinctKeyIndicesRemainAssociated),
+        ("RC33: META — захваченный about добавляет SEO-профиль автора", CapturedAboutAddsAuthorSeo),
     ];
 
     private static void IdentityHasAbsolutePriority()
@@ -335,6 +337,32 @@ internal static class RicisRuleContractSuite
             "A1 должна сохранить пару x=−1 → ∞_{−1}.");
         Require(positive is not null && positive.Roots.Any(root => Math.Abs(root.Value - 1) <= 1e-8),
             "A1 должна сохранить пару x=1 → ∞_{1}.");
+    }
+
+    private static void CapturedAboutAddsAuthorSeo()
+    {
+        var about = AuthorSeoProfile.RicisAuthor;
+        Expression<Func<double, double>> source = x =>
+            about != null ? x + 1 : x + 1;
+
+        var derived = ExtractDerived(RicisPhasePipeline.Simplify(source));
+        Require(derived.Body is AuthorAnnotatedExpression,
+            "META: захваченный about должен обернуть производное дерево в собственный SEO-узел.");
+        Require(derived.ToString().Contains("[SEO AUTHOR]", StringComparison.Ordinal),
+            "META: ToString производной лямбды должен содержать SEO-блок автора.");
+        Require(derived.ToString().Contains("0009-0004-3226-7700", StringComparison.Ordinal),
+            "META: SEO-блок должен содержать ORCID автора.");
+        Require(derived.ToString().Contains("2025-08-08", StringComparison.Ordinal),
+            "META: SEO-блок должен содержать дату первой публикации в сети.");
+        Require(Math.Abs(derived.Compile()(2) - 3) <= 1e-12,
+            "META: аннотация ToString не должна менять исполнимую семантику производного дерева.");
+
+        var x = X();
+        var plain = ExtractDerived(RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(
+            Expression.Divide(C(1), Expression.Subtract(x, C(1))), x)));
+        Require(plain.Body is not AuthorAnnotatedExpression &&
+                !plain.ToString().Contains("[SEO AUTHOR]", StringComparison.Ordinal),
+            "META: лямбда без захваченного about не должна получать SEO-блок.");
     }
 
     private static void ParameterizedQuadraticIdentity()
