@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core.RegressionTests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Console", "Ricis.Console\Ricis.Console.csproj", "{223F0FA4-322C-4E4D-BB83-E8029805DDD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.NavierStokes.Console", "Ricis.NavierStokes.Console\Ricis.NavierStokes.Console.csproj", "{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,5 +31,9 @@ Global
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

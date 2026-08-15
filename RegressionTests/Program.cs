@@ -41,6 +41,7 @@ tests.AddRange(RicisSumSuite.Tests);
 tests.AddRange(RicisProofOperationsSuite.Tests);
 tests.AddRange(RicisAcademicProofSuite.Tests);
 tests.AddRange(RiemannHypothesisProofSuite.Tests);
+tests.AddRange(RicisNavierStokesProofSuite.Tests);
 tests.AddRange(RicisContinuousSugarSuite.Tests);
 tests.AddRange(RicisComplexSuite.Tests);
 tests.AddRange(RicisCompoundInterestSuite.Tests);

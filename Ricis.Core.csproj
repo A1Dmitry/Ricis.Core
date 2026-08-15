@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Remove="RegressionTests/**/*.cs" />
     <Compile Remove="Ricis.Console/**/*.cs" />
+    <Compile Remove="Ricis.NavierStokes.Console/**/*.cs" />
   </ItemGroup>
 
 </Project>
