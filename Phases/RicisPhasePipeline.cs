@@ -9,21 +9,14 @@ using Ricis.Core.Simplifiers;
 namespace Ricis.Core.Phases;
 
 /// <summary>
-/// Phase order (theory COMPUTATION_ALGORITHM + polar):
-///   Priority contract: the identity of essence F≡F→1 has absolute priority.
-///   Other explicit RICIS rules and structural algebra then run before a
-///   permitted classical bridge. Operations outside an explicit RICIS rule
-///   preserve their classical expression semantics unchanged.
-///   Phase 0   IdentityReductionVisitor  — F/F → 1 (highest priority)
-///   Phase 0.5 PolarTrigVisitor          — trig → polar sector → exact collapse
-///   Phase 1   AlgebraicReductionVisitor — SP2 cancel identical factors
-///   Phase 1.5 LimitBridgeVisitor        — O(1) bridges F·0→0_F, F/0→∞_F
-///   Phase 2   RicisTransformVisitor     — A4/A1 0_F/0_G=F/G, F/0=∞_F
-///   Phase 5   StandardOperationsVisitor — ∞ algebra (A5/A6/A7)
+/// Normative RICIS phase order:
+/// identity of essence F≡F→1; polar reduction; SP2 algebra; O(1) bridges;
+/// A1/A4 singular transforms; and standard operations A5–A7 plus indexed-zero
+/// rules. Operations outside an explicit RICIS rule retain classical semantics.
 /// </summary>
 public static class RicisPhasePipeline
 {
-    private static readonly List<IExpressionVisitor> _visitors =
+    private static readonly List<IExpressionVisitor> Visitors =
     [
         new IdentityReductionVisitor(),
         new PolarTrigVisitor(),
@@ -34,66 +27,103 @@ public static class RicisPhasePipeline
     ];
 
     /// <summary>
-    /// Executes <c>Simplify</c> for the RICIS expression model.
+    /// Simplifies an expression through the complete normative RICIS pipeline.
     /// </summary>
-    public static Expression Simplify(Expression expr)
+    public static Expression Simplify(Expression expr) => SimplifyCore(expr, null);
+
+    /// <summary>
+    /// Simplifies an expression through the normative RICIS pipeline and appends
+    /// one immutable trace record for every phase attempt. The supplied trace is
+    /// output-only: existing records are preserved and the input expression is
+    /// never executed during simplification.
+    /// </summary>
+    public static Expression SimplifyWithTrace(Expression expr, ICollection<RicisPhaseTraceStep> trace)
     {
-        try
-        {
-            // Metadata is opt-in: it appears only when the source lambda uses
-            // a compiler-captured outer variable exactly named "about".
-            var authorProfile = AboutCaptureDetector.IsCaptured(expr)
-                ? AuthorSeoProfile.RicisAuthor
-                : null;
-
-            var result = expr;
-            foreach (var visitor in _visitors)
-            {
-                if (visitor is RicisTransformVisitor &&
-                    result is LambdaExpression { Body: LazyInfinityExpression { CanReduce: true } })
-                {
-                    continue;
-                }
-
-                // Certified roots and key substitution currently operate in the
-                // double domain. Generic finite algebra and direct O(1) bridges
-                // retain their original scalar type without a double coercion.
-                if (visitor is RicisTransformVisitor &&
-                    result is LambdaExpression typedLambda &&
-                    typedLambda.ReturnType != typeof(double))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    result = visitor.Visit(result);
-                }
-                catch (Exception error)
-                {
-                    throw new InvalidOperationException(
-                        $"Фаза RICIS {visitor.GetType().Name} не смогла преобразовать выражение типа {result.Type}.",
-                        error);
-                }
-            }
-
-            if (authorProfile is not null && result is LambdaExpression lambda)
-            {
-                // Preserve the executable body and type; the annotation only
-                // extends our custom RICIS textual form and reduces back to it.
-                result = Expression.Lambda(
-                    lambda.Type,
-                    new AuthorAnnotatedExpression(lambda.Body, authorProfile),
-                    lambda.Name,
-                    lambda.TailCall,
-                    lambda.Parameters);
-            }
-
-            return result;
-        }
-        catch
-        {
-            throw;
-        }
+        ArgumentNullException.ThrowIfNull(trace);
+        return SimplifyCore(expr, trace);
     }
+
+    private static Expression SimplifyCore(Expression expr, ICollection<RicisPhaseTraceStep> trace)
+    {
+        ArgumentNullException.ThrowIfNull(expr);
+
+        // Metadata is opt-in: it appears only when a source lambda captures an
+        // outer variable exactly named "about".
+        var authorProfile = AboutCaptureDetector.IsCaptured(expr)
+            ? AuthorSeoProfile.RicisAuthor
+            : null;
+
+        var result = expr;
+        foreach (var visitor in Visitors)
+        {
+            var before = result;
+            var (phaseName, ruleFamily) = Describe(visitor);
+            if (MustSkip(visitor, result))
+            {
+                trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, before, wasSkipped: true));
+                continue;
+            }
+
+            try
+            {
+                result = visitor.Visit(result);
+            }
+            catch (Exception error)
+            {
+                throw new InvalidOperationException(
+                    $"Фаза RICIS {visitor.GetType().Name} не смогла преобразовать выражение типа {result.Type}.",
+                    error);
+            }
+
+            trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, result, wasSkipped: false));
+        }
+
+        if (authorProfile is not null && result is LambdaExpression lambda)
+        {
+            var before = result;
+            result = Expression.Lambda(
+                lambda.Type,
+                new AuthorAnnotatedExpression(lambda.Body, authorProfile),
+                lambda.Name,
+                lambda.TailCall,
+                lambda.Parameters);
+            trace?.Add(new RicisPhaseTraceStep(
+                "Метафаза автора",
+                "META — opt-in SEO-аннотация about",
+                before,
+                result,
+                wasSkipped: false));
+        }
+
+        return result;
+    }
+
+    private static bool MustSkip(IExpressionVisitor visitor, Expression result)
+    {
+        if (visitor is not RicisTransformVisitor)
+        {
+            return false;
+        }
+
+        if (result is LambdaExpression { Body: LazyInfinityExpression { CanReduce: true } })
+        {
+            return true;
+        }
+
+        // Certified root discovery and key substitution are presently a double
+        // facility. Finite generic algebra and O(1) bridges remain typed and do
+        // not coerce their scalar domain only to search for numeric roots.
+        return result is LambdaExpression lambda && lambda.ReturnType != typeof(double);
+    }
+
+    private static (string PhaseName, string RuleFamily) Describe(IExpressionVisitor visitor) => visitor switch
+    {
+        IdentityReductionVisitor => ("Фаза 0 — тождество сущности", "ID-01 / L1: F/F → 1"),
+        PolarTrigVisitor => ("Фаза 0.5 — полярная тригонометрия", "POL: точные полярные тождества"),
+        AlgebraicReductionVisitor => ("Фаза 1 — структурная алгебра", "SP2: сокращение до сингулярностей"),
+        LimitBridgeVisitor => ("Фаза 1.5 — мосты O(1)", "LIM: F·0 → 0_F, F/0 → ∞_F"),
+        RicisTransformVisitor => ("Фаза 2 — сингулярное преобразование", "A1/A4: индексирование и отношение нулей"),
+        StandardOperationsVisitor => ("Фаза 5 — стандартные операции", "Z-01/Z-02, A5/A6/A7"),
+        _ => (visitor.GetType().Name, "Нормативная фаза RICIS")
+    };
 }

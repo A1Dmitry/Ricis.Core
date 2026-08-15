@@ -53,6 +53,11 @@ internal static class Program
             return RunProofOperationsDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--academic-proof-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunAcademicProofDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunContinuousSugarDemo();
@@ -270,6 +275,29 @@ internal static class Program
         Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
         Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
         Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
+    }
+
+    private static int RunAcademicProofDemo()
+    {
+        Expression<Func<double, bool>>[] conditions =
+        [
+            x => x >= -10.0,
+        ];
+        Expression<Func<double, bool>>[] constraints =
+        [
+            x => x != 5.0,
+        ];
+        Expression<Func<double, double>> claim = x => ((x * x) - 25.0) / (x - 5.0);
+        var protocol = new StringBuilder();
+        var derived = conditions.Prove(constraints, claim, protocol);
+
+        Console.WriteLine("Академический доказательный протокол RICIS:");
+        Console.WriteLine($"Исходный тезис: {claim}");
+        Console.WriteLine($"Производное выражение: {derived}");
+        Console.WriteLine();
+        Console.WriteLine(protocol.ToString());
+        Console.WriteLine($"Проверка производного дерева при x=2: {derived.Compile()(2.0):G17}");
         return 0;
     }
 
@@ -591,6 +619,7 @@ internal static class Program
         Console.WriteLine("  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.");
         Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
+        Console.WriteLine("  В CLI --academic-proof-demo записывает пошаговый академический вывод Prove в StringBuilder.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");
