@@ -53,6 +53,11 @@ internal static class Program
             return RunProofOperationsDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunContinuousSugarDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -253,6 +258,46 @@ internal static class Program
         return 0;
     }
 
+    private static int RunContinuousSugarDemo()
+    {
+        Expression<Func<double, double>> f = x => 2.0 * x;
+        Expression<Func<double, double>> g = y => y + 1.0;
+        Expression<Func<double, double>> lower = z => z - 1.0;
+        Expression<Func<double, double>> upper = u => u + 1.0;
+
+        var absolute = f.Abs();
+        var minimum = f.Min(g);
+        var maximum = f.Max(g);
+        var clamped = f.Clamp(lower, upper);
+        var positive = f.PositivePart();
+        var negative = f.NegativePart();
+        var distance = f.Distance(g);
+
+        Console.WriteLine("Непрерывный математический сахар RICIS:");
+        Console.WriteLine("  Все результаты — чистые конечные expression tree; делегаты не вызываются при построении.");
+        Console.WriteLine($"F(x):              {f}");
+        Console.WriteLine($"G(y):              {g}");
+        Console.WriteLine($"Abs(F):            {absolute}");
+        Console.WriteLine($"Min(F, G):         {minimum}");
+        Console.WriteLine($"Max(F, G):         {maximum}");
+        Console.WriteLine($"Clamp(F, x-1, x+1):{clamped}");
+        Console.WriteLine($"PositivePart(F):   {positive}");
+        Console.WriteLine($"NegativePart(F):   {negative}");
+        Console.WriteLine($"Distance(F, G):    {distance}");
+        Console.WriteLine();
+        Console.WriteLine("x       Abs(F)   Min(F,G)  Max(F,G)  Clamp     F⁺        F⁻        |F−G|");
+
+        foreach (var point in new[] { -2.0, 0.0, 2.0 })
+        {
+            Console.WriteLine($"{point,4:G}  {absolute.Compile()(point),9:G5}  {minimum.Compile()(point),9:G5}  " +
+                              $"{maximum.Compile()(point),9:G5}  {clamped.Compile()(point),9:G5}  " +
+                              $"{positive.Compile()(point),9:G5}  {negative.Compile()(point),9:G5}  " +
+                              $"{distance.Compile()(point),9:G5}");
+        }
+
+        return 0;
+    }
+
     private static int RunSumDemo()
     {
         Expression<Func<double, double>> first = x => x + 1.0;
@@ -432,6 +477,7 @@ internal static class Program
         Console.WriteLine("  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.");
         Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
+        Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine();
         PrintExamples();
     }
