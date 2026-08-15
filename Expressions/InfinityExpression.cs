@@ -1,74 +1,94 @@
 ﻿using System.Linq.Expressions;
 using System.Text;
-using Ricis.Core.Phases;
 
 namespace Ricis.Core.Expressions;
 
 /// <summary>
-/// Represents the RICIS public type <c>InfinityExpression</c>.
+/// Base class for RICIS indexed singularity expressions. A singularity keeps
+/// the scalar type of its symbolic index, so replacing a subexpression never
+/// changes the return type of its enclosing lambda.
 /// </summary>
 public abstract class InfinityExpression : RicisExpression
 {
+    private readonly List<(ParameterExpression Param, double Value)> _roots;
+
     /// <summary>
-    /// Initializes a new instance of <c>InfinityExpression</c>.
+    /// Initializes a singularity with a defensive copy of its certified keys.
     /// </summary>
     protected InfinityExpression(List<(ParameterExpression, double)> roots = null)
     {
-        Roots = roots ?? new List<(ParameterExpression, double)>();
+        _roots = roots?.ToList() ?? [];
     }
 
     /// <summary>
-    /// Gets the <c>Roots</c> value of <c>InfinityExpression</c>.
+    /// Gets a defensive copy of the certified singularity keys. Mutating the
+    /// returned list cannot alter the already-built RICIS expression.
     /// </summary>
-    public List<(ParameterExpression Param, double Value)> Roots { get; }
+    public List<(ParameterExpression Param, double Value)> Roots => _roots.ToList();
+
     /// <inheritdoc />
     public override ExpressionType NodeType => ExpressionType.Extension;
-    /// <inheritdoc />
-    public override Type Type => typeof(double);
 
     /// <summary>
-    /// Gets the <c>Variable</c> value of <c>InfinityExpression</c>.
+    /// Gets the scalar type of the singularity index. This is the type exposed
+    /// to an enclosing expression tree and therefore matches the original
+    /// numerator or deferred function rather than being forced to <see cref="double"/>.
     /// </summary>
-    public new ParameterExpression Variable => Roots.Count > 0 ? Roots[0].Param : null;
-    /// <summary>
-    /// Gets the <c>SingularityValue</c> value of <c>InfinityExpression</c>.
-    /// </summary>
-    public double SingularityValue => Roots.Count > 0 ? Roots[0].Value : double.NaN;
+    public override Type Type => Numerator.Type;
 
     /// <summary>
-    /// Executes <c>CreateLazy</c> for the RICIS expression model.
+    /// Gets the first key parameter when a certified key exists.
+    /// </summary>
+    public new ParameterExpression Variable => _roots.Count > 0 ? _roots[0].Param : null;
+
+    /// <summary>
+    /// Gets the first certified singularity value, or <see cref="double.NaN"/>
+    /// when the singularity is not bound to one concrete key.
+    /// </summary>
+    public double SingularityValue => _roots.Count > 0 ? _roots[0].Value : double.NaN;
+
+    /// <summary>
+    /// Creates a lazy indexed infinity while preserving the type of
+    /// <paramref name="numerator"/> and defensively copying its keys.
     /// </summary>
     public static InfinityExpression CreateLazy(Expression numerator, List<(ParameterExpression, double)> roots)
     {
+        ArgumentNullException.ThrowIfNull(numerator);
         return new LazyInfinityExpression(numerator, roots);
     }
 
-    // FIX: Фабрика 2: Удобная перегрузка (для одиночного корня)
-    // Это исправит ошибку CS1501
     /// <summary>
-    /// Executes <c>CreateLazy</c> for the RICIS expression model.
+    /// Creates a lazy indexed infinity with one certified key.
     /// </summary>
     public static InfinityExpression CreateLazy(Expression numerator, ParameterExpression param, double value)
     {
+        ArgumentNullException.ThrowIfNull(numerator);
+        ArgumentNullException.ThrowIfNull(param);
         return new LazyInfinityExpression(numerator, [(param, value)]);
     }
 
     /// <summary>
-    /// Executes <c>FormatInfinity</c> for the RICIS expression model.
+    /// Formats an indexed infinity and its certified keys.
     /// </summary>
-    protected static string FormatInfinity(string index, List<(ParameterExpression Param, double Value)> roots) =>
+    protected static string FormatInfinity(string index, IReadOnlyList<(ParameterExpression Param, double Value)> roots) =>
         FormatIndexedSymbol("∞", index, roots);
 
     /// <summary>
-    /// Executes <c>FormatZero</c> for the RICIS expression model.
+    /// Formats an indexed zero and its certified keys.
     /// </summary>
-    protected static string FormatZero(string index, List<(ParameterExpression Param, double Value)> roots) =>
+    protected static string FormatZero(string index, IReadOnlyList<(ParameterExpression Param, double Value)> roots) =>
         FormatIndexedSymbol("0", index, roots);
 
-    private static string FormatIndexedSymbol(string symbol, string index, List<(ParameterExpression Param, double Value)> roots)
+    private static string FormatIndexedSymbol(
+        string symbol,
+        string index,
+        IReadOnlyList<(ParameterExpression Param, double Value)> roots)
     {
         var sb = new StringBuilder();
-        sb.Append($"{symbol}_{{{index.Replace("\"", "")}}}");
+        sb.Append(symbol);
+        sb.Append("_{");
+        sb.Append(index.Replace("\"", ""));
+        sb.Append('}');
 
         if (roots.Count == 1)
         {
@@ -78,11 +98,9 @@ public abstract class InfinityExpression : RicisExpression
         {
             sb.Append(" at {");
             sb.Append(string.Join(", ", roots.Select(r => $"{r.Param?.Name ?? "?"}={r.Value:G17}")));
-            sb.Append("}");
+            sb.Append('}');
         }
 
         return sb.ToString();
     }
-
-    
 }

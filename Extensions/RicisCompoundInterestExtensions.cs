@@ -13,9 +13,11 @@ public static class RicisCompoundInterestExtensions
 {
     /// <summary>
     /// Builds P=S·(1+r/100)^n from deferred principal S, deferred rate r in
-    /// percent, and a non-negative integer number of periods n. The power is
-    /// represented by repeated typed multiplication, so generic scalar types
-    /// retain their native arithmetic without a conversion to <see cref="double"/>.
+    /// percent, and a non-negative integer number of periods n. The scalar
+    /// domain must represent r/100 without integer truncation; known integral
+    /// .NET domains are rejected explicitly instead of silently losing a rate.
+    /// The power is represented by repeated typed multiplication without a
+    /// conversion to <see cref="double"/>.
     /// </summary>
     public static Expression<Func<T, T>> CompoundInterest<T>(
         this Expression<Func<T, T>> principal,
@@ -31,6 +33,7 @@ public static class RicisCompoundInterestExtensions
         var (normalizedPrincipal, normalizedRate) = NormalizePair(principal, ratePercent, nameof(CompoundInterest));
         var common = normalizedPrincipal.Parameters[0];
         var reboundRate = Rebind(normalizedRate, common, nameof(CompoundInterest));
+        EnsureRateIsRepresentable<T>(reboundRate, periods);
         var growth = Expression.Add(
             NumericConstants.OneOf(typeof(T)),
             Expression.Divide(reboundRate, Expression.Constant(T.CreateChecked(100), typeof(T))));
@@ -100,6 +103,68 @@ public static class RicisCompoundInterestExtensions
                 common),
             nameof(CompoundInterest));
     }
+
+    private static void EnsureRateIsRepresentable<T>(Expression ratePercent, int periods)
+        where T : INumber<T>
+    {
+        if (periods == 0 || !IsKnownIntegralDomain(typeof(T)))
+        {
+            return;
+        }
+
+        if (TryGetStaticRate(ratePercent, out T rate) &&
+            rate % T.CreateChecked(100) == T.Zero)
+        {
+            return;
+        }
+
+        throw new NotSupportedException(
+            $"CompoundInterest<{typeof(T).Name}> не может точно представить процентную дробь r/100 для данной отложенной ставки. " +
+            "Используйте decimal, double, Half, custom rational scalar либо целочисленную ставку, кратную 100%. ");
+    }
+
+    private static bool TryGetStaticRate<T>(Expression expression, out T rate)
+        where T : INumber<T>
+    {
+        if (expression is ConstantExpression { Value: T constant })
+        {
+            rate = constant;
+            return true;
+        }
+
+        // A C# lambda such as `_ => new BigInteger(100)` is represented as a
+        // NewExpression rather than a ConstantExpression. Inspecting its literal
+        // constructor argument keeps the operation structural and invokes no
+        // user delegate.
+        if (typeof(T) == typeof(BigInteger) &&
+            expression is NewExpression { Constructor.DeclaringType: var declaringType, Arguments.Count: 1 } created &&
+            declaringType == typeof(BigInteger) &&
+            created.Arguments[0] is ConstantExpression { Value: not null } argument)
+        {
+            try
+            {
+                rate = (T)(object)new BigInteger(Convert.ToInt64(argument.Value));
+                return true;
+            }
+            catch (Exception)
+            {
+                // A non-integral or unsupported literal remains explicitly
+                // rejected by the caller rather than being approximated.
+            }
+        }
+
+        rate = T.Zero;
+        return false;
+    }
+
+    private static bool IsKnownIntegralDomain(Type type) =>
+        type == typeof(byte) || type == typeof(sbyte) ||
+        type == typeof(short) || type == typeof(ushort) ||
+        type == typeof(int) || type == typeof(uint) ||
+        type == typeof(long) || type == typeof(ulong) ||
+        type == typeof(nint) || type == typeof(nuint) ||
+        type == typeof(Int128) || type == typeof(UInt128) ||
+        type == typeof(BigInteger);
 
     private static (Expression<Func<T, T>> Principal, Expression<Func<T, T>> Rate) NormalizePair<T>(
         Expression<Func<T, T>> principal,

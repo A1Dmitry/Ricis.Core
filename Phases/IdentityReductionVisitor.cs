@@ -6,9 +6,10 @@ namespace Ricis.Core.Phases;
 
 /// <summary>
 /// RICIS Phase 0 — highest-priority identity of essence.
-/// For every scalar type that supplies a multiplicative identity to RICIS,
-/// structurally identical operands satisfy F/F → 1 before any polar,
-/// structural, limit, singularity, or classical fallback rule is considered.
+/// For intrinsic .NET numeric scalar types, structurally identical operands
+/// satisfy F/F → 1 before polar, algebraic, bridge or singularity phases.
+/// User-defined operator methods remain classical even when their type also
+/// implements generic math.
 /// </summary>
 public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVisitor
 {
@@ -19,6 +20,7 @@ public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVis
         var right = Visit(node.Right);
 
         if (node.NodeType == ExpressionType.Divide &&
+            NumericConstants.IsIntrinsicNumeric(left.Type) &&
             left.AreEqual(right) &&
             NumericConstants.TryOneOf(left.Type, out var one))
         {

@@ -27,9 +27,12 @@ public static class RicisContinuousExtensions
         }
 
         var zero = NumericConstants.ZeroOf(typeof(T));
+        var negated = UsesCheckedNegation(typeof(T))
+            ? Expression.NegateChecked(normalized.Body)
+            : Expression.Negate(normalized.Body);
         var body = Expression.Condition(
             Expression.LessThan(normalized.Body, zero),
-            Expression.Negate(normalized.Body),
+            negated,
             normalized.Body);
         return Normalize(Expression.Lambda<Func<T, T>>(body, normalized.Parameters[0]), nameof(Abs));
     }
@@ -268,6 +271,10 @@ public static class RicisContinuousExtensions
     private static bool IsBuiltInUnsigned(Type type) =>
         type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) ||
         type == typeof(ulong) || type == typeof(nuint) || type == typeof(UInt128);
+
+    private static bool UsesCheckedNegation(Type type) =>
+        type == typeof(sbyte) || type == typeof(short) || type == typeof(int) ||
+        type == typeof(long) || type == typeof(nint) || type == typeof(Int128);
 
     private sealed class ParameterRebindVisitor : ExpressionVisitor
     {

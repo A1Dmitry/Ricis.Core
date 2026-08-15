@@ -49,30 +49,31 @@ public static class RicisPhasePipeline
             var result = expr;
             foreach (var visitor in _visitors)
             {
+                if (visitor is RicisTransformVisitor &&
+                    result is LambdaExpression { Body: LazyInfinityExpression { CanReduce: true } })
+                {
+                    continue;
+                }
+
+                // Certified roots and key substitution currently operate in the
+                // double domain. Generic finite algebra and direct O(1) bridges
+                // retain their original scalar type without a double coercion.
+                if (visitor is RicisTransformVisitor &&
+                    result is LambdaExpression typedLambda &&
+                    typedLambda.ReturnType != typeof(double))
+                {
+                    continue;
+                }
+
                 try
                 {
-                    if (visitor is RicisTransformVisitor &&
-                        result is LambdaExpression { Body: LazyInfinityExpression { CanReduce: true } })
-                    {
-                        continue;
-                    }
-
-                    // Certified roots and key substitution currently operate
-                    // in the double domain. Generic INumber finite algebra is
-                    // still simplified by L1/SP2/O(1), but is not coerced into
-                    // double merely to discover a non-constant pole.
-                    if (visitor is RicisTransformVisitor &&
-                        result is LambdaExpression typedLambda &&
-                        typedLambda.ReturnType != typeof(double))
-                    {
-                        continue;
-                    }
-
                     result = visitor.Visit(result);
                 }
-                catch (Exception ve)
+                catch (Exception error)
                 {
-                    Console.WriteLine(ve.Message);
+                    throw new InvalidOperationException(
+                        $"Фаза RICIS {visitor.GetType().Name} не смогла преобразовать выражение типа {result.Type}.",
+                        error);
                 }
             }
 
@@ -90,9 +91,8 @@ public static class RicisPhasePipeline
 
             return result;
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e);
             throw;
         }
     }

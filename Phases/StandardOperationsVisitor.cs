@@ -6,12 +6,12 @@ using System.Linq.Expressions;
 namespace Ricis.Core.Phases;
 
 /// <summary>
-/// Represents the RICIS public type <c>StandardOperationsVisitor</c>.
+/// Applies the standard RICIS operations A4–A7 after bridge and transform
+/// phases. Indexed zeros and indexed infinities are distinct forms and are
+/// deliberately handled by separate rules.
 /// </summary>
 public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
 {
-    // КРИТИЧНО: Переопределяем VisitExtension, иначе ExpressionVisitor упадет 
-    // или не сможет обработать InfinityExpression при рекурсивном обходе.
     /// <inheritdoc />
     protected override Expression VisitExtension(Expression node)
     {
@@ -19,6 +19,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         {
             return node;
         }
+
         return base.VisitExtension(node);
     }
 
@@ -28,41 +29,51 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         var left = Visit(node.Left);
         var right = Visit(node.Right);
 
-        // RICIS standard operations redefine only built-in arithmetic. Preserve
-        // custom operator semantics exactly as supplied by the scalar type.
+        // RICIS standard operations redefine only intrinsic .NET arithmetic.
+        // User-defined operator semantics stay strictly classical.
         if (node.Method is not null && !NumericConstants.IsIntrinsicNumeric(node.Type))
         {
-            return left == node.Left && right == node.Right
-                ? node
-                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+            return Rebuild(node, left, right);
         }
 
-        // A keyed pole has different F(a) values on different roots. Until a
-        // branch-wise operation is defined, it must not be collapsed into one
-        // A5–A7 index; keep the surrounding classical tree untouched.
+        // A keyed pole contains different F(a) values for different keys. It
+        // must remain branch-aware until a matching branchwise operation exists.
         if (left is KeyedInfinityExpression || right is KeyedInfinityExpression)
         {
-            return left == node.Left && right == node.Right
-                ? node
-                : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+            return Rebuild(node, left, right);
         }
 
-        // A6_GENERAL: 0_F × ∞_G = F·G. The operands retain their deferred
-        // indices, so no numerical evaluation is allowed at this stage.
+        // Indexed-zero algebra. These forms are not infinities and therefore
+        // must be handled before A5–A7.
+        if (left is ZeroInfinityExpression zeroLeft && right is ZeroInfinityExpression zeroRight &&
+            AreRootsCompatible(zeroLeft, zeroRight))
+        {
+            return node.NodeType switch
+            {
+                ExpressionType.Add => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Add),
+                ExpressionType.Multiply => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Multiply),
+                // A4: 0_F / 0_G -> F/G; equal identities preserve L1.
+                ExpressionType.Divide when zeroLeft.Numerator.AreEqual(zeroRight.Numerator) =>
+                    NumericConstants.OneOf(zeroLeft.Numerator.Type),
+                ExpressionType.Divide => Expression.Divide(zeroLeft.Numerator, zeroRight.Numerator),
+                _ => Rebuild(node, left, right)
+            };
+        }
+
+        // A6: 0_F * ∞_G -> F*G. A zero is never accepted as the ∞ operand.
         if (node.NodeType == ExpressionType.Multiply)
         {
-            if (left is ZeroInfinityExpression zeroLeft && right is InfinityExpression rightInfinity)
+            if (left is ZeroInfinityExpression indexedZeroLeft && IsTrueInfinity(right))
             {
-                return Expression.Multiply(zeroLeft.Numerator, rightInfinity.Numerator);
+                return Expression.Multiply(indexedZeroLeft.Numerator, ((InfinityExpression)right).Numerator);
             }
 
-            if (right is ZeroInfinityExpression zeroRight && left is InfinityExpression leftInfinity)
+            if (right is ZeroInfinityExpression indexedZeroRight && IsTrueInfinity(left))
             {
-                return Expression.Multiply(leftInfinity.Numerator, zeroRight.Numerator);
+                return Expression.Multiply(((InfinityExpression)left).Numerator, indexedZeroRight.Numerator);
             }
 
-            // Limit form: F·0 → 0_F. A numeric zero is not allowed to erase
-            // the deferred identity of F before subsequent RICIS operations.
+            // O(1): F·0 -> 0_F. The deferred parent index is retained.
             if (left.IsZero())
             {
                 return new ZeroInfinityExpression(right, []);
@@ -74,139 +85,107 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             }
         }
 
-        // --- RICIS ALGEBRA: Операции над сингулярностями (∞ + ∞, ∞ * ∞) ---
-        if (left is InfinityExpression infLeft && right is InfinityExpression infRight)
+        // A5/A7 operate only on true indexed infinities, never on 0_F.
+        if (IsTrueInfinity(left) && IsTrueInfinity(right))
         {
-            // Проверяем, что это сингулярности в одной и той же точке
-            if (AreRootsCompatible(infLeft, infRight))
+            var infinityLeft = (InfinityExpression)left;
+            var infinityRight = (InfinityExpression)right;
+            if (AreRootsCompatible(infinityLeft, infinityRight))
             {
                 switch (node.NodeType)
                 {
                     case ExpressionType.Add:
-                        // A7: ∞_A + ∞_B = ∞_{A+B}
-                        return MergeSingularities(infLeft, infRight, ExpressionType.Add);
-
+                        return MergeInfinities(infinityLeft, infinityRight, ExpressionType.Add);
                     case ExpressionType.Subtract:
-                        // ∞_A - ∞_B = ∞_{A-B}
-                        return MergeSingularities(infLeft, infRight, ExpressionType.Subtract);
-
+                        return MergeInfinities(infinityLeft, infinityRight, ExpressionType.Subtract);
                     case ExpressionType.Multiply:
-                        // ∞_A * ∞_B = ∞_{A*B}
-                        return MergeSingularities(infLeft, infRight, ExpressionType.Multiply);
-
+                        return MergeInfinities(infinityLeft, infinityRight, ExpressionType.Multiply);
                     case ExpressionType.Divide:
-                        // A5: ∞_A / ∞_B = 1 only when the normalized indices are equal;
-                        // otherwise preserve the structural ratio A / B.
-                        if (infLeft.Numerator.AreEqual(infRight.Numerator))
-                        {
-                            return NumericConstants.OneOf(infLeft.Numerator.Type);
-                        }
-                        return Expression.Divide(infLeft.Numerator, infRight.Numerator);
+                        return infinityLeft.Numerator.AreEqual(infinityRight.Numerator)
+                            ? NumericConstants.OneOf(infinityLeft.Numerator.Type)
+                            : Expression.Divide(infinityLeft.Numerator, infinityRight.Numerator);
                 }
             }
-            // Если корни разные -> это Монолит (Tuple), оставляем BinaryExpression
         }
 
-        // --- RICIS ALGEBRA: Скаляр и Сингулярность (C * ∞) ---
+        // Scalar multiplication/division preserves an infinity index.
         if (node.NodeType == ExpressionType.Multiply)
         {
-            // C * ∞_A = ∞_{C*A}
-            if (left is InfinityExpression infL && IsScalar(right))
+            if (IsTrueInfinity(left) && IsScalar(right))
             {
-                var newNum = Expression.Multiply(infL.Numerator, right);
-                return InfinityExpression.CreateLazy(newNum, infL.Roots);
+                var infinity = (InfinityExpression)left;
+                return InfinityExpression.CreateLazy(Expression.Multiply(infinity.Numerator, right), infinity.Roots);
             }
-            // ∞_A * C = ∞_{A*C}
-            if (right is InfinityExpression infR && IsScalar(left))
+
+            if (IsTrueInfinity(right) && IsScalar(left))
             {
-                var newNum = Expression.Multiply(left, infR.Numerator);
-                return InfinityExpression.CreateLazy(newNum, infR.Roots);
+                var infinity = (InfinityExpression)right;
+                return InfinityExpression.CreateLazy(Expression.Multiply(left, infinity.Numerator), infinity.Roots);
             }
         }
 
-        // ∞_A / C = ∞_{A/C}
-        if (node.NodeType == ExpressionType.Divide)
+        if (node.NodeType == ExpressionType.Divide && IsTrueInfinity(left) && IsScalar(right))
         {
-            if (left is InfinityExpression infDiv && IsScalar(right))
-            {
-                var newNum = Expression.Divide(infDiv.Numerator, right);
-                return InfinityExpression.CreateLazy(newNum, infDiv.Roots);
-            }
+            var infinity = (InfinityExpression)left;
+            return InfinityExpression.CreateLazy(Expression.Divide(infinity.Numerator, right), infinity.Roots);
         }
 
-        // --- Стандартные упрощения (используем ваши Extensions) ---
         if (node.NodeType == ExpressionType.Multiply)
         {
-            if (left.IsOne())
-            {
-                return right;
-            }
-
-            if (right.IsOne())
-            {
-                return left;
-            }
-
-            if (left.IsZero())
-            {
-                return left; // 0 * x = 0
-            }
-
-            if (right.IsZero())
-            {
-                return right;
-            }
+            if (left.IsOne()) return right;
+            if (right.IsOne()) return left;
+            if (left.IsZero()) return left;
+            if (right.IsZero()) return right;
         }
 
         if (node.NodeType == ExpressionType.Add)
         {
-            if (left.IsZero())
-            {
-                return right;
-            }
-
-            if (right.IsZero())
-            {
-                return left;
-            }
+            if (left.IsZero()) return right;
+            if (right.IsZero()) return left;
         }
 
-        // Если ничего не изменилось, возвращаем узел
-        if (left == node.Left && right == node.Right)
-        {
-            return node;
-        }
-
-        return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+        return Rebuild(node, left, right);
     }
 
-    // Хелпер для слияния двух сингулярностей
-    private Expression MergeSingularities(InfinityExpression a, InfinityExpression b, ExpressionType op)
+    private static Expression BuildZeroOperation(
+        ZeroInfinityExpression left,
+        ZeroInfinityExpression right,
+        ExpressionType operation)
     {
-        // Создаем новое выражение для индекса: IndexA (op) IndexB
-        var newNumerator = Expression.MakeBinary(op, a.Numerator, b.Numerator);
-
-        // Возвращаем новую сингулярность с объединенным индексом
-        // Берем корни от 'a', так как они совместимы
-        return InfinityExpression.CreateLazy(newNumerator, a.Roots);
+        var rawIndex = Expression.MakeBinary(operation, left.Numerator, right.Numerator);
+        var index = new ExpressionSimplifierVisitor().Visit(rawIndex);
+        return new ZeroInfinityExpression(index, left.Roots);
     }
 
-    private static bool AreRootsCompatible(InfinityExpression a, InfinityExpression b)
+    private static Expression MergeInfinities(InfinityExpression left, InfinityExpression right, ExpressionType operation)
     {
-        if (a.Roots.Count == 0 || a.Roots.Count != b.Roots.Count)
+        var newNumerator = Expression.MakeBinary(operation, left.Numerator, right.Numerator);
+        return InfinityExpression.CreateLazy(newNumerator, left.Roots);
+    }
+
+    private static bool IsTrueInfinity(Expression expression) =>
+        expression is InfinityExpression && expression is not ZeroInfinityExpression;
+
+    private static bool AreRootsCompatible(InfinityExpression left, InfinityExpression right)
+    {
+        var leftRoots = left.Roots;
+        var rightRoots = right.Roots;
+        if (leftRoots.Count != rightRoots.Count)
         {
             return false;
         }
 
-        // A monolith is tied to its complete set of singular points. Comparing
-        // only the first point silently loses information about the other poles.
-        return a.Roots.All(rootA => b.Roots.Any(rootB =>
-            rootA.Param == rootB.Param &&
-            Math.Abs(rootA.Value - rootB.Value) < 1e-9));
+        // Empty root sets represent the same deferred O(1) context. For
+        // concrete keys every key must match; no key is silently discarded.
+        return leftRoots.All(rootLeft => rightRoots.Any(rootRight =>
+            rootLeft.Param == rootRight.Param &&
+            Math.Abs(rootLeft.Value - rootRight.Value) < 1e-9));
     }
 
-    private static bool IsScalar(Expression expr)
-    {
-        return !(expr is InfinityExpression);
-    }
+    private static bool IsScalar(Expression expression) => !IsTrueInfinity(expression) && expression is not ZeroInfinityExpression;
+
+    private static Expression Rebuild(BinaryExpression node, Expression left, Expression right) =>
+        left == node.Left && right == node.Right
+            ? node
+            : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
 }

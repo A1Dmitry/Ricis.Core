@@ -30,6 +30,11 @@ public static class NumericConstants
         Register<uint>();
         Register<long>();
         Register<ulong>();
+        Register<nint>();
+        Register<nuint>();
+        Register<Int128>();
+        Register<UInt128>();
+        Register<Half>();
         Register<float>();
         Register<double>();
         Register<decimal>();

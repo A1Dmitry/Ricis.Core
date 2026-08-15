@@ -3,12 +3,16 @@
 namespace Ricis.Core.Expressions;
 
 /// <summary>
-/// Represents the RICIS public type <c>ExpressionStructuralComparer</c>.
+/// Structural equality for ordinary LINQ expressions and RICIS extension nodes.
+/// The comparer intentionally preserves the concrete kind and complete indexed
+/// structure of singularities so phase-0 identity is applied only to the same
+/// RICIS entity.
 /// </summary>
 public static class ExpressionStructuralComparer
 {
     /// <summary>
-    /// Executes <c>AreEqual</c> for the RICIS expression model.
+    /// Returns whether two expression trees represent the same structure,
+    /// including special RICIS indices, keys, branches and deferred operands.
     /// </summary>
     public static bool AreEqual(this Expression a, Expression b)
     {
@@ -17,17 +21,7 @@ public static class ExpressionStructuralComparer
             return true;
         }
 
-        if (a is null || b is null)
-        {
-            return false;
-        }
-
-        if (a.NodeType != b.NodeType)
-        {
-            return false;
-        }
-
-        if (a.Type != b.Type)
+        if (a is null || b is null || a.NodeType != b.NodeType || a.Type != b.Type)
         {
             return false;
         }
@@ -53,11 +47,10 @@ public static class ExpressionStructuralComparer
         };
     }
 
-    private static bool ConstantEqual(ConstantExpression a, ConstantExpression b)
-        => Equals(a.Value, b.Value);
+    private static bool ConstantEqual(ConstantExpression a, ConstantExpression b) => Equals(a.Value, b.Value);
 
-    private static bool ParameterEqual(ParameterExpression a, ParameterExpression b)
-        => a.Name == b.Name && a.Type == b.Type;
+    private static bool ParameterEqual(ParameterExpression a, ParameterExpression b) =>
+        a.Name == b.Name && a.Type == b.Type;
 
     private static bool BinaryEqual(BinaryExpression a, BinaryExpression b)
     {
@@ -66,54 +59,42 @@ public static class ExpressionStructuralComparer
             return false;
         }
 
-        var sameOrder = AreEqual(a.Left, b.Left) && AreEqual(a.Right, b.Right);
-        if (sameOrder)
+        if (AreEqual(a.Left, b.Left) && AreEqual(a.Right, b.Right))
         {
             return true;
         }
 
-        // SP4 normalizes only the built-in commutative arithmetic operations.
-        // User-defined operators can have arbitrary semantics and must keep their order.
+        // Only built-in arithmetic is commutative. User-defined operators can
+        // have arbitrary classical semantics and therefore keep their order.
         return a.Method is null &&
                a.NodeType is ExpressionType.Add or ExpressionType.Multiply &&
                AreEqual(a.Left, b.Right) &&
                AreEqual(a.Right, b.Left);
     }
 
-    private static bool UnaryEqual(UnaryExpression a, UnaryExpression b)
-        => a.Method == b.Method &&
-           AreEqual(a.Operand, b.Operand);
+    private static bool UnaryEqual(UnaryExpression a, UnaryExpression b) =>
+        a.Method == b.Method && AreEqual(a.Operand, b.Operand);
 
     private static bool CallEqual(MethodCallExpression a, MethodCallExpression b)
     {
-        if (a.Method != b.Method)
+        if (a.Method != b.Method || !AreEqual(a.Object, b.Object) || a.Arguments.Count != b.Arguments.Count)
         {
             return false;
         }
 
-        if (!AreEqual(a.Object, b.Object))
+        for (var index = 0; index < a.Arguments.Count; index++)
         {
-            return false;
-        }
-
-        if (a.Arguments.Count != b.Arguments.Count)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < a.Arguments.Count; i++)
-            if (!AreEqual(a.Arguments[i], b.Arguments[i]))
+            if (!AreEqual(a.Arguments[index], b.Arguments[index]))
             {
                 return false;
             }
+        }
 
         return true;
     }
 
     private static bool ConditionalEqual(ConditionalExpression a, ConditionalExpression b) =>
-        AreEqual(a.Test, b.Test) &&
-        AreEqual(a.IfTrue, b.IfTrue) &&
-        AreEqual(a.IfFalse, b.IfFalse);
+        AreEqual(a.Test, b.Test) && AreEqual(a.IfTrue, b.IfTrue) && AreEqual(a.IfFalse, b.IfFalse);
 
     private static bool LambdaEqual(LambdaExpression a, LambdaExpression b)
     {
@@ -122,47 +103,74 @@ public static class ExpressionStructuralComparer
             return false;
         }
 
-        for (var i = 0; i < a.Parameters.Count; i++)
-            if (!ParameterEqual(a.Parameters[i], b.Parameters[i]))
+        for (var index = 0; index < a.Parameters.Count; index++)
+        {
+            if (!ParameterEqual(a.Parameters[index], b.Parameters[index]))
             {
                 return false;
             }
+        }
 
         return AreEqual(a.Body, b.Body);
     }
 
-    // === RICIS EXTENSIONS ===
     private static bool ExtensionEqual(Expression a, Expression b)
     {
-        return (a, b) switch
-        {
-            (InfinityExpression ia, InfinityExpression ib)
-                => InfinityEqual(ia, ib),
-
-            //(SingularityMonolithExpression ma, SingularityMonolithExpression mb)
-            //    => MonolithEqual(ma, mb),
-
-            //(BridgedExpression ba, BridgedExpression bb)
-            //    => BridgedEqual(ba, bb),
-
-            (var xa, var xb)
-                => xa.GetType() == xb.GetType() // fallback: same type
-        };
-    }
-
-    private static bool InfinityEqual(InfinityExpression a, InfinityExpression b)
-    {
-        if (!AreEqual(a.Numerator, b.Numerator) || a.Roots.Count != b.Roots.Count)
+        if (a.GetType() != b.GetType())
         {
             return false;
         }
 
-        return a.Roots.All(rootA => b.Roots.Any(rootB =>
-            ParameterEqual(rootA.Param, rootB.Param) &&
-            rootA.Value.Equals(rootB.Value)));
+        return (a, b) switch
+        {
+            (KeyedInfinityExpression left, KeyedInfinityExpression right) => KeyedInfinityEqual(left, right),
+            (InfinityExpression left, InfinityExpression right) => InfinityEqual(left, right),
+            (AuthorAnnotatedExpression left, AuthorAnnotatedExpression right) =>
+                AreEqual(left.Body, right.Body) && Equals(left.Profile, right.Profile),
+            (DeferredDerivativeExpression left, DeferredDerivativeExpression right) =>
+                AreEqual(left.Operand, right.Operand) &&
+                ParameterEqual(left.DifferentiationVariable, right.DifferentiationVariable),
+            _ => false
+        };
     }
 
-   
+    private static bool KeyedInfinityEqual(KeyedInfinityExpression a, KeyedInfinityExpression b)
+    {
+        if (a.Branches.Count != b.Branches.Count)
+        {
+            return false;
+        }
 
-   
+        var unmatched = b.Branches.ToList();
+        foreach (var branch in a.Branches)
+        {
+            var matchIndex = unmatched.FindIndex(candidate => InfinityEqual(branch, candidate));
+            if (matchIndex < 0)
+            {
+                return false;
+            }
+
+            unmatched.RemoveAt(matchIndex);
+        }
+
+        return unmatched.Count == 0;
+    }
+
+    private static bool InfinityEqual(InfinityExpression a, InfinityExpression b)
+    {
+        if (a.GetType() != b.GetType() || !AreEqual(a.Numerator, b.Numerator))
+        {
+            return false;
+        }
+
+        var aRoots = a.Roots;
+        var bRoots = b.Roots;
+        if (aRoots.Count != bRoots.Count)
+        {
+            return false;
+        }
+
+        return aRoots.All(rootA => bRoots.Any(rootB =>
+            ParameterEqual(rootA.Param, rootB.Param) && rootA.Value.Equals(rootB.Value)));
+    }
 }
