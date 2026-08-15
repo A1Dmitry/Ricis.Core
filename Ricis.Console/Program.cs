@@ -63,6 +63,11 @@ internal static class Program
             return RunSystemProofDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--riemann-proof-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunRiemannProofDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunContinuousSugarDemo();
@@ -328,6 +333,34 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine(protocol.ToString());
         Console.WriteLine($"Проверка производного выражения: (x,y)=(3,2) → {derived.Compile()(3.0, 2.0)}; (2,3) → {derived.Compile()(2.0, 3.0)}");
+        return 0;
+    }
+
+    private static int RunRiemannProofDemo()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (sigma, mirrorSigma) => sigma + mirrorSigma == 1.0,
+            (sigma, mirrorSigma) => sigma - mirrorSigma == 0.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints =
+        [
+            (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
+            (sigma, mirrorSigma) => mirrorSigma > 0.0 && mirrorSigma < 1.0,
+        ];
+        Expression<Func<double, double, bool>> claim =
+            (sigma, mirrorSigma) => sigma == 0.5;
+        var protocol = new StringBuilder();
+        var derived = equations.Prove(constraints, claim, protocol);
+
+        Console.WriteLine("Riemann-связанный формальный proof-тест:");
+        Console.WriteLine("  sigma + mirrorSigma = 1");
+        Console.WriteLine("  sigma - mirrorSigma = 0");
+        Console.WriteLine("  Следствие: sigma = 1/2");
+        Console.WriteLine("  Это не доказательство гипотезы Римана: вывод относится только к переданной конечной системе.");
+        Console.WriteLine();
+        Console.WriteLine(protocol.ToString());
+        Console.WriteLine($"Проверка производного выражения: (0.5,0.5) → {derived.Compile()(0.5, 0.5)}; (0.4,0.6) → {derived.Compile()(0.4, 0.6)}");
         return 0;
     }
 
@@ -651,6 +684,7 @@ internal static class Program
         Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
         Console.WriteLine("  В CLI --academic-proof-demo записывает пошаговый академический вывод Prove в StringBuilder.");
         Console.WriteLine("  В CLI --system-proof-demo доказывает следствие из системы двух линейных уравнений.");
+        Console.WriteLine("  В CLI --riemann-proof-demo выводит конечное следствие из Riemann-связанной системы симметрий, не доказывая саму гипотезу.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");

@@ -245,6 +245,8 @@ public static class RicisAcademicProofExtensions
 
         var x = claim.Parameters[0];
         var y = claim.Parameters[1];
+        var xName = x.Name ?? "x";
+        var yName = y.Name ?? "y";
         var eliminationCoefficient = (second.X * first.Y) - (first.X * second.Y);
         var eliminationConstant = (second.Constant * first.Y) - (first.Constant * second.Y);
         var combined = Expression.Lambda<Func<double, double, bool>>(
@@ -285,7 +287,11 @@ public static class RicisAcademicProofExtensions
         proof.AppendLine("Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.");
         proof.AppendLine();
         proof.AppendLine("### Шаг 1: Линейная комбинация уравнений системы");
-        proof.AppendLine("**Основание:** умножение первого равенства на противоположный коэффициент y второго и второго на коэффициент y первого; переменная y исключается по детерминанту.");
+        proof.Append("**Основание:** умножение первого равенства на противоположный коэффициент ")
+            .Append(yName)
+            .Append(" второго и второго на коэффициент ")
+            .Append(yName)
+            .AppendLine(" первого; переменная исключается по детерминанту.");
         proof.Append("До: `").Append(equations[0]).Append("`; `").Append(equations[1]).AppendLine("`.");
         proof.Append("После: `").Append(combined).AppendLine("`.");
         proof.AppendLine();
@@ -305,9 +311,9 @@ public static class RicisAcademicProofExtensions
         proof.Append("После: `").Append(yResult).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine("## Заключение");
-        proof.Append("Следовательно, система выводит x=").Append(solutionX.ToString("G17"))
-            .Append(" и y=").Append(solutionY.ToString("G17"))
-            .Append("; требуемая координата ").Append(coordinate == 0 ? "x" : "y")
+        proof.Append("Следовательно, система выводит ").Append(xName).Append('=').Append(solutionX.ToString("G17"))
+            .Append(" и ").Append(yName).Append('=').Append(solutionY.ToString("G17"))
+            .Append("; требуемая координата ").Append(coordinate == 0 ? xName : yName)
             .Append(" доказана выражением `").Append(derived).AppendLine("`.");
     }
 
