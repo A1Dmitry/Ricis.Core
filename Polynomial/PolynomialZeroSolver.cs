@@ -4,6 +4,9 @@ using System.Linq.Expressions;
 
 namespace Ricis.Core.Polynomial;
 
+/// <summary>
+/// Represents the RICIS public type <c>PolynomialZeroSolver</c>.
+/// </summary>
 public static class PolynomialZeroSolver
 {
     /// <summary>
@@ -166,6 +169,9 @@ public static class PolynomialZeroSolver
         return double.IsFinite(residual) && Math.Abs(residual) <= tol ? candidate : null;
     }
 
+    /// <summary>
+    /// Executes <c>FindRootsInRange</c> for the RICIS expression model.
+    /// </summary>
     public static double[] FindRootsInRange(this Expression expr, ParameterExpression x,
         double a, double b, int steps = 20)
     {

@@ -8,6 +8,9 @@ namespace Ricis.Core.Solvers;
 /// </summary>
 public static class TrigSolver
 {
+    /// <summary>
+    /// Executes <c>Solve</c> for the RICIS expression model.
+    /// </summary>
     public static (ParameterExpression, double)? Solve(this Expression expr)
     {
         if (expr is not MethodCallExpression call || call.Arguments.Count == 0)
@@ -67,6 +70,9 @@ public static class TrigSolver
 
     // Try to extract linear argument a*x + b from expression.
     // Supports forms: a*x, x*a, a*x + b, a*x - b, (x) etc.
+    /// <summary>
+    /// Attempts to <c>ExtractLinear</c> within the RICIS model.
+    /// </summary>
     public static bool TryExtractLinear(Expression expr, out ParameterExpression param, out double a, out double b)
     {
         param = null; a = 1.0; b = 0.0;

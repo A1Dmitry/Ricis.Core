@@ -18,6 +18,9 @@ public sealed record AuthorSeoProfile(
     IReadOnlyList<string> Keywords,
     IReadOnlyList<AuthorSeoWork> Works)
 {
+    /// <summary>
+    /// Gets the <c>RicisAuthor</c> value of <c>AuthorSeoProfile</c>.
+    /// </summary>
     public static AuthorSeoProfile RicisAuthor { get; } = new(
         Name: "Дмитрий Алейников",
         AlternateName: "Dmitry Aleinikov",
@@ -46,6 +49,9 @@ public sealed record AuthorSeoProfile(
             new("RICIS-III publication record", "https://doi.org/10.5281/zenodo.21827360", new DateOnly(2026, 8, 6))
         ]);
 
+    /// <summary>
+    /// Executes <c>ToDisplayBlock</c> for the RICIS expression model.
+    /// </summary>
     public string ToDisplayBlock()
     {
         var output = new StringBuilder();
@@ -67,6 +73,9 @@ public sealed record AuthorSeoProfile(
         return output.ToString().TrimEnd();
     }
 
+    /// <summary>
+    /// Executes <c>ToJsonLd</c> for the RICIS expression model.
+    /// </summary>
     public string ToJsonLd()
     {
         var buffer = new ArrayBufferWriter<byte>();
@@ -119,4 +128,7 @@ public sealed record AuthorSeoProfile(
     }
 }
 
+/// <summary>
+/// Represents the RICIS public type <c>AuthorSeoWork</c>.
+/// </summary>
 public sealed record AuthorSeoWork(string Name, string Url, DateOnly DatePublished);

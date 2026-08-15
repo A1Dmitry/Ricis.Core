@@ -5,19 +5,30 @@ using Ricis.Core.Solvers;
 namespace Ricis.Core.Expressions;
 
 // --- 2. UNRESOLVED (LAZY) ---
+/// <summary>
+/// Represents the RICIS public type <c>LazyInfinityExpression</c>.
+/// </summary>
 public sealed class LazyInfinityExpression : InfinityExpression
 {
     private readonly Expression _numerator;
     
+    /// <summary>
+    /// Gets the <c>Numerator</c> value of <c>LazyInfinityExpression</c>.
+    /// </summary>
     public override Expression Numerator => _numerator;
+    /// <inheritdoc />
     public override bool CanReduce => true;
 
+    /// <summary>
+    /// Initializes a new instance of <c>LazyInfinityExpression</c>.
+    /// </summary>
     public LazyInfinityExpression(Expression numerator, List<(ParameterExpression, double)> roots)
         : base(roots)
     {
         _numerator = numerator;
     }
 
+    /// <inheritdoc />
     public override Expression Reduce()
     {
         if (Roots.Count != 1)
@@ -64,5 +75,6 @@ public sealed class LazyInfinityExpression : InfinityExpression
         return new PoleInfinityExpression(numerator, Roots, numeratorRoots);
     }
 
+    /// <inheritdoc />
     public override string ToString() => FormatInfinity(_numerator.ToString(), Roots);
 }

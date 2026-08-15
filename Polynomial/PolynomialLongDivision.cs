@@ -3,8 +3,14 @@ using Ricis.Core.Rationals;
 
 namespace Ricis.Core.Polynomial;
 
+/// <summary>
+/// Represents the RICIS public type <c>PolynomialLongDivision</c>.
+/// </summary>
 public static class PolynomialLongDivision
 {
+    /// <summary>
+    /// Attempts to <c>Divide</c> within the RICIS model.
+    /// </summary>
     public static Expression TryDivide(this Expression numerator, Expression denominator, ParameterExpression param)
     {
         var numCollector = new PolynomialCoefficientCollector(param);

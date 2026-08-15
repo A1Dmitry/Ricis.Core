@@ -17,6 +17,7 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
@@ -425,6 +426,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return (roots, collector.IsPolynomial);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
         var obj = Visit(node.Object);
@@ -436,6 +438,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return Expression.Call(obj, node.Method, args);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 
     private static ParameterExpression FindSingleParameter(Expression expr)

@@ -11,6 +11,9 @@ namespace Ricis.Core.Execution;
 /// </summary>
 public static class StrictExpressionExecutor
 {
+    /// <summary>
+    /// Executes <c>Compile</c> for the RICIS expression model.
+    /// </summary>
     public static Func<double, double> Compile(Expression<Func<double, double>> expression)
     {
         ArgumentNullException.ThrowIfNull(expression);

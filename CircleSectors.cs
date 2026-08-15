@@ -3,8 +3,14 @@ using System.Numerics;
 
 namespace Ricis.Core;
 
+/// <summary>
+/// Represents the RICIS public type <c>CircleSectors</c>.
+/// </summary>
 public readonly struct CircleSectors
 {
+    /// <summary>
+    /// Gets the <c>Fraction</c> value of <c>CircleSectors</c>.
+    /// </summary>
     public Rational Fraction { get; }
 
     private CircleSectors(Rational fraction)
@@ -18,6 +24,9 @@ public readonly struct CircleSectors
         }
     }
 
+    /// <summary>
+    /// Executes <c>FromRadians</c> for the RICIS expression model.
+    /// </summary>
     public static CircleSectors FromRadians(double radians, int maxDenominator = 100)
     {
         if (double.IsNaN(radians) || double.IsInfinity(radians))
@@ -97,6 +106,9 @@ public readonly struct CircleSectors
         return x < 0 ? -result : result;
     }
 
+    /// <summary>
+    /// Executes <c>InSectors</c> for the RICIS expression model.
+    /// </summary>
     public string InSectors(int totalSectors)
     {
         if (totalSectors <= 0)
@@ -126,6 +138,7 @@ public readonly struct CircleSectors
         return $"{sectorsPassed} секторов из {totalSectors}";
     }
 
+    /// <inheritdoc />
     public override string ToString()
     {
         if (Fraction.IsZero)

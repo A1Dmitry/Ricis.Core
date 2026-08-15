@@ -5,9 +5,15 @@ using System.Numerics;
 
 namespace Ricis.Core.Extensions;
 
+/// <summary>
+/// Represents the RICIS public type <c>ExpressionExtensions</c>.
+/// </summary>
 public static class ExpressionExtensions
 {
 
+    /// <summary>
+    /// Executes <c>Prepare</c> for the RICIS expression model.
+    /// </summary>
     public static Expression<Func<double, double>> Prepare(this Expression expr, ParameterExpression param)
     {
         return Expression.Lambda<Func<double, double>>(expr, param);
@@ -42,6 +48,9 @@ public static class ExpressionExtensions
     public static Func<T, T> CompileFinite<T>(this Expression expr, ParameterExpression param)
         where T : INumber<T> => expr.Prepare<T>(param).Compile();
 
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static double Evaluate(this Expression expr, ParameterExpression param, double value)
     {
         return expr.Prepare(param).Compile()(value);
@@ -54,12 +63,18 @@ public static class ExpressionExtensions
     public static T EvaluateFinite<T>(this Expression expr, ParameterExpression param, T value)
         where T : INumber<T> => expr.CompileFinite<T>(param)(value);
 
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static double Evaluate(this Expression expr, string paramName, double value)
     {
         var lambda = expr.Evaluate( value, paramName);
         return lambda.Compile()();
     }
 
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static Expression<Func<double>> Evaluate(this Expression expr, double value, string paramName = null)
     {
         // Используем SubstitutionVisitor для безопасной подмены параметра
@@ -129,6 +144,9 @@ public static class ExpressionExtensions
         MethodCallExpression m => 10 + m.Arguments.Sum(a => a.GetComplexityScore()),
         _ => 20
     };
+    /// <summary>
+    /// Attempts to <c>Evaluate</c> within the RICIS model.
+    /// </summary>
     public static bool TryEvaluate(this Expression expr, string paramName, double value, out double result)
     {
         try
@@ -145,6 +163,9 @@ public static class ExpressionExtensions
     }
 
 
+    /// <summary>
+    /// Executes <c>EvaluateAtPoint</c> for the RICIS expression model.
+    /// </summary>
     public static double EvaluateAtPoint(this Expression expr, double value, string paramName = null)
     {
         try
@@ -160,6 +181,9 @@ public static class ExpressionExtensions
         }
     }
 
+    /// <summary>
+    /// Executes <c>AddSingularityIfValid</c> for the RICIS expression model.
+    /// </summary>
     public static void AddSingularityIfValid(this
         Expression numerator,
         ParameterExpression param,
@@ -199,6 +223,9 @@ public static class ExpressionExtensions
     };
 
     // Хелпер для поиска параметра (x)
+    /// <summary>
+    /// Executes <c>FindParameter</c> for the RICIS expression model.
+    /// </summary>
     public static ParameterExpression FindParameter(this Expression expr)
     {
         ParameterExpression found = null;
@@ -213,6 +240,9 @@ public static class ExpressionExtensions
         return found;
     }
 
+    /// <summary>
+    /// Determines whether <c>IsTranscendentalCandidate</c> holds for the supplied RICIS expression.
+    /// </summary>
     public static bool IsTranscendentalCandidate(this Expression expr)
     {
         var hasTranscendental = false;

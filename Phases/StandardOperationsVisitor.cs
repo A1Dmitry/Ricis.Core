@@ -5,10 +5,14 @@ using System.Linq.Expressions;
 
 namespace Ricis.Core.Phases;
 
+/// <summary>
+/// Represents the RICIS public type <c>StandardOperationsVisitor</c>.
+/// </summary>
 public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
 {
     // КРИТИЧНО: Переопределяем VisitExtension, иначе ExpressionVisitor упадет 
     // или не сможет обработать InfinityExpression при рекурсивном обходе.
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node)
     {
         if (node is InfinityExpression or DeferredDerivativeExpression)
@@ -18,6 +22,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         return base.VisitExtension(node);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);

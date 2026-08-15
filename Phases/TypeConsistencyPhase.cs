@@ -12,6 +12,9 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public static class TypeConsistencyPhase
 {
+    /// <summary>
+    /// Executes <c>Apply</c> for the RICIS expression model.
+    /// </summary>
     public static Expression Apply(Expression expr)
     {
         if (expr == null)

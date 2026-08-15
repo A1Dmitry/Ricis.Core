@@ -10,6 +10,7 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public class PolarTrigVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    /// <inheritdoc />
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
         var obj = Visit(node.Object);
@@ -26,5 +27,6 @@ public class PolarTrigVisitor : ExpressionVisitor, IExpressionVisitor
         return collapsed;
     }
 
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 }

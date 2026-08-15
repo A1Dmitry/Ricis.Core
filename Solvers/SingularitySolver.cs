@@ -5,8 +5,14 @@ using Ricis.Core.Polynomial;
 
 namespace Ricis.Core.Solvers;
 
+/// <summary>
+/// Represents the RICIS public type <c>SingularitySolver</c>.
+/// </summary>
 public static class SingularitySolver
 {
+    /// <summary>
+    /// Executes <c>SolveRoots</c> for the RICIS expression model.
+    /// </summary>
     public static List<(ParameterExpression expr, double value)> SolveRoots(this Expression denominator)
     {
         var roots = new HashSet<(ParameterExpression, double)>();

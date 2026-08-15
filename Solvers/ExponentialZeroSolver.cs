@@ -9,6 +9,9 @@ namespace Ricis.Core.Solvers
     /// </summary>
     public static class ExponentialZeroSolver
     {
+        /// <summary>
+        /// Executes <c>FindRoots</c> for the RICIS expression model.
+        /// </summary>
         public static ICollection<Root> FindRoots(Expression expr, ParameterExpression parameter)
         {
             var roots = new List<Root>();
@@ -49,6 +52,9 @@ namespace Ricis.Core.Solvers
         }
 
         // Совместимый адаптер: возвращаем первый корень, если он есть.
+        /// <summary>
+        /// Executes <c>Solve</c> for the RICIS expression model.
+        /// </summary>
         public static (ParameterExpression, double)? Solve(Expression expr)
         {
             // используем общий адаптер, чтобы не дублировать поиск параметра и нормализацию

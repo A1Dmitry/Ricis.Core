@@ -8,6 +8,9 @@ namespace Ricis.Core.Metadata;
 /// </summary>
 public static class AboutCaptureDetector
 {
+    /// <summary>
+    /// Determines whether <c>IsCaptured</c> holds for the supplied RICIS expression.
+    /// </summary>
     public static bool IsCaptured(Expression expression)
     {
         var visitor = new CaptureVisitor();

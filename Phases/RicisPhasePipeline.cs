@@ -33,6 +33,9 @@ public static class RicisPhasePipeline
         new StandardOperationsVisitor(),
     ];
 
+    /// <summary>
+    /// Executes <c>Simplify</c> for the RICIS expression model.
+    /// </summary>
     public static Expression Simplify(Expression expr)
     {
         try

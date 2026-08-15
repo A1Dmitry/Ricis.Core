@@ -4,6 +4,9 @@ using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 
+/// <summary>
+/// Represents the RICIS public type <c>PolynomialCoefficientCollector</c>.
+/// </summary>
 public class PolynomialCoefficientCollector(ParameterExpression parameterExpression)
     : ExpressionVisitor, IExpressionVisitor
 {
@@ -13,9 +16,16 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
     private Rational _currentMultiplier = Rational.One;
     private int _currentPower = -1;
 
+    /// <summary>
+    /// Gets the <c>IsPolynomial</c> value of <c>PolynomialCoefficientCollector</c>.
+    /// </summary>
     public bool IsPolynomial { get; private set; } = true;
+    /// <summary>
+    /// Gets the <c>Coefficients</c> value of <c>PolynomialCoefficientCollector</c>.
+    /// </summary>
     public Dictionary<int, Rational> Coefficients { get; } = new();
 
+    /// <inheritdoc />
     public new void Visit(Expression expr)
     {
         IsPolynomial = true;
@@ -24,6 +34,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
         if (!IsPolynomial) Coefficients.Clear();
     }
 
+    /// <inheritdoc />
     protected override Expression VisitParameter(ParameterExpression node)
     {
         if (node == _parameter || node.Name == _parameter.Name)
@@ -38,6 +49,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
         return node;
     }
 
+    /// <inheritdoc />
     protected override Expression VisitConstant(ConstantExpression node)
     {
         var value = ConvertConstantToRational(node.Value);
@@ -48,6 +60,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
         return node;
     }
 
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         if (!IsPolynomial) return node;
@@ -137,6 +150,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
             }
     }
 
+    /// <inheritdoc />
     protected override Expression VisitUnary(UnaryExpression node)
     {
         if (node.NodeType == ExpressionType.Convert) return base.Visit(node.Operand);
@@ -151,6 +165,7 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
         return node;
     }
 
+    /// <inheritdoc />
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
         if (node.Method.DeclaringType == typeof(Math) && node.Method.Name == "Pow")

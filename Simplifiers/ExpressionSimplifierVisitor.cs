@@ -5,11 +5,15 @@ using Ricis.Core.Extensions;
 
 namespace Ricis.Core.Simplifiers;
 
+/// <summary>
+/// Represents the RICIS public type <c>ExpressionSimplifierVisitor</c>.
+/// </summary>
 public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
 {
     private readonly Dictionary<string, ParameterExpression> _parameters = new();
 
 
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
@@ -70,6 +74,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return node.Update(left, node.Conversion, right);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitUnary(UnaryExpression node)
     {
         var operand = Visit(node.Operand);
@@ -111,6 +116,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
     }
 
 
+    /// <inheritdoc />
     protected override Expression VisitConditional(ConditionalExpression node)
     {
         var test = Visit(node.Test);

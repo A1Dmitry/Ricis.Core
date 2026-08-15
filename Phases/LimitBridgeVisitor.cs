@@ -10,6 +10,7 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public sealed class LimitBridgeVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
@@ -21,5 +22,6 @@ public sealed class LimitBridgeVisitor : ExpressionVisitor, IExpressionVisitor
         return LimitBridge.TryApply(rebuilt, out var bridge) ? bridge : rebuilt;
     }
 
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 }

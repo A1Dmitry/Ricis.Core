@@ -11,6 +11,9 @@ public static class LogSolver
 {
     // Âîçâðàùàåò âñå òî÷íûå êîðíè äëÿ expr = 0, îòíîñèòåëüíî ïåðåäàííîãî ïàðàìåòðà.
     // Ïîääåðæèâàåò ñëó÷àè âèäà Log(x) (íàòèâíî) è âëîæåííûå âûçîâû, åñëè íàéä¸ì ÿâíûé ïàðàìåòð.
+    /// <summary>
+    /// Executes <c>FindRoots</c> for the RICIS expression model.
+    /// </summary>
     public static ICollection<Root> FindRoots(this Expression expr, ParameterExpression parameter)
     {
         var roots = new List<Root>();
@@ -59,6 +62,9 @@ public static class LogSolver
     }
 
     // Ñîâìåñòèìûé àäàïòåð äëÿ SingularitySolver: âîçâðàùàåò ïåðâûé root (param,double)? èñïîëüçóÿ ZeroSolverUtils
+    /// <summary>
+    /// Executes <c>Solve</c> for the RICIS expression model.
+    /// </summary>
     public static (ParameterExpression, double)? Solve(this Expression expr)
     {
         return ZeroSolverUtils.FindFirstRootFromFindRoots(FindRoots, expr);

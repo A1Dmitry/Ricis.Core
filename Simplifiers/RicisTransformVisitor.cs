@@ -17,6 +17,7 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         // A1/A4 redefine only built-in division. Overloaded operators belong to
@@ -29,6 +30,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         return base.VisitBinary(node);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 
     private Expression SimplifyDivision(Expression numerator, Expression denominator)

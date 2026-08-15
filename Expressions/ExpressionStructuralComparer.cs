@@ -2,8 +2,14 @@
 
 namespace Ricis.Core.Expressions;
 
+/// <summary>
+/// Represents the RICIS public type <c>ExpressionStructuralComparer</c>.
+/// </summary>
 public static class ExpressionStructuralComparer
 {
+    /// <summary>
+    /// Executes <c>AreEqual</c> for the RICIS expression model.
+    /// </summary>
     public static bool AreEqual(this Expression a, Expression b)
     {
         if (ReferenceEquals(a, b))

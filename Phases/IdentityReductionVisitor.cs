@@ -12,6 +12,7 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
@@ -29,5 +30,6 @@ public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVis
             : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 }

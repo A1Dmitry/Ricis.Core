@@ -11,9 +11,16 @@ public sealed class ZeroInfinityExpression : InfinityExpression
 {
     private readonly Expression _index;
 
+    /// <summary>
+    /// Gets the <c>Numerator</c> value of <c>ZeroInfinityExpression</c>.
+    /// </summary>
     public override Expression Numerator => _index;
+    /// <inheritdoc />
     public override bool CanReduce => false;
 
+    /// <summary>
+    /// Initializes a new instance of <c>ZeroInfinityExpression</c>.
+    /// </summary>
     public ZeroInfinityExpression(Expression index, List<(ParameterExpression, double)> roots)
         : base(roots)
     {
@@ -22,10 +29,14 @@ public sealed class ZeroInfinityExpression : InfinityExpression
 
     // Compatibility constructor for callers that have no symbolic index.
     // New RICIS paths must use the overload above and retain F.
+    /// <summary>
+    /// Initializes a new instance of <c>ZeroInfinityExpression</c>.
+    /// </summary>
     public ZeroInfinityExpression(List<(ParameterExpression, double)> roots)
         : this(RicisType.InfinityZero, roots)
     {
     }
 
+    /// <inheritdoc />
     public override string ToString() => FormatZero(_index.ToString(), Roots);
 }

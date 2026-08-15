@@ -10,6 +10,9 @@ namespace Ricis.Core.Solvers.ZeroSolver
     /// </summary>
     public static class ZeroSolverUtils
     {
+        /// <summary>
+        /// Executes <c>FindFirstParameter</c> for the RICIS expression model.
+        /// </summary>
         public static ParameterExpression FindFirstParameter(this Expression expr)
         {
             var pf = new ParamFinder();
@@ -17,6 +20,9 @@ namespace Ricis.Core.Solvers.ZeroSolver
             return pf.Parameter;
         }
 
+        /// <summary>
+        /// Executes <c>NormalizeZero</c> for the RICIS expression model.
+        /// </summary>
         public static double NormalizeZero(double v) => v == 0.0 ? 0.0 : v;
 
         /// <summary>
