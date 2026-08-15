@@ -36,6 +36,8 @@ tests.AddRange(RicisStressSuite.Tests);
 tests.AddRange(KnownRicisLimitsSuite.Tests);
 tests.AddRange(RicisClassicalComparisonSuite.Tests);
 tests.AddRange(RicisDerivativeSuite.Tests);
+tests.AddRange(RicisIntegralSuite.Tests);
+tests.AddRange(RicisSumSuite.Tests);
 tests.AddRange(RicisRuleContractSuite.Tests);
 
 var failures = new List<string>();

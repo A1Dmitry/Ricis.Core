@@ -38,6 +38,16 @@ internal static class Program
             return RunStructuralFunctionDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--integral-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunIntegralDemo();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--sum-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunSumDemo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length < 2)
@@ -210,6 +220,42 @@ internal static class Program
         return allMatch ? 0 : 1;
     }
 
+    private static int RunSumDemo()
+    {
+        Expression<Func<double, double>> first = x => x + 1.0;
+        Expression<Func<double, double>> second = y => y - 1.0;
+        var sum = first.Sum(second);
+
+        Console.WriteLine("Структурная Sum RICIS для двух отложенных лямбд:");
+        Console.WriteLine($"F(x):       {first}");
+        Console.WriteLine($"G(y):       {second}");
+        Console.WriteLine($"Sum(F, G):  {sum}");
+        Console.WriteLine($"Проверка x=2: {sum.Compile()(2.0):G17}");
+        return 0;
+    }
+
+    private static int RunIntegralDemo()
+    {
+        Expression<Func<double, double>> strip = x => x + 1.0;
+        Expression<Func<double, double>> deferredWidth = u => u - 1.0;
+        var constantRange = strip.Integral(5.0);
+        var symbolicRange = strip.Integral(deferredWidth);
+
+        Console.WriteLine("Геометрический Integral RICIS через A6:");
+        Console.WriteLine("  0_F · ∞_L → F·L; F и L остаются отложенными деревьями.");
+        Console.WriteLine("  Ни предел, ни сумма Римана, ни первообразная не строятся.");
+        Console.WriteLine();
+        Console.WriteLine($"F(x):              {strip}");
+        Console.WriteLine("L:                 5");
+        Console.WriteLine($"Integral(F, 5):    {constantRange}");
+        Console.WriteLine($"Проверка x=2:      {constantRange.Compile()(2.0):G17}");
+        Console.WriteLine();
+        Console.WriteLine($"L(x):              {deferredWidth}");
+        Console.WriteLine($"Integral(F, L):    {symbolicRange}");
+        Console.WriteLine($"Проверка x=3:      {symbolicRange.Compile()(3.0):G17}");
+        return 0;
+    }
+
     private static int RunStructuralFunctionDemo()
     {
         var inputs = new[]
@@ -350,6 +396,8 @@ internal static class Program
         Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");
         Console.WriteLine("  В CLI --derivative-demo показывает DxDt() как символьную перестройку без lim и Лопиталя.");
         Console.WriteLine("  В CLI --structural-demo показывает L1/SP2 для sign, clamp, abs и остатка.");
+        Console.WriteLine("  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.");
+        Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
         Console.WriteLine();
         PrintExamples();
     }
