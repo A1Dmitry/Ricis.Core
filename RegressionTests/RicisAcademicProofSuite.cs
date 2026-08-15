@@ -15,6 +15,7 @@ internal static class RicisAcademicProofSuite
         ("PROVE03: Prove — generic BigInteger сохраняет тип и отмечает пропуск A1/A4", GenericProofPreservesDomain),
         ("PROVE04: Prove — StringBuilder дописывается без потери существующего текста", ProofAppendsToBuilder),
         ("PROVE05: Trace — конвейер публикует все нормативные фазы", PublicPhaseTraceHasOrderedSteps),
+        ("PROVE06: Prove — разность кубов выводит x²+2x+4 при x≠2", DifferenceOfCubesProof),
     ];
 
     private static void DifferenceOfSquaresProof()
@@ -76,6 +77,29 @@ internal static class RicisAcademicProofSuite
 
         Require(protocol.ToString().StartsWith("Преамбула исследователя.\n# Формальный вывод RICIS III", StringComparison.Ordinal),
             "Prove обязан дописывать отдельный раздел, не стирая существующий StringBuilder.");
+    }
+
+    private static void DifferenceOfCubesProof()
+    {
+        // Известное тождество: x³ − 2³ = (x−2)(x²+2x+4).
+        // Ограничение x≠2 отделяет область исходной дроби от производного
+        // polynomial quotient и сохраняется в академическом протоколе.
+        Expression<Func<double, bool>>[] conditions = [x => x >= -100.0];
+        Expression<Func<double, bool>>[] constraints = [x => x != 2.0];
+        Expression<Func<double, double>> claim = x => (((x * x) * x) - 8.0) / (x - 2.0);
+        var protocol = new StringBuilder();
+
+        var derived = conditions.Prove(constraints, claim, protocol);
+        var execute = derived.Compile();
+
+        Require(Math.Abs(execute(-1.0) - 3.0) < 1e-12 &&
+                Math.Abs(execute(0.0) - 4.0) < 1e-12 &&
+                Math.Abs(execute(3.0) - 19.0) < 1e-12,
+            $"Разность кубов должна вывести x²+2x+4; получено {derived}.");
+        Require(protocol.ToString().Contains("x => (x != 2)", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("SP2: сокращение до сингулярностей", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("После:", StringComparison.Ordinal),
+            "Академический протокол должен зафиксировать ограничение x≠2 и шаг SP2 разности кубов.");
     }
 
     private static void PublicPhaseTraceHasOrderedSteps()
