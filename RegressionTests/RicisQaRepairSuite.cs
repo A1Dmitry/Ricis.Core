@@ -20,6 +20,8 @@ internal static class RicisQaRepairSuite
         ("QA09: CompoundInterest — BigInteger 100% сохраняет точную форму", IntegralWholeGrowthRemainsExact),
         ("QA10: Abs — Int32.MinValue сообщает overflow вместо отрицательного |x|", MinimumIntAbsSignalsOverflow),
         ("QA11: API — RicisEngine явно отклоняет конечный член", EngineRejectsFiniteExpression),
+        ("QA12: ID-03 — разные параметры с одинаковым именем не образуют L1", SameNamedDistinctParametersAreNotIdentical),
+        ("QA13: ID-03 — альфа-эквивалентные лямбды остаются одной функцией", AlphaEquivalentFunctionsKeepIdentity),
     ];
 
     private static void IntBridgePreservesType()
@@ -109,6 +111,32 @@ internal static class RicisQaRepairSuite
 
         Require(pole.Roots.Count == 1 && pole.Roots[0].Value == 0.0,
             $"Внешняя мутация не должна менять ключ полюса, получено {pole}.");
+    }
+
+    private static void SameNamedDistinctParametersAreNotIdentical()
+    {
+        var left = Expression.Parameter(typeof(double), "sigma");
+        var right = Expression.Parameter(typeof(double), "sigma");
+        var ratio = Expression.Divide(left, right);
+
+        Require(!left.AreEqual(right),
+            "Разные связанные параметры с одинаковым отображаемым именем не могут быть одной identity.");
+        var reduced = new IdentityReductionVisitor().Visit(ratio);
+        Require(reduced is BinaryExpression,
+            $"L1 не должен превращать разные sigma-параметры в 1, получено {reduced}.");
+    }
+
+    private static void AlphaEquivalentFunctionsKeepIdentity()
+    {
+        var sigma = Expression.Parameter(typeof(double), "sigma");
+        var mirrorSigma = Expression.Parameter(typeof(double), "mirrorSigma");
+        var first = Expression.Lambda<Func<double, double>>(
+            Expression.Add(sigma, Expression.Constant(1.0)), sigma);
+        var second = Expression.Lambda<Func<double, double>>(
+            Expression.Add(mirrorSigma, Expression.Constant(1.0)), mirrorSigma);
+
+        Require(first.AreEqual(second),
+            "Разные имена связанных параметров не должны превращать одну альфа-эквивалентную функцию в две функции.");
     }
 
     private static void IntegralRateIsRejected()

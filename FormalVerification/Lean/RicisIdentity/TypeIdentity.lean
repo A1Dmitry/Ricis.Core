@@ -62,6 +62,15 @@ theorem id06_reflected_exact_half {TypeTag : Type} (A : TypeIdentityAxioms TypeT
   have h := id06_exact_half A sigma
   linarith
 
+/-- A type map that collapses distinct coordinates cannot satisfy ID-03. -/
+def collapsedType : ℚ → Unit := fun _ => ()
+
+/-- QA guard: same displayed type value at 0 and 1 refutes coordinate faithfulness. -/
+theorem collapsed_type_violates_id03 : ¬ Function.Injective collapsedType := by
+  intro faithful
+  have zeroEqualsOne : (0 : ℚ) = 1 := faithful rfl
+  norm_num at zeroEqualsOne
+
 #print axioms id06_exact_half
 
 end RicisIdentity
