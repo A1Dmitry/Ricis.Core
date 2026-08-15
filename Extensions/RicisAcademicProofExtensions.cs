@@ -129,7 +129,7 @@ public static class RicisAcademicProofExtensions
         var (coordinate, claimedValue) = ReadCoordinateClaim(claim);
         if (!double.IsFinite(claimedValue))
         {
-            throw new ArgumentException("Тезис системы должен содержать конечную double-константу.", nameof(claim));
+            throw new ArgumentException("Тезис системы должен содержать конечную double-константу или константную дробь.", nameof(claim));
         }
 
         var provenValue = coordinate == 0 ? solutionX : solutionY;
@@ -140,11 +140,30 @@ public static class RicisAcademicProofExtensions
                 nameof(claim));
         }
 
+        var hasExactIntegralSystem = TrySolveIntegralSystem(first, second, out var exactX, out var exactY);
+        var solutionXExpression = hasExactIntegralSystem
+            ? BuildExactRationalExpression(exactX)
+            : Expression.Constant(solutionX);
+        var solutionYExpression = hasExactIntegralSystem
+            ? BuildExactRationalExpression(exactY)
+            : Expression.Constant(solutionY);
         var parameter = claim.Parameters[coordinate];
         var derived = Expression.Lambda<Func<double, double, bool>>(
-            Expression.Equal(parameter, Expression.Constant(provenValue)),
+            Expression.Equal(parameter, coordinate == 0 ? solutionXExpression : solutionYExpression),
             claim.Parameters);
-        AppendLinearSystemProtocol(proof, equationList, constraintList, claim, first, second, solutionX, solutionY, coordinate, derived);
+        AppendLinearSystemProtocol(
+            proof,
+            equationList,
+            constraintList,
+            claim,
+            first,
+            second,
+            solutionX,
+            solutionY,
+            solutionXExpression,
+            solutionYExpression,
+            coordinate,
+            derived);
         return derived;
     }
 
@@ -212,18 +231,104 @@ public static class RicisAcademicProofExtensions
         }
 
         var leftIndex = ParameterIndex(left, claim.Parameters);
-        if (leftIndex >= 0 && right is ConstantExpression { Value: double rightValue })
+        if (leftIndex >= 0 && TryReadFiniteDoubleScalar(right, out var rightValue))
         {
             return (leftIndex, rightValue);
         }
 
         var rightIndex = ParameterIndex(right, claim.Parameters);
-        if (rightIndex >= 0 && left is ConstantExpression { Value: double leftValue })
+        if (rightIndex >= 0 && TryReadFiniteDoubleScalar(left, out var leftValue))
         {
             return (rightIndex, leftValue);
         }
 
-        throw new ArgumentException("Тезис системы должен иметь форму x=c или y=c, где c — double-константа.", nameof(claim));
+        throw new ArgumentException(
+            "Тезис системы должен иметь форму x=c или y=c, где c — конечная double-константа либо константная дробь.",
+            nameof(claim));
+    }
+
+    private static bool TryReadFiniteDoubleScalar(Expression expression, out double value)
+    {
+        if (expression is ConstantExpression { Value: double constant } && double.IsFinite(constant))
+        {
+            value = constant;
+            return true;
+        }
+
+        if (expression is BinaryExpression { NodeType: ExpressionType.Divide, Left: var numerator, Right: var denominator } &&
+            TryReadFiniteDoubleScalar(numerator, out var numeratorValue) &&
+            TryReadFiniteDoubleScalar(denominator, out var denominatorValue) &&
+            denominatorValue != 0.0)
+        {
+            value = numeratorValue / denominatorValue;
+            return double.IsFinite(value);
+        }
+
+        value = 0.0;
+        return false;
+    }
+
+    private static bool TrySolveIntegralSystem(
+        LinearEquation first,
+        LinearEquation second,
+        out ExactRational x,
+        out ExactRational y)
+    {
+        x = default;
+        y = default;
+        if (!TryReadIntegralDouble(first.Constant, out var firstConstant) ||
+            !TryReadIntegralDouble(second.Constant, out var secondConstant))
+        {
+            return false;
+        }
+
+        var firstX = new BigInteger(first.X);
+        var firstY = new BigInteger(first.Y);
+        var secondX = new BigInteger(second.X);
+        var secondY = new BigInteger(second.Y);
+        var determinant = (firstX * secondY) - (secondX * firstY);
+        if (determinant.IsZero)
+        {
+            return false;
+        }
+
+        x = ExactRational.Create(
+            (firstConstant * secondY) - (secondConstant * firstY),
+            determinant);
+        y = ExactRational.Create(
+            (firstX * secondConstant) - (secondX * firstConstant),
+            determinant);
+        return true;
+    }
+
+    private static bool TryReadIntegralDouble(double value, out BigInteger integer)
+    {
+        integer = BigInteger.Zero;
+        if (!double.IsFinite(value) || value != Math.Truncate(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            integer = new BigInteger(value);
+            return (double)integer == value;
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+    }
+
+    private static Expression BuildExactRationalExpression(ExactRational value)
+    {
+        var numerator = Expression.Constant((double)value.Numerator);
+        if (value.Denominator.IsOne)
+        {
+            return numerator;
+        }
+
+        return Expression.Divide(numerator, Expression.Constant((double)value.Denominator));
     }
 
     private static void AppendLinearSystemProtocol(
@@ -235,6 +340,8 @@ public static class RicisAcademicProofExtensions
         LinearEquation second,
         double solutionX,
         double solutionY,
+        Expression solutionXExpression,
+        Expression solutionYExpression,
         int coordinate,
         Expression<Func<double, double, bool>> derived)
     {
@@ -256,17 +363,17 @@ public static class RicisAcademicProofExtensions
             x,
             y);
         var xResult = Expression.Lambda<Func<double, double, bool>>(
-            Expression.Equal(x, Expression.Constant(solutionX)), x, y);
+            Expression.Equal(x, solutionXExpression), x, y);
         var firstWithProofParameters = new ParameterSubstitutionVisitor(equations[0].Parameters[0], x)
             .Visit(equations[0].Body);
         firstWithProofParameters = new ParameterSubstitutionVisitor(equations[0].Parameters[1], y)
             .Visit(firstWithProofParameters);
         var substituted = Expression.Lambda<Func<double, double, bool>>(
-            new ParameterSubstitutionVisitor(x, Expression.Constant(solutionX)).Visit(firstWithProofParameters),
+            new ParameterSubstitutionVisitor(x, solutionXExpression).Visit(firstWithProofParameters),
             x,
             y);
         var yResult = Expression.Lambda<Func<double, double, bool>>(
-            Expression.Equal(y, Expression.Constant(solutionY)), x, y);
+            Expression.Equal(y, solutionYExpression), x, y);
 
         proof.AppendLine("# Формальный вывод RICIS III: система линейных уравнений");
         proof.AppendLine();
@@ -311,8 +418,8 @@ public static class RicisAcademicProofExtensions
         proof.Append("После: `").Append(yResult).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine("## Заключение");
-        proof.Append("Следовательно, система выводит ").Append(xName).Append('=').Append(solutionX.ToString("G17"))
-            .Append(" и ").Append(yName).Append('=').Append(solutionY.ToString("G17"))
+        proof.Append("Следовательно, система выводит ").Append(xName).Append('=').Append(solutionXExpression)
+            .Append(" и ").Append(yName).Append('=').Append(solutionYExpression)
             .Append("; требуемая координата ").Append(coordinate == 0 ? xName : yName)
             .Append(" доказана выражением `").Append(derived).AppendLine("`.");
     }
@@ -334,6 +441,26 @@ public static class RicisAcademicProofExtensions
     }
 
     private sealed record LinearEquation(double X, double Y, double Constant);
+
+    private readonly record struct ExactRational(BigInteger Numerator, BigInteger Denominator)
+    {
+        public static ExactRational Create(BigInteger numerator, BigInteger denominator)
+        {
+            if (denominator.IsZero)
+            {
+                throw new DivideByZeroException("Рациональный вывод не может иметь нулевой знаменатель.");
+            }
+
+            if (denominator.Sign < 0)
+            {
+                numerator = BigInteger.Negate(numerator);
+                denominator = BigInteger.Negate(denominator);
+            }
+
+            var divisor = BigInteger.GreatestCommonDivisor(BigInteger.Abs(numerator), denominator);
+            return new ExactRational(numerator / divisor, denominator / divisor);
+        }
+    }
 
     private sealed class ParameterSubstitutionVisitor : ExpressionVisitor
     {

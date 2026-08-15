@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text;
+using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 
 /// <summary>
@@ -32,8 +33,14 @@ internal static class RiemannHypothesisProofSuite
             (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
             (sigma, mirrorSigma) => mirrorSigma > 0.0 && mirrorSigma < 1.0,
         ];
-        Expression<Func<double, double, bool>> claim =
-            (sigma, mirrorSigma) => sigma == 0.5;
+        var exactHalf = Expression.Lambda<Func<double>>(
+            Expression.Divide(Expression.Constant(1.0), Expression.Constant(2.0)));
+        var sigma = Expression.Parameter(typeof(double), "sigma");
+        var mirrorSigma = Expression.Parameter(typeof(double), "mirrorSigma");
+        var claim = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(sigma, exactHalf.Body),
+            sigma,
+            mirrorSigma);
         var protocol = new StringBuilder();
 
         var derived = equations.Prove(constraints, claim, protocol);
@@ -41,12 +48,15 @@ internal static class RiemannHypothesisProofSuite
         var text = protocol.ToString();
 
         Require(derivedPredicate(0.5, 0.5) && !derivedPredicate(0.4, 0.6),
-            $"Из заданной системы должно следовать sigma=0.5; получено {derived}.");
+            $"Из заданной системы должно следовать sigma=1/2; получено {derived}.");
+        Require(derived.Body is BinaryExpression { NodeType: ExpressionType.Equal, Right: var derivedHalf } &&
+                derivedHalf.AreEqual(exactHalf.Body),
+            "Производное доказательное дерево должно сравнивать sigma с эталонным expression tree () => 1.0 / 2.0.");
         Require(text.Contains("((2 * sigma) == 1)", StringComparison.Ordinal) &&
-                text.Contains("(sigma == 0.5)", StringComparison.Ordinal) &&
-                text.Contains("(mirrorSigma == 0.5)", StringComparison.Ordinal) &&
-                text.Contains("система выводит sigma=0.5 и mirrorSigma=0.5", StringComparison.Ordinal),
-            "Riemann-связанный протокол должен сохранить реальные имена параметров и все четыре шага линейного вывода.");
+                text.Contains("(sigma == (1 / 2))", StringComparison.Ordinal) &&
+                text.Contains("(mirrorSigma == (1 / 2))", StringComparison.Ordinal) &&
+                text.Contains("система выводит sigma=(1 / 2) и mirrorSigma=(1 / 2)", StringComparison.Ordinal),
+            "Riemann-связанный протокол должен сохранить несократимую дробь 1/2, реальные имена параметров и все четыре шага линейного вывода.");
         Require(!text.Contains("доказывает гипотезу Римана", StringComparison.OrdinalIgnoreCase),
             "Конечный proof-сценарий не должен ошибочно объявляться доказательством гипотезы Римана.");
     }

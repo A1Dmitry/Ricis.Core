@@ -348,8 +348,14 @@ internal static class Program
             (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
             (sigma, mirrorSigma) => mirrorSigma > 0.0 && mirrorSigma < 1.0,
         ];
-        Expression<Func<double, double, bool>> claim =
-            (sigma, mirrorSigma) => sigma == 0.5;
+        var exactHalf = Expression.Lambda<Func<double>>(
+            Expression.Divide(Expression.Constant(1.0), Expression.Constant(2.0)));
+        var sigma = Expression.Parameter(typeof(double), "sigma");
+        var mirrorSigma = Expression.Parameter(typeof(double), "mirrorSigma");
+        var claim = Expression.Lambda<Func<double, double, bool>>(
+            Expression.Equal(sigma, exactHalf.Body),
+            sigma,
+            mirrorSigma);
         var protocol = new StringBuilder();
         var derived = equations.Prove(constraints, claim, protocol);
 
