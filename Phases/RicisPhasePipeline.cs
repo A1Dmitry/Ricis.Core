@@ -101,6 +101,15 @@ public static class RicisPhasePipeline
 
     private static bool MustSkip(IExpressionVisitor visitor, Expression result)
     {
+        if (visitor is ExpressionSimplifierVisitor)
+        {
+            // A final ordinary-algebra pass must not rewrite an expression tree
+            // that still carries RICIS extension payload. A6/L0 results can be
+            // ordinary-looking products after materialization, but their
+            // structural form is normative and must remain untouched.
+            return ContainsRicisExpression(result);
+        }
+
         if (visitor is not RicisTransformVisitor)
         {
             return false;
@@ -115,6 +124,29 @@ public static class RicisPhasePipeline
         // facility. Finite generic algebra and O(1) bridges remain typed and do
         // not coerce their scalar domain only to search for numeric roots.
         return result is LambdaExpression lambda && lambda.ReturnType != typeof(double);
+    }
+
+    private static bool ContainsRicisExpression(Expression expression)
+    {
+        var finder = new RicisExpressionFinder();
+        finder.Visit(expression);
+        return finder.Found;
+    }
+
+    private sealed class RicisExpressionFinder : ExpressionVisitor
+    {
+        public bool Found { get; private set; }
+
+        public override Expression Visit(Expression node)
+        {
+            if (node is RicisExpression)
+            {
+                Found = true;
+                return node;
+            }
+
+            return base.Visit(node);
+        }
     }
 
     private static (string PhaseName, string RuleFamily) Describe(IExpressionVisitor visitor) => visitor switch

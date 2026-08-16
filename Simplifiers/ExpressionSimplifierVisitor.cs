@@ -9,7 +9,7 @@ namespace Ricis.Core.Simplifiers;
 /// <summary>
 /// Represents the RICIS public type <c>ExpressionSimplifierVisitor</c>.
 /// </summary>
-public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
+public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpressionVisitor
 {
     private readonly Dictionary<string, ParameterExpression> _parameters = new();
 
@@ -23,6 +23,14 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
     {
         var left = Visit(node.Left);
         var right = Visit(node.Right);
+
+        // RICIS extensions have already received their normative A/O(1)
+        // semantics in earlier phases. Do not apply ordinary zero, power,
+        // distribution, or commutative rewrites across indexed payload nodes.
+        if (left is RicisExpression || right is RicisExpression)
+        {
+            return node.Update(left, node.Conversion, right);
+        }
 
         // Базовые алгебраические тождества
         switch (node.NodeType)
@@ -83,6 +91,11 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
     protected override Expression VisitUnary(UnaryExpression node)
     {
         var operand = Visit(node.Operand);
+
+        if (operand is RicisExpression)
+        {
+            return node.Update(operand);
+        }
 
         // Двойное отрицание
         if (node.NodeType == ExpressionType.Negate && operand is UnaryExpression innerNegate &&
