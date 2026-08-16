@@ -54,6 +54,29 @@ jobs:
           dotnet build Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-restore
           dotnet build Ricis.WebAssembly/Ricis.WebAssembly.csproj --configuration Release --no-restore
 
+      - name: Verify unified Ricis.Core version
+        shell: bash
+        run: |
+          projects=(
+            Ricis.Core.csproj
+            Ricis.Console/Ricis.Console.csproj
+            Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj
+            Ricis.WebApi/Ricis.WebApi.csproj
+            Ricis.WebAssembly/Ricis.WebAssembly.csproj
+            RegressionTests/Ricis.Core.RegressionTests.csproj
+          )
+          expected=""
+          for project in "${projects[@]}"; do
+            current=$(dotnet msbuild "$project" -getProperty:Version | tail -n 1)
+            echo "$project => $current"
+            if [[ -z "$expected" ]]; then expected="$current"; fi
+            if [[ "$current" != "$expected" ]]; then
+              echo "Version mismatch: expected $expected, got $current in $project"
+              exit 1
+            fi
+          done
+          echo "All projects use Ricis.Core version $expected"
+
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
 

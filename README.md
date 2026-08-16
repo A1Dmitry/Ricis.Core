@@ -66,13 +66,14 @@ WebAssembly client обращается к API через ограниченну
 | [`RICIS_INTEGRALS.md`](RICIS_INTEGRALS.md) | Геометрический `Integral` и `Sum` через нормативную A6-семантику. |
 | [`RICIS_NAVIER_STOKES_PROOF.md`](RICIS_NAVIER_STOKES_PROOF.md) | Символьный сценарий Навье—Стокса для конкретного поля. |
 | [`FormalVerification/Lean/README.md`](FormalVerification/Lean/README.md) | Canonical Lean contract и воспроизведение ID-01–ID-06. |
+| [`RICIS_VERSIONING.md`](RICIS_VERSIONING.md) | Единая версия Ricis.Core, зависимые проекты, централизованные NuGet versions и release policy. |
 | [`RICIS_LEAN_TEMPLATE.md`](RICIS_LEAN_TEMPLATE.md) | `StructuredData/RequestedRows => LeanDoc`, supported bridge, controlled rejection и compiler check. |
 
 ## Автоматизация поставки
 
 GitHub Actions workflow [`build-and-test.yml`](.github/workflows/build-and-test.yml) выполняет restore, Release build всех проектов и regression suite при каждом push.
 
-Workflow [`publish-nuget.yml`](.github/workflows/publish-nuget.yml) создаёт и публикует `Ricis.Core` в NuGet.org при push release-тега вида `v*`. Для публикации требуется repository secret `NUGET_API_KEY`.
+Workflow [`publish-nuget.yml`](.github/workflows/publish-nuget.yml) создаёт и публикует `Ricis.Core` в NuGet.org при push release-тега вида `v*`. Версия тега передаётся в `RicisCoreVersion` и становится общей assembly/package version solution. Для публикации требуется repository secret `NUGET_API_KEY`.
 
 ```bash
 git tag -a v1.0.0 -m "Release v1.0.0"

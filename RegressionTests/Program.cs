@@ -13,6 +13,7 @@ var tests = new List<(string Name, Action Body)>();
 // Первый gate: канонические аксиомы должны пройти до любых stress, API,
 // proof или classical-comparison scenarios.
 tests.AddRange(RicisAxiomSuite.Tests);
+tests.AddRange(RicisPreviousParameterIdentitySuite.Tests);
 
 tests.AddRange(
 [

@@ -56,10 +56,21 @@ jobs:
         run: dotnet restore Ricis.Core.csproj
 
       - name: Build
-        run: dotnet build Ricis.Core.csproj --configuration Release --no-restore
+        run: dotnet build Ricis.Core.csproj --configuration Release --no-restore -p:RicisCoreVersion=${{ steps.version.outputs.value }}
 
       - name: Pack
-        run: dotnet pack Ricis.Core.csproj --configuration Release --no-build --output ./artifacts -p:PackageVersion=${{ steps.version.outputs.value }}
+        run: dotnet pack Ricis.Core.csproj --configuration Release --no-build --output ./artifacts -p:RicisCoreVersion=${{ steps.version.outputs.value }}
+
+      - name: Verify package version
+        shell: bash
+        run: |
+          expected="${{ steps.version.outputs.value }}"
+          actual=$(unzip -p ./artifacts/*.nupkg '*.nuspec' | sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' | head -n 1)
+          if [[ "$actual" != "$expected" ]]; then
+            echo "Package version mismatch: expected $expected, got $actual"
+            exit 1
+          fi
+          echo "Verified Ricis.Core package version $actual"
 
       - name: Publish to NuGet.org
         run: dotnet nuget push "./artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
