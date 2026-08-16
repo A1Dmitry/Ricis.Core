@@ -220,7 +220,10 @@ J_F=(∂Fᵢ/∂xⱼ)
  4  type consistency / SP3
  5  standard operations A5/A6/A7 and Z rules
  6  final structural verification
+ META  opt-in author presentation metadata after the structural result
 ```
+
+`META` не является новой аксиомой и не изменяет RICIS-expression semantics: при внешнем closure capture `about` или параметре lambda `about` производное дерево получает `AuthorAnnotatedExpression`, который влияет только на текстовое представление и редуцируется к исходному телу при `Compile()`.
 
 Внешнее слово «предел» не должно попадать в вычислительную цепочку. Если документация использует краткую запись `lim(x→a)→x=a`, это читается только как обозначение прямого внутреннего O(1)-моста и структурной подстановки.
 
@@ -291,6 +294,7 @@ Q_problem
 |---|---|
 | `Expressions/RicisVector.cs` | конечный N-мерный вектор |
 | `Expressions/RicisVectorExpression.cs` | deferred vector lambdas |
+| `Expressions/ExpressionSystem.cs` | структурный контейнер системы lambda-выражений поверх vector API |
 | `Expressions/RicisVectorExpressionVisitor.cs` | multivariate component visitor |
 | `Expressions/RicisMultivariateAlgebraicVisitor.cs` | структурные перестановки и cancellation |
 | `Expressions/RicisMatrixExpression.cs` | deferred matrix и determinant 2×2/3×3 |
@@ -298,6 +302,7 @@ Q_problem
 | `RegressionTests/RicisPrioritySuite.cs` | приоритет RICIS над classical fallback |
 | `RegressionTests/RicisVectorVisitorSuite.cs` | `G∘F=Id` и `F∘G=Id` component proof |
 | `RICIS_RULE_COVERAGE.md` | контракт регрессий |
+| `RICIS_WEBAPI.md` | HTTP API, security boundaries и release integration |
 | `../Jacobian2DProbe` | двумерный vector/matrix protocol |
 | `../Jacobian3DProbe` | трёхмерный vector/matrix/Visitor protocol |
 | `../PvsNPProofProbe` | конечный verifier/witness probe |

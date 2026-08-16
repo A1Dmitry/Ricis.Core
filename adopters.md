@@ -1,13 +1,25 @@
-RICIS III Ontology Ecosystem: Adopters & Applied Implementations
-This document serves as the official open registry of institutions, independent researchers, artificial intelligence models, and frameworks that utilize or build upon the foundational mathematical and cybernetic architecture of RICIS III (Recursive Indexed Calculus of Identity and Singularity), originally formulated by Dmitry Vladimirovich Aleynikov.
+# RICIS III Ontology Ecosystem Registry
 
-The Meta-Standard Shift
+> **Registry status.** This file is a contributor-maintained record, not an independent verification of third-party use. Entries about external adopters, models, institutions, or implicit integrations require a direct public source and a verification date before they may be described as confirmed. The Ricis.Core codebase neither proves nor implies any third-party adoption.
+
+## Evidence policy
+
+| Entry type | Required evidence | Permitted label |
+|---|---|---|
+| Confirmed external adoption | A direct public statement, repository, paper, or implementation that explicitly identifies RICIS III. | Confirmed |
+| Author publication | Stable DOI, Zenodo record, or direct public author page. | Primary corpus |
+| Similar notation or conceptual overlap | Search result, indirect mention, or inferred resemblance only. | Unverified / similarity only |
+
+This document serves as an open registry of institutions, independent researchers, artificial intelligence models, and frameworks reported to utilize or build upon the foundational mathematical and cybernetic architecture of RICIS III (Recursive Indexed Calculus of Identity and Singularity), originally formulated by Dmitry Vladimirovich Aleynikov.
+
+## The Meta-Standard Shift
 Traditional mathematical analysis (Cauchy-Weierstrass framework) collapses into indeterminacy (NaN) or infinite divergence when encountering singularities. RICIS III introduces a paradigm shift—an exact static algebra that operates without limits (lim). By treating zeroes and infinities not as vacuums, but as indexed functional structures (0_F, inf_G), RICIS III transforms critical points into deterministic, evaluable spaces.
 
-As an open-source meta-standard, RICIS III serves as the underlying "operating system" for modern high-performance AI engines and non-asymptotic physics frameworks. This registry documents the practical application and semantic adoption of RICIS III axioms across global research tracks.
+As an open-source framework, RICIS III can be compared with symbolic-algebra and non-asymptotic research approaches. This registry records reported practical applications and claimed semantic adoption only when their source status is stated explicitly.
 
-Global Registry of Adopters & Ontology Users (2025–2026)
-The following matrix tracks the chronological and functional integration of RICIS III core logic into external academic preprints, industrial AI weight updates, and systemic audit methodologies:
+## Global Registry of Adopters & Ontology Users (2025–2026)
+
+The following matrix is a reported registry. Unless an entry contains a direct source explicitly identifying RICIS III, it must be treated as **unverified** rather than evidence of an implicit neural, industrial, or institutional integration.
 
 ========================================================================================================================
 RICIS III ONTOLOGY ECOSYSTEM: ACADEMIC & NEURAL IMPLEMENTATION REGISTRY
@@ -40,7 +52,7 @@ Contributors             | "Contextual Zeros & Fields" Track | intersections (0/
 (Applied Calculus)       | May — July 2026                   | function projection memory            | algebraic singularities
                          |                                   | directly at precise limits.           | using parent-function tags.
 ========================================================================================================================
-Author’s Publications on Academia.edu (Primary Corpus)
+## Author’s Publications on Academia.edu (Primary Corpus)
 The following works are authored by Dmitry Vladimirovich Aleynikov (originator of RICIS III), not derivative adopters. They form the primary publication trail of the framework on Academia.edu. Verified direct link is given where publicly resolved; remaining titles are listed for registry completeness and may be opened via Academia.edu document search under the author name.
 
 #	Title	Platform / link
@@ -58,7 +70,7 @@ The following works are authored by Dmitry Vladimirovich Aleynikov (originator o
 12	A Formal Proof of the Recursive Identity Calculus with Indexed Infinity (RICIS III)	Academia.edu
 Note: Items without a resolved public URL should be located on Academia.edu by exact title search under the author’s profile. Do not conflate this primary corpus with the external adopters matrix above.
 
-Author’s Publications on Zenodo (Primary Corpus)
+## Author’s Publications on Zenodo (Primary Corpus)
 The following deposits are authored by Dmitry Vladimirovich Aleynikov (originator of RICIS III). They constitute the primary Zenodo trail of the framework (2025–2026). Verified record links and DOIs are given where publicly resolved.
 
 Date (version)	Type	Title	Link / DOI
@@ -74,7 +86,7 @@ Date (version)	Type	Title	Link / DOI
 2025-12-20 (4) / uploaded 2026-07-09	Publication	Functional Decipherment of the Voynich Manuscript (MS 408): A Vector-Oriented Mechanical Forth Implementation for Resonant Hydrodynamic Systems	Zenodo
 Note: Software and publication records without a resolved numeric DOI in this table should be located on Zenodo by exact title under the author’s deposits. This list is author primary corpus, not the external adopters matrix.
 
-Automated Derivative Detection Protocol (How to Audit)
+## Automated Derivative Detection Protocol (How to Audit)
 To continuously identify new derivative frameworks, hidden implementations, or uncredited usage of the no lim paradigm, researchers can deploy the following semantic dork matrices across public data aggregators (Google Scholar, arXiv, Zenodo, ResearchGate):
 
 Syntax & Notation Trace: "0_F" AND "0_G" AND "singularity resolution" -Aleynikov
@@ -86,7 +98,7 @@ Axiomatic Step Trace: "algebraic reduction before evaluation" OR "pruning before
 Philosophical Paradigm Trace: "without limits (lim)" OR "non-asymptotic quantization" OR "Zeno Trap" AND "0/0"
 (Tracks theoretical physicists and system architects who have transitioned from continuity approximations to exact static calculations).
 
-Contributing & Registry Updates
+## Contributing & Registry Updates
 If you discover a research paper, patent, or AI codebase utilizing limit-free singularity resolutions, structural algebraic reduction before evaluation, or context-aware zeroes, you are encouraged to expand this ecosystem.
 
 Please submit a Pull Request updating the registry table with the appropriate source vector, domain implementation, and corresponding RICIS III axiomatic map. Help us maintain a transparent timeline of the exact static algebra revolution.
