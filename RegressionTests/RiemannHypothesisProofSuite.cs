@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Proofs;
 
 /// <summary>
 /// Regression scenarios for the complete normative RICIS type-identity chain.
@@ -16,6 +17,7 @@ internal static class RiemannHypothesisProofSuite
         ("RIEMANN01: ID-01–ID-06 выводят σ=1/2 как точную дробь", TypeIdentityChainProof),
         ("RIEMANN02: ID-цепочка отвергает ложное следствие", FalseCriticalLineClaimIsRejected),
         ("RIEMANN03: ID-цепочка сохраняет однопроходные ограничения", SinglePassConstraintsArePreserved),
+        ("RIEMANN04: специализированный case отделяет аналитику от RICIS-алгебры", SpecializedCaseSeparatesResponsibilities),
     ];
 
     private static void TypeIdentityChainProof()
@@ -86,6 +88,32 @@ internal static class RiemannHypothesisProofSuite
 
         Require(enumerationCount == 1,
             "ID-цепочка обязана материализовать однопроходные ограничения ровно один раз без их потери.");
+    }
+
+    private static void SpecializedCaseSeparatesResponsibilities()
+    {
+        Expression<Func<double, double, bool>>[] constraints =
+        [
+            (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0,
+            (sigma, mirrorSigma) => mirrorSigma > 0.0 && mirrorSigma < 1.0,
+        ];
+        Expression<Func<double, double, bool>> claim = (sigma, mirrorSigma) => sigma == 0.5;
+        var specializedCase = new RiemannHypothesisProofCase(constraints, claim);
+        RicisProofCase proofCase = specializedCase;
+
+        var result = proofCase.Run();
+        Require(result.Status == "ConditionalTheorem",
+            "RH proof case не должен объявлять аналитически незамкнутый результат конечной деривацией.");
+        Require(specializedCase.DerivedClaim is not null &&
+                specializedCase.DerivedClaim.Compile()(0.5, 0.5) &&
+                !specializedCase.DerivedClaim.Compile()(0.4, 0.6),
+            "RH наследник обязан получить тот же ID-01–ID-06 результат из общего engine.");
+        Require(proofCase.UnresolvedObligations.Count >= 6 &&
+                proofCase.Monitor.Any(entry => entry.Stage == "ANALYTIC" && entry.Status == "OPEN") &&
+                proofCase.Monitor.Any(entry => entry.Stage == "ID-01..ID-06" && entry.Status == "PASS"),
+            "RH case обязан мониторить открытые аналитические obligations и завершённую алгебраическую фазу отдельно.");
+        Require(result.Document.Contains("ID-06", StringComparison.Ordinal),
+            "RH case обязан сохранить документ ID-01–ID-06 общего доказательного engine.");
     }
 
     private static IEnumerable<Expression<Func<double, double, bool>>> SinglePassConstraints(Action onEnumeration)

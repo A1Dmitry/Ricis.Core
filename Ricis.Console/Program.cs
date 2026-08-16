@@ -421,10 +421,19 @@ internal static class Program
             Expression.Equal(sigma, exactHalf.Body),
             sigma,
             mirrorSigma);
-        var document = new StringBuilder();
-        var derived = constraints.ProveTypeIdentityCriticalLine(claim, document);
+        var proofCase = new RiemannHypothesisProofCase(constraints, claim);
+        var result = proofCase.Run();
 
-        Console.WriteLine(document.ToString());
+        Console.WriteLine("Мониторинг специализированного RH proof case:");
+        foreach (var entry in proofCase.Monitor)
+        {
+            Console.WriteLine($"[{entry.Status}] {entry.Stage}: {entry.Message}");
+        }
+        Console.WriteLine();
+        Console.WriteLine(result.Document);
+        var derived = proofCase.DerivedClaim
+            ?? throw new InvalidOperationException("RH proof case did not produce a derived claim.");
+        Console.WriteLine($"Статус: {result.Status}; производное выражение: {result.DerivedExpression}");
         Console.WriteLine($"Проверка производного выражения: (0.5,0.5) → {derived.Compile()(0.5, 0.5)}; (0.4,0.6) → {derived.Compile()(0.4, 0.6)}");
         return 0;
     }
