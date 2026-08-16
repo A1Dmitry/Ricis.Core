@@ -10,7 +10,10 @@ internal static class RicisProofDocumentFormatSuite
     [
         ("PDF01: Log template — выводит trace и возвращает то же производное дерево", LogTemplate),
         ("PDF02: Academic template — применяет Func<string,string> без изменения вывода", AcademicTemplateWithTransform),
-        ("PDF03: Lean template — создаёт только явно ограниченный scaffold", LeanTemplate),
+        ("PDF03: Generic Lean format — отклоняет неподдержанный shape", LeanTemplate),
+        ("LFT01: StructuredData и RequestedRows создают LeanDoc", StructuredLeanDocument),
+        ("LFT02: RequestedRows раскрывает theorem dependencies", LeanRowsExpandDependencies),
+        ("LFT03: StructuredData блокирует небезопасные Lean identifiers", LeanIdentifiersAreValidated),
         ("PDF04: Json template — выводит валидный структурированный документ", JsonTemplate),
         ("PDF05: Format API — отклоняет неизвестный enum и null callback", InvalidFormatAndCallbackAreRejected),
         ("PDF06: Binary overload — использует общий Log renderer", BinarySystemLogTemplate),
@@ -66,21 +69,70 @@ internal static class RicisProofDocumentFormatSuite
         Expression<Func<double, bool>>[] conditions = [];
         Expression<Func<double, bool>>[] constraints = [];
         Expression<Func<double, double>> claim = x => x + 1.0;
-        var document = new StringBuilder();
 
-        _ = conditions.ProveDocument(
-            constraints,
-            claim,
-            CreateProfile(),
-            RicisProofDocumentFormat.Lean,
-            document);
+        RequireThrows<RicisUnsupportedLeanProofShapeException>(
+            () => _ = conditions.ProveDocument(
+                constraints,
+                claim,
+                CreateProfile(),
+                RicisProofDocumentFormat.Lean,
+                new StringBuilder()),
+            "Generic Lean format обязан отклонить неподдержанный C# expression shape, а не создавать scaffold.");
+    }
 
-        var text = document.ToString();
-        Require(text.StartsWith("/-", StringComparison.Ordinal) &&
-                text.Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal) &&
-                text.Contains("arbitrary C# expression trees are not Lean-checked", StringComparison.Ordinal) &&
-                text.Contains("namespace Ricis.Generated", StringComparison.Ordinal),
-            "Lean template должен быть честным documentation scaffold, а не ложным заявлением Lean-проверки.");
+    private static void StructuredLeanDocument()
+    {
+        var data = new RicisLeanStructuredData();
+        var rows = new RicisLeanRequestedRows([RicisLeanProofRow.Id06ExactHalf]);
+        var document = RicisLeanTemplate.Render(data, rows);
+        var source = document.Source;
+
+        Require(document.Rows == rows &&
+                source.Contains("import Mathlib", StringComparison.Ordinal) &&
+                source.Contains("theorem id06_exact_half", StringComparison.Ordinal) &&
+                source.Contains("sigma = 1 / 2", StringComparison.Ordinal) &&
+                !source.Contains("sorry", StringComparison.OrdinalIgnoreCase) &&
+                !source.Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal),
+            "Structured LeanTemplate должен создать типизированный LeanDoc без scaffold и sorry.");
+    }
+
+    private static void LeanRowsExpandDependencies()
+    {
+        var rows = new RicisLeanRequestedRows([RicisLeanProofRow.Id06ReflectedExactHalf]);
+        Require(rows.Rows.SequenceEqual(
+                [
+                    RicisLeanProofRow.Id01TypePreserved,
+                    RicisLeanProofRow.Id02ReflectionSum,
+                    RicisLeanProofRow.Id03SameCoordinate,
+                    RicisLeanProofRow.Id04LinearPair,
+                    RicisLeanProofRow.Id05DoubledCoordinate,
+                    RicisLeanProofRow.Id06ExactHalf,
+                    RicisLeanProofRow.Id06ReflectedExactHalf,
+                ]),
+            "RequestedRows должен добавить все theorem dependencies в canonical порядке.");
+    }
+
+    private static void LeanIdentifiersAreValidated()
+    {
+        RequireThrows<ArgumentException>(
+            () => _ = new RicisLeanStructuredData(namespaceName: "Ricis.Generated\naxiom forged : False"),
+            "StructuredData не должен допускать инъекцию Lean statements через identifier.");
+        RequireThrows<ArgumentException>(
+            () => _ = new RicisLeanStructuredData(namespaceName: "theorem"),
+            "StructuredData не должен принимать зарезервированный Lean keyword.");
+
+        var data = new RicisLeanStructuredData(
+            typeOfName: "identityType",
+            reflectName: "mirror",
+            sigmaName: "about",
+            mirrorSigmaName: "mirrorAbout");
+        var source = RicisLeanTemplate.Render(
+            data,
+            new RicisLeanRequestedRows([RicisLeanProofRow.Id02ReflectionSum])).Source;
+        Require(source.Contains("identityType", StringComparison.Ordinal) &&
+                source.Contains("mirror", StringComparison.Ordinal) &&
+                source.Contains("about + A.mirror about", StringComparison.Ordinal),
+            "Validated StructuredData names должны использоваться в generated Lean source.");
     }
 
     private static void JsonTemplate()

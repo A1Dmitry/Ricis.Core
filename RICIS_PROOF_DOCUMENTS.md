@@ -51,10 +51,10 @@ var derived = conditions.ProveDocument(
 |---|---|---|
 | `Log` | Компактный line-oriented protocol с trace. | Диагностическое представление. |
 | `Academic` | Полный Markdown-документ с определениями, scope, предпосылками, trace и границами. | Основной академический формат. |
-| `Lean` | Lean-oriented comment scaffold с RICIS trace. | **Не** является Lean-проверкой произвольных C# expression tree. |
+| `Lean` | Для generic C# expression tree выполняет controlled rejection; корректный Lean output строится через `RicisLeanTemplate(StructuredData, RequestedRows) => RicisLeanDoc`. | LeanDoc компилируем только для поддержанного structured bridge ID-01–ID-06. |
 | `Json` | Валидный структурированный JSON: profile, normative steps, trace и derived expression. | Машиночитаемое представление. |
 
-Все шаблоны используют один уже построенный `Prove` derivation. Они не запускают дополнительные RICIS-фазы, не исполняют условия и не применяют `Eval`, Razor или TypeScript. Это сохраняет DRY: symbolical proof engine существует в одном месте, а template layer отвечает только за presentation.
+Log, Academic и Json используют один уже построенный `Prove` derivation. Они не запускают дополнительные RICIS-фазы, не исполняют условия и не применяют `Eval`, Razor или TypeScript. Для Lean используется отдельный структурированный источник: `RicisLeanTemplate.Render(RicisLeanStructuredData, RicisLeanRequestedRows)` возвращает `RicisLeanDoc` с generated Lean source. Generic C# expression tree без поддержанного bridge отклоняется, а не превращается в comment scaffold. Это сохраняет DRY: proof engine и Lean structured model существуют в одном месте, а остальные templates отвечают только за presentation.
 
 ## Доказательный статус
 

@@ -15,7 +15,7 @@ jobs:
   build-and-test:
     name: Build and run regression suite
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -54,3 +54,19 @@ jobs:
 
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
+
+      - name: Setup Lean toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y elan
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Generate and compile LeanDoc
+        run: |
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-doc-demo > /tmp/ricis_generated.lean
+          cd FormalVerification/Lean
+          lake env lean /tmp/ricis_generated.lean
+          if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean; then
+            echo "Generated LeanDoc contains forbidden sorry token."
+            exit 1
+          fi

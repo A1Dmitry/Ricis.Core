@@ -249,6 +249,18 @@ F(G(y)) − y = 0⃗
 
 Успешное сведение до `0⃗` является доказательством заданной внутренней системы и не должно автоматически называться доказательством внешней нерешённой теоремы без формального bridge от предметной системы к RICIS-системе.
 
+### Lean как первичный формальный output
+
+Корректный Lean строится не из текстового `ToString()` и не из academic trace. Нормативная форма имеет вид:
+
+```text
+LeanTemplate(StructuredData, RequestedRows) => LeanDoc
+```
+
+`LeanDoc` содержит compilable Lean source, сформированный из типизированных структурированных данных и конечного enum-набора theorem rows. В текущем supported bridge это exact-rational модель ID-01–ID-06 на `ℚ`, проверяемая без `sorry` и `sorryAx`. `Log`, `Academic` и `Json` являются частными presentation-форматами proof model и не заменяют Lean compiler.
+
+Если произвольный C# expression tree не соответствует supported structured bridge, Lean output обязан завершиться controlled rejection, а не созданием comment scaffold, который можно ошибочно принять за формальное доказательство.
+
 ## 10. Применение к задачам Clay
 
 Единая фрактальная схема предметной задачи:
@@ -295,6 +307,9 @@ Q_problem
 | `Expressions/RicisVector.cs` | конечный N-мерный вектор |
 | `Expressions/RicisVectorExpression.cs` | deferred vector lambdas |
 | `Expressions/ExpressionSystem.cs` | структурный контейнер системы lambda-выражений поверх vector API |
+| `Proofs/RicisLeanProofModels.cs` | `StructuredData`, `RequestedRows`, `LeanDoc` и controlled rejection для unsupported Lean shapes |
+| `Proofs/RicisLeanTemplate.cs` | typed Lean source renderer для supported ID-01–ID-06 bridge |
+| `RICIS_LEAN_TEMPLATE.md` | первичный Lean contract и compiler-backed verification command |
 | `Expressions/RicisVectorExpressionVisitor.cs` | multivariate component visitor |
 | `Expressions/RicisMultivariateAlgebraicVisitor.cs` | структурные перестановки и cancellation |
 | `Expressions/RicisMatrixExpression.cs` | deferred matrix и determinant 2×2/3×3 |

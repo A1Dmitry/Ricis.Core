@@ -3,6 +3,7 @@ using System.Text;
 using Ricis.Core.Extensions;
 using Ricis.Core.Metadata;
 using Ricis.Core.Phases;
+using Ricis.Core.Proofs;
 
 namespace Ricis.ConsoleApp;
 
@@ -66,6 +67,11 @@ internal static class Program
         if (args.Length > 0 && string.Equals(args[0], "--riemann-proof-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunRiemannProofDemo();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--lean-doc-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunLeanDocumentDemo();
         }
 
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
@@ -326,6 +332,15 @@ internal static class Program
         Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
         Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
         Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        return 0;
+    }
+
+    private static int RunLeanDocumentDemo()
+    {
+        var document = RicisLeanTemplate.Render(
+            new RicisLeanStructuredData(),
+            new RicisLeanRequestedRows([RicisLeanProofRow.Id06ReflectedExactHalf]));
+        Console.Write(document.Source);
         return 0;
     }
 

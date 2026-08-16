@@ -61,6 +61,9 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Lean build cache
+.lake/
+
 # Local task outputs
 console_*.txt
 *._check.txt

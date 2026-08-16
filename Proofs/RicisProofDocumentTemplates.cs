@@ -26,7 +26,9 @@ internal static class RicisProofDocumentTemplates
         return format switch
         {
             RicisProofDocumentFormat.Log => RenderLog(profile, derivation, derived),
-            RicisProofDocumentFormat.Lean => RenderLeanScaffold(profile, derivation, derived),
+            RicisProofDocumentFormat.Lean => throw new RicisUnsupportedLeanProofShapeException(
+                "Generic C# expression tree cannot be emitted as a verified Lean theorem. " +
+                "Use RicisLeanTemplate.Render(StructuredData, RequestedRows) for a supported structured Lean bridge."),
             RicisProofDocumentFormat.Json => RenderJson(profile, derivation, derived),
             RicisProofDocumentFormat.Academic => throw new ArgumentException(
                 "Academic document rendering is provided by the existing academic template.", nameof(format)),

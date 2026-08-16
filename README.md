@@ -30,6 +30,15 @@ dotnet run --project Ricis.Console/Ricis.Console.csproj -c Release -- \
   "x => ((x ^ 2) - 25) / (x - 5)"
 ```
 
+Сгенерировать проверяемый LeanDoc для canonical ID-01–ID-06 bridge:
+
+```bash
+dotnet run --project Ricis.Console/Ricis.Console.csproj -c Release -- --lean-doc-demo \
+  > /tmp/ricis_generated.lean
+cd FormalVerification/Lean
+lake env lean /tmp/ricis_generated.lean
+```
+
 Запустить Web API:
 
 ```bash
@@ -49,7 +58,8 @@ dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:50
 | [`RICIS_DERIVATIVES.md`](RICIS_DERIVATIVES.md) | Символьная производная без пределов и Лопиталя. |
 | [`RICIS_INTEGRALS.md`](RICIS_INTEGRALS.md) | Геометрический `Integral` и `Sum` через нормативную A6-семантику. |
 | [`RICIS_NAVIER_STOKES_PROOF.md`](RICIS_NAVIER_STOKES_PROOF.md) | Символьный сценарий Навье—Стокса для конкретного поля. |
-| [`FormalVerification/Lean/README.md`](FormalVerification/Lean/README.md) | Воспроизведение Lean-модели ID-01–ID-06. |
+| [`FormalVerification/Lean/README.md`](FormalVerification/Lean/README.md) | Canonical Lean contract и воспроизведение ID-01–ID-06. |
+| [`RICIS_LEAN_TEMPLATE.md`](RICIS_LEAN_TEMPLATE.md) | `StructuredData/RequestedRows => LeanDoc`, supported bridge, controlled rejection и compiler check. |
 
 ## Автоматизация поставки
 

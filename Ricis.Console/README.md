@@ -81,7 +81,18 @@ x => x + 1; x => derivative(x ^ 3); x => integral(x, 5)
 | `all` | Запустить 58 выражений каталога. |
 | `exit` / `quit` | Завершить программу. |
 
-Дополнительные демонстрационные режимы доступны как CLI-флаги: `--proof-demo`, `--academic-proof-demo`, `--system-proof-demo`, `--riemann-proof-demo`, `--continuous-demo`, `--complex-demo`, `--interest-demo`, `--analytic-demo` и `--author-seo-demo`.
+Дополнительные демонстрационные режимы доступны как CLI-флаги: `--proof-demo`, `--academic-proof-demo`, `--system-proof-demo`, `--riemann-proof-demo`, `--lean-doc-demo`, `--continuous-demo`, `--complex-demo`, `--interest-demo`, `--analytic-demo` и `--author-seo-demo`.
+
+`--lean-doc-demo` печатает настоящий structured LeanDoc для canonical ID-01–ID-06 bridge:
+
+```bash
+dotnet run --project Ricis.Console/Ricis.Console.csproj -c Release -- --lean-doc-demo \
+  > /tmp/ricis_generated.lean
+cd ../FormalVerification/Lean
+lake env lean /tmp/ricis_generated.lean
+```
+
+Generic `RicisProofDocumentFormat.Lean` для произвольного C# expression tree не создаёт комментарий, похожий на доказательство: он выполняет controlled rejection. Корректный Lean source строится через `RicisLeanTemplate` из `RicisLeanStructuredData` и `RicisLeanRequestedRows`.
 
 ## Семантика RICIS
 
