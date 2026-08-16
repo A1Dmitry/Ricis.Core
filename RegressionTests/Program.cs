@@ -58,7 +58,8 @@ tests.AddRange(RicisJacobianSingularitySuite.Tests);
 tests.AddRange(RicisPrioritySuite.Tests);
 tests.AddRange(RicisVectorVisitorSuite.Tests);
 tests.AddRange(RicisTypeConsistencySuite.Tests);
-tests.AddRange(RicisCheckedProofSuite.Tests);
+    tests.AddRange(RicisCheckedProofSuite.Tests);
+    tests.AddRange(RicisProofDocumentFormatSuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)

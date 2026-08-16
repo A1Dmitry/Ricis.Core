@@ -189,11 +189,123 @@ public static class RicisAcademicProofExtensions
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(document);
 
+        return conditions.ProveDocument(
+            constraints,
+            claim,
+            profile,
+            RicisProofDocumentFormat.Academic,
+            static text => text,
+            document);
+    }
+
+    /// <summary>
+    /// Derives a unary scalar claim once through the existing RICIS proof engine
+    /// and renders the resulting proof with the selected document template.
+    /// The <paramref name="documentTextTransform"/> callback receives the complete
+    /// template output and returns the exact text appended to <paramref name="document"/>.
+    /// It may add organisation-specific lines or apply a final textual transform,
+    /// but it cannot change the proof expression, proof scope, or RICIS trace.
+    /// </summary>
+    /// <typeparam name="T">The intrinsic or generic-math scalar type of the delayed expression.</typeparam>
+    /// <param name="conditions">Formal unary assumptions.</param>
+    /// <param name="constraints">Formal unary domain restrictions.</param>
+    /// <param name="claim">The delayed scalar expression to derive.</param>
+    /// <param name="profile">Proof metadata, stated premises, and limitations.</param>
+    /// <param name="format">The requested Log, Academic, Lean scaffold, or Json template.</param>
+    /// <param name="documentTextTransform">A non-null final-text transformation callback.</param>
+    /// <param name="document">The buffer receiving the rendered proof document.</param>
+    /// <returns>The independently derived RICIS expression.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the profile, callback, or document is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="format"/> is unknown.</exception>
+    public static Expression<Func<T, T>> ProveDocument<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        Func<string, string> documentTextTransform,
+        StringBuilder document)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(documentTextTransform);
+        ArgumentNullException.ThrowIfNull(document);
+        ValidateDocumentFormat(format);
+
         var derivation = new StringBuilder();
         var derived = conditions.Prove(constraints, claim, derivation);
-        AppendProofDocument(document, profile, derivation, derived);
+        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, format, documentTextTransform);
         return derived;
     }
+
+    /// <summary>
+    /// Derives a unary scalar claim and renders it with the selected proof format
+    /// without applying a caller-specific text transformation.
+    /// </summary>
+    public static Expression<Func<T, T>> ProveDocument<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        StringBuilder document)
+        where T : INumber<T> => conditions.ProveDocument(
+            constraints,
+            claim,
+            profile,
+            format,
+            static text => text,
+            document);
+
+    /// <summary>
+    /// Derives a stated coordinate of a supported two-variable linear system once
+    /// and renders the existing symbolic protocol through the selected template.
+    /// </summary>
+    /// <param name="equations">The two formal linear equations.</param>
+    /// <param name="constraints">The formal binary domain restrictions.</param>
+    /// <param name="claim">The coordinate equality to derive.</param>
+    /// <param name="profile">Proof metadata, stated premises, and limitations.</param>
+    /// <param name="format">The requested output template.</param>
+    /// <param name="documentTextTransform">A non-null final-text transformation callback.</param>
+    /// <param name="document">The buffer receiving the rendered proof document.</param>
+    /// <returns>The independently derived coordinate equality.</returns>
+    public static Expression<Func<double, double, bool>> ProveDocument(
+        this IEnumerable<Expression<Func<double, double, bool>>> equations,
+        IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        Func<string, string> documentTextTransform,
+        StringBuilder document)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(documentTextTransform);
+        ArgumentNullException.ThrowIfNull(document);
+        ValidateDocumentFormat(format);
+
+        var derivation = new StringBuilder();
+        var derived = equations.Prove(constraints, claim, derivation);
+        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, format, documentTextTransform);
+        return derived;
+    }
+
+    /// <summary>
+    /// Derives a supported two-variable linear system and renders it with the
+    /// selected proof format without a caller-specific text transformation.
+    /// </summary>
+    public static Expression<Func<double, double, bool>> ProveDocument(
+        this IEnumerable<Expression<Func<double, double, bool>>> equations,
+        IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        StringBuilder document) => equations.ProveDocument(
+            constraints,
+            claim,
+            profile,
+            format,
+            static text => text,
+            document);
 
     /// <summary>
     /// Derives a stated coordinate of a supported two-variable linear system and
@@ -218,10 +330,13 @@ public static class RicisAcademicProofExtensions
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(document);
 
-        var derivation = new StringBuilder();
-        var derived = equations.Prove(constraints, claim, derivation);
-        AppendProofDocument(document, profile, derivation, derived);
-        return derived;
+        return equations.ProveDocument(
+            constraints,
+            claim,
+            profile,
+            RicisProofDocumentFormat.Academic,
+            static text => text,
+            document);
     }
 
     /// <summary>
@@ -436,6 +551,51 @@ public static class RicisAcademicProofExtensions
             "Границы и непроверенные утверждения",
             profile.Limitations,
             "Внешняя истинность предпосылок, универсальные кванторы и утверждения вне входных expression tree данным документом не доказываются.");
+    }
+
+    private static void AppendFormattedProofDocument(
+        StringBuilder document,
+        RicisProofDocumentProfile profile,
+        string derivation,
+        LambdaExpression derived,
+        RicisProofDocumentFormat format,
+        Func<string, string> documentTextTransform)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(derivation);
+        ArgumentNullException.ThrowIfNull(derived);
+        ArgumentNullException.ThrowIfNull(documentTextTransform);
+        ValidateDocumentFormat(format);
+
+        string rendered;
+        if (format == RicisProofDocumentFormat.Academic)
+        {
+            var academic = new StringBuilder();
+            AppendProofDocument(academic, profile, new StringBuilder(derivation), derived);
+            rendered = academic.ToString();
+        }
+        else
+        {
+            rendered = RicisProofDocumentTemplates.Render(format, profile, derivation, derived);
+        }
+
+        var transformed = documentTextTransform(rendered)
+            ?? throw new InvalidOperationException("Преобразователь proof-документа не может вернуть null.");
+        if (document.Length > 0 && document[^1] != '\n')
+        {
+            document.AppendLine();
+        }
+
+        document.Append(transformed);
+    }
+
+    private static void ValidateDocumentFormat(RicisProofDocumentFormat format)
+    {
+        if (!Enum.IsDefined(format))
+        {
+            throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-документа.");
+        }
     }
 
     private static void AppendNormativeAxiomSteps(
