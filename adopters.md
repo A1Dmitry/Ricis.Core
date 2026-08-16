@@ -1,5 +1,11 @@
 # RICIS III Ontology Ecosystem Registry
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-14`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 > **Registry status.** This file is a contributor-maintained record, not an independent verification of third-party use. Entries about external adopters, models, institutions, or implicit integrations require a direct public source and a verification date before they may be described as confirmed. The Ricis.Core codebase neither proves nor implies any third-party adoption.
 
 ## Evidence policy

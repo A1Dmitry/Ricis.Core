@@ -25,6 +25,26 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 
         if (node.NodeType != ExpressionType.Divide)
         {
+            // Safe ordinary structural algebra. RICIS extension payloads are
+            // deliberately excluded so indexed zero/infinity semantics remain
+            // available to the later O(1) and A phases.
+            if ((node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)) &&
+                left is not RicisExpression && right is not RicisExpression)
+            {
+                if (node.NodeType == ExpressionType.Add)
+                {
+                    if (left.IsZero()) return right;
+                    if (right.IsZero()) return left;
+                }
+
+                if (node.NodeType == ExpressionType.Subtract)
+                {
+                    if (right.IsZero()) return left;
+                    if (left.IsZero()) return Expression.Negate(right);
+                    if (left.AreEqual(right)) return NumericConstants.ZeroOf(left.Type);
+                }
+            }
+
             // Safe structural units. Deliberately do not reduce F·0 here:
             // the later O(1) bridge must retain the parent index 0_F.
             if (node.NodeType == ExpressionType.Multiply &&
@@ -76,6 +96,15 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         if (left.AreEqual(right))
         {
             return NumericConstants.OneOf(left.Type);
+        }
+
+        // SP2 adjacent powers: F^n / F^(n−1) → F. The base and
+        // exponents remain deferred structural expressions; no evaluation of F
+        // or classical domain substitution is performed.
+        var adjacentPowers = TryReduceAdjacentPowers(left, right);
+        if (adjacentPowers is not null)
+        {
+            return Visit(adjacentPowers);
         }
 
         // SP2 factorization: (A²−B²)/(A−B) → A+B. This exact structural
@@ -182,6 +211,52 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             ? Expression.Add(clearedLeft, rightRatio.Left)
             : Expression.Subtract(clearedLeft, rightRatio.Left);
         return Expression.Divide(Expression.Multiply(numerator, commonDenominator), clearedDenominator);
+    }
+
+    /// <summary>
+    /// Applies the RICIS exponent-difference identity a^N/a^(N−X) → a^X
+    /// for structurally identical deferred bases. The exponent subtraction is
+    /// preserved structurally; constant integral exponents remain supported.
+    /// </summary>
+    private static Expression TryReduceAdjacentPowers(Expression numerator, Expression denominator)
+    {
+        if (numerator is not BinaryExpression { NodeType: ExpressionType.Power, Left: var numeratorBase, Right: var numeratorExponent } ||
+            denominator is not BinaryExpression { NodeType: ExpressionType.Power, Left: var denominatorBase, Right: var denominatorExponent } ||
+            !numeratorBase.AreEqual(denominatorBase))
+        {
+            return null;
+        }
+
+        if (denominatorExponent is BinaryExpression
+            {
+                NodeType: ExpressionType.Subtract,
+                Left: var commonExponent,
+                Right: var difference
+            } && commonExponent.AreEqual(numeratorExponent))
+        {
+            return TryGetIntegralConstant(difference, out var differenceValue) && differenceValue == 1
+                ? numeratorBase
+                : Expression.Power(numeratorBase, difference);
+        }
+
+        if (TryGetIntegralConstant(numeratorExponent, out var n) &&
+            TryGetIntegralConstant(denominatorExponent, out var predecessor) &&
+            n >= 1 &&
+            predecessor < n)
+        {
+            var exponentDifference = n - predecessor;
+            if (exponentDifference == 1)
+            {
+                return numeratorBase;
+            }
+
+            var typedDifference = denominatorExponent.Type == typeof(double)
+                ? Expression.Constant((double)exponentDifference)
+                : Expression.Constant(exponentDifference, denominatorExponent.Type);
+            return Expression.Power(numeratorBase, typedDifference);
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -450,6 +525,22 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             return node;
         }
         return Expression.Call(obj, node.Method, args);
+    }
+
+    /// <inheritdoc />
+    protected override Expression VisitUnary(UnaryExpression node)
+    {
+        var operand = Visit(node.Operand);
+        if (node.NodeType == ExpressionType.Negate &&
+            operand is UnaryExpression { NodeType: ExpressionType.Negate } innerNegate &&
+            innerNegate.Operand is not RicisExpression)
+        {
+            return innerNegate.Operand;
+        }
+
+        return operand == node.Operand
+            ? node
+            : Expression.MakeUnary(node.NodeType, operand, node.Type, node.Method);
     }
 
     /// <inheritdoc />

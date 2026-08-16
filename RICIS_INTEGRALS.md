@@ -1,5 +1,11 @@
 # Геометрический Integral RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Нормативная семантика
 
 `Integral` не является классическим интегралом. Он **не** строит сумму Римана, предел, квадратуру, первообразную или численную аппроксимацию. Это программный интерфейс к уже действующему геометрическому правилу A6:

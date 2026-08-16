@@ -1,5 +1,11 @@
 # Ricis.Core Versioning Policy
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-16`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Источник истины
 
 `Ricis.Core` является источником версии для всего solution. Файл `Directory.Build.props` задаёт `RicisCoreVersion`; по умолчанию это `0.1.0`. Из него производятся `Version`, `VersionPrefix`, `AssemblyVersion`, `FileVersion` и `InformationalVersion` всех проектов, которые входят в solution.

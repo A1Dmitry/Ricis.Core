@@ -1,5 +1,11 @@
 # QA: формальная цепочка самоидентификации RICIS ID-01–ID-06
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Итог
 
 Нормативная цепочка, заданная автором, теперь имеет три согласованных представления:

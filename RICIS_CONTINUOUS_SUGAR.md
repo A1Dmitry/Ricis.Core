@@ -1,5 +1,11 @@
 # Непрерывный математический сахар RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение
 
 `RicisContinuousExtensions` добавляет компактные операции для **непрерывных кусочно-заданных выражений**. Пакет не вводит новую аксиому RICIS и не изменяет порядок фаз. Каждая операция принимает отложенные `Expression<Func<T,T>>`, где `T : INumber<T>`, строит новое независимое конечное дерево и только затем передаёт его в обычный конвейер RICIS.

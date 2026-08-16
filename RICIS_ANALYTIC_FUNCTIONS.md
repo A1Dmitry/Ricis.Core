@@ -1,5 +1,11 @@
 # Аналитический математический сахар RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение
 
 `RicisAnalyticExtensions` предоставляет компактный API для построения аналитических функций из отложенных `Expression<Func<double,double>>`. Он не вычисляет входную функцию при создании результата: каждый метод сначала нормализует исходную лямбду обычным RICIS-конвейером, затем создаёт явный `Math.*` узел и снова нормализует итоговое дерево.

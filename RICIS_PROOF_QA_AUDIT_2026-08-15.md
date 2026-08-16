@@ -1,5 +1,11 @@
 # QA-аудит академических доказательств RICIS III
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 > **Исторический snapshot от 15 августа 2026 года.** Указанные в документе commit, состав исправлений и результат `213/213` относятся к моменту аудита. Для актуального состояния используйте GitHub Actions и текущий regression runner; этот документ сохраняет QA-историю и не является live CI-отчётом.
 
 ## Цель и метод

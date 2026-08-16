@@ -1,5 +1,11 @@
 # Ricis.Console
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-14`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 `Ricis.Console` — интерактивный и command-line вход в RICIS III. Он принимает математическую строку, строит ограниченное `Expression<Func<double, double>>`, передаёт его в `RicisPhasePipeline` и выводит исходную и производную RICIS-формы.
 
 > Ввод **не компилируется как C#** и не может вызвать произвольный метод. Используется рекурсивный parser с фиксированной grammar и белым списком функций.

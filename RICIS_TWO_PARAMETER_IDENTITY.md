@@ -1,5 +1,11 @@
 # RICIS Previous-Parameter Identity
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-16`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Нормативная постановка
 
 Рассматривается одна отложенная функция `F`, текущий параметр `x` и строго определённый второй параметр `x−1`. Независимый параметр `y` в постановку не вводится.

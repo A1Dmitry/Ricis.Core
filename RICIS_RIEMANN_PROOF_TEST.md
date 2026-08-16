@@ -1,5 +1,11 @@
 # Proof-тест RICIS: самоидентификация отражённой пары
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Нормативное назначение
 
 Этот тест реализует полную цепочку самоидентификации RICIS для формальной отражённой пары `sigma`, `mirrorSigma`. Он не принимает готовые уравнения `sigma+mirrorSigma=1` и `sigma−mirrorSigma=0` от вызывающего кода: их создаёт `ProveTypeIdentityCriticalLine` как именованные следствия ID-01–ID-04, затем обычный proof-движок выполняет ID-05–ID-06.

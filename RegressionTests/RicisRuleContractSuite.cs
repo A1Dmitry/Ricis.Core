@@ -52,7 +52,128 @@ internal static class RicisRuleContractSuite
         ("RC38: SP2 — abs(x) сокращается как общий множитель", AbsoluteValueFactorCancellation),
         ("RC39: ID — x%2/(x%2) даёт 1", ModuloIdentity),
         ("RC40: ID — условная отсечка F/F даёт 1", ConditionalCutoffIdentity),
+        ("RC41: SP2 — F^n/F^(n−1) даёт F структурно", AdjacentPowerRatioCancellation),
+        ("RC42: SP2 — a^N/a^(N−X) даёт a^X структурно", ExponentDifferenceCancellation),
+        ("RC43: ID — аналитические F/F сокращаются для Log/Sqrt/Exp/Trig", AnalyticSelfRatios),
+        ("RC44: ALG — F−0 даёт F", SubtractZero),
+        ("RC45: ALG — 0−F даёт −F", ZeroSubtract),
+        ("RC46: ALG — F−F даёт обычный ноль", SelfSubtract),
+        ("RC47: ALG — −(−F) даёт F", DoubleNegation),
+        ("RC48: CONTROL — a^N/a^(N−X) проходит полный pipeline", PowerDifferenceThroughPipeline),
+        ("RC49: CONTROL — новые ALG rules не меняют 0_F payload", IndexedPayloadIsProtected),
     ];
+
+    private static void AdjacentPowerRatioCancellation()
+    {
+        var x = X();
+        var f = Expression.Add(x, C(1));
+        var numerator = Expression.Power(f, C(3));
+        var denominator = Expression.Power(f, C(2));
+        var source = Expression.Divide(numerator, denominator);
+        var result = new AlgebraicReductionVisitor().Visit(source);
+
+        AssertEqual(result, f,
+            "SP2 должен сократить F^3/F^2 до того же deferred F без вычисления основания.");
+        Require(result is BinaryExpression { NodeType: ExpressionType.Add },
+            "Результат должен сохранить структурное основание F=x+1.");
+    }
+
+    private static void ExponentDifferenceCancellation()
+    {
+        var aParameter = X();
+        var nParameter = Expression.Parameter(typeof(double), "N");
+        var xParameter = Expression.Parameter(typeof(double), "X");
+        var baseExpression = Expression.Add(aParameter, C(1));
+        var numerator = Expression.Power(baseExpression, nParameter);
+        var denominator = Expression.Power(
+            baseExpression,
+            Expression.Subtract(nParameter, xParameter));
+        var source = Expression.Divide(numerator, denominator);
+        var result = new AlgebraicReductionVisitor().Visit(source);
+        var expected = Expression.Power(baseExpression, xParameter);
+
+        AssertEqual(result, expected,
+            "SP2 должен структурно вывести a^X из a^N/a^(N−X), не вычисляя a, N или X.");
+    }
+
+    private static void AnalyticSelfRatios()
+    {
+        var x = X();
+        var baseExpression = Expression.Add(x, C(1));
+        var methodNames = new[]
+        {
+            nameof(Math.Sin), nameof(Math.Cos), nameof(Math.Tan),
+            nameof(Math.Sinh), nameof(Math.Cosh), nameof(Math.Tanh),
+            nameof(Math.Exp), nameof(Math.Log), nameof(Math.Log10), nameof(Math.Sqrt),
+        };
+
+        foreach (var methodName in methodNames)
+        {
+            var method = typeof(Math).GetMethod(methodName, [typeof(double)])
+                ?? throw new InvalidOperationException($"Не найден Math.{methodName}(double).");
+            var f = Expression.Call(method, baseExpression);
+            var result = new IdentityReductionVisitor().Visit(Expression.Divide(f, f));
+            AssertEqual(result, C(1), $"F/F для Math.{methodName} должен дать 1 по ID.");
+        }
+    }
+
+    private static void SubtractZero()
+    {
+        var x = X();
+        var result = new AlgebraicReductionVisitor().Visit(Expression.Subtract(x, C(0)));
+        AssertEqual(result, x, "Структурная алгебра должна сократить F−0 до F.");
+    }
+
+    private static void ZeroSubtract()
+    {
+        var x = X();
+        var result = new AlgebraicReductionVisitor().Visit(Expression.Subtract(C(0), x));
+        AssertEqual(result, Expression.Negate(x), "Структурная алгебра должна преобразовать 0−F в −F.");
+    }
+
+    private static void SelfSubtract()
+    {
+        var x = X();
+        var result = new AlgebraicReductionVisitor().Visit(Expression.Subtract(x, x));
+        AssertEqual(result, C(0), "Структурная алгебра должна преобразовать F−F в обычный ноль.");
+    }
+
+    private static void DoubleNegation()
+    {
+        var x = X();
+        var result = new AlgebraicReductionVisitor().Visit(Expression.Negate(Expression.Negate(x)));
+        AssertEqual(result, x, "Структурная алгебра должна сократить −(−F) до F.");
+    }
+
+    private static void PowerDifferenceThroughPipeline()
+    {
+        var aParameter = X();
+        var nParameter = Expression.Parameter(typeof(double), "N");
+        var xParameter = Expression.Parameter(typeof(double), "X");
+        var baseExpression = Expression.Add(aParameter, C(1));
+        var source = Expression.Divide(
+            Expression.Power(baseExpression, nParameter),
+            Expression.Power(baseExpression, Expression.Subtract(nParameter, xParameter)));
+        var lambda = Expression.Lambda<Func<double, double, double, double>>(
+            source, aParameter, nParameter, xParameter);
+        var result = (LambdaExpression)RicisPhasePipeline.Simplify(lambda);
+        var expected = Expression.Power(baseExpression, xParameter);
+
+        AssertEqual(result.Body, expected,
+            "Общий exponent-difference rule должен работать через полный RICIS pipeline.");
+    }
+
+    private static void IndexedPayloadIsProtected()
+    {
+        var x = X();
+        var payload = Expression.Add(x, C(1));
+        var indexedZero = new ZeroInfinityExpression(payload, []);
+        var source = Expression.Subtract(indexedZero, indexedZero);
+        var result = new AlgebraicReductionVisitor().Visit(source);
+
+        Require(result is BinaryExpression { NodeType: ExpressionType.Subtract },
+            "Обычная F−F оптимизация не должна схлопывать indexed 0_F payload.");
+    }
 
     private static void IdentityHasAbsolutePriority()
     {

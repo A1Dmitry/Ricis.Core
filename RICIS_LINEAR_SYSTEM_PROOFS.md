@@ -1,5 +1,11 @@
 # Доказательство системы линейных уравнений RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение
 
 Двухпеременный overload `Prove` принимает систему из двух отложенных `Expression<Func<double,double,bool>>`, ограничения области, тезис о координате и `StringBuilder`. Он строит **символический вывод** системы, не компилируя и не исполняя входные уравнения либо ограничения.

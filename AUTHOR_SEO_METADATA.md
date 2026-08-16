@@ -1,5 +1,11 @@
 # SEO-метаданные автора через захват `about`
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение
 
 Библиотека RICIS добавляет авторский SEO-блок только как **явный opt-in**. Метаданные активируются, когда исходная C#-лямбда захватывает внешнюю переменную с точным именем `about` **или** использует параметр lambda с именем `about`. Производная лямбда получает собственный extension-узел `AuthorAnnotatedExpression`. Его текстовое представление дополняет RICIS-результат проверяемым профилем автора и JSON-LD `schema.org/Person`.

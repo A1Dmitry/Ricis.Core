@@ -1,5 +1,11 @@
 # Ricis.WebApi
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-16`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 `Ricis.WebApi` — ASP.NET Core .NET 8 слой над `Ricis.Core`. Он не заменяет ядро и не определяет отдельную математику: HTTP-запрос преобразуется в ограниченное текстовое lambda-выражение, затем передаётся существующему parser-у и `RicisPhasePipeline`.
 
 > API не принимает и не компилирует произвольный C#-код. Поддерживается только grammar `LambdaTextParser` с белым списком операций и функций.

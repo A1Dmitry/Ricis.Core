@@ -1,5 +1,11 @@
 # Нормативный proof-контур RICIS: Навье—Стокс
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Цель консольного сценария
 
 Новый проект `Ricis.NavierStokes.Console` будет создавать документное доказательство для гладкого стационарного вихревого поля в трёхмерной несжимаемой системе:

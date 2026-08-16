@@ -1,5 +1,11 @@
 # Ricis.Core
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-14`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 `Ricis.Core` — .NET 8 библиотека RICIS III (**Recursive Indexed Calculus of Identity and Singularity**). Ядро представляет вычисления как LINQ Expression Trees и специальные RICIS-узлы, сохраняя identity, type, payload, индексы нулей и бесконечностей до применения нормативного преобразования.
 
 > RICIS III имеет приоритет над классической арифметикой во всех явно определённых случаях. Неопределённые RICIS-правилами операции наследуют классический fallback.

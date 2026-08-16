@@ -1,5 +1,11 @@
 # RICIS Core integration test report
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-16`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 **Дата:** 2026-08-16  
 **Ветка:** `main`  
 **Объём:** solution build, all executable projects, regression suite, console parser/system scenarios, Web API smoke/security checks and LeanDoc compilation.

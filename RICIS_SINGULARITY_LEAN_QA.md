@@ -1,5 +1,11 @@
 # QA: сложная RICIS singularity → A6 LeanDoc
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-16`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Цель
 
 Тест проверяет сложную двухпеременную singularity, для которой классическая double-оценка на certified boundary не даёт корректного конечного результата, тогда как RICIS сохраняет deferred payload и применяет геометрический A6 bridge.

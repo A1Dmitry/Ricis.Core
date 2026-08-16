@@ -1,5 +1,11 @@
 # Сложный процент как expression-операция RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Формула
 
 `CompoundInterest` строит отложенное expression tree для формулы:

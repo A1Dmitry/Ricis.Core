@@ -1,5 +1,11 @@
 # RICIS proof-сценарий Навье—Стокса
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение и запуск
 
 `Ricis.NavierStokes.Console` — самостоятельный .NET 8-проект, который строит и документирует символический proof-сценарий для выбранного гладкого поля. Запуск выполняется следующей командой:

@@ -1,5 +1,11 @@
 # Комплексные отложенные функции RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Модель
 
 `RicisComplexFunction<T>` представляет комплексную функцию как пару независимых отложенных скалярных лямбд:

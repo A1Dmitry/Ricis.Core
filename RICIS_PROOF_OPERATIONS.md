@@ -1,5 +1,11 @@
 # Доказательные expression-операции RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Назначение
 
 Этот слой формирует типовые шаги доказательства как **новые независимые expression tree**. Он не вызывает исходные делегаты во время построения, не использует численные подстановки, не вводит пределы и не меняет аксиомы RICIS. После построения каждое дерево проходит обычный конвейер: L1 → SP2 → O(1) → A1/A4 → A5/A6/A7.

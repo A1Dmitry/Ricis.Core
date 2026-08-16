@@ -258,8 +258,10 @@ public static class RicisAcademicProofExtensions
             document);
 
     /// <summary>
-    /// Derives a stated coordinate of a supported two-variable linear system once
-    /// and renders the existing symbolic protocol through the selected template.
+    /// Specialized overload: derives a stated coordinate of a supported two-variable
+    /// linear system once and renders the existing symbolic protocol through the
+    /// selected template. This overload does not restrict the universal generic
+    /// RICIS proof/document overloads for deferred F expressions.
     /// </summary>
     /// <param name="equations">The two formal linear equations.</param>
     /// <param name="constraints">The formal binary domain restrictions.</param>
@@ -385,14 +387,14 @@ public static class RicisAcademicProofExtensions
     }
 
     /// <summary>
-    /// Derives a stated coordinate of a two-variable linear system through
-    /// symbolic elimination and writes an academic proof protocol to
+    /// Specialized overload: derives a stated coordinate of a two-variable linear
+    /// system through symbolic elimination and writes an academic proof protocol to
     /// <paramref name="proof"/>. The supported system contains exactly two
     /// independent equations in the forms <c>x+y=c</c>, <c>x-y=c</c>,
     /// <c>y+x=c</c>, or <c>y-x=c</c>, together with optional two-variable
     /// boolean domain constraints. No equation or constraint is compiled.
     /// </summary>
-    /// <param name="equations">The two formal equations of the linear system.</param>
+    /// <param name="equations">The two formal equations of this specialized linear-system overload; generic RICIS proof APIs accept broader deferred F expressions.</param>
     /// <param name="constraints">Optional domain constraints over the same pair of variables.</param>
     /// <param name="claim">A coordinate claim of the form <c>x=c</c> or <c>y=c</c>.</param>
     /// <param name="proof">The output buffer for the academic derivation.</param>
@@ -413,7 +415,7 @@ public static class RicisAcademicProofExtensions
         var constraintList = constraints.ToList();
         if (equationList.Count != 2)
         {
-            throw new ArgumentException("Система должна содержать ровно два линейных уравнения.", nameof(equations));
+            throw new ArgumentException("Этот специализированный overload должен получить ровно два линейных уравнения.", nameof(equations));
         }
 
         ValidateBinaryHypotheses(equationList, nameof(equations));

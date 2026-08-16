@@ -1,5 +1,11 @@
 # Нормативный аудит каталога примеров RICIS III
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-14`
+> **Last modified:** `2026-08-16`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 > **Исторический snapshot исходного stress-каталога.** Этот аудит относится к 50 входам `L0–L50` исходного набора. Текущий `Ricis.Console/ExampleCatalog.cs` дополнительно содержит parser-примеры новых функций; для актуального числа и состава `--all` используйте исходный каталог и console README.
 
 **Объект аудита:** 50 входных выражений `L0–L50` из `Ricis.Console/ExampleCatalog.cs`. Код `L4` отсутствует в исходном наборе, поэтому каталог содержит именно 50, а не 51 выражение.

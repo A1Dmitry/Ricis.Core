@@ -1,5 +1,11 @@
 # Формальная производная RICIS
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 ## Принцип
 
 `DxDt()` строит производную как **символьную перестройку expression tree**. Он не вычисляет классический предел, не применяет правило Лопиталя, не использует численную разность и не аппроксимирует наклон. Если в построенном дереве возникает сингулярность, её обрабатывает существующий конвейер RICIS: L1, SP2, O(1), A1, A4–A7.

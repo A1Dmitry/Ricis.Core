@@ -1,5 +1,11 @@
 # Lean-проверка цепочки ID-01–ID-06
 
+> **Document version:** `0.1.0` (provisional baseline)
+> **Created:** `2026-08-15`
+> **Last modified:** `2026-08-15`
+> **Versioning note:** increment the document version when the normative content changes.
+
+
 `RicisIdentity/TypeIdentity.lean` — независимая Lean-модель нормативной цепочки самоидентификации, отражения и точной рациональной координаты.
 
 ## Формальный контракт
