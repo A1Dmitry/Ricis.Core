@@ -1,0 +1,179 @@
+﻿@page "/"
+@using Ricis.WebAssembly.Models
+@using Ricis.WebAssembly.Services
+@inject RicisApiClient RicisApi
+
+<PageTitle>RICIS III Workspace</PageTitle>
+
+<section class="ricis-hero">
+    <p class="eyebrow">RICIS III · Blazor WebAssembly</p>
+    <h1>Структурная обработка выражений</h1>
+    <p class="hero-copy">
+        Браузер передаёт только текст в ограниченную grammar существующего RICIS Web API.
+        Пользовательский ввод не исполняется как C# или JavaScript.
+    </p>
+</section>
+
+<section class="workspace" aria-label="RICIS workspace">
+    <div class="workspace-card">
+        <div class="operation-picker" role="group" aria-label="Операция RICIS">
+            @foreach (var item in Operations)
+            {
+                <button type="button"
+                        class="operation-button @(operation == item.Operation ? "selected" : string.Empty)"
+                        @onclick="() => SelectOperation(item.Operation)">
+                    <strong>@item.Title</strong>
+                    <span>@item.Description</span>
+                </button>
+            }
+        </div>
+
+        <label for="ricis-expression">RICIS expression</label>
+        <textarea id="ricis-expression"
+                  class="expression-input"
+                  @bind="expression"
+                  maxlength="@RicisApiClient.MaxExpressionLength"
+                  rows="7"
+                  spellcheck="false"
+                  placeholder="x => ((x ^ 2) - 25) / (x - 5)"></textarea>
+        <div class="input-meta">
+            <span>@expression.Length / @RicisApiClient.MaxExpressionLength</span>
+            <span>@OperationHint</span>
+        </div>
+
+        <div class="actions">
+            <button class="run-button" type="button" disabled="@isBusy" @onclick="ProcessAsync">
+                @(isBusy ? "Обработка…" : "Выполнить RICIS")
+            </button>
+            <button class="secondary-button" type="button" disabled="@isBusy" @onclick="UseExample">Загрузить пример</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="message error" role="alert">@error</div>
+        }
+        else if (!string.IsNullOrWhiteSpace(status))
+        {
+            <div class="message success" role="status">@status</div>
+        }
+    </div>
+
+    <aside class="guidance-card">
+        <h2>Поддерживаемый ввод</h2>
+        <p>Одиночное выражение: <code>x =&gt; sin(x) / x</code>.</p>
+        <p>Система: разделите непустые lambda выражения точкой с запятой.</p>
+        <pre>x => x + 1;
+x => derivative(x ^ 3);
+x => integral(x, 5)</pre>
+        <p class="small">Функции и операторы проверяются server-side allowlist parser-ом.</p>
+    </aside>
+</section>
+
+@if (result is not null)
+{
+    <section class="result-card" aria-live="polite">
+        <div class="result-heading">
+            <p class="eyebrow">Результат</p>
+            <h2>@OperationTitle</h2>
+        </div>
+        <dl class="result-grid">
+            <div>
+                <dt>Исходный ввод</dt>
+                <dd><code>@result.Source</code></dd>
+            </div>
+            <div>
+                <dt>Распознанная форма</dt>
+                <dd><code>@result.Parsed</code></dd>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(result.System))
+            {
+                <div>
+                    <dt>Структурная система</dt>
+                    <dd><code>@result.System</code></dd>
+                </div>
+            }
+            <div>
+                <dt>Производная форма RICIS</dt>
+                <dd>
+                    @foreach (var line in result.RicisExpressions)
+                    {
+                        <code>@line</code>
+                    }
+                </dd>
+            </div>
+        </dl>
+    </section>
+}
+
+@code {
+    private static readonly IReadOnlyList<OperationOption> Operations =
+    [
+        new(RicisOperation.Simplify, "Упростить", "Применить RICIS phase pipeline."),
+        new(RicisOperation.Derivative, "Производная", "Получить символическую производную."),
+        new(RicisOperation.System, "Система", "Обработать строки, разделённые ;.")
+    ];
+
+    private RicisOperation operation = RicisOperation.Simplify;
+    private string expression = "x => ((x ^ 2) - 25) / (x - 5)";
+    private RicisWorkspaceResult? result;
+    private string? error;
+    private string? status;
+    private bool isBusy;
+
+    private string OperationTitle => Operations.Single(item => item.Operation == operation).Title;
+
+    private string OperationHint => operation == RicisOperation.System
+        ? "Система: lambda; lambda; lambda"
+        : "Одна lambda или тело выражения";
+
+    private void SelectOperation(RicisOperation selected)
+    {
+        operation = selected;
+        result = null;
+        error = null;
+        status = null;
+    }
+
+    private void UseExample()
+    {
+        expression = operation switch
+        {
+            RicisOperation.Simplify => "x => ((x ^ 2) - 25) / (x - 5)",
+            RicisOperation.Derivative => "x => derivative(x ^ 3)",
+            RicisOperation.System => "x => x + 1; x => derivative(x ^ 3); x => integral(x, 5)",
+            _ => expression
+        };
+
+        result = null;
+        error = null;
+        status = "Пример загружен.";
+    }
+
+    private async Task ProcessAsync()
+    {
+        isBusy = true;
+        error = null;
+        status = null;
+        result = null;
+
+        try
+        {
+            result = await RicisApi.ProcessAsync(operation, expression);
+            status = "RICIS Web API успешно обработал выражение.";
+        }
+        catch (RicisApiException exception)
+        {
+            error = exception.Message;
+        }
+        catch (HttpRequestException)
+        {
+            error = "RICIS Web API недоступен. Запустите Ricis.WebApi на настроенном URL.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private sealed record OperationOption(RicisOperation Operation, string Title, string Description);
+}

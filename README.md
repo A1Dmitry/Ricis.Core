@@ -11,6 +11,7 @@
 | `Ricis.Core` | NuGet-библиотека: expression types, phases, bridges, calculus, vectors, matrices и proof API. |
 | `Ricis.Console` | Interactive/CLI parser ограниченной математической grammar. |
 | `Ricis.WebApi` | ASP.NET Core HTTP API поверх parser-а и RICIS pipeline. |
+| `Ricis.WebAssembly` | Standalone Blazor WebAssembly UI, использующий typed client существующего Web API. |
 | `Ricis.NavierStokes.Console` | Символьный proof scenario выбранного поля Навье—Стокса. |
 | `RegressionTests` | Изолированные regression contracts RICIS. |
 
@@ -42,8 +43,13 @@ lake env lean /tmp/ricis_generated.lean
 Запустить Web API:
 
 ```bash
-dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:5080
+dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:5044
+
+# Во втором терминале: Blazor WebAssembly UI
+dotnet run --project Ricis.WebAssembly/Ricis.WebAssembly.csproj --urls http://localhost:5066
 ```
+
+WebAssembly client обращается к API через ограниченную CORS policy: development origin `http://localhost:5066` явно задан в API configuration. Для publish замените его на конкретный HTTPS origin deployed client.
 
 ## Ключевая документация
 
@@ -53,6 +59,7 @@ dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:50
 | [`RICIS_RULE_COVERAGE.md`](RICIS_RULE_COVERAGE.md) | Нормативная матрица rule-to-regression coverage. |
 | [`Ricis.Console/README.md`](Ricis.Console/README.md) | CLI, parser grammar, системы через `;` и console demos. |
 | [`RICIS_WEBAPI.md`](RICIS_WEBAPI.md) | HTTP endpoints, request examples и security boundaries Web API. |
+| [`Ricis.WebAssembly/README.md`](Ricis.WebAssembly/README.md) | Blazor WebAssembly UI, API configuration, CORS boundary и local run. |
 | [`AUTHOR_SEO_METADATA.md`](AUTHOR_SEO_METADATA.md) | Opt-in author metadata через closure capture или parameter `about`. |
 | [`RICIS_ACADEMIC_PROOFS.md`](RICIS_ACADEMIC_PROOFS.md) | `Prove`, `ProveDocument`, traces и proof boundaries. |
 | [`RICIS_DERIVATIVES.md`](RICIS_DERIVATIVES.md) | Символьная производная без пределов и Лопиталя. |

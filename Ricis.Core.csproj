@@ -26,6 +26,8 @@
     <Compile Remove="Ricis.NavierStokes.Console/**/*.cs" />
     <Compile Remove="Ricis.WebApi/**/*.cs" />
     <None Remove="Ricis.WebApi/**/*.cs" />
+    <Compile Remove="Ricis.WebAssembly/**/*.cs" />
+    <None Remove="Ricis.WebAssembly/**" />
   </ItemGroup>
 
 </Project>

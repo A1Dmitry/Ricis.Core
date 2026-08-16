@@ -9,10 +9,10 @@
 Из корня solution:
 
 ```bash
-dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:5080
+dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:5044
 ```
 
-В Development environment Swagger UI доступен по адресу `http://localhost:5080/swagger`. Endpoint `GET /health` всегда возвращает состояние сервиса.
+В Development environment Swagger UI доступен по адресу `http://localhost:5044/swagger`. Endpoint `GET /health` всегда возвращает состояние сервиса.
 
 ## Endpoints
 
@@ -61,12 +61,14 @@ about => about + 1
 | Ошибки parser-а | HTTP 400 с контролируемым сообщением и позицией. |
 | Неожиданные ошибки | HTTP 400 с общим сообщением без передачи внутреннего stack trace. |
 | Swagger | Включён только для Development environment. |
+| CORS | Именованная policy `RicisWebAssembly` разрешает только origins из `Cors:AllowedOrigins`; default development origin — `http://localhost:5066`. |
+| Credentials | CORS policy не разрешает credentials и не использует `AllowAnyOrigin`. |
 
-Production deployment дополнительно требует HTTPS, rate limiting, authentication/authorization при необходимости, reverse proxy/WAF и внешних CPU/memory limits контейнера или hosting platform.
+Standalone Blazor client описан в [`Ricis.WebAssembly/README.md`](Ricis.WebAssembly/README.md). Для production deployment замените development origin на точный HTTPS origin развернутого WebAssembly приложения. Production также требует HTTPS, rate limiting, authentication/authorization при необходимости, reverse proxy/WAF и внешних CPU/memory limits контейнера или hosting platform.
 
 ## Solution и CI
 
-`Ricis.WebApi` является отдельным проектом в `Ricis.Core.sln`, ссылается на `Ricis.Core` и использует существующий public parser из `Ricis.Console`. Workflow [`.github/workflows/build-and-test.yml`](.github/workflows/build-and-test.yml) выполняет restore и Release build Web API при каждом push, а затем запускает общий regression suite.
+`Ricis.WebApi` является отдельным проектом в `Ricis.Core.sln`, ссылается на `Ricis.Core` и использует существующий public parser из `Ricis.Console`. `Ricis.WebAssembly` является отдельным standalone Blazor project, использующим typed HTTP client, а не прямую ссылку на ядро. Workflow [`.github/workflows/build-and-test.yml`](.github/workflows/build-and-test.yml) выполняет restore и Release build API, WebAssembly и остальных проектов при каждом push, а затем запускает общий regression suite.
 
 ## NuGet и release tags
 

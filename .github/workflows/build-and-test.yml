@@ -39,6 +39,7 @@ jobs:
           dotnet restore Ricis.Console/Ricis.Console.csproj
           dotnet restore Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj
           dotnet restore Ricis.WebApi/Ricis.WebApi.csproj
+          dotnet restore Ricis.WebAssembly/Ricis.WebAssembly.csproj
 
       - name: Build core library
         run: dotnet build Ricis.Core.csproj --configuration Release --no-restore
@@ -51,6 +52,7 @@ jobs:
           dotnet build Ricis.Console/Ricis.Console.csproj --configuration Release --no-restore
           dotnet build Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj --configuration Release --no-restore
           dotnet build Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-restore
+          dotnet build Ricis.WebAssembly/Ricis.WebAssembly.csproj --configuration Release --no-restore
 
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build

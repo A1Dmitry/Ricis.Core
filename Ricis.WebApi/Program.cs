@@ -6,8 +6,11 @@ using Ricis.Core.Phases;
 const int MaxRequestBodyBytes = 64 * 1024;
 const int MaxExpressionLength = 4096;
 const int MaxSystemExpressions = 64;
+const string WebAssemblyCorsPolicy = "RicisWebAssembly";
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:5066"];
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = MaxRequestBodyBytes;
@@ -15,8 +18,18 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(WebAssemblyCorsPolicy, policy =>
+    {
+        policy.WithOrigins(allowedCorsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
+app.UseCors(WebAssemblyCorsPolicy);
 
 if (app.Environment.IsDevelopment())
 {
