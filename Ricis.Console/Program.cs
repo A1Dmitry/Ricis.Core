@@ -74,6 +74,11 @@ internal static class Program
             return RunLeanDocumentDemo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--lean-a6-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunLeanA6Demo();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunContinuousSugarDemo();
@@ -340,6 +345,15 @@ internal static class Program
         var document = RicisLeanTemplate.Render(
             new RicisLeanStructuredData(),
             new RicisLeanRequestedRows([RicisLeanProofRow.Id06ReflectedExactHalf]));
+        Console.Write(document.Source);
+        return 0;
+    }
+
+    private static int RunLeanA6Demo()
+    {
+        var document = RicisLeanTemplate.Render(
+            new RicisLeanStructuredData(),
+            new RicisLeanRequestedRows([RicisLeanProofRow.A6IndexedZeroInfinityBridge]));
         Console.Write(document.Source);
         return 0;
     }

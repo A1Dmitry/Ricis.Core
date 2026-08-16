@@ -31,6 +31,11 @@ public static class RicisLeanTemplate
         var builder = new StringBuilder();
         AppendHeader(builder, data);
         AppendAxioms(builder, data);
+        if (requestedRows.Rows.Contains(RicisLeanProofRow.A6IndexedZeroInfinityBridge))
+        {
+            AppendA6Model(builder, data);
+        }
+
         foreach (var row in requestedRows.Rows)
         {
             AppendRow(builder, data, row);
@@ -101,6 +106,9 @@ public static class RicisLeanTemplate
                 return;
             case RicisLeanProofRow.CollapsedTypeGuard:
                 AppendCollapsedGuard(builder);
+                return;
+            case RicisLeanProofRow.A6IndexedZeroInfinityBridge:
+                AppendA6Theorem(builder, data);
                 return;
             default:
                 throw new ArgumentOutOfRangeException(nameof(row), row, "Неизвестная Lean proof row.");
@@ -173,6 +181,35 @@ public static class RicisLeanTemplate
         builder.Append("  rw [A.reflectionCoordinate ").Append(data.SigmaName).AppendLine("]");
         builder.Append("  have h := id06_exact_half A ").Append(data.SigmaName).AppendLine();
         builder.AppendLine("  linarith");
+        builder.AppendLine();
+    }
+
+    private static void AppendA6Model(StringBuilder builder, RicisLeanStructuredData data)
+    {
+        builder.AppendLine("/-- Structured A6 payloads: the determinant zero and inverse infinity payloads. -/");
+        builder.AppendLine("structure A6Payloads where");
+        builder.Append("  ").Append(data.ZeroPayloadName).AppendLine(" : ℚ → ℚ");
+        builder.Append("  ").Append(data.InfinityPayloadName).AppendLine(" : ℚ → ℚ");
+        builder.AppendLine();
+        builder.AppendLine("def a6BridgeAt (A : A6Payloads) (key : ℚ) : ℚ :=");
+        builder.Append("  A.").Append(data.ZeroPayloadName).Append(" key * A.").Append(data.InfinityPayloadName).AppendLine(" key");
+        builder.AppendLine();
+    }
+
+    private static void AppendA6Theorem(StringBuilder builder, RicisLeanStructuredData data)
+    {
+        builder.AppendLine("/-- A6: 0_F × ∞_G is represented by the exact payload product F·G at a certified key. -/");
+        builder.AppendLine("theorem a6_indexed_zero_infinity_bridge (A : A6Payloads) (key : ℚ) :");
+        builder.Append("    a6BridgeAt A key = A.").Append(data.ZeroPayloadName).Append(" key * A.")
+            .Append(data.InfinityPayloadName).AppendLine(" key := by");
+        builder.AppendLine("  rfl");
+        builder.AppendLine();
+        builder.AppendLine("/-- A6 payload products retain structural commutativity without numeric evaluation. -/");
+        builder.AppendLine("theorem a6_payload_product_commutative (A : A6Payloads) (key : ℚ) :");
+        builder.Append("    a6BridgeAt A key = A.").Append(data.InfinityPayloadName).Append(" key * A.")
+            .Append(data.ZeroPayloadName).AppendLine(" key := by");
+        builder.AppendLine("  unfold a6BridgeAt");
+        builder.AppendLine("  ring");
         builder.AppendLine();
     }
 

@@ -25,7 +25,7 @@ string leanSource = leanDoc.Source;
 
 ## StructuredData
 
-`RicisLeanStructuredData` описывает имена, необходимые canonical ID-01–ID-06 bridge:
+`RicisLeanStructuredData` описывает имена, необходимые canonical ID-01–ID-06 bridge и A6 payload bridge:
 
 | Поле | Назначение |
 |---|---|
@@ -35,6 +35,8 @@ string leanSource = leanDoc.Source;
 | `ReflectName` | Отражение `ℚ → ℚ`. |
 | `SigmaName` | Основная координата. |
 | `MirrorSigmaName` | Имя reflected coordinate в структурном описании. |
+| `ZeroPayloadName` | Поле payload индексированного нуля для A6. |
+| `InfinityPayloadName` | Поле payload индексированной бесконечности для A6. |
 
 Все значения проверяются как Lean identifiers. Строка с переводом строки, `axiom`, `theorem`, `by` или другим injected statement не может попасть в generated source через этот API.
 
@@ -64,6 +66,8 @@ Rows являются структурными запросами, а не ст�
 - ID-06 exact `sigma = 1 / 2`;
 - reflected exact-half theorem;
 - negative collapsed-type guard;
+- A6 `zeroPayload · infinityPayload` bridge at a certified key;
+- commutative A6 payload product theorem;
 - no `sorry` and no `sorryAx` in generated source.
 
 `RicisLeanTemplate` генерирует theorem source по этому known structured shape. Он не утверждает, что любой произвольный C# expression tree, parser input, vector system или Навье—Стокс-сценарий автоматически переводим в Lean.
@@ -95,6 +99,11 @@ dotnet run --project Ricis.Console/Ricis.Console.csproj \
 
 cd FormalVerification/Lean
 lake env lean /tmp/ricis_generated.lean
+
+dotnet run --project Ricis.Console/Ricis.Console.csproj \
+  --configuration Release -- --lean-a6-demo \
+  > /tmp/ricis_a6_generated.lean
+lake env lean /tmp/ricis_a6_generated.lean
 ```
 
 Успешный процесс должен завершиться без Lean errors. Дополнительно generated source проверяется на отсутствие `sorry` и `sorryAx`.

@@ -29,6 +29,9 @@ public enum RicisLeanProofRow
 
     /// <summary>Emits the negative ID-03 collapsed-type guard theorem.</summary>
     CollapsedTypeGuard,
+
+    /// <summary>Emits the A6 indexed-zero times indexed-infinity geometric bridge theorem.</summary>
+    A6IndexedZeroInfinityBridge,
 }
 
 /// <summary>
@@ -47,13 +50,17 @@ public sealed class RicisLeanStructuredData
     /// <param name="reflectName">The reflection field name.</param>
     /// <param name="sigmaName">The primary coordinate name.</param>
     /// <param name="mirrorSigmaName">The reflected coordinate name used in comments and bridge rows.</param>
+    /// <param name="zeroPayloadName">The indexed-zero payload field name for A6.</param>
+    /// <param name="infinityPayloadName">The indexed-infinity payload field name for A6.</param>
     public RicisLeanStructuredData(
         string namespaceName = "RicisIdentity",
         string typeTagName = "TypeTag",
         string typeOfName = "typeOf",
         string reflectName = "reflect",
         string sigmaName = "sigma",
-        string mirrorSigmaName = "mirrorSigma")
+        string mirrorSigmaName = "mirrorSigma",
+        string zeroPayloadName = "zeroPayload",
+        string infinityPayloadName = "infinityPayload")
     {
         NamespaceName = RequireIdentifier(namespaceName, nameof(namespaceName));
         TypeTagName = RequireIdentifier(typeTagName, nameof(typeTagName));
@@ -61,6 +68,8 @@ public sealed class RicisLeanStructuredData
         ReflectName = RequireIdentifier(reflectName, nameof(reflectName));
         SigmaName = RequireIdentifier(sigmaName, nameof(sigmaName));
         MirrorSigmaName = RequireIdentifier(mirrorSigmaName, nameof(mirrorSigmaName));
+        ZeroPayloadName = RequireIdentifier(zeroPayloadName, nameof(zeroPayloadName));
+        InfinityPayloadName = RequireIdentifier(infinityPayloadName, nameof(infinityPayloadName));
     }
 
     /// <summary>Gets the generated Lean namespace.</summary>
@@ -80,6 +89,12 @@ public sealed class RicisLeanStructuredData
 
     /// <summary>Gets the generated reflected-coordinate name.</summary>
     public string MirrorSigmaName { get; }
+
+    /// <summary>Gets the generated indexed-zero payload field name.</summary>
+    public string ZeroPayloadName { get; }
+
+    /// <summary>Gets the generated indexed-infinity payload field name.</summary>
+    public string InfinityPayloadName { get; }
 
     private static string RequireIdentifier(string value, string parameterName)
     {

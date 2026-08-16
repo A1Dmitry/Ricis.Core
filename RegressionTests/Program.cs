@@ -60,6 +60,7 @@ tests.AddRange(RicisVectorVisitorSuite.Tests);
 tests.AddRange(RicisTypeConsistencySuite.Tests);
     tests.AddRange(RicisCheckedProofSuite.Tests);
     tests.AddRange(RicisProofDocumentFormatSuite.Tests);
+    tests.AddRange(RicisLeanSingularitySuite.Tests);
 
 var failures = new List<string>();
 foreach (var (name, body) in tests)

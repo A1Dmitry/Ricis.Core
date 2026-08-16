@@ -64,9 +64,11 @@ jobs:
       - name: Generate and compile LeanDoc
         run: |
           dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-doc-demo > /tmp/ricis_generated.lean
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-a6-demo > /tmp/ricis_a6_generated.lean
           cd FormalVerification/Lean
           lake env lean /tmp/ricis_generated.lean
-          if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean; then
+          lake env lean /tmp/ricis_a6_generated.lean
+          if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean /tmp/ricis_a6_generated.lean; then
             echo "Generated LeanDoc contains forbidden sorry token."
             exit 1
           fi
