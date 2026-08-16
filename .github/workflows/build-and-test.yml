@@ -68,6 +68,25 @@ jobs:
           done
           grep -q '"title":"RICIS III Web API"' /tmp/ricis-openapi.json
           grep -q '"operationId":"SimplifyExpression"' /tmp/ricis-openapi.json
+          node <<'NODE'
+          const fs = require('fs');
+          const document = JSON.parse(fs.readFileSync('/tmp/ricis-openapi.json', 'utf8'));
+          const requiredExamples = {
+            '/api/expressions/simplify': ['linear', 'singular', 'about metadata'],
+            '/api/expressions/derivative': ['polynomial', 'reciprocal bridge', 'trigonometric'],
+            '/api/expressions/system': ['two curves', 'coordinate system', 'singular system']
+          };
+          for (const [path, names] of Object.entries(requiredExamples)) {
+            const operation = document.paths?.[path]?.post;
+            if (!operation?.summary || !operation?.description) throw new Error(`Missing OpenAPI metadata: ${path}`);
+            const examples = operation.requestBody?.content?.['application/json']?.examples ?? {};
+            for (const name of names) if (!examples[name]?.value?.expression) throw new Error(`Missing example ${name}: ${path}`);
+          }
+          for (const schema of ['ExpressionRequest', 'ExpressionResponse', 'ExpressionSystemResponse', 'ParseErrorResponse']) {
+            if (!document.components?.schemas?.[schema]?.description) throw new Error(`Missing XML schema description: ${schema}`);
+          }
+          console.log('Swagger metadata, examples and XML schema descriptions verified.');
+          NODE
           curl --max-time 10 -fsS -X POST http://127.0.0.1:5044/api/expressions/simplify \
             -H 'Content-Type: application/json' \
             -d '{"expression":"x => ((x ^ 2) - 25) / (x - 5)"}' \

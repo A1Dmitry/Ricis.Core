@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Ricis.ConsoleApp;
 using Ricis.Core.Expressions;
@@ -26,6 +27,11 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "Restricted RICIS expression processing API. User input is parsed through LambdaTextParser and is never executed as arbitrary C# code."
     });
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, "Ricis.WebApi.xml");
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
 });
 builder.Services.AddCors(options =>
 {
@@ -67,7 +73,13 @@ app.MapPost("/api/expressions/simplify", (ExpressionRequest request) =>
     .Produces<ExpressionResponse>(StatusCodes.Status200OK)
     .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
     .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
-    .WithOpenApi();
+    .WithOpenApi(operation => DescribeExpressionOperation(
+        operation,
+        "Simplify a RICIS expression",
+        "Parses a restricted lambda expression and applies the RICIS structural pipeline without executing arbitrary C# code.",
+        ("linear", "x => (x + 1)"),
+        ("singular", "x => ((x * 0) * (1 / x))"),
+        ("about metadata", "about => about + 1")));
 
 app.MapPost("/api/expressions/derivative", (ExpressionRequest request) =>
     ProcessSingleExpression(request, "derivative"))
@@ -76,7 +88,13 @@ app.MapPost("/api/expressions/derivative", (ExpressionRequest request) =>
     .Produces<ExpressionResponse>(StatusCodes.Status200OK)
     .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
     .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
-    .WithOpenApi();
+    .WithOpenApi(operation => DescribeExpressionOperation(
+        operation,
+        "Differentiate a RICIS expression",
+        "Builds a symbolic derivative and sends the derived expression through the RICIS pipeline.",
+        ("polynomial", "x => (x ** 3)"),
+        ("reciprocal bridge", "x => ((x * 0) * (1 / x))"),
+        ("trigonometric", "x => sin(x)")));
 
 app.MapPost("/api/expressions/system", (ExpressionRequest request) =>
     ProcessExpressionSystem(request))
@@ -85,7 +103,13 @@ app.MapPost("/api/expressions/system", (ExpressionRequest request) =>
     .Produces<ExpressionSystemResponse>(StatusCodes.Status200OK)
     .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
     .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
-    .WithOpenApi();
+    .WithOpenApi(operation => DescribeExpressionOperation(
+        operation,
+        "Process an expression system",
+        "Parses semicolon-separated lambda expressions as one structural system; each expression remains independently inspectable.",
+        ("two curves", "x => (x + 1); x => (x - 1)"),
+        ("coordinate system", "x => (x ** 2); x => (2 * x)"),
+        ("singular system", "x => (x / 0); x => (1 / x)")));
 
 app.Run();
 
@@ -171,6 +195,34 @@ static IResult ProcessExpressionSystem(ExpressionRequest request)
     }
 }
 
+static OpenApiOperation DescribeExpressionOperation(
+    OpenApiOperation operation,
+    string summary,
+    string description,
+    params (string Name, string Value)[] examples)
+{
+    operation.Summary = summary;
+    operation.Description = description;
+
+    if (operation.RequestBody?.Content.TryGetValue("application/json", out var mediaType) == true)
+    {
+        mediaType.Examples = examples.ToDictionary(
+            example => example.Name,
+            example => new OpenApiExample
+            {
+                Summary = example.Name,
+                Description = $"Example request body for {example.Name}.",
+                Value = new OpenApiObject
+                {
+                    ["expression"] = new OpenApiString(example.Value)
+                }
+            },
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    return operation;
+}
+
 static bool TryValidateExpression(ExpressionRequest? request, out string? error)
 {
     error = null;
@@ -189,14 +241,33 @@ static bool TryValidateExpression(ExpressionRequest? request, out string? error)
     return true;
 }
 
+/// <summary>
+/// Request containing one lambda expression or a semicolon-separated expression system.
+/// </summary>
+/// <param name="Expression">Restricted expression text accepted by <c>LambdaTextParser</c>.</param>
 public sealed record ExpressionRequest(string Expression);
 
+/// <summary>
+/// Result returned after parsing and applying a RICIS operation.
+/// </summary>
+/// <param name="Source">Original user input.</param>
+/// <param name="Operation">Operation name, such as <c>simplify</c> or <c>derivative</c>.</param>
+/// <param name="Parsed">Parsed expression-tree representation.</param>
+/// <param name="Ricis">RICIS-derived structural result.</param>
 public sealed record ExpressionResponse(
     string Source,
     string Operation,
     string Parsed,
     string Ricis);
 
+/// <summary>
+/// Result returned for a semicolon-separated expression system.
+/// </summary>
+/// <param name="Source">Original system input.</param>
+/// <param name="Count">Number of parsed expressions.</param>
+/// <param name="System">Structural system representation.</param>
+/// <param name="Expressions">Parsed expression-tree representations.</param>
+/// <param name="RicisExpressions">RICIS result for each expression.</param>
 public sealed record ExpressionSystemResponse(
     string Source,
     int Count,
@@ -204,6 +275,15 @@ public sealed record ExpressionSystemResponse(
     IReadOnlyList<string> Expressions,
     IReadOnlyList<string> RicisExpressions);
 
+/// <summary>
+/// Describes a rejected request or controlled processing failure.
+/// </summary>
+/// <param name="Error">Safe, non-sensitive error message.</param>
 public sealed record ErrorResponse(string Error);
 
+/// <summary>
+/// Describes a parser failure and its zero-based input position.
+/// </summary>
+/// <param name="Error">Safe parser error message.</param>
+/// <param name="Position">Zero-based position reported by the parser.</param>
 public sealed record ParseErrorResponse(string Error, int Position);
