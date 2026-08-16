@@ -8,8 +8,14 @@ using Ricis.Core.Rationals;
 using Ricis.Core.Simplifiers;
 using Ricis.Core.Solvers;
 
-var tests = new List<(string Name, Action Body)>
-{
+var tests = new List<(string Name, Action Body)>();
+
+// Первый gate: канонические аксиомы должны пройти до любых stress, API,
+// proof или classical-comparison scenarios.
+tests.AddRange(RicisAxiomSuite.Tests);
+
+tests.AddRange(
+[
     ("SP4: коммутативно эквивалентные суммы имеют одну идентичность", CommutativeStructuralIdentity),
     ("SP2: (x + 1) / (1 + x) сокращается до 1", CommutativeDivisionReduction),
     ("A5: одинаковые индексированные бесконечности при делении дают 1", SameInfinityDivision),
@@ -30,7 +36,7 @@ var tests = new List<(string Name, Action Body)>
     ("Рациональная арифметика сохраняет каноническую форму", RationalCanonicalForm),
     ("Generic INumber: BigInteger сохраняется в SP2 и конечном делегате", GenericBigIntegerFiniteExecution),
     ("Generic INumber: X/X возвращает типизированную единицу", GenericBigIntegerIdentityReduction),
-};
+]);
 
 tests.AddRange(RicisStressSuite.Tests);
 tests.AddRange(KnownRicisLimitsSuite.Tests);

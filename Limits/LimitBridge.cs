@@ -28,6 +28,24 @@ public static class LimitBridge
 
         if (binary.NodeType == ExpressionType.Multiply)
         {
+            // Coupled A6 reciprocal bridge: (F·0)·(1/F) has already formed
+            // 0_F on the left, while the raw reciprocal still retains its
+            // denominator F. Preserve that identity before A1 compresses the
+            // reciprocal to the finite numerator index ∞_1.
+            if (binary.Left is ZeroInfinityExpression reciprocalZeroLeft &&
+                IsUnitReciprocalOf(binary.Right, reciprocalZeroLeft.Numerator))
+            {
+                bridge = Expression.Multiply(reciprocalZeroLeft.Numerator, reciprocalZeroLeft.Numerator);
+                return true;
+            }
+
+            if (binary.Right is ZeroInfinityExpression reciprocalZeroRight &&
+                IsUnitReciprocalOf(binary.Left, reciprocalZeroRight.Numerator))
+            {
+                bridge = Expression.Multiply(reciprocalZeroRight.Numerator, reciprocalZeroRight.Numerator);
+                return true;
+            }
+
             // An indexed zero is already a RICIS node. Do not re-index it as
             // the parent of a new zero: A6 must receive 0_F·∞_G intact.
             if (binary.Left.IsZero() && binary.Left is not ZeroInfinityExpression)
@@ -56,4 +74,13 @@ public static class LimitBridge
         bridge = expression;
         return false;
     }
+
+    private static bool IsUnitReciprocalOf(Expression expression, Expression payload) =>
+        expression is BinaryExpression
+        {
+            NodeType: ExpressionType.Divide,
+            Method: null,
+            Left: var numerator,
+            Right: var denominator
+        } && numerator.IsOne() && denominator.AreEqual(payload);
 }
