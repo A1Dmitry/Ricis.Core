@@ -12,7 +12,9 @@
 dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --urls http://localhost:5044
 ```
 
-В Development environment Swagger UI доступен по адресу `http://localhost:5044/swagger`. Endpoint `GET /health` всегда возвращает состояние сервиса.
+В Development environment Swagger UI доступен по адресу `http://localhost:5044/swagger`, а OpenAPI JSON — `http://localhost:5044/swagger/v1/swagger.json`. Документ имеет название **RICIS III Web API**, версию `v1`, endpoint groups `Diagnostics`, `Expressions` и `Expression systems`. Endpoint `GET /health` всегда возвращает состояние сервиса.
+
+`Ricis.WebAssembly` содержит ссылку **«Открыть Swagger / API Explorer»**, которая строится из того же configured API base URL, что и typed API client. Swagger не добавляется в WebAssembly как отдельный service: он относится только к серверному HTTP contract.
 
 ## Endpoints
 

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.OpenApi.Models;
 using Ricis.ConsoleApp;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
@@ -17,7 +18,15 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "RICIS III Web API",
+        Version = "v1",
+        Description = "Restricted RICIS expression processing API. User input is parsed through LambdaTextParser and is never executed as arbitrary C# code."
+    });
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(WebAssemblyCorsPolicy, policy =>
@@ -34,7 +43,11 @@ app.UseCors(WebAssemblyCorsPolicy);
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.DocumentTitle = "RICIS III API Explorer";
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "RICIS III Web API v1");
+    });
 }
 
 app.MapGet("/health", () => Results.Ok(new
@@ -42,16 +55,37 @@ app.MapGet("/health", () => Results.Ok(new
     service = "Ricis.WebApi",
     status = "ok",
     version = "v1"
-}));
+}))
+    .WithName("GetHealth")
+    .WithTags("Diagnostics")
+    .WithOpenApi();
 
 app.MapPost("/api/expressions/simplify", (ExpressionRequest request) =>
-    ProcessSingleExpression(request, "simplify"));
+    ProcessSingleExpression(request, "simplify"))
+    .WithName("SimplifyExpression")
+    .WithTags("Expressions")
+    .Produces<ExpressionResponse>(StatusCodes.Status200OK)
+    .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+    .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
+    .WithOpenApi();
 
 app.MapPost("/api/expressions/derivative", (ExpressionRequest request) =>
-    ProcessSingleExpression(request, "derivative"));
+    ProcessSingleExpression(request, "derivative"))
+    .WithName("DifferentiateExpression")
+    .WithTags("Expressions")
+    .Produces<ExpressionResponse>(StatusCodes.Status200OK)
+    .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+    .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
+    .WithOpenApi();
 
 app.MapPost("/api/expressions/system", (ExpressionRequest request) =>
-    ProcessExpressionSystem(request));
+    ProcessExpressionSystem(request))
+    .WithName("ProcessExpressionSystem")
+    .WithTags("Expression systems")
+    .Produces<ExpressionSystemResponse>(StatusCodes.Status200OK)
+    .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+    .Produces<ParseErrorResponse>(StatusCodes.Status400BadRequest)
+    .WithOpenApi();
 
 app.Run();
 

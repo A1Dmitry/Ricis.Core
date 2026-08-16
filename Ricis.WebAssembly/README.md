@@ -38,6 +38,8 @@ dotnet run --project Ricis.WebAssembly/Ricis.WebAssembly.csproj --urls http://lo
 
 Для другого окружения задайте абсолютный `http` или `https` URL. `Program.cs` намеренно отклоняет невалидную или неполную конфигурацию до запуска приложения.
 
+В workspace есть ссылка **«Открыть Swagger / API Explorer»**. Она получает адрес как `swagger/` относительно этого же configured API base URL. Swagger UI и OpenAPI JSON публикуются API только в Development environment; WebAssembly не содержит и не дублирует Swagger server.
+
 ## CORS boundary
 
 `Ricis.WebApi` применяет именованную политику `RicisWebAssembly`. Development origin `http://localhost:5066` перечислен в `Ricis.WebApi/appsettings.json` как единственный разрешённый origin. Политика разрешает только необходимые HTTP headers и methods, не включает credentials и не использует `AllowAnyOrigin`.

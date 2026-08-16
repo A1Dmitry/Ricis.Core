@@ -57,6 +57,23 @@ jobs:
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
 
+      - name: Smoke-test Swagger and expression API
+        run: |
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-build --urls http://127.0.0.1:5044 > /tmp/ricis-webapi.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --max-time 10 -fsS http://127.0.0.1:5044/swagger/v1/swagger.json > /tmp/ricis-openapi.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q '"title":"RICIS III Web API"' /tmp/ricis-openapi.json
+          grep -q '"operationId":"SimplifyExpression"' /tmp/ricis-openapi.json
+          curl --max-time 10 -fsS -X POST http://127.0.0.1:5044/api/expressions/simplify \
+            -H 'Content-Type: application/json' \
+            -d '{"expression":"x => ((x ^ 2) - 25) / (x - 5)"}' \
+            > /tmp/ricis-simplify.json
+          grep -q '"ricis":"x => (x + 5)"' /tmp/ricis-simplify.json
+
       - name: Setup Lean toolchain
         run: |
           sudo apt-get update -qq

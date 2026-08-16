@@ -27,6 +27,11 @@ public sealed class RicisApiClient
     }
 
     /// <summary>
+    /// Gets the Swagger UI address for the configured RICIS API origin.
+    /// </summary>
+    public string SwaggerUrl => new Uri(httpClient.BaseAddress ?? throw new InvalidOperationException("RICIS API base address is missing."), "swagger/").AbsoluteUri;
+
+    /// <summary>
     /// Processes a RICIS expression or expression system without evaluating supplied text as C#.
     /// </summary>
     /// <param name="operation">Supported server operation.</param>
