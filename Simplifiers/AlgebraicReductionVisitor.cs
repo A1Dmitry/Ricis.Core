@@ -1,3 +1,4 @@
+using Ricis.Core.Execution;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Polynomial;
@@ -164,13 +165,16 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
                 : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
         }
 
-        var cache = AnalyzeDenominator(right, parameter);
+        var isPolynomial = IsSafePolynomialDenominator(right, parameter);
 
         // Pure RICIS: do NOT invent ∞ from numerical 0/0 here.
         // If long division cancels the common factor, return the quotient (SP2).
         // If not, leave Divide intact for Phase 2 (A4: F/G by identity).
-
-        if (!cache.isPolynomial)
+        //
+        // Phase 1 must never compile a caller-provided expression merely to
+        // inspect its denominator. Polynomial collection is structural only;
+        // non-polynomial trees remain deferred for the later RICIS phases.
+        if (!isPolynomial)
         {
             return left == node.Left && right == node.Right
                 ? node
@@ -503,16 +507,16 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 
     private static Expression OneOf(Type type) => NumericConstants.OneOf(type);
 
-    private static (List<Root> roots, bool isPolynomial) AnalyzeDenominator(Expression denominator, ParameterExpression param)
+    private static bool IsSafePolynomialDenominator(Expression denominator, ParameterExpression param)
     {
+        if (!NumericalEvaluationSafety.IsSafeDoubleExpression(denominator))
+        {
+            return false;
+        }
+
         var collector = new PolynomialCoefficientCollector(param);
         collector.Visit(denominator);
-
-        var roots = collector.IsPolynomial
-            ? denominator.FindRoots(param)
-            : denominator.FindNumericalRoots(param);
-
-        return (roots, collector.IsPolynomial);
+        return collector.IsPolynomial;
     }
 
     /// <inheritdoc />

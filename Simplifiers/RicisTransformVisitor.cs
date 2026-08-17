@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Ricis.Core.Execution;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Solvers;
@@ -81,45 +82,49 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         }
 
         var tempSingularities = new List<InfinityExpression>();
+        var canEvaluateNumerically = CanEvaluateNumerically(numerator, denominator);
 
-        // 1. Polynomial roots of denominator
-        foreach (var root in denominator.SolveRoots())
+        if (canEvaluateNumerically)
         {
-            if (double.IsNaN(root.value)) continue;
-
-            var numVal = numerator.EvaluateAtPoint(root.value, root.expr.Name);
-            if (double.IsNaN(numVal)) continue;
-
-            if (Math.Abs(numVal) < 1e-10)
+            // 1. Polynomial roots of denominator
+            foreach (var root in denominator.SolveRoots())
             {
-                // A4: 0_F / 0_G = F/G
-                // Indices are the parent expressions (SP4). No limit, no derivatives.
-                // If SP2 canceled identical factors, we would not reach here with 0/0.
-                // Remaining case: different identities → keep structural ratio F/G.
-                return Expression.Divide(numerator, denominator);
-            }
+                if (double.IsNaN(root.value)) continue;
 
-            // A1: F(a) ≠ 0 and den(a) = 0 → ∞_{F(a)}.
-            numerator.AddSingularityIfValid(root.expr, root.value, tempSingularities);
-        }
-
-        // 2. Trigonometric roots
-        var trigRoot = TrigSolver.Solve(denominator);
-        if (trigRoot.HasValue)
-        {
-            var (param, value) = trigRoot.Value;
-            if (!double.IsNaN(value))
-            {
-                var numVal = numerator.EvaluateAtPoint(value, param.Name);
+                var numVal = numerator.EvaluateAtPoint(root.value, root.expr.Name);
+                if (double.IsNaN(numVal)) continue;
 
                 if (Math.Abs(numVal) < 1e-10)
                 {
-                    // A4 again: 0_F/0_G = F/G (e.g. sin(x)/x keeps structural ratio;
-                    // SP2/series are NOT applied here — pure index law).
+                    // A4: 0_F / 0_G = F/G
+                    // Indices are the parent expressions (SP4). No limit, no derivatives.
+                    // If SP2 canceled identical factors, we would not reach here with 0/0.
+                    // Remaining case: different identities → keep structural ratio F/G.
                     return Expression.Divide(numerator, denominator);
                 }
 
-                numerator.AddSingularityIfValid(param, value, tempSingularities);
+                // A1: F(a) ≠ 0 and den(a) = 0 → ∞_{F(a)}.
+                numerator.AddSingularityIfValid(root.expr, root.value, tempSingularities);
+            }
+
+            // 2. Trigonometric roots
+            var trigRoot = TrigSolver.Solve(denominator);
+            if (trigRoot.HasValue)
+            {
+                var (param, value) = trigRoot.Value;
+                if (!double.IsNaN(value))
+                {
+                    var numVal = numerator.EvaluateAtPoint(value, param.Name);
+
+                    if (Math.Abs(numVal) < 1e-10)
+                    {
+                        // A4 again: 0_F / 0_G = F/G (e.g. sin(x)/x keeps structural ratio;
+                        // SP2/series are NOT applied here — pure index law).
+                        return Expression.Divide(numerator, denominator);
+                    }
+
+                    numerator.AddSingularityIfValid(param, value, tempSingularities);
+                }
             }
         }
 
@@ -155,6 +160,12 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
             ? branches[0]
             : new KeyedInfinityExpression(branches);
     }
+
+    private static bool CanEvaluateNumerically(Expression numerator, Expression denominator) =>
+        numerator.Type == typeof(double) &&
+        denominator.Type == typeof(double) &&
+        NumericalEvaluationSafety.IsSafeDoubleExpression(numerator) &&
+        NumericalEvaluationSafety.IsSafeDoubleExpression(denominator);
 
     private static List<(ParameterExpression Param, double Value)> DistinctSortedRoots(
         IEnumerable<(ParameterExpression Param, double Value)> roots) =>

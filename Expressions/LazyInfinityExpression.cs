@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ricis.Core.Execution;
 using Ricis.Core.Extensions;
 using Ricis.Core.Solvers;
 
@@ -17,7 +18,9 @@ public sealed class LazyInfinityExpression : InfinityExpression
     /// </summary>
     public override Expression Numerator => _numerator;
     /// <inheritdoc />
-    public override bool CanReduce => true;
+    public override bool CanReduce =>
+        _numerator.Type == typeof(double) &&
+        NumericalEvaluationSafety.IsSafeDoubleExpression(_numerator);
 
     /// <summary>
     /// Initializes a new instance of <c>LazyInfinityExpression</c>.
@@ -37,6 +40,10 @@ public sealed class LazyInfinityExpression : InfinityExpression
         }
 
         var root = Roots[0];
+        if (!CanReduce)
+        {
+            return new ErrorInfinityExpression(_numerator, Roots);
+        }
 
         try
         {

@@ -58,6 +58,7 @@ tests.AddRange(RicisModernClassicalComparisonSuite.Tests);
 tests.AddRange(RicisQaRepairSuite.Tests);
 tests.AddRange(RicisRuleContractSuite.Tests);
 tests.AddRange(RicisCsharpInvariantSuite.Tests);
+tests.AddRange(RicisPipelineSafetySuite.Tests);
 tests.AddRange(RicisVectorSuite.Tests);
 tests.AddRange(RicisVectorExpressionSuite.Tests);
 tests.AddRange(ExpressionSystemSuite.Tests);

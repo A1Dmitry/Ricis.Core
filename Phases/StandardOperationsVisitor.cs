@@ -152,7 +152,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             !right.IsZero())
         {
             var rawIndex = Expression.Divide(indexedDividend.Numerator, right);
-            var index = new ExpressionSimplifierVisitor().Visit(rawIndex);
+            var index = SimplifyIndexedPayload(rawIndex);
             return new ZeroInfinityExpression(index, indexedDividend.Roots);
         }
 
@@ -232,8 +232,16 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         ExpressionType operation)
     {
         var rawIndex = Expression.MakeBinary(operation, left.Numerator, right.Numerator);
-        var index = new ExpressionSimplifierVisitor().Visit(rawIndex);
+        var index = SimplifyIndexedPayload(rawIndex);
         return new ZeroInfinityExpression(index, left.Roots);
+    }
+
+    private static Expression SimplifyIndexedPayload(Expression rawIndex)
+    {
+        var simplified = new ExpressionSimplifierVisitor().Visit(rawIndex);
+        return simplified is not null && simplified.Type == rawIndex.Type
+            ? simplified
+            : rawIndex;
     }
 
     private static Expression MergeInfinities(InfinityExpression left, InfinityExpression right, ExpressionType operation)

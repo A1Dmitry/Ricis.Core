@@ -104,33 +104,10 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
             return innerNegate.Operand;
         }
 
-        if (operand is ConstantExpression c)
-        {
-            return SimplifyConstantsUnary(node.NodeType, c.Value);
-        }
-
+        // Keep unary constants in their original scalar type. Converting every
+        // value through BigInteger truncates fractional values and can make a
+        // later indexed payload type-inconsistent.
         return node.Update(operand);
-    }
-
-    private Expression SimplifyConstantsUnary(ExpressionType nodeType, object value)
-    {
-        try
-        {
-            var num = value.ToBigInteger();
-
-            return nodeType switch
-            {
-                ExpressionType.Negate => Expression.Constant(-num, typeof(BigInteger)),
-                ExpressionType.UnaryPlus => Expression.Constant(num, typeof(BigInteger)),
-                ExpressionType.Not when value is bool b => Expression.Constant(!b, typeof(bool)),
-                _ => throw new ArgumentException($"Unsupported unary operation: {nodeType}")
-            };
-        }
-        catch
-        {
-            // Fallback для неподдерживаемых типов
-            return Expression.MakeUnary(nodeType, Expression.Constant(value), value?.GetType() ?? typeof(object));
-        }
     }
 
 

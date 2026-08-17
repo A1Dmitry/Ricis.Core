@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Ricis.ConsoleApp;
 using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
 
 const int MaxRequestBodyBytes = 64 * 1024;
@@ -92,7 +93,7 @@ app.MapPost("/api/expressions/derivative", (ExpressionRequest request) =>
         operation,
         "Differentiate a RICIS expression",
         "Builds a symbolic derivative and sends the derived expression through the RICIS pipeline.",
-        ("polynomial", "x => (x ** 3)"),
+        ("polynomial", "x => (x ^ 3)"),
         ("reciprocal bridge", "x => ((x * 0) * (1 / x))"),
         ("trigonometric", "x => sin(x)")));
 
@@ -108,7 +109,7 @@ app.MapPost("/api/expressions/system", (ExpressionRequest request) =>
         "Process an expression system",
         "Parses semicolon-separated lambda expressions as one structural system; each expression remains independently inspectable.",
         ("two curves", "x => (x + 1); x => (x - 1)"),
-        ("coordinate system", "x => (x ** 2); x => (2 * x)"),
+        ("coordinate system", "x => (x ^ 2); x => (2 * x)"),
         ("singular system", "x => (x / 0); x => (1 / x)")));
 
 app.Run();
@@ -124,13 +125,18 @@ static IResult ProcessSingleExpression(ExpressionRequest request, string operati
     {
         var parser = new LambdaTextParser();
         var source = parser.Parse(request.Expression);
-        var simplified = RicisPhasePipeline.Simplify(source);
+        var result = operation switch
+        {
+            "simplify" => RicisPhasePipeline.Simplify(source),
+            "derivative" => source.DxDt(),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, "Unsupported expression operation."),
+        };
 
         return Results.Ok(new ExpressionResponse(
             request.Expression,
             operation,
             source.ToString(),
-            simplified.ToString()));
+            result.ToString()));
     }
     catch (LambdaParseException exception)
     {
