@@ -101,11 +101,11 @@ jobs:
             fi
             sleep 1
           done
-          grep -q '"title":"RICIS III Web API"' /tmp/ricis-openapi.json
-          grep -q '"operationId":"SimplifyExpression"' /tmp/ricis-openapi.json
           node <<'NODE'
           const fs = require('fs');
           const document = JSON.parse(fs.readFileSync('/tmp/ricis-openapi.json', 'utf8'));
+          if (document.info?.title !== 'RICIS III Web API') throw new Error(`Unexpected OpenAPI title: ${document.info?.title}`);
+          if (document.paths?.['/api/expressions/simplify']?.post?.operationId !== 'SimplifyExpression') throw new Error('Missing SimplifyExpression operationId');
           const requiredExamples = {
             '/api/expressions/simplify': ['linear', 'singular', 'about metadata'],
             '/api/expressions/derivative': ['polynomial', 'reciprocal bridge', 'trigonometric'],
