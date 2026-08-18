@@ -80,7 +80,7 @@ jobs:
 
       - name: Smoke-test Swagger and expression API
         run: |
-          ASPNETCORE_ENVIRONMENT=Development dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-build --urls http://127.0.0.1:5044 > /tmp/ricis-webapi.log 2>&1 &
+          ASPNETCORE_ENVIRONMENT=Development nohup dotnet Ricis.WebApi/bin/Release/net8.0/Ricis.WebApi.dll --urls http://127.0.0.1:5044 > /tmp/ricis-webapi.log 2>&1 &
           api_pid=$!
           cleanup_api() {
             status=$?
@@ -95,11 +95,13 @@ jobs:
           }
           trap cleanup_api EXIT
           for attempt in $(seq 1 30); do
-            if curl --max-time 10 -fsS http://127.0.0.1:5044/swagger/v1/swagger.json > /tmp/ricis-openapi.json; then
+            if curl --max-time 10 -fsS http://127.0.0.1:5044/health > /tmp/ricis-health.json; then
+              curl --max-time 10 -fsS http://127.0.0.1:5044/swagger/v1/swagger.json > /tmp/ricis-openapi.json
               break
             fi
             sleep 1
           done
+          kill -0 "$api_pid"
           grep -q '"title":"RICIS III Web API"' /tmp/ricis-openapi.json
           grep -q '"operationId":"SimplifyExpression"' /tmp/ricis-openapi.json
           node <<'NODE'
