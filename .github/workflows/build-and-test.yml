@@ -81,6 +81,19 @@ jobs:
       - name: Smoke-test Swagger and expression API
         run: |
           ASPNETCORE_ENVIRONMENT=Development dotnet run --project Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-build --urls http://127.0.0.1:5044 > /tmp/ricis-webapi.log 2>&1 &
+          api_pid=$!
+          cleanup_api() {
+            status=$?
+            if [ "$status" -ne 0 ] && [ -f /tmp/ricis-webapi.log ]; then
+              echo '--- Ricis.WebApi startup log ---'
+              cat /tmp/ricis-webapi.log
+              echo '--- End Ricis.WebApi startup log ---'
+            fi
+            kill "$api_pid" 2>/dev/null || true
+            wait "$api_pid" 2>/dev/null || true
+            exit "$status"
+          }
+          trap cleanup_api EXIT
           for attempt in $(seq 1 30); do
             if curl --max-time 10 -fsS http://127.0.0.1:5044/swagger/v1/swagger.json > /tmp/ricis-openapi.json; then
               break
