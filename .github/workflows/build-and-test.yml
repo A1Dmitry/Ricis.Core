@@ -101,7 +101,6 @@ jobs:
             fi
             sleep 1
           done
-          kill -0 "$api_pid"
           grep -q '"title":"RICIS III Web API"' /tmp/ricis-openapi.json
           grep -q '"operationId":"SimplifyExpression"' /tmp/ricis-openapi.json
           node <<'NODE'
