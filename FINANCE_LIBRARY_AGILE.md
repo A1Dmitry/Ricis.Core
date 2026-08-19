@@ -1,6 +1,6 @@
 # APP-001 — финансовая доменная библиотека
 
-**Статус:** `В РАБОТЕ`
+**Статус:** `БАЗОВЫЙ ИНКРЕМЕНТ ЗАВЕРШЁН В v0.5.0`
 **Приоритет:** `Highest`
 **Источник:** пользовательский backlog от 2026-08-19
 
@@ -12,11 +12,13 @@
 
 | Роль | Результат | Статус |
 |---|---|---|
-| Постановка / compliance | Проверенные внешние ограничения и границы автоматизации | Выполнено |
-| DDD-архитектор | Bounded contexts, aggregates, ports, инварианты и ADR | Выполнено |
-| C#-разработчик | Чистое domain ядро и application services | Выполнено |
-| QA | Сценарии payment → settlement → receipt candidate, payout, fee, FX и threshold | Выполнено локально: FIN01–FIN06 |
-| DevOps | Сборка, тесты, CI и публикация | CI включён; публикация ожидается |
+| Постановка / compliance | Проверенные внешние ограничения и границы автоматизации | Выполнено; запреты и блокировки уточняются только по первоисточникам. |
+| DDD-архитектор | Bounded contexts, aggregates, ports, инварианты и payment-launch boundary | Выполнено в `v0.5.0`. |
+| C#-разработчик | Чистое domain/application ядро и bePaid launch adapter | Выполнено в `v0.5.0`; production adapters требуют отдельного route contract. |
+| QA | Core и finance regression scenarios | Выполнено: `324` Core + `FIN01`–`FIN09`. |
+| DevOps | Сборка, тесты, CI и публикация | Выполнено: tag `v0.5.0`, GitHub CI success. |
+
+> **Продолжение работ.** Все незавершённые задачи, зависимости, блокировки, Definition of Done и порядок будущих спринтов ведутся в едином [`Ricis.Finance/BACKLOG.md`](Ricis.Finance/BACKLOG.md). Этот документ фиксирует исходную постановку и не дублирует backlog.
 
 ## Non-negotiable constraints
 
@@ -29,4 +31,4 @@
 
 ## Definition of Done
 
-Библиотека независима от `Ricis.Core`, компилируется в solution, содержит domain/application/integration contracts, воспроизводимые FIN01–FIN06 регрессии, документацию boundary и не имеет секретов, HTTP-клиентов или конкретных платёжных API в domain layer. Публикация допускается только после полного локального и GitHub CI quality gate.
+Библиотека независима от `Ricis.Core`, компилируется в solution, содержит domain/application/integration contracts, воспроизводимые `FIN01`–`FIN09` regressions, документацию boundary и не имеет секретов, HTTP-клиентов или конкретных платёжных API в domain layer. В `v0.5.0` provider HTTP изолирован в отдельном infrastructure-проекте `Ricis.Finance.Bepaid`; публикация прошла только после полного локального и GitHub CI quality gate.

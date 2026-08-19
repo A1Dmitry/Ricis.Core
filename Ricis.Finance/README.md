@@ -51,7 +51,7 @@ sequenceDiagram
 
 Для Беларуси provider response содержит QR и provider-issued deep links банков, поэтому host отображает выбор банка из `PaymentLaunchSession.BankApplications`; для России СБП response возвращает provider-hosted `PaymentHandoff` на QR/селектор банков. Страны СНГ не получают fallback route: отсутствующий capability отвергается явно.
 
-Полный контракт, безопасный host flow, код подключения и первоисточники находятся в [`PAYMENT_LAUNCH_INTEGRATION.md`](PAYMENT_LAUNCH_INTEGRATION.md).
+Полный контракт, безопасный host flow, код подключения и первоисточники находятся в [`PAYMENT_LAUNCH_INTEGRATION.md`](PAYMENT_LAUNCH_INTEGRATION.md). Все незавершённые работы, зависимости и план следующих спринтов ведутся только в [`BACKLOG.md`](BACKLOG.md).
 
 ## Проверка
 
