@@ -38,6 +38,9 @@ jobs:
           dotnet restore Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj
           dotnet restore Ricis.WebApi/Ricis.WebApi.csproj
           dotnet restore Ricis.WebAssembly/Ricis.WebAssembly.csproj
+          dotnet restore Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
+          dotnet restore Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
+          dotnet restore Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
 
       - name: Build core library
         run: dotnet build Ricis.Core.csproj --configuration Release --no-restore
@@ -51,6 +54,9 @@ jobs:
           dotnet build Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj --configuration Release --no-restore
           dotnet build Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-restore
           dotnet build Ricis.WebAssembly/Ricis.WebAssembly.csproj --configuration Release --no-restore
+          dotnet build Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj --configuration Release --no-restore
+          dotnet build Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj --configuration Release --no-restore
+          dotnet build Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj --configuration Release --no-restore
 
       - name: Verify unified Ricis.Core version
         shell: bash
@@ -62,6 +68,9 @@ jobs:
             Ricis.WebApi/Ricis.WebApi.csproj
             Ricis.WebAssembly/Ricis.WebAssembly.csproj
             RegressionTests/Ricis.Core.RegressionTests.csproj
+            Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
+            Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
+            Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
           )
           expected=""
           for project in "${projects[@]}"; do
@@ -77,6 +86,9 @@ jobs:
 
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
+
+      - name: Run finance regression suite
+        run: dotnet run --project Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj --configuration Release --no-build
 
       - name: Smoke-test Swagger and expression API
         run: |

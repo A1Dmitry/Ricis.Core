@@ -1,6 +1,6 @@
 # Ricis.Core Versioning Policy
 
-> **Document version:** `0.3.0`
+> **Document version:** `0.4.0`
 > **Created:** `2026-08-16`
 > **Last modified:** `2026-08-19`
 > **Versioning note:** increment the document version when the normative content changes.
@@ -40,9 +40,13 @@ v1.2.3
 | Несовместимое изменение public API/формата | MAJOR |
 | Предварительный релиз | prerelease suffix, например `1.1.0-rc.1` |
 
+## v0.4.0
+
+Версия `0.4.0` добавляет отдельную публичную библиотеку `Ricis.Finance` с DDD Domain/Application слоями, порциями integration contracts и самостоятельными FIN01–FIN06 регрессиями. Это MINOR-релиз: существующие `Ricis.Core` proof APIs и application projects остаются совместимыми.
+
 ## v0.3.0
 
-Версия `0.3.0` вводит совместимый `ProveDocumentWithLog` API, полный node-to-root route в существующем proof trace, `Latex` в действующий `RicisProofDocumentFormat` и единую инъецируемую document factory. Это MINOR-релиз: существующие `ProveDocument` overloads, `Func<string,string>` transform и proof semantics остаются совместимыми.
+Версия `0.3.0` ввела совместимый `ProveDocumentWithLog` API, полный node-to-root route в существующем proof trace, `Latex` в действующий `RicisProofDocumentFormat` и единую инъецируемую document factory.
 
 ## v0.2.0
 

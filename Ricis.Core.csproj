@@ -28,6 +28,8 @@
     <None Remove="Ricis.WebApi/**/*.cs" />
     <Compile Remove="Ricis.WebAssembly/**/*.cs" />
     <None Remove="Ricis.WebAssembly/**" />
+    <Compile Remove="Ricis.Finance/**/*.cs" />
+    <None Remove="Ricis.Finance/**" />
   </ItemGroup>
 
 </Project>

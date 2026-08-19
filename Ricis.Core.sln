@@ -14,6 +14,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.WebApi", "Ricis.WebAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.WebAssembly", "Ricis.WebAssembly\Ricis.WebAssembly.csproj", "{489ABA6C-F86C-44A5-A97D-76135F1C802E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ricis.Finance", "Ricis.Finance", "{9B1A514F-2DFB-4C96-9724-F3DB10670A0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Domain", "Ricis.Finance\Ricis.Finance.Domain\Ricis.Finance.Domain.csproj", "{ADB89228-7479-4389-8EF3-5AC79E42C9AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Application", "Ricis.Finance\Ricis.Finance.Application\Ricis.Finance.Application.csproj", "{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.RegressionTests", "Ricis.Finance\Ricis.Finance.RegressionTests\Ricis.Finance.RegressionTests.csproj", "{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,5 +55,22 @@ Global
 		{489ABA6C-F86C-44A5-A97D-76135F1C802E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{489ABA6C-F86C-44A5-A97D-76135F1C802E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{489ABA6C-F86C-44A5-A97D-76135F1C802E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADB89228-7479-4389-8EF3-5AC79E42C9AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADB89228-7479-4389-8EF3-5AC79E42C9AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADB89228-7479-4389-8EF3-5AC79E42C9AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADB89228-7479-4389-8EF3-5AC79E42C9AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ADB89228-7479-4389-8EF3-5AC79E42C9AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
+		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
+		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 	EndGlobalSection
 EndGlobal
