@@ -62,12 +62,12 @@ internal static class RicisVectorSuite
     {
         var left = new RicisVector<double>([1, 2]);
         var right = new RicisVector<double>([1, 2, 3]);
-        Expect<ArgumentException>(() => _ = left + right, "Разные размерности должны отклоняться.");
-        Expect<ArgumentException>(() => RicisVector<double>.Dot(left, right), "Dot product должен проверять размерности.");
+        RegressionAssertions.Expect<ArgumentException>(() => _ = left + right, "Разные размерности должны отклоняться.");
+        RegressionAssertions.Expect<ArgumentException>(() => RicisVector<double>.Dot(left, right), "Dot product должен проверять размерности.");
     }
 
     private static void EmptyVectorIsRejected() =>
-        Expect<ArgumentException>(() => _ = new RicisVector<int>(Array.Empty<int>()), "Пустой вектор недопустим.");
+        RegressionAssertions.Expect<ArgumentException>(() => _ = new RicisVector<int>(Array.Empty<int>()), "Пустой вектор недопустим.");
 
     private static void BigIntegerVectorOperations()
     {
@@ -78,19 +78,5 @@ internal static class RicisVectorSuite
             "Большие generic-координаты не должны терять точность.");
     }
 
-    private static void Expect<TException>(Action action, string message)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(message);
-    }
 
 }

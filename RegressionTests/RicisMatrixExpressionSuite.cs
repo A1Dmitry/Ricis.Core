@@ -42,7 +42,7 @@ internal static class RicisMatrixExpressionSuite
         var y = Expression.Parameter(typeof(double), "y");
         var one = Expression.Lambda<Func<double, double, double>>(Expression.Constant(1.0), x, y);
         var matrix = new RicisMatrixExpression<double>([[one, one, one], [one, one, one]]);
-        Expect<InvalidOperationException>(() => matrix.Determinant2x2(), "Определитель 2×2 должен отклонять матрицу 2×3.");
+        RegressionAssertions.Expect<InvalidOperationException>(() => matrix.Determinant2x2(), "Определитель 2×2 должен отклонять матрицу 2×3.");
     }
 
     private static void BuildsThreeByThreeDeterminant()
@@ -74,20 +74,6 @@ internal static class RicisMatrixExpressionSuite
         return new RicisMatrixExpression<double>([[one, derivative], [zero, one]]);
     }
 
-    private static void Expect<TException>(Action action, string message)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(message);
-    }
 
     private static void Require(bool condition, string message)
     {

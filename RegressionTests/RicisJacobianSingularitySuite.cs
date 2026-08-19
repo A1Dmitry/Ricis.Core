@@ -47,7 +47,7 @@ internal static class RicisJacobianSingularitySuite
         var x = Expression.Parameter(typeof(double), "x");
         var y = Expression.Parameter(typeof(double), "y");
         var determinant = Expression.Lambda<Func<double, double, double>>(Expression.Constant(0.0), x, y);
-        Expect<ArgumentException>(() => _ = new RicisJacobianSingularityExpression<double>(determinant, []),
+        RegressionAssertions.Expect<ArgumentException>(() => _ = new RicisJacobianSingularityExpression<double>(determinant, []),
             "Пустой inverse payload не имеет смысла для матричного состояния.");
     }
 
@@ -60,20 +60,6 @@ internal static class RicisJacobianSingularitySuite
         return new RicisJacobianSingularityExpression<double>(determinant, [inversePayload]);
     }
 
-    private static void Expect<TException>(Action action, string message)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(message);
-    }
 
     private static void Require(bool condition, string message)
     {

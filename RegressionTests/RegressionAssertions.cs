@@ -9,4 +9,19 @@ internal static class RegressionAssertions
             throw new InvalidOperationException(message);
         }
     }
+
+    public static void Expect<TException>(Action action, string message)
+        where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(message);
+    }
 }

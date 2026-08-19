@@ -50,10 +50,10 @@ internal static class ExpressionSystemSuite
         var second = Expression.Lambda<Func<double, double, double>>(y, x, y);
         var third = Expression.Lambda<Func<double, int>>(Expression.Constant(1), x);
 
-        Expect<ArgumentException>(
+        RegressionAssertions.Expect<ArgumentException>(
             () => _ = ExpressionSystem<double>.FromLambdas(first, second),
             "Разное число параметров должно отклоняться.");
-        Expect<ArgumentException>(
+        RegressionAssertions.Expect<ArgumentException>(
             () => _ = ExpressionSystem<double>.FromLambdas(first, third),
             "Тип результата, отличный от double, должен отклоняться.");
     }
@@ -78,20 +78,6 @@ internal static class ExpressionSystemSuite
             Expression.Lambda<Func<double, double, double>>(Expression.Multiply(x, y), x, y));
     }
 
-    private static void Expect<TException>(Action action, string message)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(message);
-    }
 
     private static void Require(bool condition, string message)
     {

@@ -68,7 +68,7 @@ internal static class RicisVectorExpressionSuite
         var three = new RicisVectorExpression<double>([
             Expression.Lambda<Func<double, double, double, double>>(x, x, y, z),
             Expression.Lambda<Func<double, double, double, double>>(y, x, y, z)]);
-        Expect<ArgumentException>(() => _ = two + three, "Разное число параметров должно отклоняться.");
+        RegressionAssertions.Expect<ArgumentException>(() => _ = two + three, "Разное число параметров должно отклоняться.");
     }
 
     private static RicisVectorExpression<double> CreateF()
@@ -97,19 +97,5 @@ internal static class RicisVectorExpressionSuite
         ]);
     }
 
-    private static void Expect<TException>(Action action, string message)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(message);
-    }
 
 }
