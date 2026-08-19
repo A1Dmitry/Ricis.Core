@@ -71,6 +71,28 @@ jobs:
           echo "Verified Ricis.Core package version $actual"
 
       - name: Publish to NuGet.org
-        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        shell: bash
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_SOURCE: https://api.nuget.org/v3/index.json
+        run: |
+          set -euo pipefail
+          if [[ -z "${NUGET_API_KEY:-}" ]]; then
+            echo "::error::NUGET_API_KEY is not configured for this repository/environment. Add the NuGet.org API key as the GitHub Actions secret NUGET_API_KEY."
+            exit 1
+          fi
+
+          shopt -s nullglob
+          packages=(./artifacts/*.nupkg)
+          if (( ${#packages[@]} == 0 )); then
+            echo "::error::No .nupkg files found under ./artifacts."
+            exit 1
+          fi
+
+          for package in "${packages[@]}"; do
+            echo "Publishing $(basename "$package") to $NUGET_SOURCE"
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
+              --source "$NUGET_SOURCE" \
+              --skip-duplicate
+          done
