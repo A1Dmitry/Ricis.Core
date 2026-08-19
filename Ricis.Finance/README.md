@@ -9,8 +9,9 @@
 | Проект | Ответственность |
 |---|---|
 | `Ricis.Finance.Domain` | Pure DDD value objects и aggregates: `Money`, `FeeBreakdown`, `ProviderPayment`, `Settlement`, `PayoutRequest`, `TaxReceiptCandidate`, `AnnualTaxPosition`. |
-| `Ricis.Finance.Application` | Use cases и порты: webhook verification, settlement/payout repositories, provider payout, FX source, tax policy, tax receipt gateway. |
-| `Ricis.Finance.RegressionTests` | Шесть безвнешних сценариев инвариантов и application workflows. |
+| `Ricis.Finance.Application` | Use cases и порты: webhook verification, settlement/payout repositories, provider payout, FX source, tax policy, tax receipt gateway, payment-launch rail registry. |
+| `Ricis.Finance.Bepaid` | Infrastructure adapter для документированных `BY/ЕРИП-E-POS/BYN` и `RU/СБП/RUB` QR/link launch flows; содержит HTTP и provider JSON mapping. |
+| `Ricis.Finance.RegressionTests` | Девять безвнешних сценариев инвариантов, application workflows и provider launch mapping. |
 
 ## Money flow
 
@@ -43,6 +44,14 @@ sequenceDiagram
 Хост-приложение реализует `IPaymentProviderWebhookVerifier`, `ISettlementRepository`, `IPayoutRepository`, `IFxRateSource`, `ITaxPolicy`, `IPayoutReleasePolicy`, `IPaymentProviderPort` и, при наличии официально разрешённого пути, `ITaxReceiptGateway`. Затем оно вызывает `RecordProviderPaymentService.HandleAsync` для проверенного callback и `RequestPayoutService.HandleAsync` для идемпотентного release request.
 
 В текущем инкременте отсутствуют конкретные EasyStaff, MTBank и МНС адаптеры, потому что публичные официальные API/webhook contracts для них не подтверждены в задаче. Сначала нужно получить документацию, credential model и письменное подтверждение допустимого integration route.
+
+## QR-платёж с выбором банка
+
+`PaymentRailRegistry` выбирает только явно подключённый `country + rail + currency` adapter. В текущем инкременте `BepaidPaymentLaunchPort` создаёт BYN ЕРИП/E-POS QR/link session или RUB СБП session. В обоих случаях браузерный возврат не становится платёжным фактом: только проверенный webhook/status event может пройти в `RecordProviderPaymentService`.
+
+Для Беларуси provider response содержит QR и provider-issued deep links банков, поэтому host отображает выбор банка из `PaymentLaunchSession.BankApplications`; для России СБП response возвращает provider-hosted `PaymentHandoff` на QR/селектор банков. Страны СНГ не получают fallback route: отсутствующий capability отвергается явно.
+
+Полный контракт, безопасный host flow, код подключения и первоисточники находятся в [`PAYMENT_LAUNCH_INTEGRATION.md`](PAYMENT_LAUNCH_INTEGRATION.md).
 
 ## Проверка
 

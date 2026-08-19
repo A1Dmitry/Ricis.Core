@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Application",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.RegressionTests", "Ricis.Finance\Ricis.Finance.RegressionTests\Ricis.Finance.RegressionTests.csproj", "{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Bepaid", "Ricis.Finance\Ricis.Finance.Bepaid\Ricis.Finance.Bepaid.csproj", "{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,10 +69,15 @@ Global
 		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ADB89228-7479-4389-8EF3-5AC79E42C9AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
+		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 	EndGlobalSection
 EndGlobal

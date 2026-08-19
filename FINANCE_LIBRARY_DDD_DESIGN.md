@@ -77,3 +77,45 @@ A payout to a bank card is modelled as a **cash-movement consequence**, not as a
 ## First delivery scope
 
 The first library increment implements pure domain and application contracts plus in-memory test doubles. It intentionally excludes live provider API calls, live tax submission, credential storage, real payout execution and persistent workers. Those require provider onboarding, official API documentation, secrets and explicit approval.
+
+
+## Bank selection and payment-launch boundary
+
+The QR/barcode flow in scope is not a bank transfer initiated by `Ricis.Finance`: it is a **payer-authorised payment launch**. The provider creates a one-time or reusable payable artifact; the customer opens a provider-owned selector page, chooses an eligible bank, enters that bank application through its provider-issued deep link, and confirms there. A browser return is only navigation evidence; a signed provider webhook or an authenticated status query remains the only source of a confirmed `ProviderPayment`.
+
+| Type | Layer | Responsibility | Explicitly does not do |
+|---|---|---|---|
+| `PaymentRail` | Application | Declares a verified rail, initially `BelarusEripEpos` or `RussiaSbp`. | Does not infer country merely from currency or IP. |
+| `CreatePaymentLaunch` | Application command | Requests a payable QR/link session for an already-known amount, order reference and return/webhook URLs. | Does not record a settled payment. |
+| `IPaymentLaunchPort` | Application outbound port | Lets a host-provided adapter create a provider payment session. | Does not own HTTP credentials or bank-specific URI schemas. |
+| `PaymentLaunchSession` | Application DTO | Returns provider reference, expiry, browser handoff form and provider-supplied bank-app options. | Does not claim that a deep link is proof of payment. |
+| `PaymentHandoff` | Application DTO | Preserves GET/POST action and fields; a web/mobile host can redirect or render the form safely. | Does not concatenate a URI from untrusted user input. |
+| `BankApplicationOption` | Application DTO | Represents a provider-advertised bank application and platform deep links where the rail exposes them. | Does not maintain a hardcoded bank directory. |
+| `PaymentRailRegistry` | Application policy/service | Resolves a configured adapter by explicit rail and rejects an unsupported country/rail. | Does not guess an unverified CIS rail. |
+
+The first provider adapter is isolated in `Ricis.Finance.Bepaid`, which depends on `Ricis.Finance.Application` rather than the reverse. It implements two confirmed rails through bePaid’s documented API: **ЕРИП/E-POS for Belarus with BYN** and **СБП for Russia with RUB**. The adapter forwards the provider’s `RequestID` idempotency header and returns exactly the provider-owned selector/handoff URL. For the Belarus ERIP route it also exposes provider-returned bank option prefixes as fully resolved deep links, only after decoding the provider QR payload.
+
+> **CIS rule.** There is no common verified “CIS bank selection API”. `CIS` is therefore not a payment rail, country default, nor fallback route. A host may query configured capabilities by ISO 3166-1 country code; a requested rail is rejected until an adapter, contract, currency rule and confirmation channel are explicitly configured and regression-tested.
+
+### Extended commands and ports
+
+| Command / port | Input | Output | Idempotency key |
+|---|---|---|---|
+| `CreatePaymentLaunch` | Explicit country, rail, amount, order reference, return and notification URLs | Provider launch session with QR/browser handoff | caller-supplied key |
+| `IPaymentLaunchPort.CreateAsync` | Validated command for a supported rail | Provider reference + handoff artifact | forwarded provider request id |
+
+The `CreatePaymentLaunch` application service has no persistence dependency in the first increment because provider-side idempotency is explicitly enabled with the caller key, and the definitive lifecycle is still owned by the already existing verified webhook workflow. A future host may persist the launch session for UX/retry telemetry without turning a browser redirect into a money fact.
+
+### Confirmed regional mapping
+
+| Payer country | Rail | Currency guard | Selection / handoff behavior | Confirmation |
+|---|---|---|---|---|
+| `BY` | `BelarusEripEpos` | `BYN` only | bePaid E-POS/ЕРИП response includes QR payload plus supported banks and device-specific deep-link prefixes. | Signed/authenticated bePaid notification, then `RecordProviderPaymentService`. |
+| `RU` | `RussiaSbp` | `RUB` only in this library adapter | bePaid returns a provider-hosted URL (`form.action`) to the СБП/НСПК bank-selector and QR flow. | Signed/authenticated bePaid notification, then `RecordProviderPaymentService`. |
+| Any other CIS ISO country | no implicit rail | none | Return configured capabilities only; do not route a payer to BY or RU. | Requires a separately verified adapter and provider callback contract. |
+
+The host must retain and verify the provider credentials for the notification path. It must validate all return and notification URLs against an allow-list before passing them to the adapter. This makes open redirects, customer-controlled bank selectors and accidental country fallthrough explicit host security concerns.
+
+## Dependency rule extension
+
+`Ricis.Finance.Bepaid` is an infrastructure adapter. It contains `HttpClient` use, Basic authentication supplied by the host, JSON request/response mapping and provider-specific endpoint paths. `Domain` and `Application` remain provider-neutral and contain no bePaid secret, HTTP client, SDK, endpoint or hardcoded bank deep link.

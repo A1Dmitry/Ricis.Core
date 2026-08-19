@@ -40,6 +40,7 @@ jobs:
           dotnet restore Ricis.WebAssembly/Ricis.WebAssembly.csproj
           dotnet restore Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
           dotnet restore Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
+          dotnet restore Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj
           dotnet restore Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
 
       - name: Build core library
@@ -56,6 +57,7 @@ jobs:
           dotnet build Ricis.WebAssembly/Ricis.WebAssembly.csproj --configuration Release --no-restore
           dotnet build Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj --configuration Release --no-restore
           dotnet build Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj --configuration Release --no-restore
+          dotnet build Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj --configuration Release --no-restore
           dotnet build Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj --configuration Release --no-restore
 
       - name: Verify unified Ricis.Core version
@@ -70,6 +72,7 @@ jobs:
             RegressionTests/Ricis.Core.RegressionTests.csproj
             Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
             Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
+            Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj
             Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
           )
           expected=""
