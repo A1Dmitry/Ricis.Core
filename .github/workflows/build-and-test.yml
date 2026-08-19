@@ -15,7 +15,7 @@ jobs:
   build-and-test:
     name: Build and run regression suite
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -128,18 +128,18 @@ jobs:
             > /tmp/ricis-simplify.json
           grep -q '"ricis":"x => (x + 5)"' /tmp/ricis-simplify.json
 
-      - name: Setup Lean toolchain
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y elan
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Setup Lean toolchain and Mathlib cache
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-mathlib-cache: true
+          lake-package-directory: FormalVerification/Lean
 
       - name: Generate and compile LeanDoc
         run: |
           dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-doc-demo > /tmp/ricis_generated.lean
           dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-a6-demo > /tmp/ricis_a6_generated.lean
           cd FormalVerification/Lean
-          lake exe cache get
           lake env lean /tmp/ricis_generated.lean
           lake env lean /tmp/ricis_a6_generated.lean
           if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean /tmp/ricis_a6_generated.lean; then
