@@ -1,7 +1,9 @@
 using System.Linq.Expressions;
 using System.Text;
+using Ricis.Core;
 using Ricis.Core.Extensions;
 using Ricis.Core.Metadata;
+using Ricis.Core.Rationals;
 using Ricis.Core.Phases;
 using Ricis.Core.Proofs;
 
@@ -112,6 +114,11 @@ internal static class Program
         if (args.Length > 0 && string.Equals(args[0], "--analytic-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunAnalyticSugarDemo();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--public-api-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunPublicApiDemo();
         }
 
         if (args.Length > 0 && string.Equals(args[0], "--expr", StringComparison.OrdinalIgnoreCase))
@@ -683,6 +690,42 @@ internal static class Program
         return failures == 0 ? 0 : 1;
     }
 
+    private static int RunPublicApiDemo()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var exactExpression = Expression.Add(Expression.Multiply(x, Expression.Constant(2.0)), Expression.Constant(1.0));
+        var exactOk = exactExpression.TryEvaluate("x", Rational.Create(3), out var exactValue) && exactValue == Rational.Create(7);
+        var quarter = CircleSectors.FromRadians(Math.PI / 2);
+        var polar = PolarConverter.ExactSinCos(new Rational(1, 4));
+        var collapsedSin = PolarConverter.TryCollapseTrig(nameof(Math.Sin), Math.PI / 2);
+        var zero = NumericConstants.ZeroOf(typeof(int));
+        var one = NumericConstants.OneOf(typeof(int));
+        var left = new RicisType("Space");
+        var right = new RicisType("Time");
+        var tuple = RicisType.CreateTuple(right, left);
+        var checks = new[]
+        {
+            (Name: "ExactEvaluator", Passed: exactOk),
+            (Name: "CircleSectors", Passed: quarter.Fraction == new Rational(1, 4)),
+            (Name: "PolarConverter", Passed: polar.sin == 1.0 && polar.cos == 0.0 && collapsedSin is ConstantExpression { Value: double value } && value == 1.0),
+            (Name: "NumericConstants", Passed: zero.Value is int zeroValue && zeroValue == 0 && one.Value is int oneValue && oneValue == 1),
+            (Name: "RicisType", Passed: tuple.Signature == "Tuple<Space,Time>" && RicisType.Operate(left, right, "*").Signature == "(Space*Time)"),
+        };
+
+        Console.WriteLine("RICIS public API utility demo:");
+        Console.WriteLine($"  ExactEvaluator: {exactValue}");
+        Console.WriteLine($"  CircleSectors: {quarter} / {quarter.InSectors(4)}");
+        Console.WriteLine($"  PolarConverter: sin={polar.sin:G6}, cos={polar.cos:G6}");
+        Console.WriteLine($"  NumericConstants: zero={zero.Value}, one={one.Value}");
+        Console.WriteLine($"  RicisType tuple: {tuple}");
+        foreach (var check in checks)
+        {
+            Console.WriteLine($"  {check.Name}: {(check.Passed ? "PASS" : "FAIL")}");
+        }
+
+        return checks.All(check => check.Passed) ? 0 : 1;
+    }
+
     private static int RunAuthorSeoDemo()
     {
         // `about` is deliberately captured from the outer scope. The pipeline
@@ -816,6 +859,7 @@ internal static class Program
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");
         Console.WriteLine("  В CLI --analytic-demo показывает аналитические Math.*-узлы и производную Pow(F,3).");
+        Console.WriteLine("  В CLI --public-api-demo проверяет ExactEvaluator, CircleSectors, PolarConverter, NumericConstants и RicisType.");
         Console.WriteLine();
         PrintExamples();
     }

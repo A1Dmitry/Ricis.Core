@@ -1,0 +1,1194 @@
+=== --self-test ===
+PASS: parser — x => x + 5
+PASS: parser — sin(pi / 2)
+PASS: parser — x => pow(x, 2) + 1
+PASS: parser — x => exp(x) - 1
+PASS: parser — x => derivative(x ^ 3)
+PASS: parser — x => integral(x + 1, 5)
+PASS: parser — x => sum(x, 1)
+PASS: parser — x => compoundInterest(100, 10, 2)
+PASS: parser — x => distance(x, 5)
+PASS: parser — x => max(x, 0)
+Парсер: все встроенные проверки успешно пройдены.
+EXIT=0
+=== --all ===
+Пакетный прогон: 66 входных выражений.
+
+L0  | Базовая сингулярность
+  input:   x => (10 / (x - 2))
+  RICIS:   x => ∞_{10} when x=2
+L1  | Устранимая квадратичная форма
+  input:   x => (((x ** 2) - 25) / (x - 5))
+  RICIS:   x => (x + 5)
+L2  | Коэффициенты
+  input:   x => (1 / ((2 * x) - 6))
+  RICIS:   x => ∞_{1} when x=3
+L3  | Квадратичный знаменатель
+  input:   x => (1 / ((x ** 2) - 4))
+  RICIS:   x => ∞_{1} at {x=-2, x=2}
+L5  | Простая тригонометрия
+  input:   x => (Sin(x) / Cos(x))
+  RICIS:   x => ∞_{1} when x=1.5707963267948966
+L6  | Sinc
+  input:   x => (Sin(x) / x)
+  RICIS:   x => (Sin(x) / x)
+L7  | Составная тригонометрия
+  input:   x => (Sin((2 * x)) / Cos((2 * x)))
+  RICIS:   x => ∞_{1} at {x=-8.6393797993659796, x=-5.4977871417999085, x=-2.3561944901943135, x=0.78539816141129326, x=3.9269908189773579, x=7.0685834705829542}; ∞_{-1} at {x=-7.06858347058294, x=-3.9269908189773428, x=-0.78539816141127794, x=2.3561944901943286, x=5.4977871417999227, x=8.6393797993659938}
+L8  | Устранимая четвёртая степень
+  input:   x => (((((x * x) * x) * x) - 1) / (x - 1))
+  RICIS:   x => (((((x * x) * x) + (x * x)) + x) + 1)
+L9  | Логарифмический знаменатель
+  input:   x => (1 / Log(x))
+  RICIS:   x => ∞_{1} when x=1
+L10 | Экспоненциальная форма
+  input:   x => ((Exp(x) - 1) / x)
+  RICIS:   x => ((Exp(x) - 1) / x)
+L11 | Тригонометрическая форма
+  input:   x => ((1 - Cos(x)) / (x * x))
+  RICIS:   x => ((1 - Cos(x)) / (x * x))
+L12 | Тангенс над параметром
+  input:   x => (Tan(x) / x)
+  RICIS:   x => (Tan(x) / x)
+L13 | Стеночная модель
+  input:   x => (1 / (x * (x + 1)))
+  RICIS:   x => ∞_{1} at {x=-1, x=-0}
+L14 | Модель blow-up
+  input:   x => (1 / (1 - (x * x)))
+  RICIS:   x => ∞_{1} at {x=-1, x=1}
+L15 | Существенная сингулярность
+  input:   x => Exp((1 / x))
+  RICIS:   x => Exp(∞_{1} when x=-0)
+L16 | Простой полюс
+  input:   x => (1 / x)
+  RICIS:   x => ∞_{1} when x=-0
+L17 | Полюс второго порядка
+  input:   x => (1 / (x * x))
+  RICIS:   x => ∞_{1} when x=0
+L18 | Логарифмическая сингулярность
+  input:   x => Log(x)
+  RICIS:   x => Log(x)
+L19 | Повтор sinc
+  input:   x => (Sin(x) / x)
+  RICIS:   x => (Sin(x) / x)
+L20 | Повтор существенной сингулярности
+  input:   x => Exp((1 / x))
+  RICIS:   x => Exp(∞_{1} when x=-0)
+L21 | Модель Big Bang
+  input:   x => (1 / x)
+  RICIS:   x => ∞_{1} when x=-0
+L22 | Модель горизонта
+  input:   x => (1 / (1 - x))
+  RICIS:   x => ∞_{1} when x=1
+L23 | Модель Burgers
+  input:   x => (1 / (1 - x))
+  RICIS:   x => ∞_{1} when x=1
+L24 | Вложенная сингулярность
+  input:   x => (x / (x * x))
+  RICIS:   x => ∞_{1} when x=-0
+L25 | Смешанная sinh/cos
+  input:   x => (1 / ((Cos(x) * Sinh(x)) - 1))
+  RICIS:   x => ∞_{1} at {x=-4.694088011980039, x=-1.8863823831081326}
+L26 | Полюса Pow
+  input:   x => (1 / (Pow(x, 4) - 1))
+  RICIS:   x => ∞_{1} at {x=-1, x=1}
+L27 | Полюс третьего порядка
+  input:   x => (1 / ((x * x) * x))
+  RICIS:   x => ∞_{1} when x=0
+L28 | Устранимая кубическая форма
+  input:   x => ((Pow(x, 3) - 8) / (x - 2))
+  RICIS:   x => (((x * x) + (2 * x)) + 4)
+L29 | Двойной полюс
+  input:   x => (1 / ((x * x) * (x - 1)))
+  RICIS:   x => ∞_{1} at {x=0, x=1}
+L30 | Корневая ветвь
+  input:   x => Sqrt(x)
+  RICIS:   x => Sqrt(x)
+L31 | Прокси Gamma
+  input:   x => (Sin((3.141592653589793 * x)) / x)
+  RICIS:   x => (Sin((3.141592653589793 * x)) / x)
+L32 | Прокси Bessel
+  input:   x => (Sqrt((2 / (3.141592653589793 * x))) * Cos((x - (3.141592653589793 / 4))))
+  RICIS:   x => (Sqrt(∞_{2} when x=-0) * Cos((x - (3.141592653589793 / 4))))
+L33 | Прокси Airy
+  input:   x => Exp(Pow(x, 1.5))
+  RICIS:   x => Exp(Pow(x, 1.5))
+L34 | Прокси Riemann zeta
+  input:   x => ((1 / (x - 1)) + Log(Abs(x)))
+  RICIS:   x => (∞_{1} when x=1 + Log(Abs(x)))
+L35 | Интеграл Fermi-Dirac
+  input:   x => (Log((1 + Exp((-1 / x)))) / x)
+  RICIS:   x => (Log((1 + Exp((-1 / x)))) / x)
+L36 | Дробная степень blow-up
+  input:   x => (1 / Pow((1 - x), (2 / 3)))
+  RICIS:   x => ∞_{1} when x=1
+L37 | Вихревой слой
+  input:   x => (1 / Sqrt((Abs(x) + 2.220446049250313E-16)))
+  RICIS:   x => (1 / Sqrt((Abs(x) + 2.220446049250313E-16)))
+L38 | Schwarzschild g00
+  input:   x => (1 / (1 - (2 / x)))
+  RICIS:   x => ∞_{2} when x=2
+L39 | QCD instanton
+  input:   x => Exp((((-8 * 3.141592653589793) * 3.141592653589793) / x))
+  RICIS:   x => Exp(∞_{-78.95683520871486} when x=-0)
+L40 | UV полюс
+  input:   x => (1 / (12 * x))
+  RICIS:   x => ∞_{1} when x=-0
+L41 | Yang-Mills monopole
+  input:   x => (1 / Sqrt(((x * x) + 2.220446049250313E-16)))
+  RICIS:   x => (1 / Sqrt(((x * x) + 2.220446049250313E-16)))
+L42 | Высокий порядок
+  input:   x => ((x - Sin(x)) / Pow(x, 3))
+  RICIS:   x => ((x - Sin(x)) / Pow(x, 3))
+L43 | Гиперболическая форма
+  input:   x => ((Sinh(x) - x) / Pow(x, 3))
+  RICIS:   x => ((Sinh(x) - x) / Pow(x, 3))
+L44 | Неприводимый квадратный знаменатель
+  input:   x => (1 / ((x * x) + 1))
+  RICIS:   x => (1 / ((x * x) + 1))
+L45 | Тангенциальный полюс
+  input:   x => (1 / (1 - Tan(x)))
+  RICIS:   x => ∞_{1} at {x=-8.6393797993659796, x=-5.4977871417999085, x=-2.3561944901943135, x=0.78539816141129326, x=3.9269908189773579, x=7.0685834705829542}
+L46 | Составной экспоненциальный полюс
+  input:   x => (1 / (Exp((x * x)) - 1))
+  RICIS:   x => ∞_{1} when x=7.6466610821057657E-15
+L47 | Логарифмический ноль
+  input:   x => (1 / Log(x))
+  RICIS:   x => ∞_{1} when x=1
+L48 | Неопределённая log-форма
+  input:   x => (Log(x) / (1 / x))
+  RICIS:   x => (Log(x) * x)
+L49 | Полином пятой степени
+  input:   x => (1 / (Pow(x, 5) - 32))
+  RICIS:   x => ∞_{1} when x=2
+L50 | Близкие корни
+  input:   x => (1 / ((x - 1) * (x - 1.0000001)))
+  RICIS:   x => ∞_{1} at {x=1, x=1.0000001000000001}
+L51 | Символьная производная
+  input:   x => (3 * (x ** 2))
+  RICIS:   x => (3 * (x ** 2))
+L52 | Геометрический интеграл
+  input:   x => ((x + 1) * 5)
+  RICIS:   x => ((x + 1) * 5)
+L53 | Сумма выражений
+  input:   x => (x + 1)
+  RICIS:   x => (x + 1)
+L54 | Сложный процент
+  input:   x => (100 * ((1 + (10 / 100)) ** 2))
+  RICIS:   x => (100 * ((1 + (10 / 100)) ** 2))
+L55 | Минимум выражений
+  input:   x => IIF((x < 0), x, 0)
+  RICIS:   x => IIF((x < 0), x, 0)
+L56 | Положительная часть
+  input:   x => IIF((x > 0), x, 0)
+  RICIS:   x => IIF((x > 0), x, 0)
+L57 | Отрицательная часть
+  input:   x => IIF((x < 0), x, 0)
+  RICIS:   x => IIF((x < 0), x, 0)
+L58 | Расстояние выражений
+  input:   x => Abs((x - 5))
+  RICIS:   x => Abs((x - 5))
+L59 | Максимум выражений
+  input:   x => IIF((x > 5), x, 5)
+  RICIS:   x => IIF((x > 5), x, 5)
+L60 | Ограничение диапазона
+  input:   x => Clamp(x, -1, 1)
+  RICIS:   x => Clamp(x, -1, 1)
+L61 | Гиперболический косинус
+  input:   x => Cosh(x)
+  RICIS:   x => Cosh(x)
+L62 | Гиперболический тангенс
+  input:   x => Tanh(x)
+  RICIS:   x => Tanh(x)
+L63 | Десятичный логарифм
+  input:   x => Log10((Abs(x) + 1))
+  RICIS:   x => Log10((Abs(x) + 1))
+L64 | Знак выражения
+  input:   x => Convert(Sign(x), Double)
+  RICIS:   x => Convert(Sign(x), Double)
+L65 | Остаток от деления
+  input:   x => (x % 2)
+  RICIS:   x => (x % 2)
+L66 | Степенная функция
+  input:   x => Pow(x, 3)
+  RICIS:   x => Pow(x, 3)
+
+Пакетный прогон завершён: 66/66 выражений обработано.
+EXIT=0
+=== --author-seo-demo ===
+Исходная лямбда с захваченным about:
+  x => IIF((value(Ricis.ConsoleApp.Program+<>c__DisplayClass22_0).about != null), (x + 1), (x + 1))
+
+Производная RICIS-лямбда с SEO-профилем автора:
+  x => IIF((value(Ricis.ConsoleApp.Program+<>c__DisplayClass22_0).about != null), (x + 1), (x + 1))
+
+[SEO AUTHOR]
+name: Дмитрий Алейников (Dmitry Aleinikov)
+orcid: https://orcid.org/0009-0004-3226-7700
+firstOnlinePublication: 2025-08-08
+description: Независимый исследователь и автор публикаций о RICIS-III, формальной математике, структурном разрешении сингулярностей и вычислительных приложениях.
+keywords: RICIS-III, формальная математика, формальная верификация, индексированные бесконечности, типизированные нули, разрешение сингулярностей, алгебраическая геометрия, вычислительный анализ
+sameAs:
+  - https://dzen.ru/a/aJYMMYwpLDzBCcQN (2025-08-08; Как мы переопределили бесконечность, устранили деление на ноль и переписали теорему Коши)
+  - https://doi.org/10.5281/zenodo.18116204 (2026-01-05; RICIS-III: Recursive Indexed Calculus of Identity and Singularity – Complete Proofs of the Seven Millennium Problems and Navier–Stokes)
+  - https://doi.org/10.5281/zenodo.21309650 (2026-07-11; Resolution of a Cusp Singularity Without Blow-up: The RICIS-III Method)
+  - https://zenodo.org/records/17872755 (2025-12-09; RICIS-III publication record)
+  - https://doi.org/10.5281/zenodo.21836220 (2026-08-07; RICIS-III publication record)
+  - https://doi.org/10.5281/zenodo.21869668 (2026-08-10; Full Verification, Numerical Calculations and Benchmarks, large Structural Analysis of 5 Pharmacological Molecules, CPU/GPU Performance Comparison)
+  - https://doi.org/10.5281/zenodo.21827360 (2026-08-06; RICIS-III publication record)
+jsonld:
+{"@context":"https://schema.org","@type":"Person","name":"Дмитрий Алейников","alternateName":"Dmitry Aleinikov","identifier":"https://orcid.org/0009-0004-3226-7700","url":"https://orcid.org/0009-0004-3226-7700","description":"Независимый исследователь и автор публикаций о RICIS-III, формальной математике, структурном разрешении сингулярностей и вычислительных приложениях.","knowsAbout":["RICIS-III","формальная математика","формальная верификация","индексированные бесконечности","типизированные нули","разрешение сингулярностей","алгебраическая геометрия","вычислительный анализ"],"sameAs":["https://dzen.ru/a/aJYMMYwpLDzBCcQN","https://doi.org/10.5281/zenodo.18116204","https://doi.org/10.5281/zenodo.21309650","https://zenodo.org/records/17872755","https://doi.org/10.5281/zenodo.21836220","https://doi.org/10.5281/zenodo.21869668","https://doi.org/10.5281/zenodo.21827360","https://orcid.org/0009-0004-3226-7700"],"subjectOf":[{"@type":"CreativeWork","name":"Как мы переопределили бесконечность, устранили деление на ноль и переписали теорему Коши","url":"https://dzen.ru/a/aJYMMYwpLDzBCcQN","datePublished":"2025-08-08"},{"@type":"CreativeWork","name":"RICIS-III: Recursive Indexed Calculus of Identity and Singularity – Complete Proofs of the Seven Millennium Problems and Navier–Stokes","url":"https://doi.org/10.5281/zenodo.18116204","datePublished":"2026-01-05"},{"@type":"CreativeWork","name":"Resolution of a Cusp Singularity Without Blow-up: The RICIS-III Method","url":"https://doi.org/10.5281/zenodo.21309650","datePublished":"2026-07-11"},{"@type":"CreativeWork","name":"RICIS-III publication record","url":"https://zenodo.org/records/17872755","datePublished":"2025-12-09"},{"@type":"CreativeWork","name":"RICIS-III publication record","url":"https://doi.org/10.5281/zenodo.21836220","datePublished":"2026-08-07"},{"@type":"CreativeWork","name":"Full Verification, Numerical Calculations and Benchmarks, large Structural Analysis of 5 Pharmacological Molecules, CPU/GPU Performance Comparison","url":"https://doi.org/10.5281/zenodo.21869668","datePublished":"2026-08-10"},{"@type":"CreativeWork","name":"RICIS-III publication record","url":"https://doi.org/10.5281/zenodo.21827360","datePublished":"2026-08-06"}],"firstOnlinePublication":"2025-08-08"}
+
+Проверка исполнения: x=2 → 3
+EXIT=0
+=== --derivative-demo ===
+Сравнение формальной производной RICIS с известной классической формулой:
+Лимиты и Лопиталь не используются; сравниваются исполненные производные.
+
+F(t) = t³
+  Исходное дерево: t => ((t * t) * t)
+  RICIS dF/dt:    t => (((t + t) * t) + (t * t))
+  t                 RICIS               классика            |Δ|
+        -2                    12                    12         0 OK
+         0                     0                     0         0 OK
+         3                    27                    27         0 OK
+
+F(t) = sin(t²)+t³
+  Исходное дерево: t => (Sin((t * t)) + Pow(t, 3))
+  RICIS dF/dt:    t => ((Cos((t * t)) * (t + t)) + (3 * Pow(t, 2)))
+  t                 RICIS               классика            |Δ|
+        -1    1.9193953882637205    1.9193953882637205         0 OK
+         0                     0                     0         0 OK
+         2    9.3854255165455527    9.3854255165455527         0 OK
+
+F(t) = t²·sin(t)
+  Исходное дерево: t => ((t * t) * Sin(t))
+  RICIS dF/dt:    t => (((t + t) * Sin(t)) + ((t * t) * Cos(t)))
+  t                 RICIS               классика            |Δ|
+        -1    2.2232442754839328    2.2232442754839328         0 OK
+       0.5    0.6988211790767962    0.6988211790767962         0 OK
+         2    1.9726023611141572    1.9726023611141572         0 OK
+EXIT=0
+=== --structural-demo ===
+Структурное сокращение одинаковых функций по L1/SP2:
+Классические нулевые точки не вычисляются до тождества F/F → 1.
+
+> x => sign(x) / sign(x)
+Исходная лямбда:
+  x => (Convert(Sign(x), Double) / Convert(Sign(x), Double))
+Производная RICIS-лямбда:
+  x => 1
+Значения производного дерева:
+  -2 → 1; -1 → 1; 0 → 1; 1 → 1; 2 → 1
+
+> x => clamp(x, -1, 1) / clamp(x, -1, 1)
+Исходная лямбда:
+  x => (Clamp(x, -1, 1) / Clamp(x, -1, 1))
+Производная RICIS-лямбда:
+  x => 1
+Значения производного дерева:
+  -2 → 1; -1 → 1; 0 → 1; 1 → 1; 2 → 1
+
+> x => (abs(x) * (x + 1)) / abs(x)
+Исходная лямбда:
+  x => ((Abs(x) * (x + 1)) / Abs(x))
+Производная RICIS-лямбда:
+  x => (x + 1)
+Значения производного дерева:
+  -2 → -1; -1 → 0; 0 → 1; 1 → 2; 2 → 3
+
+> x => mod(x, 2) / mod(x, 2)
+Исходная лямбда:
+  x => ((x % 2) / (x % 2))
+Производная RICIS-лямбда:
+  x => 1
+Значения производного дерева:
+  -2 → 1; -1 → 1; 0 → 1; 1 → 1; 2 → 1
+
+> x => (x % 2) / (x % 2)
+Исходная лямбда:
+  x => ((x % 2) / (x % 2))
+Производная RICIS-лямбда:
+  x => 1
+Значения производного дерева:
+  -2 → 1; -1 → 1; 0 → 1; 1 → 1; 2 → 1
+
+EXIT=0
+=== --integral-demo ===
+Геометрический Integral RICIS через A6:
+  0_F · ∞_L → F·L; F и L остаются отложенными деревьями.
+  Ни предел, ни сумма Римана, ни первообразная не строятся.
+
+F(x):              x => (x + 1)
+L:                 5
+Integral(F, 5):    x => ((x + 1) * 5)
+Проверка x=2:      15
+
+L(x):              u => (u - 1)
+Integral(F, L):    x => ((x + 1) * (x - 1))
+Проверка x=3:      8
+EXIT=0
+=== --sum-demo ===
+Структурная Sum RICIS для двух отложенных лямбд:
+F(x):       x => (x + 1)
+G(y):       y => (y - 1)
+Sum(F, G):  x => ((x + 1) + (x - 1))
+Проверка x=2: 4
+EXIT=0
+=== --proof-demo ===
+Доказательные expression-операции RICIS:
+F(x):              x => (x + 1)
+G(y):              y => (y - 1)
+Compose(F, G):     y => ((y - 1) + 1)
+At(F, G):          y => ((y - 1) + 1)
+Difference(F, F):  x => 0
+Ratio(I, I):       z => 1
+Product(F, G):     x => ((x + 1) * (x - 1))
+
+Compose при x=3:   3
+Product при x=3:   8
+Difference при x=0:0
+Ratio при x=0:     1
+EXIT=0
+=== --academic-proof-demo ===
+Академический доказательный протокол RICIS:
+Исходный тезис: x => (((x * x) - 25) / (x - 5))
+Производное выражение: x => (x + 5)
+
+# Формальный вывод RICIS III
+
+## Предпосылки
+1. Условие: `x => (x >= -10)`.
+
+## Ограничения области
+1. Ограничение: `x => (x != 5)`.
+
+## Тезис
+Доказуемое отложенное выражение: `x => (((x * x) - 25) / (x - 5))`.
+
+## Нормативный вывод
+Ни одна предпосылка не исполнялась численно. Ниже записан полный порядок нормативных фаз, включая пропущенные и структурно неизменённые попытки. Для каждой попытки фиксируются все маршруты от посещённого узла к корню expression tree.
+
+### Шаг 1: Фаза 0 — тождество сущности
+**Нормативное основание:** ID-01 / L1: F/F → 1.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(25) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(5) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(25) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(5) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (((x * x) - 25) / (x - 5))`.
+После: `x => (((x * x) - 25) / (x - 5))`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+### Шаг 2: Фаза 0.5 — полярная тригонометрия
+**Нормативное основание:** POL: точные полярные тождества.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(25) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(5) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(25) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(5) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (((x * x) - 25) / (x - 5))`.
+После: `x => (((x * x) - 25) / (x - 5))`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+### Шаг 3: Фаза 1 — структурная алгебра
+**Нормативное основание:** SP2: сокращение до сингулярностей.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Multiply -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(25) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Constant(5) -> Subtract -> Divide -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Промежуточное выведение:**
+#### Шаг 3.1: Разложение разности квадратов
+**Основание:** SP2: A²−B² = (A−B)(A+B).
+До: `x => (((x * x) - 25) / (x - 5))`.
+После: `x => (((x - 5) * (x + 5)) / (x - 5))`.
+#### Шаг 3.2: Сокращение общего множителя
+**Основание:** SP2: (F·G)/F = G.
+До: `x => (((x - 5) * (x + 5)) / (x - 5))`.
+После: `x => (x + 5)`.
+
+### Шаг 4: Фаза 1.5 — мосты O(1)
+**Нормативное основание:** LIM: F·0 → 0_F, F/0 → ∞_F.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (x + 5)`.
+После: `x => (x + 5)`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+### Шаг 5: Фаза 2 — сингулярное преобразование
+**Нормативное основание:** A1/A4: индексирование и отношение нулей.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (x + 5)`.
+После: `x => (x + 5)`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+### Шаг 6: Фаза 4 — согласованность типов
+**Нормативное основание:** SP3: сохранение типа и ключей payload.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (x + 5)`.
+После: `x => (x + 5)`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+### Шаг 7: Фаза 5 — стандартные операции
+**Нормативное основание:** Z-01/Z-02, A5/A6/A7.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Add -> Lambda<Func`2>`.
+- `Constant(5) -> Add -> Lambda<Func`2>`.
+- `Parameter(x) -> Lambda<Func`2>`.
+
+До: `x => (x + 5)`.
+После: `x => (x + 5)`.
+**Статус:** фаза выполнена, но структурно не изменила expression tree.
+
+## Заключение
+Следовательно, в рамках перечисленных формальных условий и ограничений производное RICIS-выражение имеет вид: `x => (x + 5)`.
+Протокол фиксирует символическое выведение и не утверждает истинность внешних предпосылок вне переданных expression tree.
+
+Проверка производного дерева при x=2: 7
+EXIT=0
+=== --system-proof-demo ===
+Академическое доказательство RICIS для системы линейных уравнений:
+  x + y = 5
+  x - y = 1
+  Доказуемое следствие: x = 3
+
+# Формальный вывод RICIS III: система линейных уравнений
+
+## Система уравнений
+1. Уравнение: `(x, y) => ((x + y) == 5)`.
+2. Уравнение: `(x, y) => ((x - y) == 1)`.
+
+## Ограничения области
+1. Ограничение: `(x, y) => ((x >= 0) AndAlso (y >= 0))`.
+
+## Тезис
+Доказуемое следствие: `(x, y) => (x == 3)`.
+
+## Символическое исключение
+Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.
+
+### Шаг 1: Линейная комбинация уравнений системы
+**Основание:** умножение первого равенства на противоположный коэффициент y второго и второго на коэффициент y первого; переменная исключается по детерминанту.
+До: `(x, y) => ((x + y) == 5)`; `(x, y) => ((x - y) == 1)`.
+После: `(x, y) => ((2 * x) == 6)`.
+
+### Шаг 2: Выделение первой координаты
+**Основание:** точное деление обеих частей линейного равенства на ненулевой коэффициент.
+До: `(x, y) => ((2 * x) == 6)`.
+После: `(x, y) => (x == 3)`.
+
+### Шаг 3: Подстановка найденной координаты в первое уравнение
+**Основание:** подстановка равных выражений в формальное равенство.
+До: `(x, y) => ((x + y) == 5)`.
+После: `(x, y) => ((3 + y) == 5)`.
+
+### Шаг 4: Выделение второй координаты
+**Основание:** точное решение линейного равенства по оставшейся координате.
+До: `(x, y) => ((3 + y) == 5)`.
+После: `(x, y) => (y == 2)`.
+
+## Заключение
+Следовательно, система выводит x=3 и y=2; требуемая координата x доказана выражением `(x, y) => (x == 3)`.
+
+Проверка производного выражения: (x,y)=(3,2) → True; (2,3) → False
+EXIT=0
+=== --riemann-proof-demo ===
+Мониторинг специализированного RH proof case:
+[START] CASE: Riemann Hypothesis — conditional critical-line case
+[OPEN] ANALYTIC: Complex scalar model with Re, Im and conjugation
+[OPEN] ANALYTIC: Zeta(s) or completed Xi(s) symbolic definition
+[OPEN] ANALYTIC: NontrivialZero(s) predicate with pole and trivial-zero exclusions
+[OPEN] ANALYTIC: Analytic continuation over the critical strip
+[OPEN] ANALYTIC: Functional equation transferring zero membership from s to 1-s
+[OPEN] ANALYTIC: Universal bridge from every nontrivial zero to the reflected pair
+[START] ID-01..ID-06: Delegating reflected-pair elimination to the generic RICIS proof extension.
+[PASS] ID-01..ID-06: Derived (sigma, mirrorSigma) => (sigma == (1 / 2)) as a conditional algebraic consequence.
+[CONDITIONAL] SCOPE: Analytic obligations are explicit and are not silently promoted to axioms.
+[END] CASE: ConditionalTheorem
+
+# Нормативный вывод RICIS: тождество типа отражённой пары
+
+## Аннотация
+Документирует полную нормативную цепочку ID-01–ID-06 для формальной отражённой пары и её точного рационального следствия.
+
+## Доказательный статус
+**Конечное символическое выведение.** Документ сертифицирует только преобразование явно переданных expression tree.
+
+## Определения
+1. sigma и mirrorSigma — координаты формальной отражённой пары.
+2. Type — сохранённый компонент идентичности Id(X)={Value(X), Type(X)}.
+
+## Аксиомы и внешние предпосылки
+Дополнительные аксиомы не заданы.
+
+## Нормативная цепочка RICIS
+### Шаг 1: ID-01 — самоидентификация
+**Нормативное следствие:** Сохранение идентичности отражённой пары даёт Type(sigma)=Type(mirrorSigma).
+### Шаг 2: ID-02 — зеркальная симметрия
+**Нормативное следствие:** R(sigma)=1−sigma; следовательно sigma+mirrorSigma=1.
+### Шаг 3: ID-03 — верность типа координате
+**Нормативное следствие:** Равенство Type(sigma)=Type(mirrorSigma) даёт sigma=mirrorSigma.
+### Шаг 4: ID-04 — линейная пара идентичности
+**Нормативное следствие:** Из ID-02 и ID-03 следует sigma−mirrorSigma=0 при sigma+mirrorSigma=1.
+### Шаг 5: ID-05 — структурное исключение
+**Нормативное следствие:** Линейная комбинация ID-04 даёт 2·sigma=1.
+### Шаг 6: ID-06 — точное рациональное выделение
+**Нормативное следствие:** Из 2·sigma=1 следует sigma=Divide(1,2).
+
+## Теорема или конечный тезис
+По ID-01–ID-06 для пары sigma, mirrorSigma доказывается `(sigma, mirrorSigma) => (sigma == (1 / 2))`.
+
+## Машинно воспроизводимое символическое выведение
+Следующие шаги получены из expression tree; входные условия и ограничения не компилировались и не исполнялись.
+
+### Формальный вывод RICIS III: система линейных уравнений
+
+#### Система уравнений
+1. Уравнение: `(sigma, mirrorSigma) => ((sigma + mirrorSigma) == 1)`.
+2. Уравнение: `(sigma, mirrorSigma) => ((sigma - mirrorSigma) == 0)`.
+
+#### Ограничения области
+1. Ограничение: `(sigma, mirrorSigma) => ((sigma > 0) AndAlso (sigma < 1))`.
+2. Ограничение: `(sigma, mirrorSigma) => ((mirrorSigma > 0) AndAlso (mirrorSigma < 1))`.
+
+#### Тезис
+Доказуемое следствие: `(sigma, mirrorSigma) => (sigma == (1 / 2))`.
+
+#### Символическое исключение
+Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.
+
+##### Шаг 1: Линейная комбинация уравнений системы
+**Основание:** умножение первого равенства на противоположный коэффициент mirrorSigma второго и второго на коэффициент mirrorSigma первого; переменная исключается по детерминанту.
+До: `(sigma, mirrorSigma) => ((sigma + mirrorSigma) == 1)`; `(sigma, mirrorSigma) => ((sigma - mirrorSigma) == 0)`.
+После: `(sigma, mirrorSigma) => ((2 * sigma) == 1)`.
+
+##### Шаг 2: Выделение первой координаты
+**Основание:** точное деление обеих частей линейного равенства на ненулевой коэффициент.
+До: `(sigma, mirrorSigma) => ((2 * sigma) == 1)`.
+После: `(sigma, mirrorSigma) => (sigma == (1 / 2))`.
+
+##### Шаг 3: Подстановка найденной координаты в первое уравнение
+**Основание:** подстановка равных выражений в формальное равенство.
+До: `(sigma, mirrorSigma) => ((sigma + mirrorSigma) == 1)`.
+После: `(sigma, mirrorSigma) => (((1 / 2) + mirrorSigma) == 1)`.
+
+##### Шаг 4: Выделение второй координаты
+**Основание:** точное решение линейного равенства по оставшейся координате.
+До: `(sigma, mirrorSigma) => (((1 / 2) + mirrorSigma) == 1)`.
+После: `(sigma, mirrorSigma) => (mirrorSigma == (1 / 2))`.
+
+#### Заключение
+Следовательно, система выводит sigma=(1 / 2) и mirrorSigma=(1 / 2); требуемая координата sigma доказана выражением `(sigma, mirrorSigma) => (sigma == (1 / 2))`.
+
+
+## Воспроизводимый результат
+Производное expression tree: `(sigma, mirrorSigma) => (sigma == (1 / 2))`.
+
+## Границы и непроверенные утверждения
+1. Документ фиксирует нормативную цепочку ID-01–ID-06 для одной формальной отражённой пары; область применения пары задаётся моделью пользователя.
+
+
+Статус: ConditionalTheorem; производное выражение: (sigma, mirrorSigma) => (sigma == (1 / 2))
+Проверка производного выражения: (0.5,0.5) → True; (0.4,0.6) → False
+EXIT=0
+=== --lean-doc-demo ===
+import Mathlib
+
+namespace RicisIdentity
+
+/-- Generated from structured RICIS proof rows; exact rational domain. -/
+structure TypeIdentityAxioms (TypeTag : Type) where
+  typeOf : ℚ → TypeTag
+  reflect : ℚ → ℚ
+  reflectionCoordinate : ∀ sigma, reflect sigma = 1 - sigma
+  identityPreservesType : ∀ sigma, typeOf sigma = typeOf (reflect sigma)
+  typeCoordinateFaithful : Function.Injective typeOf
+
+/-- ID-01: reflection preserves the identity type. -/
+theorem id01_type_preserved {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    A.typeOf sigma = A.typeOf (A.reflect sigma) :=
+  A.identityPreservesType sigma
+
+/-- ID-02: reflected coordinates sum to one. -/
+theorem id02_reflection_sum {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    sigma + A.reflect sigma = 1 := by
+  rw [A.reflectionCoordinate sigma]
+  ring
+
+/-- ID-03: faithful type identifies the coordinate. -/
+theorem id03_same_coordinate {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    sigma = A.reflect sigma :=
+  A.typeCoordinateFaithful (id01_type_preserved A sigma)
+
+/-- ID-04: the named identity rules produce the linear pair. -/
+theorem id04_linear_pair {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    sigma + A.reflect sigma = 1 ∧ sigma - A.reflect sigma = 0 := by
+  constructor
+  · exact id02_reflection_sum A sigma
+  · have h := id03_same_coordinate A sigma
+    linarith
+
+/-- ID-05: eliminate the reflected coordinate. -/
+theorem id05_doubled_coordinate {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    2 * sigma = 1 := by
+  have h := id04_linear_pair A sigma
+  linarith
+
+/-- ID-06: exact critical coordinate. -/
+theorem id06_exact_half {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    sigma = 1 / 2 := by
+  have h := id05_doubled_coordinate A sigma
+  linarith
+
+/-- The reflected coordinate obtains the same exact rational result. -/
+theorem id06_reflected_exact_half {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    A.reflect sigma = 1 / 2 := by
+  rw [A.reflectionCoordinate sigma]
+  have h := id06_exact_half A sigma
+  linarith
+
+end RicisIdentity
+EXIT=0
+=== --lean-a6-demo ===
+import Mathlib
+
+namespace RicisIdentity
+
+/-- Generated from structured RICIS proof rows; exact rational domain. -/
+structure TypeIdentityAxioms (TypeTag : Type) where
+  typeOf : ℚ → TypeTag
+  reflect : ℚ → ℚ
+  reflectionCoordinate : ∀ sigma, reflect sigma = 1 - sigma
+  identityPreservesType : ∀ sigma, typeOf sigma = typeOf (reflect sigma)
+  typeCoordinateFaithful : Function.Injective typeOf
+
+/-- ID-01: reflection preserves the identity type. -/
+theorem id01_type_preserved {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    A.typeOf sigma = A.typeOf (A.reflect sigma) :=
+  A.identityPreservesType sigma
+
+/-- Structured A6 payloads: the determinant zero and inverse infinity payloads. -/
+structure A6Payloads where
+  zeroPayload : ℚ → ℚ
+  infinityPayload : ℚ → ℚ
+
+def a6BridgeAt (A : A6Payloads) (key : ℚ) : ℚ :=
+  A.zeroPayload key * A.infinityPayload key
+
+/-- A6: 0_F × ∞_G is represented by the exact payload product F·G at a certified key. -/
+theorem a6_indexed_zero_infinity_bridge (A : A6Payloads) (key : ℚ) :
+    a6BridgeAt A key = A.zeroPayload key * A.infinityPayload key := by
+  rfl
+
+/-- A6 payload products retain structural commutativity without numeric evaluation. -/
+theorem a6_payload_product_commutative (A : A6Payloads) (key : ℚ) :
+    a6BridgeAt A key = A.infinityPayload key * A.zeroPayload key := by
+  unfold a6BridgeAt
+  ring
+
+end RicisIdentity
+EXIT=0
+=== --jacobian-proof-demo ===
+JAC-001: сингулярный rank-one Jacobian
+Проверка lambda-тезиса: True
+Lambda-условий: 2; ограничений: 1
+Typed trace entries: 19
+Structural singularity: True; A6 payload entries: 1
+
+{
+  "format": "Json",
+  "title": "JAC-001: \u0441\u0438\u043D\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0439 rank-one Jacobian",
+  "scope": "ConditionalTheorem",
+  "abstract": "\u041A\u0430\u043D\u043E\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F RICIS-\u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 structural determinant identity \u0438 A6 payload bridge \u0434\u043B\u044F J=((1,1),(1,1)).",
+  "theorem": "\u041F\u0440\u0438 \u043F\u0435\u0440\u0435\u0434\u0430\u043D\u043D\u044B\u0445 \u0444\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u044B\u0445 \u043F\u043E\u0441\u044B\u043B\u043A\u0430\u0445 det(J)=0 scalar claim detJ/detJ \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u0432\u044B\u0432\u043E\u0434\u0438\u0442\u0441\u044F \u0432 1; inverse payload \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442\u043B\u043E\u0436\u0435\u043D\u043D\u044B\u043C A6-\u043E\u0431\u044A\u0435\u043A\u0442\u043E\u043C.",
+  "definitions": [
+    "J = ((1,1),(1,1)); det(J)=1\u00B71\u22121\u00B71=0.",
+    "detJ \u2014 scalar-\u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u0430 determinant, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u043C\u0430\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u043A expression tree.",
+    "0_det(J) \u0438 \u221E_Inv(J) \u2014 \u0438\u043D\u0434\u0435\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u044B\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u044B, \u043D\u0435 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 inverse."
+  ],
+  "axioms": [
+    "L1/SP2: \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0435 \u043E\u0442\u043B\u043E\u0436\u0435\u043D\u043D\u044B\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u044F F/F \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u0441\u043E\u043A\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0434\u043E 1.",
+    "A6: 0_F\u00B7\u221E_G \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 structural payload F\u00B7G."
+  ],
+  "normativeSteps": [
+    {
+      "ruleId": "JAC-01",
+      "title": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F determinant",
+      "statement": "Rank-one Jacobian \u043F\u0435\u0440\u0435\u0434\u0430\u0451\u0442 structural zero determinant \u0431\u0435\u0437 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0438\u044F inverse."
+    },
+    {
+      "ruleId": "JAC-02",
+      "title": "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 scalar claim",
+      "statement": "L1/SP2 \u0441\u0442\u0440\u043E\u0438\u0442 verification lambda \u0434\u043B\u044F detJ/detJ \u0438 1."
+    },
+    {
+      "ruleId": "JAC-03",
+      "title": "A6 payload bridge",
+      "statement": "\u041A\u0430\u0436\u0434\u0430\u044F inverse payload entry \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442\u043B\u043E\u0436\u0435\u043D\u043D\u043E\u0439 \u0438 \u0441\u0432\u044F\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u0441 indexed determinant."
+    }
+  ],
+  "limitations": [
+    "\u0424\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u044B\u0435 lambda-\u043F\u043E\u0441\u044B\u043B\u043A\u0438 \u043D\u0435 \u0438\u0441\u043F\u043E\u043B\u043D\u044F\u044E\u0442\u0441\u044F \u0438 \u043D\u0435 \u0441\u0447\u0438\u0442\u0430\u044E\u0442\u0441\u044F \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043D\u044B\u043C\u0438 \u0444\u0430\u043A\u0442\u0430\u043C\u0438.",
+    "Generic Lean audit trace \u043D\u0435 \u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F theorem; kernel-checked \u0447\u0430\u0441\u0442\u044C \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0430 structured A6 template.",
+    "\u0421\u0446\u0435\u043D\u0430\u0440\u0438\u0439 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u044F\u0435\u0442 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 inverse \u0441\u0438\u043D\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0439 \u043C\u0430\u0442\u0440\u0438\u0446\u044B."
+  ],
+  "derivation": "# \u0424\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434 RICIS III\n\n## \u041F\u0440\u0435\u0434\u043F\u043E\u0441\u044B\u043B\u043A\u0438\n1. \u0423\u0441\u043B\u043E\u0432\u0438\u0435: \u0060detJ =\u003E (detJ == 0)\u0060.\n2. \u0423\u0441\u043B\u043E\u0432\u0438\u0435: \u0060detJ =\u003E ((detJ * detJ) == 0)\u0060.\n\n## \u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u044F \u043E\u0431\u043B\u0430\u0441\u0442\u0438\n1. \u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0435: \u0060detJ =\u003E (detJ \u003E= 0)\u0060.\n\n## \u0422\u0435\u0437\u0438\u0441\n\u0414\u043E\u043A\u0430\u0437\u0443\u0435\u043C\u043E\u0435 \u043E\u0442\u043B\u043E\u0436\u0435\u043D\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435: \u0060detJ =\u003E (detJ / detJ)\u0060.\n\n## \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434\n\u041D\u0438 \u043E\u0434\u043D\u0430 \u043F\u0440\u0435\u0434\u043F\u043E\u0441\u044B\u043B\u043A\u0430 \u043D\u0435 \u0438\u0441\u043F\u043E\u043B\u043D\u044F\u043B\u0430\u0441\u044C \u0447\u0438\u0441\u043B\u0435\u043D\u043D\u043E. \u041D\u0438\u0436\u0435 \u0437\u0430\u043F\u0438\u0441\u0430\u043D \u043F\u043E\u043B\u043D\u044B\u0439 \u043F\u043E\u0440\u044F\u0434\u043E\u043A \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u044B\u0445 \u0444\u0430\u0437, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043D\u044B\u0435 \u0438 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435\u0438\u0437\u043C\u0435\u043D\u0451\u043D\u043D\u044B\u0435 \u043F\u043E\u043F\u044B\u0442\u043A\u0438. \u0414\u043B\u044F \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u043F\u044B\u0442\u043A\u0438 \u0444\u0438\u043A\u0441\u0438\u0440\u0443\u044E\u0442\u0441\u044F \u0432\u0441\u0435 \u043C\u0430\u0440\u0448\u0440\u0443\u0442\u044B \u043E\u0442 \u043F\u043E\u0441\u0435\u0449\u0451\u043D\u043D\u043E\u0433\u043E \u0443\u0437\u043B\u0430 \u043A \u043A\u043E\u0440\u043D\u044E expression tree.\n\n### \u0428\u0430\u0433 1: \u0424\u0430\u0437\u0430 0 \u2014 \u0442\u043E\u0436\u0434\u0435\u0441\u0442\u0432\u043E \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** ID-01 / L1: F/F \u2192 1.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Divide -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Divide -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Divide -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E (detJ / detJ)\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n\n### \u0428\u0430\u0433 2: \u0424\u0430\u0437\u0430 0.5 \u2014 \u043F\u043E\u043B\u044F\u0440\u043D\u0430\u044F \u0442\u0440\u0438\u0433\u043E\u043D\u043E\u043C\u0435\u0442\u0440\u0438\u044F\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** POL: \u0442\u043E\u0447\u043D\u044B\u0435 \u043F\u043E\u043B\u044F\u0440\u043D\u044B\u0435 \u0442\u043E\u0436\u0434\u0435\u0441\u0442\u0432\u0430.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n### \u0428\u0430\u0433 3: \u0424\u0430\u0437\u0430 1 \u2014 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u0430\u044F \u0430\u043B\u0433\u0435\u0431\u0440\u0430\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** SP2: \u0441\u043E\u043A\u0440\u0430\u0449\u0435\u043D\u0438\u0435 \u0434\u043E \u0441\u0438\u043D\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0441\u0442\u0435\u0439.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n### \u0428\u0430\u0433 4: \u0424\u0430\u0437\u0430 1.5 \u2014 \u043C\u043E\u0441\u0442\u044B O(1)\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** LIM: F\u00B70 \u2192 0_F, F/0 \u2192 \u221E_F.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n### \u0428\u0430\u0433 5: \u0424\u0430\u0437\u0430 2 \u2014 \u0441\u0438\u043D\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u0435\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** A1/A4: \u0438\u043D\u0434\u0435\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \u0438 \u043E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u0435 \u043D\u0443\u043B\u0435\u0439.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n### \u0428\u0430\u0433 6: \u0424\u0430\u0437\u0430 4 \u2014 \u0441\u043E\u0433\u043B\u0430\u0441\u043E\u0432\u0430\u043D\u043D\u043E\u0441\u0442\u044C \u0442\u0438\u043F\u043E\u0432\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** SP3: \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0442\u0438\u043F\u0430 \u0438 \u043A\u043B\u044E\u0447\u0435\u0439 payload.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n### \u0428\u0430\u0433 7: \u0424\u0430\u0437\u0430 5 \u2014 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438\n**\u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0435 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435:** Z-01/Z-02, A5/A6/A7.\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u0414\u043E \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n**Node-to-root \u043C\u0430\u0440\u0448\u0440\u0443\u0442 (\u041F\u043E\u0441\u043B\u0435 \u0444\u0430\u0437\u044B):**\n- \u0060Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Constant(1) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n- \u0060Parameter(detJ) -\u003E Lambda\u003CFunc\u00602\u003E\u0060.\n\n\u0414\u043E: \u0060detJ =\u003E 1\u0060.\n\u041F\u043E\u0441\u043B\u0435: \u0060detJ =\u003E 1\u0060.\n**\u0421\u0442\u0430\u0442\u0443\u0441:** \u0444\u0430\u0437\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430, \u043D\u043E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0430 expression tree.\n\n## \u0417\u0430\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435\n\u0421\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u043E, \u0432 \u0440\u0430\u043C\u043A\u0430\u0445 \u043F\u0435\u0440\u0435\u0447\u0438\u0441\u043B\u0435\u043D\u043D\u044B\u0445 \u0444\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u044B\u0445 \u0443\u0441\u043B\u043E\u0432\u0438\u0439 \u0438 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0439 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u043D\u043E\u0435 RICIS-\u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u0438\u043C\u0435\u0435\u0442 \u0432\u0438\u0434: \u0060detJ =\u003E 1\u0060.\n\u041F\u0440\u043E\u0442\u043E\u043A\u043E\u043B \u0444\u0438\u043A\u0441\u0438\u0440\u0443\u0435\u0442 \u0441\u0438\u043C\u0432\u043E\u043B\u0438\u0447\u0435\u0441\u043A\u043E\u0435 \u0432\u044B\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0438 \u043D\u0435 \u0443\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442 \u0438\u0441\u0442\u0438\u043D\u043D\u043E\u0441\u0442\u044C \u0432\u043D\u0435\u0448\u043D\u0438\u0445 \u043F\u0440\u0435\u0434\u043F\u043E\u0441\u044B\u043B\u043E\u043A \u0432\u043D\u0435 \u043F\u0435\u0440\u0435\u0434\u0430\u043D\u043D\u044B\u0445 expression tree.\n## \u041F\u0440\u043E\u0432\u0435\u0440\u043E\u0447\u043D\u043E\u0435 \u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u0435\n- Derived: \u0060detJ =\u003E 1\u0060\n- Expected: \u0060detJ =\u003E 1\u0060\n- Verification: \u0060detJ =\u003E (1 == 1)\u0060\n- Structural status: \u0060True\u0060\n\n## \u0422\u0438\u043F\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u043B\u043E\u0433 visitor \u0438 handler \u044D\u0442\u0430\u043F\u043E\u0432\n[1] Info Ricis.Core.Logging.RicisProofOrchestrationStage :: RICIS_PROOF_START \u2014 \u0417\u0430\u043F\u0443\u0449\u0435\u043D\u043E symbolic proof-\u0432\u044B\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0434\u043B\u044F unary expression tree.\n[2] Info Ricis.Core.Logging.RicisProofOrchestrationStage :: RICIS_PIPELINE_START \u2014 \u0417\u0430\u043F\u0443\u0449\u0435\u043D \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u044B\u0439 RICIS phase pipeline.\n[3] Info Ricis.Core.Phases.IdentityReductionVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[4] Trace Ricis.Core.Phases.IdentityReductionVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E (detJ / detJ)\n  after: detJ =\u003E 1\n[5] Info Ricis.Core.Simplifiers.PolarTrigVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[6] Trace Ricis.Core.Simplifiers.PolarTrigVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[7] Info Ricis.Core.Simplifiers.AlgebraicReductionVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[8] Trace Ricis.Core.Simplifiers.AlgebraicReductionVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[9] Info Ricis.Core.Phases.LimitBridgeVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[10] Trace Ricis.Core.Phases.LimitBridgeVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[11] Info Ricis.Core.Simplifiers.RicisTransformVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[12] Trace Ricis.Core.Simplifiers.RicisTransformVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[13] Info Ricis.Core.Phases.TypeConsistencyVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[14] Trace Ricis.Core.Phases.TypeConsistencyVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[15] Info Ricis.Core.Phases.StandardOperationsVisitor :: RICIS_PHASE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u0430\u044F \u0444\u0430\u0437\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430.\n[16] Trace Ricis.Core.Phases.StandardOperationsVisitor :: RICIS_PHASE_TRACE \u2014 \u0417\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u043F\u043E\u043F\u044B\u0442\u043A\u0430 \u043D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E \u043F\u0440\u0435\u043E\u0431\u0440\u0430\u0437\u043E\u0432\u0430\u043D\u0438\u044F.\n  before: detJ =\u003E 1\n  after: detJ =\u003E 1\n[17] Info Ricis.Core.Logging.RicisProofOrchestrationStage :: RICIS_PIPELINE_COMPLETE \u2014 \u041D\u043E\u0440\u043C\u0430\u0442\u0438\u0432\u043D\u044B\u0439 RICIS phase pipeline \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D.\n[18] Info Ricis.Core.Logging.RicisProofOrchestrationStage :: RICIS_PROOF_COMPLETE \u2014 Unary symbolic proof-\u0432\u044B\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E.\n[19] Info Ricis.Core.Logging.RicisProofOrchestrationStage :: RICIS_PROOF_VERIFICATION \u2014 Structural verification lambda \u0441\u0444\u043E\u0440\u043C\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u0431\u0435\u0437 \u0438\u0441\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u0443\u0441\u043B\u043E\u0432\u0438\u0439 \u0438\u043B\u0438 \u0442\u0435\u0437\u0438\u0441\u0430.\n",
+  "derived": "detJ =\u003E 1",
+  "limitationsNotice": "The document records a finite derivation or conditional theorem only; external premises are not evaluated."
+}
+EXIT=0
+=== --jacobian-proof-latex ===
+\documentclass[11pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian,english]{babel}
+\usepackage{textcomp}
+\usepackage[margin=25mm]{geometry}
+\begin{document}
+\section*{RICIS proof document}
+\textbf{Title:} JAC-001: сингулярный rank-one Jacobian\\
+\textbf{Scope:} ConditionalTheorem\\
+\textbf{Theorem:} При переданных формальных посылках det(J)=0 scalar claim detJ/detJ структурно выводится в 1; inverse payload остаётся отложенным A6-объектом.\\
+\textbf{Derived expression:} detJ => 1\\
+
+\subsection*{Node-to-root proof trace}
+\begin{verbatim}
+# Формальный вывод RICIS III
+
+## Предпосылки
+1. Условие: `detJ => (detJ == 0)`.
+2. Условие: `detJ => ((detJ * detJ) == 0)`.
+
+## Ограничения области
+1. Ограничение: `detJ => (detJ >= 0)`.
+
+## Тезис
+Доказуемое отложенное выражение: `detJ => (detJ / detJ)`.
+
+## Нормативный вывод
+Ни одна предпосылка не исполнялась численно. Ниже записан полный
+  порядок нормативных фаз, включая пропущенные и структурно
+  неизменённые попытки. Для каждой попытки фиксируются все маршруты
+  от посещённого узла к корню expression tree.
+
+### Шаг 1: Фаза 0 — тождество сущности
+**Нормативное основание:** ID-01 / L1: F/F -> 1.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Divide -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Divide -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Divide -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => (detJ / detJ)`.
+После: `detJ => 1`.
+
+### Шаг 2: Фаза 0.5 — полярная тригонометрия
+**Нормативное основание:** POL: точные полярные тождества.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+### Шаг 3: Фаза 1 — структурная алгебра
+**Нормативное основание:** SP2: сокращение до сингулярностей.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+### Шаг 4: Фаза 1.5 — мосты O(1)
+**Нормативное основание:** LIM: F*0 -> 0_F, F/0 -> Infinity_F.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+### Шаг 5: Фаза 2 — сингулярное преобразование
+**Нормативное основание:** A1/A4: индексирование и отношение нулей.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+### Шаг 6: Фаза 4 — согласованность типов
+**Нормативное основание:** SP3: сохранение типа и ключей payload.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+### Шаг 7: Фаза 5 — стандартные операции
+**Нормативное основание:** Z-01/Z-02, A5/A6/A7.
+**Node-to-root маршрут (До фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+**Node-to-root маршрут (После фазы):**
+- `Lambda<Func`2>`.
+- `Constant(1) -> Lambda<Func`2>`.
+- `Parameter(detJ) -> Lambda<Func`2>`.
+
+До: `detJ => 1`.
+После: `detJ => 1`.
+**Статус:** фаза выполнена, но структурно не изменила expression
+  tree.
+
+## Заключение
+Следовательно, в рамках перечисленных формальных условий и
+  ограничений производное RICIS-выражение имеет вид: `detJ => 1`.
+Протокол фиксирует символическое выведение и не утверждает
+  истинность внешних предпосылок вне переданных expression tree.
+## Проверочное выражение
+- Derived: `detJ => 1`
+- Expected: `detJ => 1`
+- Verification: `detJ => (1 == 1)`
+- Structural status: `True`
+
+## Типизированный лог visitor и handler этапов
+[1] Info Ricis.Core.Logging.RicisProofOrchestrationStage ::
+  RICIS_PROOF_START — Запущено symbolic proof-выведение для unary
+  expression tree.
+[2] Info Ricis.Core.Logging.RicisProofOrchestrationStage ::
+  RICIS_PIPELINE_START — Запущен нормативный RICIS phase pipeline.
+[3] Info Ricis.Core.Phases.IdentityReductionVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[4] Trace Ricis.Core.Phases.IdentityReductionVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => (detJ / detJ)
+  after: detJ => 1
+[5] Info Ricis.Core.Simplifiers.PolarTrigVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[6] Trace Ricis.Core.Simplifiers.PolarTrigVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[7] Info Ricis.Core.Simplifiers.AlgebraicReductionVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[8] Trace Ricis.Core.Simplifiers.AlgebraicReductionVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[9] Info Ricis.Core.Phases.LimitBridgeVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[10] Trace Ricis.Core.Phases.LimitBridgeVisitor :: RICIS_PHASE_TRACE
+  — Зафиксирована попытка нормативного преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[11] Info Ricis.Core.Simplifiers.RicisTransformVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[12] Trace Ricis.Core.Simplifiers.RicisTransformVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[13] Info Ricis.Core.Phases.TypeConsistencyVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[14] Trace Ricis.Core.Phases.TypeConsistencyVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[15] Info Ricis.Core.Phases.StandardOperationsVisitor ::
+  RICIS_PHASE_COMPLETE — Нормативная фаза завершена.
+[16] Trace Ricis.Core.Phases.StandardOperationsVisitor ::
+  RICIS_PHASE_TRACE — Зафиксирована попытка нормативного
+  преобразования.
+  before: detJ => 1
+  after: detJ => 1
+[17] Info Ricis.Core.Logging.RicisProofOrchestrationStage ::
+  RICIS_PIPELINE_COMPLETE — Нормативный RICIS phase pipeline
+  завершён.
+[18] Info Ricis.Core.Logging.RicisProofOrchestrationStage ::
+  RICIS_PROOF_COMPLETE — Unary symbolic proof-выведение завершено.
+[19] Info Ricis.Core.Logging.RicisProofOrchestrationStage ::
+  RICIS_PROOF_VERIFICATION — Structural verification lambda
+  сформирована без исполнения условий или тезиса.
+
+\end{verbatim}
+\textbf{Status:} finite symbolic derivation only; external premises are not evaluated by this document.
+\end{document}
+EXIT=0
+=== --jacobian-proof-lean ===
+import Mathlib
+
+namespace RicisJacobian
+
+/-- Generated from structured RICIS proof rows; exact rational domain. -/
+structure TypeIdentityAxioms (TypeTag : Type) where
+  typeOf : ℚ → TypeTag
+  reflect : ℚ → ℚ
+  reflectionCoordinate : ∀ sigma, reflect sigma = 1 - sigma
+  identityPreservesType : ∀ sigma, typeOf sigma = typeOf (reflect sigma)
+  typeCoordinateFaithful : Function.Injective typeOf
+
+/-- ID-01: reflection preserves the identity type. -/
+theorem id01_type_preserved {T : Type} (A : TypeIdentityAxioms T) (sigma : ℚ) :
+    A.typeOf sigma = A.typeOf (A.reflect sigma) :=
+  A.identityPreservesType sigma
+
+/-- Structured A6 payloads: the determinant zero and inverse infinity payloads. -/
+structure A6Payloads where
+  zeroPayload : ℚ → ℚ
+  infinityPayload : ℚ → ℚ
+
+def a6BridgeAt (A : A6Payloads) (key : ℚ) : ℚ :=
+  A.zeroPayload key * A.infinityPayload key
+
+/-- A6: 0_F × ∞_G is represented by the exact payload product F·G at a certified key. -/
+theorem a6_indexed_zero_infinity_bridge (A : A6Payloads) (key : ℚ) :
+    a6BridgeAt A key = A.zeroPayload key * A.infinityPayload key := by
+  rfl
+
+/-- A6 payload products retain structural commutativity without numeric evaluation. -/
+theorem a6_payload_product_commutative (A : A6Payloads) (key : ℚ) :
+    a6BridgeAt A key = A.infinityPayload key * A.zeroPayload key := by
+  unfold a6BridgeAt
+  ring
+
+end RicisJacobian
+EXIT=0
+=== --continuous-demo ===
+Непрерывный математический сахар RICIS:
+  Все результаты — чистые конечные expression tree; делегаты не вызываются при построении.
+F(x):              x => (2 * x)
+G(y):              y => (y + 1)
+Abs(F):            x => IIF(((2 * x) < 0), -(2 * x), (2 * x))
+Min(F, G):         x => IIF(((2 * x) > (x + 1)), (x + 1), (2 * x))
+Max(F, G):         x => IIF(((2 * x) > (x + 1)), (2 * x), (x + 1))
+Clamp(F, x-1, x+1):x => IIF((IIF(((2 * x) > (x - 1)), (2 * x), (x - 1)) > (x + 1)), (x + 1), IIF(((2 * x) > (x - 1)), (2 * x), (x - 1)))
+PositivePart(F):   x => IIF(((2 * x) > 0), (2 * x), 0)
+NegativePart(F):   x => IIF(((2 * x) < 0), (2 * x), 0)
+Distance(F, G):    x => IIF((((2 * x) - (x + 1)) < 0), -((2 * x) - (x + 1)), ((2 * x) - (x + 1)))
+
+x       Abs(F)   Min(F,G)  Max(F,G)  Clamp     F⁺        F⁻        |F−G|
+  -2          4         -4         -1         -3          0         -4          3
+   0          0          0          1          0          0          0          1
+   2          4          3          4          3          4          0          1
+EXIT=0
+=== --complex-demo ===
+Комплексные отложенные функции RICIS:
+  z(x) хранится как пара expression tree Re(z), Im(z); System.Numerics.Complex и делегаты не используются при построении.
+z.Re(x):             x => (x + 1)
+z.Im(x):             x => 2
+conj(z).Re(x):       x => (x + 1)
+conj(z).Im(x):       x => -2
+(z·w).Re(x):         x => (((x + 1) * (x - 1)) - (2 * 3))
+(z·w).Im(x):         x => (((x + 1) * 3) + (2 * (x - 1)))
+|z|²:                x => (((x + 1) * (x + 1)) + (2 * 2))
+|z|:                 x => Sqrt((((x + 1) * (x + 1)) + (2 * 2)))
+
+x       Re(z)    Im(z)    Re(z·w)  Im(z·w)  |z|²     |z|
+  -1         0        2         -6         -4        4       2
+   0         1        2         -7          1        5  2.2361
+   2         3        2         -3         11       13  3.6056
+EXIT=0
+=== --interest-demo ===
+Символическая формула сложного процента RICIS:
+  P = S · (1 + r/100)^n; S, r и при необходимости n остаются отложенными expression tree.
+  Формула строится символически и не является финансовым прогнозом или рекомендацией.
+
+S(x):                 x => (1000 * x)
+r(x), в процентах:    y => (2.5 * y)
+P(x), n=3:            x => ((1000 * x) * (((1 + ((2.5 * x) / 100)) * (1 + ((2.5 * x) / 100))) * (1 + ((2.5 * x) / 100))))
+P(x), n(x)=x:         x => ((1000 * x) * Pow((1 + ((2.5 * x) / 100)), x))
+
+x       S(x)      r(x)      P(x), n=3      P(x), n=x
+   1       1000       2.5    1076.890625           1025
+   2       2000         5        2315.25           2205
+   3       3000       7.5    3726.890625    3726.890625
+EXIT=0
+=== --analytic-demo ===
+Аналитический математический сахар RICIS:
+  Каждый результат — явный Math.* expression-узел над нормализованной лямбдой; исходные делегаты не вызываются при построении.
+F(x):          x => (x + 1)
+Sin(F):        x => Sin((x + 1))
+Exp(F):        x => Exp((x + 1))
+Log(F):        x => Log((x + 1))
+Sqrt(F):       x => Sqrt((x + 1))
+Pow(F, 3):     x => Pow((x + 1), 3)
+d Pow(F,3)/dx:x => (3 * Pow((x + 1), 2))
+Tanh(F):       x => Tanh((x + 1))
+
+x       sin(F)      exp(F)      log(F)      sqrt(F)     F³         dF³/dx    tanh(F)
+   0    0.841471     2.71828           0           1         1          3   0.761594
+   1    0.909297     7.38906    0.693147     1.41421         8         12   0.964028
+   2     0.14112     20.0855     1.09861     1.73205        27         27   0.995055
+EXIT=0
+=== --public-api-demo ===
+RICIS public API utility demo:
+  ExactEvaluator: 7
+  CircleSectors: 1/4 полного круга / ровно 1 секторов из 4
+  PolarConverter: sin=1, cos=0
+  NumericConstants: zero=0, one=1
+  RicisType tuple: Tuple<Space,Time>
+  ExactEvaluator: PASS
+  CircleSectors: PASS
+  PolarConverter: PASS
+  NumericConstants: PASS
+  RicisType: PASS
+EXIT=0

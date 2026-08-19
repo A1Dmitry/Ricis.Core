@@ -51,7 +51,7 @@ public class RicisType(string signature, bool isComposite = false) : IEquatable<
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Signature, IsComposite);
+        return StringComparer.Ordinal.GetHashCode(Signature);
     }
 
     // Логика совместимости (L1 Identity)
