@@ -42,6 +42,10 @@ Generic C# expression trees не преобразуются в kernel theorem а
 
 Результаты regression tests фиксируются отдельно от kernel theorem. Нельзя менять status `RegressionChecked` на `KernelChecked` без реально скомпилированного Lean theorem source.
 
+## Public API test dependency
+
+Любое добавление или изменение `public` метода обязано сопровождаться regression tests в том же изменении. Нормативный контракт зафиксирован в [`PUBLIC_API_TEST_POLICY.md`](./PUBLIC_API_TEST_POLICY.md). Для Lean-related public API regression test дополнительно обязан фиксировать соответствующий artifact/provenance, если результат объявлен подтверждённым. Public method без собственного test ID и регистрации suite не считается готовым к commit.
+
 ## CI acceptance
 
 CI выполняет следующие проверки:
@@ -53,6 +57,7 @@ CI выполняет следующие проверки:
 5. `AuditOnly` содержит явную границу `NOT KERNEL VERIFIED`.
 6. Manifest сам является валидным JSON и не содержит дубликатов IDs.
 7. Каждый artifact помечен как обязательный источник знаний для изучения моделью.
+8. Public API changes принимаются только при наличии соответствующих regression tests согласно `PUBLIC_API_TEST_POLICY.md`.
 
 ## Directory contract
 

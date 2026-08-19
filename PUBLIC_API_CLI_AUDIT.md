@@ -60,6 +60,12 @@
 
 Финальный quality gate после расширения suite: Console Release build — 0 warnings/0 errors; Finance regression — **12/12 PASS**; Lean manifest — **6/6 PASS**; `git diff --check` — PASS. NuGet publication не выполнялась.
 
+## Обязательное правило для нового public API
+
+После добавления или изменения любого `public` метода его direct regression tests обязательны в том же изменении. Тест должен иметь устойчивый ID, быть подключён к общему harness и проверять результат, структуру дерева или exception contract. Для user-facing метода также обязателен CLI/example smoke coverage. Полный нормативный контракт сохранён в [`PUBLIC_API_TEST_POLICY.md`](./PUBLIC_API_TEST_POLICY.md).
+
+Изменение public API без собственного regression test считается незавершённым и не принимается в основную ветку.
+
 ## Правило аудита
 
 Нельзя объявлять public method покрытым только потому, что компилируется файл. Для закрытия пробела нужны одновременно: regression test семантики, CLI/example coverage для пользовательского сценария (если метод предназначен для CLI) и quality-gate запуск соответствующей команды.
