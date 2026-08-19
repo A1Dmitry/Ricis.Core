@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Linq.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Logging;
 using Ricis.Core.Proofs;
 
 internal static class RicisProofDocumentFormatSuite
@@ -10,13 +11,15 @@ internal static class RicisProofDocumentFormatSuite
     [
         ("PDF01: Log template — выводит trace и возвращает то же производное дерево", LogTemplate),
         ("PDF02: Academic template — применяет Func<string,string> без изменения вывода", AcademicTemplateWithTransform),
-        ("PDF03: Generic Lean format — отклоняет неподдержанный shape", LeanTemplate),
+        ("PDF03: Generic Lean format — сохраняет node-to-root scaffold", LeanTemplate),
+        ("PDF04: Json template — сохраняет полный node-to-root маршрут", JsonTemplate),
+        ("PDF05: LaTeX template — сохраняет полный node-to-root маршрут", LatexTemplate),
         ("LFT01: StructuredData и RequestedRows создают LeanDoc", StructuredLeanDocument),
         ("LFT02: RequestedRows раскрывает theorem dependencies", LeanRowsExpandDependencies),
         ("LFT03: StructuredData блокирует небезопасные Lean identifiers", LeanIdentifiersAreValidated),
-        ("PDF04: Json template — выводит валидный структурированный документ", JsonTemplate),
-        ("PDF05: Format API — отклоняет неизвестный enum и null callback", InvalidFormatAndCallbackAreRejected),
-        ("PDF06: Binary overload — использует общий Log renderer", BinarySystemLogTemplate),
+        ("PDF06: Format API — отклоняет неизвестный enum и null callback", InvalidFormatAndCallbackAreRejected),
+        ("PDF07: Binary overload — использует общий Log renderer", BinarySystemLogTemplate),
+        ("PDF08: Injected ILog сохраняет полный typed node-to-root документ", InjectedLogDocumentTemplate),
     ];
 
     private static void LogTemplate()
@@ -69,15 +72,20 @@ internal static class RicisProofDocumentFormatSuite
         Expression<Func<double, bool>>[] conditions = [];
         Expression<Func<double, bool>>[] constraints = [];
         Expression<Func<double, double>> claim = x => x + 1.0;
+        var document = new StringBuilder();
 
-        RequireThrows<RicisUnsupportedLeanProofShapeException>(
-            () => _ = conditions.ProveDocument(
-                constraints,
-                claim,
-                CreateProfile(),
-                RicisProofDocumentFormat.Lean,
-                new StringBuilder()),
-            "Generic Lean format обязан отклонить неподдержанный C# expression shape, а не создавать scaffold.");
+        _ = conditions.ProveDocument(
+            constraints,
+            claim,
+            CreateProfile(),
+            RicisProofDocumentFormat.Lean,
+            document);
+
+        Require(document.ToString().Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal) &&
+                document.ToString().Contains("RICIS trace:", StringComparison.Ordinal) &&
+                document.ToString().Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
+                document.ToString().Contains("not Lean-checked", StringComparison.Ordinal),
+            "Generic Lean format обязан записывать node-to-root scaffold без заявления о Lean verification.");
     }
 
     private static void StructuredLeanDocument()
@@ -154,8 +162,29 @@ internal static class RicisProofDocumentFormatSuite
         Require(root.GetProperty("format").GetString() == "Json" &&
                 root.GetProperty("title").GetString() == "Форматный proof-тест" &&
                 root.GetProperty("derived").GetString()?.Contains("x => (x + 1)", StringComparison.Ordinal) == true &&
+                root.GetProperty("derivation").GetString()?.Contains("Node-to-root маршрут", StringComparison.Ordinal) == true &&
                 root.GetProperty("normativeSteps").GetArrayLength() == 1,
-            "Json template должен быть валидным и содержать profile, result и normative steps.");
+            "Json template должен быть валидным и содержать profile, result, normative steps и node-to-root маршрут.");
+    }
+
+    private static void LatexTemplate()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [];
+        Expression<Func<double, double>> claim = x => x + 1.0;
+        var document = new StringBuilder();
+
+        _ = conditions.ProveDocument(
+            constraints,
+            claim,
+            CreateProfile(),
+            RicisProofDocumentFormat.Latex,
+            document);
+
+        Require(document.ToString().Contains(@"\section*{RICIS proof document}", StringComparison.Ordinal) &&
+                document.ToString().Contains(@"\begin{verbatim}", StringComparison.Ordinal) &&
+                document.ToString().Contains("Node-to-root маршрут", StringComparison.Ordinal),
+            "LaTeX template должен получить тот же node-to-root derivation через существующую factory.");
     }
 
     private static void InvalidFormatAndCallbackAreRejected()
@@ -205,6 +234,32 @@ internal static class RicisProofDocumentFormatSuite
         Require(derived.Compile()(3.0, 2.0) &&
                 document.ToString().Contains("Формальный вывод RICIS III: система линейных уравнений", StringComparison.Ordinal),
             "Binary overload должен получить derivation через существующий linear Prove и передать его общему renderer.");
+    }
+
+    private static void InjectedLogDocumentTemplate()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [];
+        Expression<Func<double, double>> claim = x => x / x;
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var document = new StringBuilder();
+
+        _ = conditions.ProveDocumentWithLog(
+            constraints,
+            claim,
+            CreateProfile(),
+            RicisProofDocumentFormat.Json,
+            log,
+            document);
+
+        using var json = JsonDocument.Parse(document.ToString());
+        var derivation = json.RootElement.GetProperty("derivation").GetString() ?? string.Empty;
+        Require(derivation.Contains("Типизированный лог visitor и handler этапов", StringComparison.Ordinal) &&
+                derivation.Contains(typeof(RicisProofOrchestrationStage).FullName!, StringComparison.Ordinal) &&
+                derivation.Contains("IdentityReductionVisitor", StringComparison.Ordinal) &&
+                derivation.Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
+                log.Snapshot().Count > 0,
+            "Injected ILog должен за один proof-run дать factory полную типизированную и node-to-root трассировку.");
     }
 
     private static RicisProofDocumentProfile CreateProfile() => new(

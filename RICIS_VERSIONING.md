@@ -1,6 +1,6 @@
 # Ricis.Core Versioning Policy
 
-> **Document version:** `0.2.0`
+> **Document version:** `0.3.0`
 > **Created:** `2026-08-16`
 > **Last modified:** `2026-08-19`
 > **Versioning note:** increment the document version when the normative content changes.
@@ -40,8 +40,12 @@ v1.2.3
 | Несовместимое изменение public API/формата | MAJOR |
 | Предварительный релиз | prerelease suffix, например `1.1.0-rc.1` |
 
+## v0.3.0
+
+Версия `0.3.0` вводит совместимый `ProveDocumentWithLog` API, полный node-to-root route в существующем proof trace, `Latex` в действующий `RicisProofDocumentFormat` и единую инъецируемую document factory. Это MINOR-релиз: существующие `ProveDocument` overloads, `Func<string,string>` transform и proof semantics остаются совместимыми.
+
 ## v0.2.0
 
-Версия `0.2.0` вводит совместимый публичный `ILog<TStage>` API, canonical typed event journal и renderer-ы JSON/LaTeX/Lean-oriented audit report. Это MINOR-релиз: существующие `StringBuilder` overloads и proof semantics остаются совместимыми.
+Версия `0.2.0` ввела совместимый публичный `ILog<TStage>` API и canonical typed event journal.
 
 Version metadata не заменяет regression suite и API/Lean compatibility checks. Перед тегом требуется выполнить Release build, полный regression run, API/Swagger smoke checks и Lean verification, если изменён proof pipeline.

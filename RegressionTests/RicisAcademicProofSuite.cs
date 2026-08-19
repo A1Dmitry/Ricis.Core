@@ -17,7 +17,7 @@ internal static class RicisAcademicProofSuite
         ("PROVE04: Prove — StringBuilder дописывается без потери существующего текста", ProofAppendsToBuilder),
         ("PROVE05: Trace — конвейер публикует все нормативные фазы", PublicPhaseTraceHasOrderedSteps),
         ("PROVE06: Prove — разность кубов выводит x²+2x+4 при x≠2", DifferenceOfCubesProof),
-        ("PROVE07: Prove — печатает только эффективные RICIS-шаги", ProofOmitsUnchangedSteps),
+        ("PROVE07: Prove — печатает полный node-to-root RICIS pipeline", ProofRecordsAllPipelineSteps),
         ("PROVE08: Prove — раскрывает сокращение общего множителя как промежуточный шаг", CommonFactorProof),
         ("PROVE09: Prove — система x+y=5, x−y=1 выводит x=3", LinearSystemProof),
         ("PROVE10: Prove — система отклоняет противоречащий тезис", ContradictorySystemClaimIsRejected),
@@ -76,8 +76,10 @@ internal static class RicisAcademicProofSuite
         Require(derived.Compile()(new BigInteger(17)) == new BigInteger(17),
             "Generic SP2 должен сохранить BigInteger и вывести x.");
         Require(protocol.ToString().Contains("SP2: сокращение до сингулярностей", StringComparison.Ordinal) &&
-                !protocol.ToString().Contains("Фаза 2 — сингулярное преобразование", StringComparison.Ordinal),
-            "Для generic-домена протокол должен оставить только эффективный SP2 и пропустить неприменённую double-root phase.");
+                protocol.ToString().Contains("Фаза 2 — сингулярное преобразование", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("фаза пропущена по документированному precondition", StringComparison.Ordinal) &&
+                protocol.ToString().Contains("Node-to-root маршрут", StringComparison.Ordinal),
+            "Для generic-домена полный протокол обязан зафиксировать SP2, пропуск неприменённой double-root phase и node-to-root маршрут.");
     }
 
     private static void ProofAppendsToBuilder()
@@ -168,7 +170,7 @@ internal static class RicisAcademicProofSuite
             "Академический протокол должен зафиксировать ограничение x≠2, факторизацию и сокращение разности кубов.");
     }
 
-    private static void ProofOmitsUnchangedSteps()
+    private static void ProofRecordsAllPipelineSteps()
     {
         Expression<Func<double, bool>>[] conditions = [];
         Expression<Func<double, bool>>[] constraints = [x => x != 5.0];
@@ -178,13 +180,14 @@ internal static class RicisAcademicProofSuite
         _ = conditions.Prove(constraints, claim, protocol);
         var text = protocol.ToString();
 
-        Require(text.Contains("### Шаг 1: Фаза 1 — структурная алгебра", StringComparison.Ordinal) &&
-                !text.Contains("Фаза 0 — тождество сущности", StringComparison.Ordinal) &&
-                !text.Contains("Фаза 0.5 — полярная тригонометрия", StringComparison.Ordinal) &&
-                !text.Contains("Фаза 1.5 — мосты O(1)", StringComparison.Ordinal) &&
-                !text.Contains("Фаза 2 — сингулярное преобразование", StringComparison.Ordinal) &&
-                !text.Contains("Фаза 5 — стандартные операции", StringComparison.Ordinal),
-            "StringBuilder-доказательство должно печатать только фактически изменивший дерево шаг SP2.");
+        Require(text.Contains("Фаза 0 — тождество сущности", StringComparison.Ordinal) &&
+                text.Contains("Фаза 0.5 — полярная тригонометрия", StringComparison.Ordinal) &&
+                text.Contains("Фаза 1 — структурная алгебра", StringComparison.Ordinal) &&
+                text.Contains("Фаза 1.5 — мосты O(1)", StringComparison.Ordinal) &&
+                text.Contains("Фаза 2 — сингулярное преобразование", StringComparison.Ordinal) &&
+                text.Contains("Фаза 5 — стандартные операции", StringComparison.Ordinal) &&
+                text.Contains("Node-to-root маршрут", StringComparison.Ordinal),
+            "StringBuilder-доказательство должно печатать полный pipeline, включая неизменённые фазы и node-to-root маршруты.");
     }
 
     private static void CommonFactorProof()

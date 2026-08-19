@@ -19,14 +19,19 @@ public enum RicisProofDocumentFormat
     Academic,
 
     /// <summary>
+    /// Emits a machine-readable JSON representation of the proof document.
+    /// </summary>
+    Json,
+
+    /// <summary>
+    /// Emits a LaTeX proof document generated from the same RICIS derivation.
+    /// </summary>
+    Latex,
+
+    /// <summary>
     /// Emits a Lean-oriented documentation scaffold. It records the RICIS
     /// derivation in comments and explicitly does not claim that arbitrary C#
     /// expression trees have been checked by Lean.
     /// </summary>
     Lean,
-
-    /// <summary>
-    /// Emits a machine-readable JSON representation of the proof document.
-    /// </summary>
-    Json,
 }

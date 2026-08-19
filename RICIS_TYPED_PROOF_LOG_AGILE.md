@@ -1,6 +1,6 @@
 # Agile-задача: типизированный журнал proof-процесса
 
-**Статус:** `ВЫПОЛНЕНО ЛОКАЛЬНО — ОЖИДАЕТ CI/PUBLICATION`
+**Статус:** `ВЫПОЛНЕНО И ОПУБЛИКОВАНО В v0.2.0; РАСШИРЕНО ДЛЯ v0.3.0`
 **Приоритет:** высокий
 **Дата постановки:** 2026-08-19
 **Владелец решения:** Ricis.Core
@@ -55,7 +55,8 @@
 | Архитектор/Fullstack C# | выполнено | Реализованы `ILog<TStage>`, canonical event journal, typed child stages и DRY renderer boundary. |
 | Разработчик | выполнено | Pipeline и unary generic proof API получили additive typed-log path; существующий `StringBuilder` API сохранён. |
 | QA | выполнено локально | `322` regression tests прошли; JSON/LaTeX/Lean reports, stage types, exception trace и deferred-expression boundary покрыты TLOG01–TLOG04. |
-| Release/DevOps | ожидается | Нужны финальный diff check, GitHub CI и публикация v0.2.0. |
+| Release/DevOps | v0.2.0 выполнено | GitHub CI, tag `v0.2.0` и публикация завершены. |
+| Strict DRY follow-up | выполняется для v0.3.0 | Существующий `RicisProofDocumentFormat` получает `Latex`, единую factory и node-to-root derivation. |
 
 ## Definition of Done
 

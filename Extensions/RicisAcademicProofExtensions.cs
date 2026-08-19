@@ -292,12 +292,53 @@ public static class RicisAcademicProofExtensions
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(documentTextTransform);
         ArgumentNullException.ThrowIfNull(document);
-        ValidateDocumentFormat(format);
+        var documentConstructor = ResolveDocumentConstructor(format);
 
         var derivation = new StringBuilder();
         var derived = conditions.Prove(constraints, claim, derivation);
-        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, format, documentTextTransform);
+        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, documentConstructor, documentTextTransform);
         return derived;
+    }
+
+    /// <summary>
+    /// Derives a unary scalar claim once while publishing the complete typed
+    /// proof journal to an injected log. The selected document constructor is
+    /// resolved before derivation, then receives the same node-to-root protocol
+    /// and typed event sequence without a second proof pass.
+    /// </summary>
+    public static Expression<Func<T, T>> ProveDocumentWithLog<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        ILog<RicisProofOrchestrationStage> log,
+        StringBuilder document)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(document);
+        var documentConstructor = ResolveDocumentConstructor(format);
+
+        var derivationResult = DeriveUnaryProof(conditions, constraints, claim, log);
+        var derivation = new StringBuilder();
+        AppendAcademicProtocol(
+            derivation,
+            derivationResult.Conditions,
+            derivationResult.Constraints,
+            claim,
+            derivationResult.Trace,
+            derivationResult.Derived);
+        AppendTypedProofLog(derivation, log.Snapshot());
+        AppendFormattedProofDocument(
+            document,
+            profile,
+            derivation.ToString(),
+            derivationResult.Derived,
+            documentConstructor,
+            static text => text);
+        return derivationResult.Derived;
     }
 
     /// <summary>
@@ -345,11 +386,11 @@ public static class RicisAcademicProofExtensions
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(documentTextTransform);
         ArgumentNullException.ThrowIfNull(document);
-        ValidateDocumentFormat(format);
+        var documentConstructor = ResolveDocumentConstructor(format);
 
         var derivation = new StringBuilder();
         var derived = equations.Prove(constraints, claim, derivation);
-        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, format, documentTextTransform);
+        AppendFormattedProofDocument(document, profile, derivation.ToString(), derived, documentConstructor, documentTextTransform);
         return derived;
     }
 
@@ -622,28 +663,17 @@ public static class RicisAcademicProofExtensions
         RicisProofDocumentProfile profile,
         string derivation,
         LambdaExpression derived,
-        RicisProofDocumentFormat format,
+        Func<RicisProofDocumentProfile, string, LambdaExpression, string> documentConstructor,
         Func<string, string> documentTextTransform)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(derivation);
         ArgumentNullException.ThrowIfNull(derived);
+        ArgumentNullException.ThrowIfNull(documentConstructor);
         ArgumentNullException.ThrowIfNull(documentTextTransform);
-        ValidateDocumentFormat(format);
 
-        string rendered;
-        if (format == RicisProofDocumentFormat.Academic)
-        {
-            var academic = new StringBuilder();
-            AppendProofDocument(academic, profile, new StringBuilder(derivation), derived);
-            rendered = academic.ToString();
-        }
-        else
-        {
-            rendered = RicisProofDocumentTemplates.Render(format, profile, derivation, derived);
-        }
-
+        var rendered = documentConstructor(profile, derivation, derived);
         var transformed = documentTextTransform(rendered)
             ?? throw new InvalidOperationException("Преобразователь proof-документа не может вернуть null.");
         if (document.Length > 0 && document[^1] != '\n')
@@ -652,6 +682,20 @@ public static class RicisAcademicProofExtensions
         }
 
         document.Append(transformed);
+    }
+
+    private static Func<RicisProofDocumentProfile, string, LambdaExpression, string> ResolveDocumentConstructor(
+        RicisProofDocumentFormat format)
+    {
+        ValidateDocumentFormat(format);
+        return format == RicisProofDocumentFormat.Academic
+            ? static (profile, derivation, derived) =>
+            {
+                var academic = new StringBuilder();
+                AppendProofDocument(academic, profile, new StringBuilder(derivation), derived);
+                return academic.ToString();
+            }
+            : RicisProofDocumentTemplates.ResolveFactory(format);
     }
 
     private static void ValidateDocumentFormat(RicisProofDocumentFormat format)
@@ -1093,27 +1137,39 @@ public static class RicisAcademicProofExtensions
         proof.Append("Доказуемое отложенное выражение: `").Append(claim).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine("## Нормативный вывод");
-        proof.AppendLine("Ни одна предпосылка не исполнялась численно. Ниже записаны только нормативные фазы, которые действительно изменили expression tree; неизменяющие и неприменённые фазы в текст доказательства не включаются.");
+        proof.AppendLine("Ни одна предпосылка не исполнялась численно. Ниже записан полный порядок нормативных фаз, включая пропущенные и структурно неизменённые попытки. Для каждой попытки фиксируются все маршруты от посещённого узла к корню expression tree.");
         proof.AppendLine();
 
-        var effectiveSteps = trace.Where(step => step.Changed).ToList();
-        if (effectiveSteps.Count == 0)
+        if (trace.Count == 0)
         {
-            proof.AppendLine("Ни одна нормативная фаза не изменила тезис: производное выражение структурно совпадает с исходным.");
+            proof.AppendLine("Pipeline не предоставил phase trace; node-to-root маршрут для этой proof-ветви отсутствует.");
             proof.AppendLine();
         }
 
-        for (var index = 0; index < effectiveSteps.Count; index++)
+        for (var index = 0; index < trace.Count; index++)
         {
-            var step = effectiveSteps[index];
+            var step = trace[index];
             proof.Append("### Шаг ").Append(index + 1).Append(": ").AppendLine(step.PhaseName);
             proof.Append("**Нормативное основание:** ").AppendLine(step.RuleFamily + ".");
+            AppendNodeToRootRoutes(proof, "До фазы", step.BeforeNodeToRoot);
+            AppendNodeToRootRoutes(proof, "После фазы", step.AfterNodeToRoot);
+
+            if (step.WasSkipped)
+            {
+                proof.AppendLine("**Статус:** фаза пропущена по документированному precondition; expression tree не изменялось.");
+                proof.AppendLine();
+                continue;
+            }
 
             var intermediateSteps = BuildIntermediateSteps(step);
             if (intermediateSteps.Count == 0)
             {
                 proof.Append("До: `").Append(step.Before).AppendLine("`.");
                 proof.Append("После: `").Append(step.After).AppendLine("`.");
+                if (!step.Changed)
+                {
+                    proof.AppendLine("**Статус:** фаза выполнена, но структурно не изменила expression tree.");
+                }
             }
             else
             {
@@ -1141,6 +1197,53 @@ public static class RicisAcademicProofExtensions
             .Append(derived)
             .AppendLine("`.");
         proof.AppendLine("Протокол фиксирует символическое выведение и не утверждает истинность внешних предпосылок вне переданных expression tree.");
+    }
+
+    private static void AppendTypedProofLog(
+        StringBuilder proof,
+        IReadOnlyList<RicisLogEntry> entries)
+    {
+        proof.AppendLine();
+        proof.AppendLine("## Типизированный лог visitor и handler этапов");
+        if (entries.Count == 0)
+        {
+            proof.AppendLine("Инъецированный лог не зафиксировал событий.");
+            return;
+        }
+
+        foreach (var entry in entries)
+        {
+            proof.Append('[').Append(entry.Sequence).Append("] ")
+                .Append(entry.Severity).Append(" ")
+                .Append(entry.StageType).Append(" :: ")
+                .Append(entry.EventCode).Append(" — ")
+                .AppendLine(entry.Message);
+            if (entry.Severity == RicisLogSeverity.Trace)
+            {
+                proof.Append("  before: ").AppendLine(entry.BeforeExpression ?? string.Empty);
+                proof.Append("  after: ").AppendLine(entry.AfterExpression ?? string.Empty);
+            }
+
+            if (entry.Severity == RicisLogSeverity.Exception)
+            {
+                proof.Append("  exception: ").AppendLine(entry.ExceptionType ?? string.Empty);
+                proof.Append("  trace: ").AppendLine(entry.ExceptionTrace ?? string.Empty);
+            }
+        }
+    }
+
+    private static void AppendNodeToRootRoutes(
+        StringBuilder proof,
+        string label,
+        IReadOnlyList<string> routes)
+    {
+        proof.Append("**Node-to-root маршрут (").Append(label).AppendLine("):**");
+        foreach (var route in routes)
+        {
+            proof.Append("- `").Append(route).AppendLine("`.");
+        }
+
+        proof.AppendLine();
     }
 
     private static IReadOnlyList<IntermediateProofStep> BuildIntermediateSteps(RicisPhaseTraceStep step)

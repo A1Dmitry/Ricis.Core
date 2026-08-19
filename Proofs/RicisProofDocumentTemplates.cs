@@ -10,9 +10,33 @@ namespace Ricis.Core.Proofs;
 /// </summary>
 internal static class RicisProofDocumentTemplates
 {
+    private static readonly IReadOnlyDictionary<RicisProofDocumentFormat, Func<RicisProofDocumentProfile, string, LambdaExpression, string>> Factories =
+        new Dictionary<RicisProofDocumentFormat, Func<RicisProofDocumentProfile, string, LambdaExpression, string>>
+        {
+            [RicisProofDocumentFormat.Log] = RenderLog,
+            [RicisProofDocumentFormat.Json] = RenderJson,
+            [RicisProofDocumentFormat.Latex] = RenderLatex,
+            [RicisProofDocumentFormat.Lean] = RenderLeanScaffold,
+        };
+
     /// <summary>
-    /// Renders a non-academic proof template selected by <paramref name="format"/>.
+    /// Resolves the document constructor immediately from the selected format.
+    /// The returned lambda only renders already-captured proof data; it never
+    /// executes a hypothesis, reruns a visitor, or changes an expression tree.
     /// </summary>
+    internal static Func<RicisProofDocumentProfile, string, LambdaExpression, string> ResolveFactory(
+        RicisProofDocumentFormat format)
+    {
+        return format switch
+        {
+            RicisProofDocumentFormat.Academic => throw new ArgumentException(
+                "Academic document rendering is provided by the existing academic template.", nameof(format)),
+            _ when Factories.TryGetValue(format, out var factory) => factory,
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-документа."),
+        };
+    }
+
+    /// <summary>Renders an already-derived proof through the injected format factory.</summary>
     internal static string Render(
         RicisProofDocumentFormat format,
         RicisProofDocumentProfile profile,
@@ -22,18 +46,7 @@ internal static class RicisProofDocumentTemplates
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(derivation);
         ArgumentNullException.ThrowIfNull(derived);
-
-        return format switch
-        {
-            RicisProofDocumentFormat.Log => RenderLog(profile, derivation, derived),
-            RicisProofDocumentFormat.Lean => throw new RicisUnsupportedLeanProofShapeException(
-                "Generic C# expression tree cannot be emitted as a verified Lean theorem. " +
-                "Use RicisLeanTemplate.Render(StructuredData, RequestedRows) for a supported structured Lean bridge."),
-            RicisProofDocumentFormat.Json => RenderJson(profile, derivation, derived),
-            RicisProofDocumentFormat.Academic => throw new ArgumentException(
-                "Academic document rendering is provided by the existing academic template.", nameof(format)),
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-документа."),
-        };
+        return ResolveFactory(format)(profile, derivation, derived);
     }
 
     private static string RenderLog(
@@ -98,6 +111,26 @@ internal static class RicisProofDocumentTemplates
         return builder.ToString();
     }
 
+    private static string RenderLatex(
+        RicisProofDocumentProfile profile,
+        string derivation,
+        LambdaExpression derived)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("\\section*{RICIS proof document}");
+        builder.Append("\\textbf{Title:} ").Append(EscapeLatex(profile.Title)).AppendLine("\\\\");
+        builder.Append("\\textbf{Scope:} ").Append(EscapeLatex(profile.Scope.ToString())).AppendLine("\\\\");
+        builder.Append("\\textbf{Theorem:} ").Append(EscapeLatex(profile.Theorem)).AppendLine("\\\\");
+        builder.Append("\\textbf{Derived expression:} ").Append(EscapeLatex(derived.ToString())).AppendLine("\\\\");
+        builder.AppendLine();
+        builder.AppendLine("\\subsection*{Node-to-root proof trace}");
+        builder.AppendLine("\\begin{verbatim}");
+        builder.AppendLine(derivation);
+        builder.AppendLine("\\end{verbatim}");
+        builder.AppendLine("\\textbf{Status:} finite symbolic derivation only; external premises are not evaluated by this document.");
+        return builder.ToString();
+    }
+
     private static string RenderJson(
         RicisProofDocumentProfile profile,
         string derivation,
@@ -133,6 +166,30 @@ internal static class RicisProofDocumentTemplates
         }
 
         return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    private static string EscapeLatex(string value)
+    {
+        var builder = new StringBuilder();
+        foreach (var character in value ?? string.Empty)
+        {
+            builder.Append(character switch
+            {
+                '\\' => "\\textbackslash{}",
+                '{' => "\\{",
+                '}' => "\\}",
+                '$' => "\\$",
+                '&' => "\\&",
+                '#' => "\\#",
+                '%' => "\\%",
+                '_' => "\\_",
+                '^' => "\\textasciicircum{}",
+                '~' => "\\textasciitilde{}",
+                _ => character.ToString(),
+            });
+        }
+
+        return builder.ToString();
     }
 
     private static void WriteStringArray(Utf8JsonWriter writer, string propertyName, IReadOnlyList<string> values)

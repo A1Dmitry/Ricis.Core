@@ -64,6 +64,7 @@ public static class FermatFactorizer
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(document);
+        var documentConstructor = RicisProofDocumentTemplates.ResolveFactory(format);
         var result = Solve(n);
         var derivation = new StringBuilder();
         derivation.AppendLine("N-only input: N is the sole supplied value.");
@@ -78,7 +79,7 @@ public static class FermatFactorizer
         var y = Expression.Parameter(typeof(double), "y");
         var derived = Expression.Lambda<Func<double, double, bool>>(
             Expression.Equal(x, Expression.Constant((double)result.X)), x, y);
-        var rendered = RicisProofDocumentTemplates.Render(format, profile, derivation.ToString(), derived);
+        var rendered = documentConstructor(profile, derivation.ToString(), derived);
         document.Append(rendered);
         return result;
     }

@@ -1,82 +1,56 @@
-# Архитектурный дизайн: `ILog<TStage>` для Ricis.Core
+# Архитектурный дизайн: единый `ILog<TStage>` и proof-document factory
 
-**Статус:** `ПРИНЯТ ДЛЯ РЕАЛИЗАЦИИ`
+**Статус:** `РЕФАКТОРИРОВАНО ДЛЯ СТРОГОГО DRY`
 **Связанная задача:** [`RICIS_TYPED_PROOF_LOG_AGILE.md`](RICIS_TYPED_PROOF_LOG_AGILE.md)
 
-## Решение архитектора
+## Решение
 
-Вводится canonical typed event journal. `ILog<TStage>` не выбирает формат документа и не выполняет expression tree. Его generic-параметр фиксирует **фактический источник события**: proof orchestration, конкретный visitor или solver handler.
+`ILog<TStage>` остаётся единственным typed event journal proof-процесса. Параметр `TStage` обозначает реальный источник события: orchestration, visitor либо handler. Он **не** выбирает формат документа.
+
+Формат выбирает существующий `RicisProofDocumentFormat`. До запуска proof-run `ResolveDocumentConstructor(format)` инъецирует одну лямбду-конструктор документа. После единственного symbolic derivation тот же constructor получает `profile`, полный text derivation и derived expression. Он не исполняет conditions/constraints, не запускает visitor повторно и не меняет expression tree.
 
 ```text
-Proof orchestration ─── ILog<RicisProofOrchestrationStage>
-                            │ For<IdentityReductionVisitor>()
-                            ▼
-                         ILog<IdentityReductionVisitor>
-                            │ For<AlgebraicReductionVisitor>()
-                            ▼
-                         ILog<AlgebraicReductionVisitor>
+format enum
+   │
+   └── ResolveDocumentConstructor(format)
+          │
+          ├── Academic: existing Markdown builder
+          └── RicisProofDocumentTemplates.Factories
+                 ├── Log
+                 ├── Json
+                 ├── Latex
+                 └── Lean scaffold
 
-         одна упорядоченная sequence событий
-                    │              │               │
-                    ▼              ▼               ▼
-                  JSON           LaTeX       Lean-oriented report
+one proof run ─── ILog<TStage> ─── full phase trace ─── node → root routes
+      │                                                     │
+      └──────────── injected constructor receives one common derivation ───────┘
 ```
 
-Все три отчёта читают одни и те же immutable `RicisLogEntry`. Они не запускают proof pipeline повторно и не получают доступ к исходным conditions, constraints, claim или expected кроме безопасных текстовых snapshot, уже зафиксированных логом.
-
-## Контракт
-
-| Тип | Ответственность |
+| Существующий элемент | Назначение после рефакторинга |
 |---|---|
-| `ILog<TStage>` | Typed facade: `Info`, `Warning`, `Exception`, `Trace`, `For<TNextStage>`, snapshot |
-| `RicisProofLog<TStage>` | Thread-safe in-memory implementation; child facades разделяют один event journal |
-| `RicisLogEntry` | Immutable canonical event: sequence, UTC timestamp, severity, event code, message, source stage, optional before/after expression display, exception data and attributes |
-| `RicisLogSeverity` | `Info`, `Warning`, `Exception`, `Trace` |
-| `RicisProofLogFormat` | Независимый от proof-document enum: `Json`, `Latex`, `Lean` |
-| `RicisProofLogReportRenderer` | Единственная DRY dispatch point для format renderer-ов |
-| `IRicisProofLogRenderer` | Renderer adapter, работающий только с `IReadOnlyList<RicisLogEntry>` |
+| `ILog<TStage>` | `Info`, `Warning`, `Exception`, `Trace`, typed child stages и общий snapshot. |
+| `RicisPhaseTraceStep` | До/после tree каждого pipeline этапа и все маршруты от каждого узла к корню. |
+| `RicisProofDocumentFormat` | Единственный selector: `Log`, `Academic`, `Json`, `Latex`, `Lean`. |
+| `RicisProofDocumentTemplates.Factories` | Таблица `format → constructor lambda` для всех не-academic форматов. |
+| `ResolveDocumentConstructor` | Выбирает academic builder либо существующую format factory до proof-run. |
+| `ProveDocumentWithLog` | Additive explicit injection API; строит proof один раз и добавляет typed visitor/handler log в common derivation. |
 
-## Ключевые инварианты
+## Инварианты
 
 | ID | Инвариант |
 |---|---|
-| D-01 | Каждый entry получает монотонный `Sequence`; порядок определяется им, а не timestamp. |
-| D-02 | `StageType` пишется из `typeof(TStage)`; дочерние stage-facade используют общий journal. |
-| D-03 | `Trace` хранит `Before` и `After` как render-safe string snapshots, не как исполняемые delegate. |
-| D-04 | `Exception` фиксирует type/message/stack trace, но не делает exception proof-успехом. Pipeline сохраняет прежнее исключение. |
-| D-05 | JSON, LaTeX и Lean renderer получают один snapshot и не меняют journal. |
-| D-06 | Lean renderer формирует только комментарий-отчёт, а не Lean theorem/source. Он явно содержит `NOT KERNEL VERIFIED`. |
-| D-07 | Existing `StringBuilder` остаётся compatibility sink. Он не будет вторым событийнo-логическим путём. |
+| D-01 | Полный proof protocol содержит каждую нормативную фазу: changed, unchanged и skipped. |
+| D-02 | Для до- и после-снимка каждой фазы фиксируются все маршруты от посетившегося узла к root expression. |
+| D-03 | `TStage` берётся из реального CLR type и остаётся видимым в injected document path. |
+| D-04 | `Log`, `Json`, `Latex` и Lean scaffold потребляют одинаковый already-derived protocol; ни один format не доказывает выражение повторно. |
+| D-05 | Generic Lean output является documentation scaffold и не заявляет kernel verification; типизированный `RicisLeanTemplate` остаётся отдельным bridge для поддерживаемых theorem rows. |
+| D-06 | Прежние `ProveDocument` overloads и `Func<string,string>` transform сохраняют source compatibility; injection path имеет явное имя `ProveDocumentWithLog`, чтобы `null` transform не стал неоднозначным. |
 
-## Реальное типизированное подключение pipeline
+## Проверяемый порядок форматов
 
-`RicisPhasePipeline` получает additive overload `SimplifyWithLog<TLogStage>(Expression, ILog<TLogStage>)`. Внутри список visitors заменяется internal stage wrappers:
+1. `Log` фиксирует полный line-oriented protocol.
+2. `Json` записывает тот же protocol в поле `derivation`.
+3. `Latex` вкладывает тот же protocol в verbatim proof trace.
+4. `Lean` вкладывает тот же protocol в comment scaffold без создаваемого theorem.
 
-| Pipeline stage | Typed child log |
-|---|---|
-| identity | `ILog<IdentityReductionVisitor>` |
-| polar | `ILog<PolarTrigVisitor>` |
-| structural algebra | `ILog<AlgebraicReductionVisitor>` |
-| O(1) bridge | `ILog<LimitBridgeVisitor>` |
-| singular transform | `ILog<RicisTransformVisitor>` |
-| type consistency | `ILog<TypeConsistencyVisitor>` |
-| standard operations | `ILog<StandardOperationsVisitor>` |
-| author annotation | `ILog<AuthorAnnotatedExpression>` |
-
-Wrapper знает compile-time visitor type; поэтому `TStage` не выводится из string и не превращается в декоративный runtime name.
-
-## Совместимость proof API
-
-Existing `Prove(..., StringBuilder)` остаётся без изменения результата. Additive overload получает `ILog<RicisProofOrchestrationStage>` и передаёт его в `SimplifyWithTraceAndLog`. Existing overload может использовать `StringBuilder` как прежний document protocol, а новый лог публикует структурные события параллельно. На следующем инкременте `StringBuilder` будет получать text из event-backed adapter, но этот шаг не должен менять public formatting output без отдельной regression matrix.
-
-## Отчёты
-
-| Формат | Назначение | Особенности |
-|---|---|---|
-| JSON | Машинный audit trail | Sequence, severity, stage type, event code, attributes, trace snapshots, exception metadata |
-| LaTeX | Human-readable technical appendix | Экранирует TeX-special characters, выводит таблицу событий и trace blocks |
-| Lean | Review report рядом с Lean workflow | Только comment block; `NOT KERNEL VERIFIED`; arbitrary C# expression не превращается в theorem |
-
-## Отложенные решения
-
-Первый инкремент не меняет `RicisProofDocumentFormat` и не пытается считать `Lean` обычным proof-document форматoм для generic C# expression. Mapping event reports в existing document API делается после того, как журнал, renderer-ы и pipeline trace подтвердятся regression suite.
+Тесты `PDF01`–`PDF08` проверяют format factory, node-to-root маршрут, Lean boundary, LaTeX и документ с injected `ILog<TStage>`.
