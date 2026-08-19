@@ -64,6 +64,7 @@ tests.AddRange(RicisVectorExpressionSuite.Tests);
 tests.AddRange(ExpressionSystemSuite.Tests);
 tests.AddRange(RicisMatrixExpressionSuite.Tests);
 tests.AddRange(RicisJacobianSingularitySuite.Tests);
+tests.AddRange(RicisJacobianProofArtifactSuite.Tests);
 tests.AddRange(RicisPrioritySuite.Tests);
 tests.AddRange(RicisVectorVisitorSuite.Tests);
 tests.AddRange(RicisTypeConsistencySuite.Tests);

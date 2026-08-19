@@ -138,6 +138,42 @@ public static class RicisAcademicProofExtensions
         IReadOnlyList<RicisPhaseTraceStep> Trace,
         Expression<Func<T, T>> Derived);
 
+    private static RicisCheckedProofResult<T> CreateCheckedProofResult<T>(
+        Expression<Func<T, T>> derived,
+        Expression<Func<T, T>> expected,
+        IReadOnlyList<Expression<Func<T, bool>>> conditions,
+        IReadOnlyList<Expression<Func<T, bool>>> constraints)
+        where T : INumber<T>
+    {
+        var normalizedExpected = RicisPhasePipeline.Simplify(expected) as Expression<Func<T, T>>
+            ?? throw new InvalidOperationException("RICIS-конвейер должен сохранить expected lambda.");
+        var reboundExpectedBody = new ParameterSubstitutionVisitor(
+            normalizedExpected.Parameters[0], derived.Parameters[0]).Visit(normalizedExpected.Body)
+            ?? throw new InvalidOperationException("Не удалось связать expected expression с claim parameter.");
+        var reboundExpected = Expression.Lambda<Func<T, T>>(reboundExpectedBody, derived.Parameters);
+        var verification = Expression.Lambda<Func<T, bool>>(
+            Expression.Equal(derived.Body, reboundExpected.Body), derived.Parameters);
+        return new RicisCheckedProofResult<T>(
+            derived,
+            reboundExpected,
+            verification,
+            derived.Body.AreEqual(reboundExpected.Body),
+            conditions,
+            constraints);
+    }
+
+    private static void AppendVerificationProtocol<T>(
+        StringBuilder proof,
+        RicisCheckedProofResult<T> result)
+        where T : INumber<T>
+    {
+        proof.AppendLine("## Проверочное выражение");
+        proof.AppendLine($"- Derived: `{result.Derived}`");
+        proof.AppendLine($"- Expected: `{result.Expected}`");
+        proof.AppendLine($"- Verification: `{result.Verification}`");
+        proof.AppendLine($"- Structural status: `{result.IsVerified}`");
+    }
+
     /// <summary>
     /// Proves a real unary lambda claim and structurally checks it against a real
     /// expected lambda expression. Conditions and constraints remain expression
@@ -162,24 +198,9 @@ public static class RicisAcademicProofExtensions
         var conditionList = conditions?.ToList() ?? throw new ArgumentNullException(nameof(conditions));
         var constraintList = constraints?.ToList() ?? throw new ArgumentNullException(nameof(constraints));
         var derived = conditionList.Prove(constraintList, claim, proof);
-        var normalizedExpected = RicisPhasePipeline.Simplify(expected) as Expression<Func<T, T>>
-            ?? throw new InvalidOperationException("RICIS-конвейер должен сохранить expected lambda.");
-        var reboundExpectedBody = new ParameterSubstitutionVisitor(
-            normalizedExpected.Parameters[0], derived.Parameters[0]).Visit(normalizedExpected.Body)
-            ?? throw new InvalidOperationException("Не удалось связать expected expression с claim parameter.");
-        var reboundExpected = Expression.Lambda<Func<T, T>>(reboundExpectedBody, derived.Parameters);
-        var verification = Expression.Lambda<Func<T, bool>>(
-            Expression.Equal(derived.Body, reboundExpected.Body), derived.Parameters);
-        var isVerified = derived.Body.AreEqual(reboundExpected.Body);
-
-        proof.AppendLine("## Проверочное выражение");
-        proof.AppendLine($"- Derived: `{derived}`");
-        proof.AppendLine($"- Expected: `{reboundExpected}`");
-        proof.AppendLine($"- Verification: `{verification}`");
-        proof.AppendLine($"- Structural status: `{isVerified}`");
-
-        return new RicisCheckedProofResult<T>(derived, reboundExpected, verification,
-            isVerified, conditionList, constraintList);
+        var result = CreateCheckedProofResult(derived, expected, conditionList, constraintList);
+        AppendVerificationProtocol(proof, result);
+        return result;
     }
 
     /// <summary>
@@ -225,6 +246,80 @@ public static class RicisAcademicProofExtensions
         RicisProofDocumentProfile profile,
         StringBuilder document)
         where T : INumber<T> => conditions.ProveDocument(constraints, claim, expected, profile, document);
+
+    /// <summary>
+    /// Runs a checked unary proof exactly once with an injected typed journal and
+    /// renders several formats from the same node-to-root derivation. The real
+    /// expected lambda is normalized structurally after the single claim pass;
+    /// no hypothesis is evaluated and no second claim derivation is performed.
+    /// </summary>
+    public static RicisCheckedProofArtifacts<T> ProveDocumentsCheckedWithLog<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        Expression<Func<T, T>> expected,
+        RicisProofDocumentProfile profile,
+        IEnumerable<RicisProofDocumentFormat> formats,
+        ILog<RicisProofOrchestrationStage> log)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(formats);
+        ArgumentNullException.ThrowIfNull(log);
+        var requestedFormats = formats.Distinct().ToArray();
+        if (requestedFormats.Length == 0)
+        {
+            throw new ArgumentException("Нужен хотя бы один формат proof-document export.", nameof(formats));
+        }
+
+        foreach (var format in requestedFormats)
+        {
+            ValidateDocumentFormat(format);
+        }
+
+        var derivationResult = DeriveUnaryProof(conditions, constraints, claim, log);
+        var result = CreateCheckedProofResult(
+            derivationResult.Derived,
+            expected,
+            derivationResult.Conditions,
+            derivationResult.Constraints);
+        log.Info(
+            "RICIS_PROOF_VERIFICATION",
+            "Structural verification lambda сформирована без исполнения условий или тезиса.",
+            new Dictionary<string, string>
+            {
+                ["verification"] = result.Verification.ToString(),
+                ["isVerified"] = result.IsVerified.ToString(),
+            });
+
+        var derivation = new StringBuilder();
+        AppendAcademicProtocol(
+            derivation,
+            derivationResult.Conditions,
+            derivationResult.Constraints,
+            claim,
+            derivationResult.Trace,
+            derivationResult.Derived);
+        AppendVerificationProtocol(derivation, result);
+        AppendTypedProofLog(derivation, log.Snapshot());
+
+        var documents = new Dictionary<RicisProofDocumentFormat, string>();
+        foreach (var format in requestedFormats)
+        {
+            var document = new StringBuilder();
+            AppendFormattedProofDocument(
+                document,
+                profile,
+                derivation.ToString(),
+                result.Derived,
+                ResolveDocumentConstructor(format),
+                static text => text);
+            documents.Add(format, document.ToString());
+        }
+
+        return new RicisCheckedProofArtifacts<T>(result, log.Snapshot(), documents);
+    }
 
     /// <summary>
     /// Derives a unary scalar expression and writes an academic proof document

@@ -79,6 +79,21 @@ internal static class Program
             return RunLeanA6Demo();
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "--jacobian-proof-demo", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunJacobianProofDemo();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--jacobian-proof-latex", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunJacobianProofLatex();
+        }
+
+        if (args.Length > 0 && string.Equals(args[0], "--jacobian-proof-lean", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunJacobianProofLean();
+        }
+
         if (args.Length > 0 && string.Equals(args[0], "--continuous-demo", StringComparison.OrdinalIgnoreCase))
         {
             return RunContinuousSugarDemo();
@@ -355,6 +370,31 @@ internal static class Program
             new RicisLeanStructuredData(),
             new RicisLeanRequestedRows([RicisLeanProofRow.A6IndexedZeroInfinityBridge]));
         Console.Write(document.Source);
+        return 0;
+    }
+
+    private static int RunJacobianProofDemo()
+    {
+        var scenario = RicisJacobianProofScenario.Create();
+        Console.WriteLine("JAC-001: сингулярный rank-one Jacobian");
+        Console.WriteLine($"Проверка lambda-тезиса: {scenario.ScalarProof.Proof.IsVerified}");
+        Console.WriteLine($"Lambda-условий: {scenario.ScalarProof.Proof.Conditions.Count}; ограничений: {scenario.ScalarProof.Proof.Constraints.Count}");
+        Console.WriteLine($"Typed trace entries: {scenario.ScalarProof.Trace.Count}");
+        Console.WriteLine($"Structural singularity: {scenario.Jacobian.IsStructuralSingular}; A6 payload entries: {scenario.A6Payload.Count}");
+        Console.WriteLine();
+        Console.WriteLine(scenario.ScalarProof.GetDocument(RicisProofDocumentFormat.Json));
+        return scenario.ScalarProof.Proof.IsVerified && scenario.Jacobian.IsStructuralSingular ? 0 : 1;
+    }
+
+    private static int RunJacobianProofLatex()
+    {
+        Console.Write(RicisJacobianProofScenario.Create().LatexSource);
+        return 0;
+    }
+
+    private static int RunJacobianProofLean()
+    {
+        Console.Write(RicisJacobianProofScenario.Create().CombinedLeanSource);
         return 0;
     }
 
@@ -770,6 +810,8 @@ internal static class Program
         Console.WriteLine("  В CLI --academic-proof-demo записывает пошаговый академический вывод Prove в StringBuilder.");
         Console.WriteLine("  В CLI --system-proof-demo доказывает следствие из системы двух линейных уравнений.");
         Console.WriteLine("  В CLI --riemann-proof-demo выводит конечное следствие из Riemann-связанной системы симметрий, не доказывая саму гипотезу.");
+        Console.WriteLine("  В CLI --jacobian-proof-demo показывает JAC-001: lambda-посылки, checked proof и A6 Jacobian bridge.");
+        Console.WriteLine("  В CI --jacobian-proof-latex и --jacobian-proof-lean выдают standalone artifacts для внешней проверки форматов.");
         Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
         Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
         Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");

@@ -117,6 +117,13 @@ internal static class RicisProofDocumentTemplates
         LambdaExpression derived)
     {
         var builder = new StringBuilder();
+        builder.AppendLine("\\documentclass[11pt]{article}");
+        builder.AppendLine("\\usepackage[T2A]{fontenc}");
+        builder.AppendLine("\\usepackage[utf8]{inputenc}");
+        builder.AppendLine("\\usepackage[russian,english]{babel}");
+        builder.AppendLine("\\usepackage{textcomp}");
+        builder.AppendLine("\\usepackage[margin=25mm]{geometry}");
+        builder.AppendLine("\\begin{document}");
         builder.AppendLine("\\section*{RICIS proof document}");
         builder.Append("\\textbf{Title:} ").Append(EscapeLatex(profile.Title)).AppendLine("\\\\");
         builder.Append("\\textbf{Scope:} ").Append(EscapeLatex(profile.Scope.ToString())).AppendLine("\\\\");
@@ -125,9 +132,10 @@ internal static class RicisProofDocumentTemplates
         builder.AppendLine();
         builder.AppendLine("\\subsection*{Node-to-root proof trace}");
         builder.AppendLine("\\begin{verbatim}");
-        builder.AppendLine(derivation);
+        builder.AppendLine(ToLatexVerbatimText(derivation));
         builder.AppendLine("\\end{verbatim}");
         builder.AppendLine("\\textbf{Status:} finite symbolic derivation only; external premises are not evaluated by this document.");
+        builder.AppendLine("\\end{document}");
         return builder.ToString();
     }
 
@@ -185,11 +193,54 @@ internal static class RicisProofDocumentTemplates
                 '_' => "\\_",
                 '^' => "\\textasciicircum{}",
                 '~' => "\\textasciitilde{}",
+                '∞' => "\\ensuremath{\\infty}",
+                '→' => "\\ensuremath{\\to}",
+                '·' => "\\ensuremath{\\cdot}",
+                '−' => "-",
+                '≤' => "\\ensuremath{\\le}",
+                '≥' => "\\ensuremath{\\ge}",
+                '≠' => "\\ensuremath{\\ne}",
+                '≡' => "\\ensuremath{\\equiv}",
                 _ => character.ToString(),
             });
         }
 
         return builder.ToString();
+    }
+
+    private static string ToLatexVerbatimText(string value)
+    {
+        var normalized = (value ?? string.Empty)
+            .Replace("∞", "Infinity", StringComparison.Ordinal)
+            .Replace("→", "->", StringComparison.Ordinal)
+            .Replace("·", "*", StringComparison.Ordinal)
+            .Replace("−", "-", StringComparison.Ordinal)
+            .Replace("≤", "<=", StringComparison.Ordinal)
+            .Replace("≥", ">=", StringComparison.Ordinal)
+            .Replace("≠", "!=", StringComparison.Ordinal)
+            .Replace("≡", "==", StringComparison.Ordinal);
+        return string.Join(
+            Environment.NewLine,
+            normalized.Split('\n').SelectMany(WrapLatexVerbatimLine));
+    }
+
+    private static IEnumerable<string> WrapLatexVerbatimLine(string line)
+    {
+        const int maximumColumnCount = 68;
+        var remaining = line ?? string.Empty;
+        while (remaining.Length > maximumColumnCount)
+        {
+            var breakIndex = remaining.LastIndexOf(' ', maximumColumnCount);
+            if (breakIndex <= 0)
+            {
+                breakIndex = maximumColumnCount;
+            }
+
+            yield return remaining[..breakIndex];
+            remaining = "  " + remaining[breakIndex..].TrimStart();
+        }
+
+        yield return remaining;
     }
 
     private static void WriteStringArray(Utf8JsonWriter writer, string propertyName, IReadOnlyList<string> values)

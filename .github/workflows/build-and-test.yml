@@ -143,6 +143,11 @@ jobs:
             > /tmp/ricis-simplify.json
           grep -q '"ricis":"x => (x + 5)"' /tmp/ricis-simplify.json
 
+      - name: Setup LaTeX validator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-lang-cyrillic
+
       - name: Setup Lean toolchain and Mathlib cache
         uses: leanprover/lean-action@v1
         with:
@@ -159,5 +164,25 @@ jobs:
           lake env lean /tmp/ricis_a6_generated.lean
           if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean /tmp/ricis_a6_generated.lean; then
             echo "Generated LeanDoc contains forbidden sorry token."
+            exit 1
+          fi
+
+      - name: Generate and validate Jacobian proof artifacts
+        run: |
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --jacobian-proof-latex > /tmp/ricis_jacobian_proof.tex
+          mkdir -p /tmp/ricis-jacobian-latex
+          pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
+            -output-directory=/tmp/ricis-jacobian-latex /tmp/ricis_jacobian_proof.tex \
+            > /tmp/ricis_jacobian_latex.log 2>&1
+          test -s /tmp/ricis-jacobian-latex/ricis_jacobian_proof.pdf
+          if grep -E '(^! |LaTeX Error:|Fatal error|Overfull \\hbox)' /tmp/ricis_jacobian_latex.log; then
+            echo "Jacobian LaTeX artifact contains a compilation error or overfull proof-trace line."
+            exit 1
+          fi
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --jacobian-proof-lean > /tmp/ricis_jacobian_proof.lean
+          cd FormalVerification/Lean
+          lake env lean /tmp/ricis_jacobian_proof.lean
+          if grep -niE 'sorry|sorryAx' /tmp/ricis_jacobian_proof.lean; then
+            echo "Jacobian Lean artifact contains forbidden sorry token."
             exit 1
           fi
