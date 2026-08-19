@@ -155,6 +155,9 @@ jobs:
           use-mathlib-cache: true
           lake-package-directory: FormalVerification/Lean
 
+      - name: Verify versioned Lean evidence artifacts
+        run: python3 scripts/verify_lean_artifacts.py --compile
+
       - name: Generate and compile LeanDoc
         run: |
           dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-doc-demo > /tmp/ricis_generated.lean

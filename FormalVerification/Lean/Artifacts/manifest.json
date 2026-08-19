@@ -1,0 +1,85 @@
+{
+  "schema": "ricis-lean-evidence/v1",
+  "repository": "A1Dmitry/Ricis.Core",
+  "toolchain": "Lean 4.33.0",
+  "artifacts": [
+    {
+      "id": "RICIS-TYPE-IDENTITY",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/RicisIdentity/TypeIdentity.lean",
+      "description": "Exact rational RICIS type-identity chain ID-01 through ID-06 and collapsed type guard.",
+      "origin": "FormalVerification/Lean/RicisIdentity/TypeIdentity.lean",
+      "testIds": ["LFT01", "LFT02", "LFT03"],
+      "theoremNames": ["id01_type_preserved", "id02_reflection_sum", "id03_same_coordinate", "id04_linear_pair", "id05_doubled_coordinate", "id06_exact_half", "id06_reflected_exact_half", "collapsed_type_violates_id03"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "RicisLeanTemplate / checked-in structured source",
+      "generatedFrom": "Proofs/RicisLeanTemplate.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    },
+    {
+      "id": "RICIS-A6-GENERATED",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/Generated/ComplexSingularityA6.lean",
+      "description": "Structured A6 indexed-zero times indexed-infinity bridge and payload commutativity.",
+      "origin": "Proofs/RicisLeanTemplate.cs",
+      "testIds": ["SQA03", "JPR03", "LFT01"],
+      "theoremNames": ["a6_indexed_zero_infinity_bridge", "a6_payload_product_commutative"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "RicisLeanTemplate / checked-in generated source",
+      "generatedFrom": "Proofs/RicisLeanTemplate.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    },
+    {
+      "id": "RICIS-A6-REGRESSION-EVIDENCE",
+      "status": "RegressionChecked",
+      "source": "FormalVerification/Lean/Artifacts/regression/A6RegressionEvidence.lean",
+      "description": "Lean-readable evidence record for C# regression assertions covering A6 payload preservation and structured theorem generation.",
+      "origin": "RegressionTests/RicisLeanSingularitySuite.cs",
+      "testIds": ["SQA01", "SQA02", "SQA03", "JPR04"],
+      "theoremNames": ["regression_a6_payload_contract", "regression_a6_lean_source_contract"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "QA artifact capture",
+      "generatedFrom": "RegressionTests/RicisLeanSingularitySuite.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    },
+    {
+      "id": "RICIS-TYPE-IDENTITY-REGRESSION-EVIDENCE",
+      "status": "RegressionChecked",
+      "source": "FormalVerification/Lean/Artifacts/regression/TypeIdentityRegressionEvidence.lean",
+      "description": "Lean-readable evidence record for structured Lean row expansion, identifier validation and theorem-source assertions.",
+      "origin": "RegressionTests/RicisProofDocumentFormatSuite.cs",
+      "testIds": ["LFT01", "LFT02", "LFT03"],
+      "theoremNames": ["regression_id06_source_contract", "regression_id06_dependency_contract", "regression_identifier_safety_contract"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "QA artifact capture",
+      "generatedFrom": "RegressionTests/RicisProofDocumentFormatSuite.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    },
+    {
+      "id": "RICIS-JAC-001-KERNEL-EXPORT",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/Artifacts/jacobian/JacobianProof.lean",
+      "description": "Versioned structured Lean export emitted by the canonical JAC-001 proof run.",
+      "origin": "Proofs/RicisJacobianProofScenario.cs",
+      "testIds": ["JPR01", "JPR02", "JPR03", "JPR04"],
+      "theoremNames": ["id01_type_preserved", "a6_indexed_zero_infinity_bridge", "a6_payload_product_commutative"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "RicisLeanTemplate / checked-in JAC-001 export",
+      "generatedFrom": "Proofs/RicisJacobianProofScenario.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    },
+    {
+      "id": "RICIS-JAC-001-AUDIT",
+      "status": "AuditOnly",
+      "source": "FormalVerification/Lean/Artifacts/audit/JacobianAuditReport.lean",
+      "description": "Typed-log audit record for JAC-001. It is explicitly not a kernel theorem.",
+      "origin": "Proofs/RicisJacobianProofScenario.cs",
+      "testIds": ["JPR01", "JPR02", "JPR03", "JPR04"],
+      "theoremNames": [],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "RicisProofLogReportRenderer.Lean",
+      "generatedFrom": "Proofs/RicisJacobianProofScenario.cs",
+      "forbiddenMarkers": ["sorry", "sorryAx"]
+    }
+  ]
+}
