@@ -366,14 +366,14 @@ internal static class RicisAcademicProofSuite
         var trace = new List<RicisPhaseTraceStep>();
         _ = RicisPhasePipeline.SimplifyWithTrace(Expression.Divide(x, x), trace);
 
-        Require(trace.Count == 7,
-            $"Обычное double-дерево должно фиксировать семь нормативных фаз, получено {trace.Count}.");
+        Require(trace.Count == 8,
+            $"Обычное double-дерево должно фиксировать восемь нормативных фаз, получено {trace.Count}.");
         Require(trace[0].PhaseName.Contains("Фаза 0", StringComparison.Ordinal) &&
                 trace[0].Changed &&
                 trace[0].RuleFamily.Contains("ID-01", StringComparison.Ordinal),
             "Первый trace-step обязан фиксировать абсолютный L1.");
-        Require(trace[5].PhaseName.Contains("согласованность типов", StringComparison.Ordinal) &&
-                trace[5].RuleFamily.Contains("SP3", StringComparison.Ordinal),
+        Require(trace[6].PhaseName.Contains("согласованность типов", StringComparison.Ordinal) &&
+                trace[6].RuleFamily.Contains("SP3", StringComparison.Ordinal),
             "TypeConsistency/SP3 обязан идти перед стандартными операциями.");
     }
 
