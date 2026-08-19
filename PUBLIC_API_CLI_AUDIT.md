@@ -54,9 +54,11 @@
 
 ## Проверка RicisType.GetHashCode и expression tree
 
-После исправления `GetHashCode` выполнена отдельная проверка `API11`. Она подтверждает, что structural comparison двух эквивалентных expression trees не изменился, а `HashSet<RicisType>` находит объект с тем же `Signature` и другим `IsComposite`. Полный Core regression suite завершился результатом **339/339 PASS**.
+После исправления `GetHashCode` выполнены отдельные проверки `API11–API16`. Они подтверждают structural comparison эквивалентных expression trees, `HashSet<RicisType>`, constructor/properties/static constants, null и unrelated-object equality, полную compatibility matrix, все ветви `Operate`, canonical tuple и `ToString`. Полный Core regression suite завершился результатом **344/344 PASS**.
 
 Причина безопасности изменения: `RicisType.Equals` и `Equals(object)` сравнивают только `Signature`, тогда как прежний hash включал ещё `IsComposite`, нарушая обязательный invariant равенства и hash code. Новый hash использует только `StringComparer.Ordinal` для `Signature`. Поиск usages показал, что `RicisType.GetHashCode` не участвует в expression-tree node hashing или canonical tree traversal; `RicisType` используется как public type metadata и static expression constants.
+
+Финальный quality gate после расширения suite: Console Release build — 0 warnings/0 errors; Finance regression — **12/12 PASS**; Lean manifest — **6/6 PASS**; `git diff --check` — PASS. NuGet publication не выполнялась.
 
 ## Правило аудита
 

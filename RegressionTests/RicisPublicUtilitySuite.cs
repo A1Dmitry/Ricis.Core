@@ -19,6 +19,11 @@ internal static class RicisPublicUtilitySuite
         ("API09: RicisType сохраняет equality/hash contract и compatibility", RicisTypePreservesEqualityContract),
         ("API10: RicisType строит canonical operations and tuple", RicisTypeBuildsCanonicalOperations),
         ("API11: GetHashCode не меняет expression tree и HashSet semantics", RicisTypeHashDoesNotAlterTree),
+        ("API12: RicisType constructor, properties and constants are stable", RicisTypeExposesStableMetadata),
+        ("API13: RicisType equality handles null and unrelated objects", RicisTypeEqualityHandlesNullAndObjects),
+        ("API14: RicisType compatibility matrix is complete", RicisTypeCompatibilityMatrix),
+        ("API15: RicisType Operate covers scalar, identity and composite branches", RicisTypeOperateCoversBranches),
+        ("API16: RicisType tuple and string representations are canonical", RicisTypeRepresentationsAreCanonical),
     ];
 
     private static void ExactEvaluatorComputesRationalExpression()
@@ -134,6 +139,56 @@ internal static class RicisPublicUtilitySuite
 
         var set = new HashSet<RicisType> { new("A", false) };
         Assert(set.Contains(new RicisType("A", true)), "HashSet должен находить RicisType с равным Signature.");
+    }
+
+    private static void RicisTypeExposesStableMetadata()
+    {
+        var composite = new RicisType("A", true);
+        Assert(composite.Signature == "A" && composite.IsComposite, "Constructor должен сохранить Signature и IsComposite.");
+        Assert(RicisType.Scalar.Signature == "Scalar" && !RicisType.Scalar.IsComposite, "Scalar должен быть каноническим простым типом.");
+        Assert(RicisType.InfinityZero.NodeType == ExpressionType.Constant && RicisType.InfinityZero.Value is double zero && zero == 0.0,
+            "InfinityZero должен быть double constant 0.");
+        Assert(RicisType.InfinityOne.NodeType == ExpressionType.Constant && RicisType.InfinityOne.Value is double one && one == 1.0,
+            "InfinityOne должен быть double constant 1.");
+    }
+
+    private static void RicisTypeEqualityHandlesNullAndObjects()
+    {
+        var value = new RicisType("A");
+        RicisType other = null;
+        Assert(!value.Equals(other), "Equals(RicisType?) должен вернуть false для null.");
+        Assert(!value.Equals((object)null), "Equals(object) должен вернуть false для null.");
+        Assert(!value.Equals("A"), "RicisType не должен быть равен unrelated object.");
+        Assert(value.Equals((object)new RicisType("A", true)), "Equals(object) должен сравнивать Signature.");
+    }
+
+    private static void RicisTypeCompatibilityMatrix()
+    {
+        var space = new RicisType("Space");
+        var time = new RicisType("Time");
+        Assert(space.IsCompatibleWith(space), "Тип должен быть совместим сам с собой.");
+        Assert(!space.IsCompatibleWith(time), "Разные non-scalar типы несовместимы.");
+        Assert(space.IsCompatibleWith(RicisType.Scalar), "Non-scalar должен быть совместим со Scalar.");
+        Assert(RicisType.Scalar.IsCompatibleWith(time), "Scalar должен быть совместим с non-scalar.");
+    }
+
+    private static void RicisTypeOperateCoversBranches()
+    {
+        var a = new RicisType("A");
+        var b = new RicisType("B");
+        Assert(RicisType.Operate(RicisType.Scalar, a, "*").Equals(a), "Scalar слева должен вернуть правый тип.");
+        Assert(RicisType.Operate(a, RicisType.Scalar, "*").Equals(a), "Scalar справа должен вернуть левый тип.");
+        Assert(RicisType.Operate(a, a, "/").Equals(RicisType.Scalar), "A/A должен вернуть Scalar.");
+        Assert(RicisType.Operate(a, a, "*").Signature == "(A*A)", "Операция * над одинаковыми типами должна сохранить composite signature.");
+        Assert(RicisType.Operate(a, b, "/").Signature == "(A/B)", "Операция / над разными типами должна сохранить composite signature.");
+    }
+
+    private static void RicisTypeRepresentationsAreCanonical()
+    {
+        var tuple = RicisType.CreateTuple(new RicisType("Time"), new RicisType("Space"));
+        Assert(tuple.IsComposite && tuple.Signature == "Tuple<Space,Time>", "Tuple должен сортировать Signature канонически.");
+        Assert(tuple.ToString() == tuple.Signature, "ToString должен возвращать Signature.");
+        Assert(new RicisType("A").ToString() == "A", "Простой тип должен печатать Signature.");
     }
 
     private static void Assert(bool condition, string message)
