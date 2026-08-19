@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Ricis.Core is the version source of truth for the complete solution. -->
-    <RicisCoreVersion Condition="'$(RicisCoreVersion)' == ''">0.6.0</RicisCoreVersion>
+    <RicisCoreVersion Condition="'$(RicisCoreVersion)' == ''">0.6.1</RicisCoreVersion>
     <VersionPrefix>$(RicisCoreVersion)</VersionPrefix>
     <Version>$(RicisCoreVersion)</Version>
     <AssemblyVersion>$(RicisCoreVersion).0</AssemblyVersion>

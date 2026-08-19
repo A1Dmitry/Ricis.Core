@@ -1,7 +1,7 @@
 # JAC-001 — замкнутый proof-спринт: сингулярный якобиан, LaTeX и Lean
 
 **Статус:** `ЗАВЕРШЁН`  
-**Релиз:** `v0.6.0`.
+**Релиз:** `v0.6.1`.
 
 ## Постановка
 
@@ -48,9 +48,13 @@ J = \begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix}, \qquad \det J = 1\cdot1 - 1\cd
 | Release build | `0` warnings, `0` errors. |
 | Core regressions | `328/328` passed, включая `JPR01`–`JPR04`. |
 | Finance regressions | `9/9` passed. |
-| Единая версия | Все solution-проекты сообщили `0.6.0`. |
+| Единая версия | Все solution-проекты сообщили `0.6.1`. |
 | LaTeX | JAC-001 скомпилирован `pdflatex -halt-on-error` в пятистраничный PDF без fatal diagnostics и без `Overfull \hbox` trace warnings. |
 | Lean | Combined audit-plus-A6 artifact скомпилирован `lake env lean`; `sorry` и `sorryAx` отсутствуют. |
+
+## DevOps patch-релиз
+
+Тег `v0.6.0` успешно прошёл Build and test, включая новый remote LaTeX/Lean gate. Отдельный NuGet publish workflow этого тега остановился **до restore/build** из-за `actions/setup-dotnet` cache, настроенного на отсутствующие `packages.lock.json`. Это не относится к proof-коду и не является ошибкой LaTeX или Lean. Для завершения выпуска cache dependency path удалён, а проверенный JAC-001 инкремент выпущен как `v0.6.1` без переписывания уже опубликованного тега `v0.6.0`.
 
 ## Границы формальной силы
 
