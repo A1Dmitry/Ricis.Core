@@ -136,13 +136,12 @@ internal static class RicisClassicalComparisonSuite
     private static double ExecuteNativeClassical(Expression source, ParameterExpression parameter, double point) =>
         Expression.Lambda<Func<double, double>>(source, parameter).Compile()(point);
 
-    private static void AssertClose(double actual, double expected, string context)
-    {
-        if (double.IsNaN(actual) || double.IsInfinity(actual) || Math.Abs(actual - expected) > Tolerance)
-        {
-            throw new InvalidOperationException($"{context}: ожидалось {expected}, получено {actual}.");
-        }
-    }
+    private static void AssertClose(double actual, double expected, string context) =>
+        RegressionAssertions.AssertClose(
+            actual,
+            expected,
+            Tolerance,
+            () => $"{context}: ожидалось {expected}, получено {actual}.");
 
     private static ParameterExpression X() => Expression.Parameter(typeof(double), "x");
     private static ConstantExpression C(double value) => Expression.Constant(value);

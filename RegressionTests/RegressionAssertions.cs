@@ -24,4 +24,17 @@ internal static class RegressionAssertions
 
         throw new InvalidOperationException(message);
     }
+
+    public static void AssertClose(
+        double actual,
+        double expected,
+        double tolerance,
+        Func<string> messageFactory)
+    {
+        ArgumentNullException.ThrowIfNull(messageFactory);
+        if (double.IsNaN(actual) || double.IsInfinity(actual) || Math.Abs(actual - expected) > tolerance)
+        {
+            throw new InvalidOperationException(messageFactory());
+        }
+    }
 }

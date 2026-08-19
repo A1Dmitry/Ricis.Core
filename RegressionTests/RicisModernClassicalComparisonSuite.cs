@@ -137,11 +137,10 @@ internal static class RicisModernClassicalComparisonSuite
         }
     }
 
-    private static void AssertClose(double actual, double expected, string context)
-    {
-        if (double.IsNaN(actual) || double.IsInfinity(actual) || Math.Abs(actual - expected) > Tolerance)
-        {
-            throw new InvalidOperationException($"{context}: RICIS={actual:G17}, классика={expected:G17}.");
-        }
-    }
+    private static void AssertClose(double actual, double expected, string context) =>
+        RegressionAssertions.AssertClose(
+            actual,
+            expected,
+            Tolerance,
+            () => $"{context}: RICIS={actual:G17}, классика={expected:G17}.");
 }
