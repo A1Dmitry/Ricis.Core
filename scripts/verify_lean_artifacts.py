@@ -22,6 +22,7 @@ REQUIRED_FIELDS = {
     "generatedBy",
     "generatedFrom",
     "forbiddenMarkers",
+    "knowledgeSource",
 }
 ALLOWED_STATUSES = {"KernelChecked", "RegressionChecked", "AuditOnly", "RenderedOnly"}
 
@@ -84,6 +85,13 @@ def main() -> int:
             fail(f"{artifact_id} AuditOnly source lacks explicit boundary")
         if not artifact["testIds"]:
             fail(f"{artifact_id} has no provenance test IDs")
+        knowledge_source = artifact["knowledgeSource"]
+        if not isinstance(knowledge_source, dict):
+            fail(f"{artifact_id} knowledgeSource must be an object")
+        if knowledge_source.get("mandatoryForModelStudy") is not True:
+            fail(f"{artifact_id} must be marked mandatoryForModelStudy")
+        if knowledge_source.get("role") != "mandatory-project-knowledge-source":
+            fail(f"{artifact_id} has invalid knowledgeSource role")
 
     if arguments.compile:
         lean_root = ROOT / "FormalVerification" / "Lean"

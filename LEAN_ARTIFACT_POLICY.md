@@ -6,6 +6,21 @@
 
 > Компиляция Lean подтверждает конкретный сохранённый Lean source. Regression test подтверждает конкретный C# contract. Эти два вида evidence связаны provenance, но не подменяют друг друга.
 
+## Обязательный источник знаний для модели
+
+Каждый Lean-результат, который успешно прошёл `lake env lean` или был подтверждён regression quality gate, обязан быть прикреплён к проекту как постоянный файл под `FormalVerification/Lean/Artifacts/` и зарегистрирован в `manifest.json`. В manifest каждая запись обязана содержать объект:
+
+```json
+"knowledgeSource": {
+  "mandatoryForModelStudy": true,
+  "role": "mandatory-project-knowledge-source"
+}
+```
+
+Эта отметка означает, что artifact является обязательным источником знаний при последующем анализе проекта моделью. Временный файл в `/tmp`, stdout, локальный незакоммиченный результат или сообщение CI не являются прикреплением к проекту и не могут считаться источником знаний. Изменение или удаление такого artifact требует обновления provenance manifest и повторного прохождения quality gate.
+
+Verifier обязан отклонять любую запись без `knowledgeSource.mandatoryForModelStudy == true` и точного значения `knowledgeSource.role`. Поэтому правило является не только документационным, но и машинно проверяемым.
+
 ## Evidence statuses
 
 | Status | Смысл | Обязательная проверка |
@@ -17,7 +32,7 @@
 
 ## Обязательные provenance fields
 
-Каждая запись `manifest.json` обязана содержать `id`, `status`, `source`, `description`, `origin`, `testIds`, `theoremNames`, `leanToolchain`, `generatedBy`, `generatedFrom` и `forbiddenMarkers`. `KernelChecked` дополнительно обязан перечислять конкретные theorem names. `RegressionChecked` обязан перечислять реальные C# test IDs, а не только название suite.
+Каждая запись `manifest.json` обязана содержать `id`, `status`, `source`, `description`, `origin`, `testIds`, `theoremNames`, `leanToolchain`, `generatedBy`, `generatedFrom`, `forbiddenMarkers` и `knowledgeSource`. `KernelChecked` дополнительно обязан перечислять конкретные theorem names. `RegressionChecked` обязан перечислять реальные C# test IDs, а не только название suite.
 
 `generatedFrom` должен указывать на commit или deterministic source path. Если artifact генерируется из C#, generated source обязан быть сохранён в `FormalVerification/Lean/Artifacts/`, а не только в temporary directory.
 
@@ -37,6 +52,7 @@ CI выполняет следующие проверки:
 4. Каждый `RegressionChecked` artifact связан с существующим C# test ID или suite ID.
 5. `AuditOnly` содержит явную границу `NOT KERNEL VERIFIED`.
 6. Manifest сам является валидным JSON и не содержит дубликатов IDs.
+7. Каждый artifact помечен как обязательный источник знаний для изучения моделью.
 
 ## Directory contract
 

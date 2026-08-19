@@ -14,7 +14,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "RicisLeanTemplate / checked-in structured source",
       "generatedFrom": "Proofs/RicisLeanTemplate.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     },
     {
       "id": "RICIS-A6-GENERATED",
@@ -27,7 +31,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "RicisLeanTemplate / checked-in generated source",
       "generatedFrom": "Proofs/RicisLeanTemplate.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     },
     {
       "id": "RICIS-A6-REGRESSION-EVIDENCE",
@@ -40,7 +48,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "QA artifact capture",
       "generatedFrom": "RegressionTests/RicisLeanSingularitySuite.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     },
     {
       "id": "RICIS-TYPE-IDENTITY-REGRESSION-EVIDENCE",
@@ -53,7 +65,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "QA artifact capture",
       "generatedFrom": "RegressionTests/RicisProofDocumentFormatSuite.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     },
     {
       "id": "RICIS-JAC-001-KERNEL-EXPORT",
@@ -66,7 +82,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "RicisLeanTemplate / checked-in JAC-001 export",
       "generatedFrom": "Proofs/RicisJacobianProofScenario.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     },
     {
       "id": "RICIS-JAC-001-AUDIT",
@@ -79,7 +99,11 @@
       "leanToolchain": "Lean 4.33.0 + Mathlib",
       "generatedBy": "RicisProofLogReportRenderer.Lean",
       "generatedFrom": "Proofs/RicisJacobianProofScenario.cs",
-      "forbiddenMarkers": ["sorry", "sorryAx"]
+      "forbiddenMarkers": ["sorry", "sorryAx"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     }
   ]
 }
