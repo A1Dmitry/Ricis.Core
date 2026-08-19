@@ -3,34 +3,33 @@
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
+using Ricis.Core.Logging;
 using Ricis.Core.Metadata;
 using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Phases;
 
 /// <summary>
-/// Normative RICIS phase order:
-/// identity of essence F≡F→1; polar reduction; SP2 algebra; O(1) bridges;
-/// A1/A4 singular transforms; and standard operations A5–A7 plus indexed-zero
-/// rules. Operations outside an explicit RICIS rule retain classical semantics.
+/// Normative RICIS phase order: identity of essence F≡F→1; polar reduction;
+/// SP2 algebra; O(1) bridges; A1/A4 singular transforms; and standard
+/// operations A5–A7 plus indexed-zero rules. Operations outside an explicit
+/// RICIS rule retain classical semantics.
 /// </summary>
 public static class RicisPhasePipeline
 {
-    private static readonly List<IExpressionVisitor> Visitors =
+    private static readonly IReadOnlyList<IRicisPipelineStage> Stages =
     [
-        new IdentityReductionVisitor(),
-        new PolarTrigVisitor(),
-        new AlgebraicReductionVisitor(),
-        new LimitBridgeVisitor(),
-        new RicisTransformVisitor(),
-        new TypeConsistencyVisitor(),
-        new StandardOperationsVisitor(),
+        new RicisPipelineStage<IdentityReductionVisitor>(new IdentityReductionVisitor()),
+        new RicisPipelineStage<PolarTrigVisitor>(new PolarTrigVisitor()),
+        new RicisPipelineStage<AlgebraicReductionVisitor>(new AlgebraicReductionVisitor()),
+        new RicisPipelineStage<LimitBridgeVisitor>(new LimitBridgeVisitor()),
+        new RicisPipelineStage<RicisTransformVisitor>(new RicisTransformVisitor()),
+        new RicisPipelineStage<TypeConsistencyVisitor>(new TypeConsistencyVisitor()),
+        new RicisPipelineStage<StandardOperationsVisitor>(new StandardOperationsVisitor()),
     ];
 
-    /// <summary>
-    /// Simplifies an expression through the complete normative RICIS pipeline.
-    /// </summary>
-    public static Expression Simplify(Expression expr) => SimplifyCore(expr, null);
+    /// <summary>Simplifies an expression through the complete normative RICIS pipeline.</summary>
+    public static Expression Simplify(Expression expr) => SimplifyCore<object>(expr, null, null);
 
     /// <summary>
     /// Simplifies an expression through the normative RICIS pipeline and appends
@@ -41,12 +40,49 @@ public static class RicisPhasePipeline
     public static Expression SimplifyWithTrace(Expression expr, ICollection<RicisPhaseTraceStep> trace)
     {
         ArgumentNullException.ThrowIfNull(trace);
-        return SimplifyCore(expr, trace);
+        return SimplifyCore<object>(expr, trace, null);
     }
 
-    private static Expression SimplifyCore(Expression expr, ICollection<RicisPhaseTraceStep> trace)
+    /// <summary>
+    /// Simplifies an expression and records a typed, renderer-independent audit
+    /// event sequence. The source type of orchestration events is
+    /// <typeparamref name="TLogStage"/>; individual visitor events use typed
+    /// child logs backed by the same canonical journal.
+    /// </summary>
+    public static Expression SimplifyWithLog<TLogStage>(Expression expr, ILog<TLogStage> log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        return SimplifyCore(expr, null, log);
+    }
+
+    /// <summary>
+    /// Simplifies an expression while preserving the existing RICIS phase trace
+    /// and publishing the same phase attempts to a typed proof-log journal.
+    /// </summary>
+    public static Expression SimplifyWithTraceAndLog<TLogStage>(
+        Expression expr,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log)
+    {
+        ArgumentNullException.ThrowIfNull(trace);
+        ArgumentNullException.ThrowIfNull(log);
+        return SimplifyCore(expr, trace, log);
+    }
+
+    private static Expression SimplifyCore<TLogStage>(
+        Expression expr,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log)
     {
         ArgumentNullException.ThrowIfNull(expr);
+        log?.Info(
+            "RICIS_PIPELINE_START",
+            "Запущен нормативный RICIS phase pipeline.",
+            new Dictionary<string, string>
+            {
+                ["inputType"] = expr.Type.FullName ?? expr.Type.Name,
+                ["inputExpression"] = expr.ToString(),
+            });
 
         // Metadata is opt-in: it appears when a source lambda captures an
         // outer variable or uses a parameter exactly named "about".
@@ -55,28 +91,9 @@ public static class RicisPhasePipeline
             : null;
 
         var result = expr;
-        foreach (var visitor in Visitors)
+        foreach (var stage in Stages)
         {
-            var before = result;
-            var (phaseName, ruleFamily) = Describe(visitor);
-            if (MustSkip(visitor, result))
-            {
-                trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, before, wasSkipped: true));
-                continue;
-            }
-
-            try
-            {
-                result = visitor.Visit(result);
-            }
-            catch (Exception error)
-            {
-                throw new InvalidOperationException(
-                    $"Фаза RICIS {visitor.GetType().Name} не смогла преобразовать выражение типа {result.Type}.",
-                    error);
-            }
-
-            trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, result, wasSkipped: false));
+            result = stage.Apply(result, trace, log);
         }
 
         if (authorProfile is not null && result is LambdaExpression lambda)
@@ -94,8 +111,27 @@ public static class RicisPhasePipeline
                 before,
                 result,
                 wasSkipped: false));
+            log?.For<AuthorAnnotatedExpression>().Trace(
+                "RICIS_AUTHOR_ANNOTATION",
+                "Применена opt-in SEO-аннотация автора.",
+                before.ToString(),
+                result.ToString(),
+                new Dictionary<string, string>
+                {
+                    ["phaseName"] = "Метафаза автора",
+                    ["ruleFamily"] = "META — opt-in SEO-аннотация about",
+                    ["wasSkipped"] = bool.FalseString,
+                });
         }
 
+        log?.Info(
+            "RICIS_PIPELINE_COMPLETE",
+            "Нормативный RICIS phase pipeline завершён.",
+            new Dictionary<string, string>
+            {
+                ["outputType"] = result.Type.FullName ?? result.Type.Name,
+                ["outputExpression"] = result.ToString(),
+            });
         return result;
     }
 
@@ -133,6 +169,87 @@ public static class RicisPhasePipeline
         return finder.Found;
     }
 
+    private interface IRicisPipelineStage
+    {
+        Expression Apply<TLogStage>(
+            Expression result,
+            ICollection<RicisPhaseTraceStep> trace,
+            ILog<TLogStage> log);
+    }
+
+    private sealed class RicisPipelineStage<TVisitor> : IRicisPipelineStage
+        where TVisitor : IExpressionVisitor
+    {
+        private readonly TVisitor _visitor;
+
+        public RicisPipelineStage(TVisitor visitor)
+        {
+            _visitor = visitor ?? throw new ArgumentNullException(nameof(visitor));
+        }
+
+        public Expression Apply<TLogStage>(
+            Expression result,
+            ICollection<RicisPhaseTraceStep> trace,
+            ILog<TLogStage> log)
+        {
+            var before = result;
+            var (phaseName, ruleFamily) = Describe(_visitor);
+            var stageLog = log?.For<TVisitor>();
+            var attributes = new Dictionary<string, string>
+            {
+                ["phaseName"] = phaseName,
+                ["ruleFamily"] = ruleFamily,
+                ["visitorType"] = typeof(TVisitor).FullName ?? typeof(TVisitor).Name,
+            };
+
+            if (MustSkip(_visitor, result))
+            {
+                trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, before, wasSkipped: true));
+                attributes["wasSkipped"] = bool.TrueString;
+                stageLog?.Warning(
+                    "RICIS_PHASE_SKIPPED",
+                    "Фаза была пропущена из-за документированного precondition.",
+                    attributes);
+                stageLog?.Trace(
+                    "RICIS_PHASE_TRACE",
+                    "Зафиксирована пропущенная фаза без изменения expression tree.",
+                    before.ToString(),
+                    before.ToString(),
+                    attributes);
+                return result;
+            }
+
+            try
+            {
+                result = _visitor.Visit(result);
+            }
+            catch (Exception error)
+            {
+                attributes["wasSkipped"] = bool.FalseString;
+                stageLog?.Exception(
+                    "RICIS_PHASE_EXCEPTION",
+                    error,
+                    $"Фаза {typeof(TVisitor).Name} не смогла преобразовать выражение типа {before.Type}.",
+                    attributes);
+                throw new InvalidOperationException(
+                    $"Фаза RICIS {typeof(TVisitor).Name} не смогла преобразовать выражение типа {before.Type}.",
+                    error);
+            }
+
+            trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, result, wasSkipped: false));
+            attributes["wasSkipped"] = bool.FalseString;
+            attributes["changed"] = (!before.AreEqual(result)).ToString();
+            stageLog?.Info("RICIS_PHASE_COMPLETE", "Нормативная фаза завершена.", attributes);
+            stageLog?.Trace(
+                "RICIS_PHASE_TRACE",
+                "Зафиксирована попытка нормативного преобразования.",
+                before.ToString(),
+                result.ToString(),
+                attributes);
+            return result;
+        }
+    }
+
     private sealed class RicisExpressionFinder : ExpressionVisitor
     {
         public bool Found { get; private set; }
@@ -158,6 +275,6 @@ public static class RicisPhasePipeline
         RicisTransformVisitor => ("Фаза 2 — сингулярное преобразование", "A1/A4: индексирование и отношение нулей"),
         TypeConsistencyVisitor => ("Фаза 4 — согласованность типов", "SP3: сохранение типа и ключей payload"),
         StandardOperationsVisitor => ("Фаза 5 — стандартные операции", "Z-01/Z-02, A5/A6/A7"),
-        _ => (visitor.GetType().Name, "Нормативная фаза RICIS")
+        _ => (visitor.GetType().Name, "Нормативная фаза RICIS"),
     };
 }

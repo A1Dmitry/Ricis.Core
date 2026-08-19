@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 using Ricis.Core.Expressions;
+using Ricis.Core.Logging;
 using Ricis.Core.Phases;
 using Ricis.Core.Proofs;
 using Ricis.Core.SpecialFunctions;
@@ -55,10 +56,44 @@ public static class RicisAcademicProofExtensions
         StringBuilder proof)
         where T : INumber<T>
     {
+        ArgumentNullException.ThrowIfNull(proof);
+        var derivation = DeriveUnaryProof(conditions, constraints, claim, log: null);
+        AppendAcademicProtocol(
+            proof,
+            derivation.Conditions,
+            derivation.Constraints,
+            claim,
+            derivation.Trace,
+            derivation.Derived);
+        return derivation.Derived;
+    }
+
+    /// <summary>
+    /// Derives a unary scalar expression and publishes a structured event journal
+    /// whose typed stage facades identify proof orchestration and every executed
+    /// RICIS visitor. Expression inputs remain deferred and are never executed.
+    /// </summary>
+    public static Expression<Func<T, T>> Prove<T>(
+        this IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        ILog<RicisProofOrchestrationStage> log)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        return DeriveUnaryProof(conditions, constraints, claim, log).Derived;
+    }
+
+    private static UnaryProofDerivation<T> DeriveUnaryProof<T>(
+        IEnumerable<Expression<Func<T, bool>>> conditions,
+        IEnumerable<Expression<Func<T, bool>>> constraints,
+        Expression<Func<T, T>> claim,
+        ILog<RicisProofOrchestrationStage> log)
+        where T : INumber<T>
+    {
         ArgumentNullException.ThrowIfNull(conditions);
         ArgumentNullException.ThrowIfNull(constraints);
         ArgumentNullException.ThrowIfNull(claim);
-        ArgumentNullException.ThrowIfNull(proof);
 
         var conditionList = conditions.ToList();
         var constraintList = constraints.ToList();
@@ -66,15 +101,42 @@ public static class RicisAcademicProofExtensions
         ValidateHypotheses(constraintList, nameof(constraints));
         ValidateClaim(claim);
 
+        log?.Info(
+            "RICIS_PROOF_START",
+            "Запущено symbolic proof-выведение для unary expression tree.",
+            new Dictionary<string, string>
+            {
+                ["scalarType"] = typeof(T).FullName ?? typeof(T).Name,
+                ["conditionCount"] = conditionList.Count.ToString(),
+                ["constraintCount"] = constraintList.Count.ToString(),
+                ["claim"] = claim.ToString(),
+            });
+
         NumericConstants.Register<T>();
         var trace = new List<RicisPhaseTraceStep>();
-        var derived = RicisPhasePipeline.SimplifyWithTrace(claim, trace) as Expression<Func<T, T>>
+        var derived = log is null
+            ? RicisPhasePipeline.SimplifyWithTrace(claim, trace)
+            : RicisPhasePipeline.SimplifyWithTraceAndLog(claim, trace, log);
+        var typedDerived = derived as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
                 $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> при доказательстве.");
 
-        AppendAcademicProtocol(proof, conditionList, constraintList, claim, trace, derived);
-        return derived;
+        log?.Info(
+            "RICIS_PROOF_COMPLETE",
+            "Unary symbolic proof-выведение завершено.",
+            new Dictionary<string, string>
+            {
+                ["derived"] = typedDerived.ToString(),
+                ["phaseAttemptCount"] = trace.Count.ToString(),
+            });
+        return new UnaryProofDerivation<T>(conditionList, constraintList, trace, typedDerived);
     }
+
+    private sealed record UnaryProofDerivation<T>(
+        IReadOnlyList<Expression<Func<T, bool>>> Conditions,
+        IReadOnlyList<Expression<Func<T, bool>>> Constraints,
+        IReadOnlyList<RicisPhaseTraceStep> Trace,
+        Expression<Func<T, T>> Derived);
 
     /// <summary>
     /// Proves a real unary lambda claim and structurally checks it against a real

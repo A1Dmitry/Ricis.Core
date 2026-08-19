@@ -1,8 +1,8 @@
 # Ricis.Core Versioning Policy
 
-> **Document version:** `0.1.0` (provisional baseline)
+> **Document version:** `0.2.0`
 > **Created:** `2026-08-16`
-> **Last modified:** `2026-08-16`
+> **Last modified:** `2026-08-19`
 > **Versioning note:** increment the document version when the normative content changes.
 
 
@@ -39,5 +39,9 @@ v1.2.3
 | Новый совместимый public API или функциональность | MINOR |
 | Несовместимое изменение public API/формата | MAJOR |
 | Предварительный релиз | prerelease suffix, например `1.1.0-rc.1` |
+
+## v0.2.0
+
+Версия `0.2.0` вводит совместимый публичный `ILog<TStage>` API, canonical typed event journal и renderer-ы JSON/LaTeX/Lean-oriented audit report. Это MINOR-релиз: существующие `StringBuilder` overloads и proof semantics остаются совместимыми.
 
 Version metadata не заменяет regression suite и API/Lean compatibility checks. Перед тегом требуется выполнить Release build, полный regression run, API/Swagger smoke checks и Lean verification, если изменён proof pipeline.
