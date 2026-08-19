@@ -11,8 +11,6 @@ namespace Ricis.Core.Proofs;
 /// </summary>
 public sealed class RicisJacobianProofScenario
 {
-    private const string LeanNamespaceMarker = "namespace Ricis.Generated";
-
     private RicisJacobianProofScenario(
         RicisCheckedProofArtifacts<double> scalarProof,
         RicisJacobianSingularityExpression<double> jacobian,
@@ -42,16 +40,16 @@ public sealed class RicisJacobianProofScenario
     public RicisLeanDoc StructuredLeanDocument { get; }
 
     /// <summary>
-    /// Gets a compilable Lean source containing the full RICIS audit trace in a
-    /// comment and the structured A6 theorem. The comment is not a kernel claim.
+    /// Gets the structured, compiler-checkable Lean source only. The audit report
+    /// remains available separately through <see cref="LeanAuditSource"/>.
     /// </summary>
     public string CombinedLeanSource { get; }
 
     /// <summary>Gets the standalone LaTeX proof document rendered from the one canonical run.</summary>
     public string LatexSource => ScalarProof.GetDocument(RicisProofDocumentFormat.Latex);
 
-    /// <summary>Gets the generic Lean audit scaffold rendered from the one canonical run.</summary>
-    public string LeanAuditSource => ScalarProof.GetDocument(RicisProofDocumentFormat.Lean);
+    /// <summary>Gets the non-kernel typed-log audit report rendered from the one canonical run.</summary>
+    public string LeanAuditSource => RicisProofLogReportRenderer.Render(ScalarProof.Trace, RicisProofLogFormat.Lean);
 
     /// <summary>
     /// Creates the canonical rank-one Jacobian scenario without compiling or
@@ -109,7 +107,7 @@ public sealed class RicisJacobianProofScenario
             claim,
             expected,
             profile,
-            [RicisProofDocumentFormat.Latex, RicisProofDocumentFormat.Lean, RicisProofDocumentFormat.Json],
+            [RicisProofDocumentFormat.Latex, RicisProofDocumentFormat.Json],
             log);
 
         var x = Expression.Parameter(typeof(double), "x");
@@ -129,19 +127,9 @@ public sealed class RicisJacobianProofScenario
         var structuredLean = RicisLeanTemplate.Render(
             new RicisLeanStructuredData(namespaceName: "RicisJacobian"),
             new RicisLeanRequestedRows([RicisLeanProofRow.A6IndexedZeroInfinityBridge]));
-        var combinedLean = CombineLeanAuditAndStructuredTheorem(scalarProof.GetDocument(RicisProofDocumentFormat.Lean), structuredLean.Source);
+        var combinedLean = structuredLean.Source;
 
         return new RicisJacobianProofScenario(scalarProof, jacobian, a6Payload, structuredLean, combinedLean);
     }
 
-    private static string CombineLeanAuditAndStructuredTheorem(string auditScaffold, string structuredTheorem)
-    {
-        var namespaceStart = auditScaffold.IndexOf(LeanNamespaceMarker, StringComparison.Ordinal);
-        if (namespaceStart < 0)
-        {
-            throw new InvalidOperationException("Generic Lean audit scaffold не содержит ожидаемый namespace marker.");
-        }
-
-        return auditScaffold[..namespaceStart].TrimEnd() + Environment.NewLine + Environment.NewLine + structuredTheorem;
-    }
 }

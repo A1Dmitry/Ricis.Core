@@ -16,7 +16,7 @@ internal static class RicisProofDocumentTemplates
             [RicisProofDocumentFormat.Log] = RenderLog,
             [RicisProofDocumentFormat.Json] = RenderJson,
             [RicisProofDocumentFormat.Latex] = RenderLatex,
-            [RicisProofDocumentFormat.Lean] = RenderLeanScaffold,
+            [RicisProofDocumentFormat.Lean] = RenderUnsupportedLeanProofShape,
         };
 
     /// <summary>
@@ -77,38 +77,14 @@ internal static class RicisProofDocumentTemplates
         return builder.ToString();
     }
 
-    private static string RenderLeanScaffold(
+    private static string RenderUnsupportedLeanProofShape(
         RicisProofDocumentProfile profile,
         string derivation,
         LambdaExpression derived)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("/-");
-        builder.AppendLine("RICIS proof-document export: Lean scaffold");
-        builder.AppendLine("Status: documentation export only; arbitrary C# expression trees are not Lean-checked by this output.");
-        builder.Append("Title: ").AppendLine(EscapeLeanComment(profile.Title));
-        builder.Append("Scope: ").AppendLine(profile.Scope.ToString());
-        builder.Append("Theorem: ").AppendLine(EscapeLeanComment(profile.Theorem));
-        builder.Append("Derived expression: ").AppendLine(EscapeLeanComment(derived.ToString()));
-        builder.AppendLine("Normative steps:");
-        foreach (var step in profile.NormativeSteps)
-        {
-            builder.Append("- ").Append(step.RuleId).Append(": ")
-                .AppendLine(EscapeLeanComment(step.Statement));
-        }
-
-        builder.AppendLine("RICIS trace:");
-        foreach (var line in derivation.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            builder.Append("- ").AppendLine(EscapeLeanComment(line));
-        }
-
-        builder.AppendLine("-/");
-        builder.AppendLine("namespace Ricis.Generated");
-        builder.AppendLine();
-        builder.AppendLine("-- Add domain-specific Lean definitions and theorem statements before formal verification.");
-        builder.AppendLine("end Ricis.Generated");
-        return builder.ToString();
+        throw new RicisUnsupportedLeanProofShapeException(
+            "Generic C# expression trees do not have a supported kernel-checked Lean bridge. " +
+            "Build Lean through RicisLeanTemplate.Render with RicisLeanStructuredData and RicisLeanRequestedRows.");
     }
 
     private static string RenderLatex(
@@ -262,5 +238,4 @@ internal static class RicisProofDocumentTemplates
         }
     }
 
-    private static string EscapeLeanComment(string value) => value.Replace("-}", "- }", StringComparison.Ordinal);
 }

@@ -29,9 +29,9 @@ public enum RicisProofDocumentFormat
     Latex,
 
     /// <summary>
-    /// Emits a Lean-oriented documentation scaffold. It records the RICIS
-    /// derivation in comments and explicitly does not claim that arbitrary C#
-    /// expression trees have been checked by Lean.
+    /// Requests a Lean document for a proof shape. Generic C# expression trees
+    /// are rejected unless a supported structured Lean bridge is selected through
+    /// <see cref="RicisLeanTemplate"/>.
     /// </summary>
     Lean,
 }

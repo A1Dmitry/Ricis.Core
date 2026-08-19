@@ -52,6 +52,7 @@ internal static class RicisJacobianProofArtifactSuite
         var scenario = RicisJacobianProofScenario.Create();
         var latex = scenario.LatexSource;
         var lean = scenario.CombinedLeanSource;
+        var audit = scenario.LeanAuditSource;
 
         Require(latex.StartsWith("\\documentclass", StringComparison.Ordinal) &&
                 latex.Contains("\\begin{document}", StringComparison.Ordinal) &&
@@ -59,12 +60,16 @@ internal static class RicisJacobianProofArtifactSuite
                 latex.Contains("\\end{verbatim}", StringComparison.Ordinal) &&
                 latex.TrimEnd().EndsWith("\\end{document}", StringComparison.Ordinal),
             "LaTeX export должен быть самостоятельным документом с закрытыми document/verbatim окружениями.");
-        Require(lean.Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal) &&
-                lean.Contains("a6_indexed_zero_infinity_bridge", StringComparison.Ordinal) &&
+        Require(lean.Contains("a6_indexed_zero_infinity_bridge", StringComparison.Ordinal) &&
                 lean.Contains("namespace RicisJacobian", StringComparison.Ordinal) &&
+                !lean.Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal) &&
                 !lean.Contains("sorry", StringComparison.OrdinalIgnoreCase) &&
                 !lean.Contains("sorryAx", StringComparison.OrdinalIgnoreCase),
-            "Combined Lean source должен хранить audit trace и typed A6 theorem без sorry markers.");
+            "Structured Lean source должен содержать только typed A6 theorem без generic scaffold и sorry markers.");
+        Require(audit.Contains("NOT KERNEL VERIFIED", StringComparison.Ordinal) &&
+                audit.Contains("RICIS typed proof-log report", StringComparison.Ordinal) &&
+                !audit.Contains("theorem ", StringComparison.Ordinal),
+            "Typed-log audit должен оставаться отдельным comment-only report и не смешиваться с theorem source.");
     }
 
     private static void PreservesJacobianA6Payload()

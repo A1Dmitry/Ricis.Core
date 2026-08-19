@@ -11,7 +11,7 @@ internal static class RicisProofDocumentFormatSuite
     [
         ("PDF01: Log template — выводит trace и возвращает то же производное дерево", LogTemplate),
         ("PDF02: Academic template — применяет Func<string,string> без изменения вывода", AcademicTemplateWithTransform),
-        ("PDF03: Generic Lean format — сохраняет node-to-root scaffold", LeanTemplate),
+        ("PDF03: Generic Lean format — controlled rejection для unsupported shape", LeanTemplate),
         ("PDF04: Json template — сохраняет полный node-to-root маршрут", JsonTemplate),
         ("PDF05: LaTeX template — сохраняет полный node-to-root маршрут", LatexTemplate),
         ("LFT01: StructuredData и RequestedRows создают LeanDoc", StructuredLeanDocument),
@@ -72,20 +72,15 @@ internal static class RicisProofDocumentFormatSuite
         Expression<Func<double, bool>>[] conditions = [];
         Expression<Func<double, bool>>[] constraints = [];
         Expression<Func<double, double>> claim = x => x + 1.0;
-        var document = new StringBuilder();
 
-        _ = conditions.ProveDocument(
-            constraints,
-            claim,
-            CreateProfile(),
-            RicisProofDocumentFormat.Lean,
-            document);
-
-        Require(document.ToString().Contains("RICIS proof-document export: Lean scaffold", StringComparison.Ordinal) &&
-                document.ToString().Contains("RICIS trace:", StringComparison.Ordinal) &&
-                document.ToString().Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
-                document.ToString().Contains("not Lean-checked", StringComparison.Ordinal),
-            "Generic Lean format обязан записывать node-to-root scaffold без заявления о Lean verification.");
+        RequireThrows<RicisUnsupportedLeanProofShapeException>(
+            () => _ = conditions.ProveDocument(
+                constraints,
+                claim,
+                CreateProfile(),
+                RicisProofDocumentFormat.Lean,
+                new StringBuilder()),
+            "Generic Lean format обязан отклонять unsupported C# expression shape и направлять к structured LeanTemplate.");
     }
 
     private static void StructuredLeanDocument()
