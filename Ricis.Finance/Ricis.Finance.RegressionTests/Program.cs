@@ -16,6 +16,9 @@ var tests = new (string Name, Func<Task> Body)[]
     ("FIN07: Payment launch registry не допускает неявный CIS fallback", PaymentLaunchRegistryRequiresExplicitCapability),
     ("FIN08: bePaid ЕРИП launch передаёт RequestID и возвращает provider-issued bank deep links", BepaidEripLaunchMapsProviderResponse),
     ("FIN09: bePaid СБП launch возвращает provider-hosted selector и не делает возврат подтверждением", BepaidSbpLaunchMapsProviderHandoff),
+    ("FIN10: Invoice issue сохраняет order reference и идемпотентность", InvoiceIssueIsIdempotentAndAuditable),
+    ("FIN11: Invoice lifecycle строго ограничивает cancel и expire transitions", InvoiceLifecycleRejectsInvalidTransitions),
+    ("FIN12: Invoice launch допускается только active aggregate и идемпотентен", InvoiceLaunchIsActiveAndIdempotent),
 };
 
 var failures = 0;
@@ -258,6 +261,84 @@ static async Task BepaidSbpLaunchMapsProviderHandoff()
         "СБП capability должна быть явной только для RU/RUB; прочий СНГ не должен быть fallback-маршрутом.");
 }
 
+static async Task InvoiceIssueIsIdempotentAndAuditable()
+{
+    var now = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var service = new IssueInvoiceService(repositories, new StubClock(now));
+    var command = new IssueInvoice(
+        "order-invoice-001",
+        new Money(25m, "BYN"),
+        new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)),
+        now.AddHours(2),
+        "invoice-issue-001");
+
+    var first = await service.HandleAsync(command, CancellationToken.None);
+    var duplicate = await service.HandleAsync(command, CancellationToken.None);
+
+    Require(first.Id == duplicate.Id && first.Status == InvoiceStatus.Issued &&
+            first.OrderReference == "order-invoice-001" && repositories.StoredInvoiceCount == 1,
+        "Повторный issue command должен вернуть тот же invoice и сохранить auditable order reference ровно один раз.");
+    RequireThrowsAsync<InvalidOperationException>(() => service.HandleAsync(
+        command with { IdempotencyKey = "invoice-issue-002" }, CancellationToken.None).AsTask()).GetAwaiter().GetResult();
+}
+
+static async Task InvoiceLifecycleRejectsInvalidTransitions()
+{
+    var issueAt = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var issued = await new IssueInvoiceService(repositories, new StubClock(issueAt)).HandleAsync(
+        new IssueInvoice("order-cancel-001", new Money(10m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), issueAt.AddHours(1), "issue-cancel-001"),
+        CancellationToken.None);
+    var cancelled = await new CancelInvoiceService(repositories, new StubClock(issueAt.AddMinutes(1))).HandleAsync(
+        new CancelInvoice(issued.Id), CancellationToken.None);
+    Require(cancelled.Status == InvoiceStatus.Cancelled, "Issued invoice должен переходить в Cancelled только через application command.");
+    await RequireThrowsAsync<InvalidOperationException>(() => new CancelInvoiceService(repositories, new StubClock(issueAt.AddMinutes(2)))
+        .HandleAsync(new CancelInvoice(issued.Id), CancellationToken.None).AsTask());
+
+    var expirable = await new IssueInvoiceService(repositories, new StubClock(issueAt)).HandleAsync(
+        new IssueInvoice("order-expire-001", new Money(11m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), issueAt.AddHours(1), "issue-expire-001"),
+        CancellationToken.None);
+    await RequireThrowsAsync<InvalidOperationException>(() => new ExpireInvoiceService(repositories, new StubClock(issueAt.AddMinutes(30)))
+        .HandleAsync(new ExpireInvoice(expirable.Id), CancellationToken.None).AsTask());
+    var expired = await new ExpireInvoiceService(repositories, new StubClock(issueAt.AddHours(1)))
+        .HandleAsync(new ExpireInvoice(expirable.Id), CancellationToken.None);
+    Require(expired.Status == InvoiceStatus.Expired, "Invoice должен переходить в Expired только после ExpiresAtUtc.");
+}
+
+static async Task InvoiceLaunchIsActiveAndIdempotent()
+{
+    var now = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var invoice = await new IssueInvoiceService(repositories, new StubClock(now)).HandleAsync(
+        new IssueInvoice("order-launch-001", new Money(12m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), now.AddHours(1), "issue-launch-001"),
+        CancellationToken.None);
+    var provider = new StubPaymentLaunchPort(
+        [new PaymentRailCapability("BY", PaymentRail.BelarusEripEpos, ["BYN"])],
+        new PaymentLaunchSession("test-provider", "provider-session-001", PaymentRail.BelarusEripEpos,
+            invoice.Amount, new PaymentHandoff(new Uri("https://provider.example/pay"), PaymentHandoffMethod.Get), null, null, null));
+    var service = new CreateInvoiceLaunchService(repositories, repositories, provider, new StubClock(now));
+    var command = new CreateInvoiceLaunch(invoice.Id, "Оплата заказа", "127.0.0.1",
+        new Uri("https://merchant.example/return"), new Uri("https://merchant.example/webhook"), "launch-invoice-001", true);
+
+    var first = await service.HandleAsync(command, CancellationToken.None);
+    var duplicate = await service.HandleAsync(command, CancellationToken.None);
+    Require(first.Session.ProviderPaymentId == "provider-session-001" && ReferenceEquals(first, duplicate) && provider.CallCount == 1,
+        "Invoice launch должен создать provider session один раз и вернуть сохранённое evidence при duplicate command.");
+
+    var expired = await new IssueInvoiceService(repositories, new StubClock(now)).HandleAsync(
+        new IssueInvoice("order-launch-expired", new Money(13m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), now.AddMinutes(1), "issue-launch-expired"),
+        CancellationToken.None);
+    await RequireThrowsAsync<InvalidOperationException>(() => new CreateInvoiceLaunchService(repositories, repositories, provider, new StubClock(now.AddMinutes(2)))
+        .HandleAsync(command with { InvoiceId = expired.Id, IdempotencyKey = "launch-expired" }, CancellationToken.None).AsTask());
+    Require(expired.Status == InvoiceStatus.Expired && provider.CallCount == 1,
+        "Expired invoice должен быть автоматически переведён в Expired без вызова provider.");
+}
+
 static CreatePaymentLaunch CreateLaunch(string country, PaymentRail rail, Money amount, string idempotencyKey = "launch-001") =>
     new(
         country,
@@ -322,13 +403,19 @@ static async Task RequireThrowsAsync<TException>(Func<Task> action)
     }
 }
 
-sealed class InMemoryRepositories : ISettlementRepository, IPayoutRepository
+sealed class InMemoryRepositories : ISettlementRepository, IPayoutRepository, IInvoiceRepository, IInvoiceLaunchRepository
 {
     private readonly Dictionary<Guid, Settlement> _settlementsById = [];
     private readonly Dictionary<string, Settlement> _settlementsByEventId = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PayoutRequest> _payouts = new(StringComparer.Ordinal);
+    private readonly Dictionary<Guid, Invoice> _invoicesById = [];
+    private readonly Dictionary<string, Invoice> _invoicesByOrderReference = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Invoice> _invoicesByIssueKey = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, InvoiceLaunchRecord> _invoiceLaunches = new(StringComparer.Ordinal);
 
     public int StoredSettlementCount => _settlementsById.Count;
+
+    public int StoredInvoiceCount => _invoicesById.Count;
 
     public ValueTask<Settlement?> FindByIdAsync(Guid settlementId, CancellationToken cancellationToken) =>
         ValueTask.FromResult(_settlementsById.GetValueOrDefault(settlementId));
@@ -349,6 +436,32 @@ sealed class InMemoryRepositories : ISettlementRepository, IPayoutRepository
     public ValueTask StoreAsync(PayoutRequest payout, CancellationToken cancellationToken)
     {
         _payouts[payout.IdempotencyKey] = payout;
+        return ValueTask.CompletedTask;
+    }
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByIdAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesById.GetValueOrDefault(invoiceId));
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByOrderReferenceAsync(string orderReference, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesByOrderReference.GetValueOrDefault(orderReference));
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByIssueIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesByIssueKey.GetValueOrDefault(idempotencyKey));
+
+    public ValueTask StoreAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        _invoicesById[invoice.Id] = invoice;
+        _invoicesByOrderReference[invoice.OrderReference] = invoice;
+        _invoicesByIssueKey[invoice.IssueIdempotencyKey] = invoice;
+        return ValueTask.CompletedTask;
+    }
+
+    ValueTask<InvoiceLaunchRecord?> IInvoiceLaunchRepository.FindByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoiceLaunches.GetValueOrDefault(idempotencyKey));
+
+    public ValueTask StoreAsync(InvoiceLaunchRecord launch, CancellationToken cancellationToken)
+    {
+        _invoiceLaunches[launch.IdempotencyKey] = launch;
         return ValueTask.CompletedTask;
     }
 }

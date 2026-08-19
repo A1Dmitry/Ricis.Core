@@ -80,6 +80,38 @@ public interface IPayoutRepository
     ValueTask StoreAsync(PayoutRequest payout, CancellationToken cancellationToken);
 }
 
+/// <summary>Stores invoice aggregates and their caller-side lifecycle idempotency keys.</summary>
+public interface IInvoiceRepository
+{
+    /// <summary>Finds an invoice by its aggregate identifier.</summary>
+    ValueTask<Invoice?> FindByIdAsync(Guid invoiceId, CancellationToken cancellationToken);
+
+    /// <summary>Finds an invoice by the merchant-owned auditable order reference.</summary>
+    ValueTask<Invoice?> FindByOrderReferenceAsync(string orderReference, CancellationToken cancellationToken);
+
+    /// <summary>Finds an invoice previously issued with the supplied idempotency key.</summary>
+    ValueTask<Invoice?> FindByIssueIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken);
+
+    /// <summary>Persists a new or changed invoice aggregate.</summary>
+    ValueTask StoreAsync(Invoice invoice, CancellationToken cancellationToken);
+}
+
+/// <summary>Stores provider launch evidence separately from the invoice money fact.</summary>
+public interface IInvoiceLaunchRepository
+{
+    /// <summary>Finds a launch by its caller-supplied idempotency key.</summary>
+    ValueTask<InvoiceLaunchRecord?> FindByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken);
+
+    /// <summary>Persists the provider-created launch evidence.</summary>
+    ValueTask StoreAsync(InvoiceLaunchRecord launch, CancellationToken cancellationToken);
+}
+
+/// <summary>Provider launch evidence linked to one invoice; it is not payment confirmation.</summary>
+public sealed record InvoiceLaunchRecord(
+    Guid InvoiceId,
+    string IdempotencyKey,
+    PaymentLaunchSession Session);
+
 /// <summary>Supplies deterministic UTC time to the application layer.</summary>
 public interface IClock
 {

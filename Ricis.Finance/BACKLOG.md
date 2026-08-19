@@ -10,11 +10,11 @@
 
 | Область | Что уже сделано | Что всё ещё отсутствует |
 |---|---|---|
-| Domain | `Money`, `FeeBreakdown`, `ProviderPayment`, `Settlement`, `PayoutRequest`, tax evidence и инварианты денег. | Агрегат `Invoice` из проектного DDD-описания ещё не реализован в исходном коде. |
-| Application | Запись подтверждённого provider payment, idempotent payout request, policy ports, launch registry. | Реальные persistence adapters, invoice workflow, reconciliation/status workflow. |
+| Domain | `Money`, `FeeBreakdown`, `ProviderPayment`, `Settlement`, `PayoutRequest`, `Invoice`, tax evidence и инварианты денег. | Дальнейшая persistence реализация Invoice остаётся host-specific. |
+| Application | Запись подтверждённого provider payment, idempotent payout request, policy ports, launch registry, Invoice issue/cancel/expire и invoice-owned launch workflow. | Реальные persistence adapters, reconciliation/status workflow. |
 | Payment launch | `BY + ЕРИП/E-POS + BYN`: QR и provider-issued bank deep links. `RU + СБП + RUB`: provider-hosted QR/bank selector. | Конфигурация конкретного merchant account, host UI, реальный webhook verifier и production E2E. |
 | Compliance | Tax, fee и payout rules вынесены за versioned/effective-dated ports. | Заполненные и утверждённые policy implementations, authorised tax route, действующие тарифы/условия конкретного банка и провайдера. |
-| QA / DevOps | `324` Core + `9` Finance regressions, GitHub CI, Swagger smoke-test, LeanDoc compilation. | Contract tests с sandbox merchant account, secret scanning, production observability, incident drill. |
+| QA / DevOps | `328` Core + `12` Finance regressions, GitHub CI, Swagger smoke-test, LeanDoc compilation. | Contract tests с sandbox merchant account, secret scanning, production observability, incident drill. |
 
 ## Неподвижные границы
 
@@ -35,8 +35,8 @@
 
 | ID | Следующий результат | Приоритет | Зависит от | Definition of Done |
 |---|---|---:|---|---|
-| `FIN-01` | **Invoice ownership и launch lifecycle.** Реализовать `Invoice` aggregate, `InvoiceStatus`, invoice repository и commands выпуска, отмены, истечения и payment-launch из счёта. | P0 | Нет | Нельзя создать launch для отменённого/истёкшего invoice; один invoice имеет auditable order reference; state transitions и duplicate command покрыты regression tests. |
-| `FIN-02` | **bePaid inbound confirmation.** Реализовать `IPaymentProviderWebhookVerifier` для документированного bePaid callback, mapping status/amount/currency/reference и safe rejection невалидного callback. | P0 | Merchant onboarding, test credentials, host endpoint | Поддельный webhook, иной secret, иной amount/currency и duplicate event отклоняются или идемпотентно обрабатываются; только `successful` создаёт payment fact. [2] |
+| `FIN-01` | **Invoice ownership и launch lifecycle.** Реализовать `Invoice` aggregate, `InvoiceStatus`, invoice repository и commands выпуска, отмены, истечения и payment-launch из счёта. | DONE | Нет | Выполнено: launch запрещён для отменённого/истёкшего invoice; один invoice имеет auditable order reference; state transitions и duplicate command покрыты FIN10–FIN12. |
+| `FIN-02` | **bePaid inbound confirmation.** Реализовать `IPaymentProviderWebhookVerifier` для документированного bePaid callback, mapping status/amount/currency/reference и safe rejection невалидного callback. | NEXT P0 | Merchant onboarding, test credentials, host endpoint | Поддельный webhook, иной secret, иной amount/currency и duplicate event отклоняются или идемпотентно обрабатываются; только `successful` создаёт payment fact. [2] |
 | `FIN-03` | **Надёжное хранилище и outbox.** Реализовать persistence для settlements, payouts, invoices и launch telemetry; добавить уникальные ключи provider event / idempotency / invoice reference и transactional outbox. | P0 | Выбор host database | Перезапуск процесса, повтор webhook и конкурентная доставка не создают второй settlement/payout; публикация внутренних событий не теряется между DB commit и delivery. |
 | `FIN-04` | **Безопасный host checkout.** Добавить server-side endpoint создания launch, allow-list return/notification URLs, защищённый рендер GET/POST `PaymentHandoff`, mobile bank-selection UI и explicit user action перед открытием внешнего банка. | P0 | FIN-01, FIN-02 | Client не получает secret; HTML form не допускает подмену action/fields; bank deep link не открывается автоматически; return page показывает только server-confirmed status. |
 | `FIN-05` | **Sandbox contract suite.** Подключить bePaid test mode и создать contract tests для ЕРИП/E-POS BYN и СБП RUB: session, expiry, handoff, webhook, duplicate delivery, failed/expired flow. | P0 | FIN-02, FIN-04, provider sandbox access | Тесты исполняются с выделенными test credentials в CI-safe environment; live money не создаётся; documented `RequestID` retry подтверждён. [3] |
@@ -71,7 +71,7 @@
 
 ## Рекомендуемый следующий спринт
 
-Следующим следует взять **`FIN-01 + подготовку FIN-04`**: реализовать invoice lifecycle и host boundary для launch request. Без ownership счёта и server-side allow-list нельзя безопасно связать созданный QR/deep link с конкретным заказом, а продолжение непосредственно к payout или автоматизации НПД создаст несопоставимо больший compliance и reconciliation риск.
+`FIN-01` завершён. Следующим следует взять **`FIN-02`**, а параллельно подготовить только безопасные host-boundary контракты из `FIN-04`. Для FIN-02 потребуются официальная callback specification, test credentials и URL тестового webhook endpoint; до их получения production adapter не создаётся.
 
 После завершения `FIN-01` пользователь выбирает первый production rail по договору: **BY/ЕРИП-E-POS/BYN** или **RU/СБП/RUB**. Для запуска `FIN-02` потребуются test credentials, URL тестового webhook endpoint и подтверждение доступного merchant payment method. Ключи нельзя передавать в source control или клиентское приложение.
 
