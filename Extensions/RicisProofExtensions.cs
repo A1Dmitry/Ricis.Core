@@ -142,21 +142,11 @@ public static class RicisProofExtensions
         new ParameterSubstitutionVisitor(expression.Parameters[0], target).Visit(expression.Body)
         ?? throw new InvalidOperationException($"Не удалось связать параметр правого операнда {operation}.");
 
-    private sealed class ParameterSubstitutionVisitor : ExpressionVisitor
+    private sealed class ParameterSubstitutionVisitor : ParameterRebindingVisitorBase
     {
-        private readonly ParameterExpression _source;
-        private readonly Expression _replacement;
-
         public ParameterSubstitutionVisitor(ParameterExpression source, Expression replacement)
+            : base(source, replacement)
         {
-            _source = source;
-            _replacement = replacement;
         }
-
-        protected override Expression VisitExtension(Expression node) =>
-            RicisSpecialExpressionRebinder.Rebind(node, Visit);
-
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            ReferenceEquals(node, _source) ? _replacement : base.VisitParameter(node);
     }
 }

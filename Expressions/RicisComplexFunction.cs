@@ -132,21 +132,11 @@ public sealed class RicisComplexFunction<T>
         new ParameterRebindVisitor(expression.Parameters[0], target).Visit(expression.Body)
         ?? throw new InvalidOperationException($"Не удалось связать параметр для {context}.");
 
-    private sealed class ParameterRebindVisitor : ExpressionVisitor
+    private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
     {
-        private readonly ParameterExpression _from;
-        private readonly ParameterExpression _to;
-
         public ParameterRebindVisitor(ParameterExpression from, ParameterExpression to)
+            : base(from, to)
         {
-            _from = from;
-            _to = to;
         }
-
-        protected override Expression VisitExtension(Expression node) =>
-            RicisSpecialExpressionRebinder.Rebind(node, Visit);
-
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            ReferenceEquals(node, _from) ? _to : base.VisitParameter(node);
     }
 }

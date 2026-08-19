@@ -276,21 +276,11 @@ public static class RicisContinuousExtensions
         type == typeof(sbyte) || type == typeof(short) || type == typeof(int) ||
         type == typeof(long) || type == typeof(nint) || type == typeof(Int128);
 
-    private sealed class ParameterRebindVisitor : ExpressionVisitor
+    private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
     {
-        private readonly ParameterExpression _from;
-        private readonly ParameterExpression _to;
-
         public ParameterRebindVisitor(ParameterExpression from, ParameterExpression to)
+            : base(from, to)
         {
-            _from = from;
-            _to = to;
         }
-
-        protected override Expression VisitExtension(Expression node) =>
-            RicisSpecialExpressionRebinder.Rebind(node, Visit);
-
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            ReferenceEquals(node, _from) ? _to : base.VisitParameter(node);
     }
 }

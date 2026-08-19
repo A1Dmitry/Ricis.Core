@@ -1155,22 +1155,12 @@ public static class RicisAcademicProofExtensions
         }
     }
 
-    private sealed class ParameterSubstitutionVisitor : ExpressionVisitor
+    private sealed class ParameterSubstitutionVisitor : ParameterRebindingVisitorBase
     {
-        private readonly ParameterExpression _parameter;
-        private readonly Expression _replacement;
-
         public ParameterSubstitutionVisitor(ParameterExpression parameter, Expression replacement)
+            : base(parameter, replacement)
         {
-            _parameter = parameter;
-            _replacement = replacement;
         }
-
-        protected override Expression VisitExtension(Expression node) =>
-            RicisSpecialExpressionRebinder.Rebind(node, Visit);
-
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            ReferenceEquals(node, _parameter) ? _replacement : base.VisitParameter(node);
     }
 
     private static void ValidateHypotheses<T>(
