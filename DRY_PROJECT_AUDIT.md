@@ -11,7 +11,8 @@
 | DRY-P01 | Production expression visitors | Однотипный single-parameter visitor с `VisitParameter` по reference identity и extension rebinding через `RicisSpecialExpressionRebinder` повторён в `RicisComplexFunction` и analytic/proof extensions | Выполнено: создан `ParameterRebindingVisitorBase`, от него унаследованы 7 single-parameter visitors |
 | DRY-P02 | Production list parameter visitors | Jacobian, Matrix и Vector повторяли list-to-list mapping с одинаковым identity lookup и extension traversal | Выполнено: создан `ParameterMappingVisitorBase`; Jacobian/Matrix/Vector parameter and coordinate visitors унаследованы от него |
 | DRY-T01 | Regression assertions | `Require` и `Expect<TException>` повторяются в suites | Частично выполнено через `RegressionAssertions`; оставшиеся suites мигрировать однородными группами |
-| DRY-T02 | Regression test lifecycle | Большинство suites имеют одинаковый `Tests` catalog shape, но harness использует static members | Проверить возможность base class только после сохранения static harness contract; не наследовать искусственно без общего lifecycle |
+| DRY-T02 | Regression exception assertion | `RequireArgumentException` был продублирован в `RicisAcademicProofSuite` и `RiemannHypothesisProofSuite` | Выполнено: обе suites используют `RegressionAssertions.Expect<ArgumentException>`; static catalog/harness contract не изменён |
+| DRY-ARCH-01 | Regression test lifecycle | Большинство suites имеют одинаковый `Tests` catalog shape, но harness использует static members | Исследовано: базовый класс не вводится механически, потому что static catalog не имеет общего instance lifecycle |
 | DRY-C01 | Console sample output | Повторяются sample-point loops и formatting, но columns differ by expression/result types | Кандидат для typed renderer/helper, не объединять строковой конкатенацией |
 | DRY-F01 | Finance validation | Повторяются non-empty identifier checks, но поля принадлежат разным aggregates и trust boundaries | Сначала проверить value object/contract abstraction; механическое объединение запрещено |
 
@@ -32,7 +33,8 @@ Finance `ProviderPayment`, `Invoice`, `Settlement` и `Payout` имеют пох
 ## Recommended order
 
 1. **DRY-T01:** миграция оставшихся regression `Require`/`Assert` однородными группами.
-2. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
-3. **DRY-F01:** domain validation value objects только после отдельного contract design.
+2. **DRY-T02:** completed; продолжить проверку оставшихся специализированных assertion helpers.
+3. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
+4. **DRY-F01:** domain validation value objects только после отдельного contract design.
 
 Каждый шаг выполняется отдельным commit. Production refactoring допускается только при полном Core/Finance regression gate и сохранении Lean artifact gate.

@@ -352,24 +352,12 @@ internal static class RicisAcademicProofSuite
         ];
         Expression<Func<double, double, bool>>[] constraints = [];
 
-        RequireArgumentException(
+        RegressionAssertions.Expect<ArgumentException>(
             () => _ = nonFiniteEquations.Prove(constraints, (x, y) => x == 0.0, new StringBuilder()),
             "Система с бесконечной константой должна быть отклонена до построения доказательства.");
-        RequireArgumentException(
+        RegressionAssertions.Expect<ArgumentException>(
             () => _ = overflowEquations.Prove(constraints, (x, y) => x == double.MaxValue, new StringBuilder()),
             "Система с overflow в формуле Крамера должна быть отклонена вместо вывода x=∞.");
-    }
-
-    private static void RequireArgumentException(Action action, string message)
-    {
-        try
-        {
-            action();
-            throw new InvalidOperationException(message);
-        }
-        catch (ArgumentException)
-        {
-        }
     }
 
     private static void PublicPhaseTraceHasOrderedSteps()

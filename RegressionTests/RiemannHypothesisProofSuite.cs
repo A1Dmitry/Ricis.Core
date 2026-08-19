@@ -69,7 +69,7 @@ internal static class RiemannHypothesisProofSuite
         Expression<Func<double, double, bool>> falseClaim =
             (sigma, mirrorSigma) => sigma == 0.4;
 
-        RequireArgumentException(
+        RegressionAssertions.Expect<ArgumentException>(
             () => _ = constraints.ProveTypeIdentityCriticalLine(falseClaim, new StringBuilder()),
             "ID-цепочка не должна принимать ложное следствие sigma=0.4.");
     }
@@ -120,18 +120,6 @@ internal static class RiemannHypothesisProofSuite
     {
         onEnumeration();
         yield return (sigma, mirrorSigma) => sigma > 0.0 && sigma < 1.0;
-    }
-
-    private static void RequireArgumentException(Action action, string message)
-    {
-        try
-        {
-            action();
-            throw new InvalidOperationException(message);
-        }
-        catch (ArgumentException)
-        {
-        }
     }
 
     private static void Require(bool condition, string message)
