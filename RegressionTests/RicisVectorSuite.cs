@@ -18,9 +18,9 @@ internal static class RicisVectorSuite
     private static void StoresOrderedCoordinates()
     {
         var vector = new RicisVector<int>([3, 1, 4, 1, 5]);
-        Require(vector.Dimension == 5, "Размерность должна быть равна числу координат.");
-        Require(vector[0] == 3 && vector[4] == 5, "Порядок координат должен сохраняться.");
-        Require(vector.ToString() == "(3, 1, 4, 1, 5)", "ToString должен показывать запись координат.");
+        RegressionAssertions.Require(vector.Dimension == 5, "Размерность должна быть равна числу координат.");
+        RegressionAssertions.Require(vector[0] == 3 && vector[4] == 5, "Порядок координат должен сохраняться.");
+        RegressionAssertions.Require(vector.ToString() == "(3, 1, 4, 1, 5)", "ToString должен показывать запись координат.");
     }
 
     private static void CoordinatesAreImmutable()
@@ -28,8 +28,8 @@ internal static class RicisVectorSuite
         var source = new[] { 1, 2, 3 };
         var vector = new RicisVector<int>(source);
         source[0] = 99;
-        Require(vector[0] == 1, "RICIS-вектор обязан копировать входные координаты.");
-        Require(vector.Coordinates.Count == 3, "Публичная коллекция должна сохранять размерность.");
+        RegressionAssertions.Require(vector[0] == 1, "RICIS-вектор обязан копировать входные координаты.");
+        RegressionAssertions.Require(vector.Coordinates.Count == 3, "Публичная коллекция должна сохранять размерность.");
     }
 
     private static void ComponentwiseAddSubtract()
@@ -38,8 +38,8 @@ internal static class RicisVectorSuite
         var right = new RicisVector<int>([4, 5, 6]);
         var sum = left + right;
         var difference = left - right;
-        Require(sum.Equals(new RicisVector<int>([5, 7, 9])), "Сложение должно быть покомпонентным.");
-        Require(difference.Equals(new RicisVector<int>([-3, -3, -3])), "Вычитание должно быть покомпонентным.");
+        RegressionAssertions.Require(sum.Equals(new RicisVector<int>([5, 7, 9])), "Сложение должно быть покомпонентным.");
+        RegressionAssertions.Require(difference.Equals(new RicisVector<int>([-3, -3, -3])), "Вычитание должно быть покомпонентным.");
     }
 
     private static void ScaleAndDotUseGenericNumber()
@@ -47,15 +47,15 @@ internal static class RicisVectorSuite
         var vector = new RicisVector<int>([2, -1, 3]);
         var scaled = 4 * vector;
         var dot = RicisVector<int>.Dot(vector, new RicisVector<int>([5, 2, 1]));
-        Require(scaled.Equals(new RicisVector<int>([8, -4, 12])), "Масштабирование должно работать через INumber<T>.");
-        Require(dot == 11, "Dot product должен суммировать произведения координат.");
+        RegressionAssertions.Require(scaled.Equals(new RicisVector<int>([8, -4, 12])), "Масштабирование должно работать через INumber<T>.");
+        RegressionAssertions.Require(dot == 11, "Dot product должен суммировать произведения координат.");
     }
 
     private static void TypedZeroVector()
     {
         var zero = RicisVector<BigInteger>.Zero(4);
-        Require(zero.Dimension == 4, "Нулевой вектор должен иметь запрошенную размерность.");
-        Require(zero.All(value => value == BigInteger.Zero), "Каждая координата должна быть BigInteger.Zero.");
+        RegressionAssertions.Require(zero.Dimension == 4, "Нулевой вектор должен иметь запрошенную размерность.");
+        RegressionAssertions.Require(zero.All(value => value == BigInteger.Zero), "Каждая координата должна быть BigInteger.Zero.");
     }
 
     private static void MismatchedDimensionsAreRejected()
@@ -74,7 +74,7 @@ internal static class RicisVectorSuite
         var value = BigInteger.Parse("999999999999999999999999999999");
         var vector = new RicisVector<BigInteger>([value, value]);
         var result = vector + vector;
-        Require(result[0] == value * 2 && result[1] == value * 2,
+        RegressionAssertions.Require(result[0] == value * 2 && result[1] == value * 2,
             "Большие generic-координаты не должны терять точность.");
     }
 
@@ -93,8 +93,4 @@ internal static class RicisVectorSuite
         throw new InvalidOperationException(message);
     }
 
-    private static void Require(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
-    }
 }

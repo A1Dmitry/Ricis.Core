@@ -16,9 +16,9 @@ internal static class RicisVectorExpressionSuite
     private static void StoresLambdaCoordinates()
     {
         var vector = CreateF();
-        Require(vector.Dimension == 2, "F должен иметь две координаты.");
-        Require(vector.ParameterCount == 2, "Каждая координата должна иметь два параметра.");
-        Require(vector[0].ReturnType == typeof(double), "Координата должна возвращать double.");
+        RegressionAssertions.Require(vector.Dimension == 2, "F должен иметь две координаты.");
+        RegressionAssertions.Require(vector.ParameterCount == 2, "Каждая координата должна иметь два параметра.");
+        RegressionAssertions.Require(vector[0].ReturnType == typeof(double), "Координата должна возвращать double.");
     }
 
     private static void ComponentwiseSymbolicAdd()
@@ -26,8 +26,8 @@ internal static class RicisVectorExpressionSuite
         var f = CreateF();
         var zero = RicisVectorExpression<double>.Zero(f[0].Parameters, 2);
         var sum = f + zero;
-        Require(sum.Dimension == f.Dimension, "Сложение должно сохранять размерность.");
-        Require(sum[0].Parameters.Count == 2, "Сложение должно сохранять число параметров.");
+        RegressionAssertions.Require(sum.Dimension == f.Dimension, "Сложение должно сохранять размерность.");
+        RegressionAssertions.Require(sum[0].Parameters.Count == 2, "Сложение должно сохранять число параметров.");
     }
 
     private static void SymbolicZeroIsStructural()
@@ -38,23 +38,23 @@ internal static class RicisVectorExpressionSuite
             Expression.Parameter(typeof(double), "y")
         };
         var zero = RicisVectorExpression<double>.Zero(parameters, 2);
-        Require(zero.IsStructuralZero(), "Каждая координата Zero должна быть RICIS-нулём.");
+        RegressionAssertions.Require(zero.IsStructuralZero(), "Каждая координата Zero должна быть RICIS-нулём.");
     }
 
     private static void BuildsJacobianFamilyMaps()
     {
         var f = CreateF();
         var g = CreateG();
-        Require(f.Dimension == 2 && g.Dimension == 2, "F и G должны быть двумерными отображениями.");
-        Require(f.ToString().Contains("y"), "Векторная запись F должна содержать вторую координату.");
-        Require(g.ToString().Contains("x"), "Векторная запись G должна содержать первую координату.");
+        RegressionAssertions.Require(f.Dimension == 2 && g.Dimension == 2, "F и G должны быть двумерными отображениями.");
+        RegressionAssertions.Require(f.ToString().Contains("y"), "Векторная запись F должна содержать вторую координату.");
+        RegressionAssertions.Require(g.ToString().Contains("x"), "Векторная запись G должна содержать первую координату.");
     }
 
     private static void CompositionPreservesDimension()
     {
         var composition = RicisVectorExpression<double>.Compose(CreateG(), CreateF());
-        Require(composition.Dimension == 2, "Композиция G∘F должна иметь две координаты.");
-        Require(composition.ParameterCount == 2, "Композиция должна сохранять два входных параметра.");
+        RegressionAssertions.Require(composition.Dimension == 2, "Композиция G∘F должна иметь две координаты.");
+        RegressionAssertions.Require(composition.ParameterCount == 2, "Композиция должна сохранять два входных параметра.");
     }
 
     private static void IncompatibleSignaturesAreRejected()
@@ -112,8 +112,4 @@ internal static class RicisVectorExpressionSuite
         throw new InvalidOperationException(message);
     }
 
-    private static void Require(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
-    }
 }
