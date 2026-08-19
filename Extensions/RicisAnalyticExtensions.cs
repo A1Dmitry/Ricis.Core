@@ -101,8 +101,8 @@ public static class RicisAnalyticExtensions
     {
         ArgumentNullException.ThrowIfNull(function);
         ArgumentNullException.ThrowIfNull(exponent);
-        EnsureUnary(function, nameof(Pow));
-        EnsureUnary(exponent, nameof(Pow));
+        ExpressionValidation.EnsureUnary(function, nameof(Pow));
+        ExpressionValidation.EnsureUnary(exponent, nameof(Pow));
         var normalizedFunction = Normalize(function, nameof(Pow));
         var normalizedExponent = Normalize(exponent, nameof(Pow));
         var common = normalizedFunction.Parameters[0];
@@ -130,20 +130,13 @@ public static class RicisAnalyticExtensions
         string operation)
     {
         ArgumentNullException.ThrowIfNull(function);
-        EnsureUnary(function, operation);
+        ExpressionValidation.EnsureUnary(function, operation);
         var transformed = RicisPhasePipeline.Simplify(function);
         return transformed as Expression<Func<double, double>>
             ?? throw new InvalidOperationException(
                 $"RICIS-конвейер должен сохранить Expression<Func<double,double>> для операции {operation}.");
     }
 
-    private static void EnsureUnary(Expression<Func<double, double>> function, string operation)
-    {
-        if (function.Parameters.Count != 1)
-        {
-            throw new ArgumentException($"{operation} требует лямбду ровно с одним параметром.");
-        }
-    }
 
     private static Expression Rebind(
         Expression<Func<double, double>> expression,

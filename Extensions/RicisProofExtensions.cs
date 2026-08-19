@@ -107,8 +107,8 @@ public static class RicisProofExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-        EnsureUnary(left, operation);
-        EnsureUnary(right, operation);
+        ExpressionValidation.EnsureUnary(left, operation);
+        ExpressionValidation.EnsureUnary(right, operation);
         NumericConstants.Register<T>();
         return (Normalize(left, operation), Normalize(right, operation));
     }
@@ -125,14 +125,6 @@ public static class RicisProofExtensions
                 $"для операции {operation}.");
     }
 
-    private static void EnsureUnary<T>(Expression<Func<T, T>> expression, string operation)
-        where T : INumber<T>
-    {
-        if (expression.Parameters.Count != 1)
-        {
-            throw new ArgumentException($"{operation} требует лямбды ровно с одним параметром.");
-        }
-    }
 
     private static Expression Rebind<T>(
         Expression<Func<T, T>> expression,

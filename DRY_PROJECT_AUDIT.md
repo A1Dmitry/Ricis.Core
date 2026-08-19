@@ -13,6 +13,7 @@
 | DRY-T01 | Regression assertions | `Require` и `Expect<TException>` повторяются в suites | Частично выполнено через `RegressionAssertions`; оставшиеся suites мигрировать однородными группами |
 | DRY-T02 | Regression exception assertion | `RequireArgumentException` был продублирован в `RicisAcademicProofSuite` и `RiemannHypothesisProofSuite` | Выполнено: обе suites используют `RegressionAssertions.Expect<ArgumentException>`; static catalog/harness contract не изменён |
 | DRY-T03 | Numeric comparison assertion | `AssertClose` повторял finite-check и absolute-tolerance predicate в Classical/Modern comparison suites | Выполнено: общий predicate в `RegressionAssertions.AssertClose`; каждая suite сохраняет собственный tolerance и diagnostic message |
+| DRY-P04 | Unary expression validation | `EnsureUnary` с одинаковым `INumber<T>` contract, parameter-count check и error semantics повторялся в Analytic, CompoundInterest, Continuous и Proof extensions | Выполнено: создан internal `ExpressionValidation.EnsureUnary<T>`; четыре production duplicates удалены |
 | DRY-ARCH-01 | Regression test lifecycle | Большинство suites имеют одинаковый `Tests` catalog shape, но harness использует static members | Исследовано: базовый класс не вводится механически, потому что static catalog не имеет общего instance lifecycle |
 | DRY-C01 | Console sample output | Повторяются sample-point loops и formatting, но columns differ by expression/result types | Кандидат для typed renderer/helper, не объединять строковой конкатенацией |
 | DRY-F01 | Finance validation | Повторяются non-empty identifier checks, но поля принадлежат разным aggregates и trust boundaries | Сначала проверить value object/contract abstraction; механическое объединение запрещено |
@@ -36,7 +37,8 @@ Finance `ProviderPayment`, `Invoice`, `Settlement` и `Payout` имеют пох
 1. **DRY-T01:** миграция оставшихся regression `Require`/`Assert` однородными группами.
 2. **DRY-T02:** completed; продолжить проверку оставшихся специализированных assertion helpers.
 3. **DRY-T03:** completed; проверить `AssertIdentity` и CLI typed rendering.
-4. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
-5. **DRY-F01:** domain validation value objects только после отдельного contract design.
+4. **DRY-P04:** completed; продолжить аудит expression validation и typed CLI rendering.
+5. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
+6. **DRY-F01:** domain validation value objects только после отдельного contract design.
 
 Каждый шаг выполняется отдельным commit. Production refactoring допускается только при полном Core/Finance regression gate и сохранении Lean artifact gate.

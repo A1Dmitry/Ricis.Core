@@ -76,7 +76,7 @@ public static class RicisContinuousExtensions
     {
         ArgumentNullException.ThrowIfNull(function);
         NumericConstants.Register<T>();
-        EnsureUnary(function, nameof(Clamp));
+        ExpressionValidation.EnsureUnary(function, nameof(Clamp));
         var parameter = function.Parameters[0];
         var lowerLambda = Expression.Lambda<Func<T, T>>(
             Expression.Constant(lower, typeof(T)), parameter);
@@ -194,7 +194,7 @@ public static class RicisContinuousExtensions
         where T : INumber<T>
     {
         ArgumentNullException.ThrowIfNull(function);
-        EnsureUnary(function, operation);
+        ExpressionValidation.EnsureUnary(function, operation);
         NumericConstants.Register<T>();
         return Normalize(function, operation);
     }
@@ -207,8 +207,8 @@ public static class RicisContinuousExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-        EnsureUnary(left, operation);
-        EnsureUnary(right, operation);
+        ExpressionValidation.EnsureUnary(left, operation);
+        ExpressionValidation.EnsureUnary(right, operation);
         NumericConstants.Register<T>();
         return (Normalize(left, operation), Normalize(right, operation));
     }
@@ -224,9 +224,9 @@ public static class RicisContinuousExtensions
         ArgumentNullException.ThrowIfNull(function);
         ArgumentNullException.ThrowIfNull(lower);
         ArgumentNullException.ThrowIfNull(upper);
-        EnsureUnary(function, operation);
-        EnsureUnary(lower, operation);
-        EnsureUnary(upper, operation);
+        ExpressionValidation.EnsureUnary(function, operation);
+        ExpressionValidation.EnsureUnary(lower, operation);
+        ExpressionValidation.EnsureUnary(upper, operation);
         NumericConstants.Register<T>();
 
         var normalizedFunction = Normalize(function, operation);
@@ -251,14 +251,6 @@ public static class RicisContinuousExtensions
                 $"для операции {operation}.");
     }
 
-    private static void EnsureUnary<T>(Expression<Func<T, T>> expression, string operation)
-        where T : INumber<T>
-    {
-        if (expression.Parameters.Count != 1)
-        {
-            throw new ArgumentException($"{operation} требует лямбду ровно с одним параметром.");
-        }
-    }
 
     private static Expression Rebind<T>(
         Expression<Func<T, T>> expression,

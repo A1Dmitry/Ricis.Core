@@ -175,8 +175,8 @@ public static class RicisCompoundInterestExtensions
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(rate);
-        EnsureUnary(principal, operation);
-        EnsureUnary(rate, operation);
+        ExpressionValidation.EnsureUnary(principal, operation);
+        ExpressionValidation.EnsureUnary(rate, operation);
         NumericConstants.Register<T>();
         return (Normalize(principal, operation), Normalize(rate, operation));
     }
@@ -191,9 +191,9 @@ public static class RicisCompoundInterestExtensions
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(rate);
         ArgumentNullException.ThrowIfNull(periods);
-        EnsureUnary(principal, operation);
-        EnsureUnary(rate, operation);
-        EnsureUnary(periods, operation);
+        ExpressionValidation.EnsureUnary(principal, operation);
+        ExpressionValidation.EnsureUnary(rate, operation);
+        ExpressionValidation.EnsureUnary(periods, operation);
 
         var normalizedPrincipal = Normalize(principal, operation);
         var normalizedRate = Normalize(rate, operation);
@@ -217,14 +217,6 @@ public static class RicisCompoundInterestExtensions
                 $"для операции {operation}.");
     }
 
-    private static void EnsureUnary<T>(Expression<Func<T, T>> expression, string operation)
-        where T : INumber<T>
-    {
-        if (expression.Parameters.Count != 1)
-        {
-            throw new ArgumentException($"{operation} требует лямбду ровно с одним параметром.");
-        }
-    }
 
     private static Expression Rebind<T>(
         Expression<Func<T, T>> expression,
