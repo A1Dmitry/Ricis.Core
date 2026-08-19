@@ -8,7 +8,8 @@
 
 | ID | Область | Доказательство | Решение |
 |---|---|---|---|
-| DRY-P01 | Production expression visitors | Однотипный single-parameter visitor с `VisitParameter` по reference identity и extension rebinding через `RicisSpecialExpressionRebinder` повторён в `RicisComplexFunction` и analytic/proof extensions | Выполнено частично: создан `ParameterRebindingVisitorBase`, от него унаследованы 7 single-parameter visitors; list-rebinding visitors Jacobian/Matrix/Vector и dictionary-based calculus visitor оставлены отдельными |
+| DRY-P01 | Production expression visitors | Однотипный single-parameter visitor с `VisitParameter` по reference identity и extension rebinding через `RicisSpecialExpressionRebinder` повторён в `RicisComplexFunction` и analytic/proof extensions | Выполнено: создан `ParameterRebindingVisitorBase`, от него унаследованы 7 single-parameter visitors |
+| DRY-P02 | Production list parameter visitors | Jacobian, Matrix и Vector повторяли list-to-list mapping с одинаковым identity lookup и extension traversal | Выполнено: создан `ParameterMappingVisitorBase`; Jacobian/Matrix/Vector parameter and coordinate visitors унаследованы от него |
 | DRY-T01 | Regression assertions | `Require` и `Expect<TException>` повторяются в suites | Частично выполнено через `RegressionAssertions`; оставшиеся suites мигрировать однородными группами |
 | DRY-T02 | Regression test lifecycle | Большинство suites имеют одинаковый `Tests` catalog shape, но harness использует static members | Проверить возможность base class только после сохранения static harness contract; не наследовать искусственно без общего lifecycle |
 | DRY-C01 | Console sample output | Повторяются sample-point loops и formatting, но columns differ by expression/result types | Кандидат для typed renderer/helper, не объединять строковой конкатенацией |
@@ -26,13 +27,12 @@ Finance `ProviderPayment`, `Invoice`, `Settlement` и `Payout` имеют пох
 
 `ParameterRebindingVisitorBase` содержит только общий single-parameter contract: source parameter, arbitrary expression replacement, identity-based substitution и recursive RICIS extension rebinding. Производные private visitors сохраняют локальные имена и call sites, поэтому public API и harness contracts не меняются.
 
-`RicisJacobianSingularityExpression`, `RicisMatrixExpression` и `RicisVectorExpression` используют list-to-list rebinding; `R​​icisVectorCalculusExtensions` использует dictionary-to-expression substitution и custom extension cases. Эти классы не наследуют single-parameter base, потому что их contracts не одинаковы.
+`R​​icisVectorCalculusExtensions` использует dictionary-to-expression substitution и custom extension cases. Он не наследует `ParameterMappingVisitorBase`, потому что его extension handling и root metadata reconstruction отличаются от обычного parameter mapping.
 
 ## Recommended order
 
-1. **DRY-P01:** общий базовый single-parameter expression rebinding visitor.
-2. **DRY-T01:** миграция оставшихся regression `Require`/`Assert` однородными группами.
-3. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
-4. **DRY-F01:** domain validation value objects только после отдельного contract design.
+1. **DRY-T01:** миграция оставшихся regression `Require`/`Assert` однородными группами.
+2. **DRY-C01:** typed console sample renderer после snapshot/smoke tests.
+3. **DRY-F01:** domain validation value objects только после отдельного contract design.
 
 Каждый шаг выполняется отдельным commit. Production refactoring допускается только при полном Core/Finance regression gate и сохранении Lean artifact gate.

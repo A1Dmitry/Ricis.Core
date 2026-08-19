@@ -194,35 +194,23 @@ public sealed class RicisVectorExpression<T>
         }
     }
 
-    private sealed class ParameterRebindVisitor : ExpressionVisitor
+    private sealed class ParameterRebindVisitor : ParameterMappingVisitorBase
     {
-        private readonly IReadOnlyList<ParameterExpression> _source;
-        private readonly IReadOnlyList<ParameterExpression> _target;
-        public ParameterRebindVisitor(IReadOnlyList<ParameterExpression> source, IReadOnlyList<ParameterExpression> target)
+        public ParameterRebindVisitor(
+            IReadOnlyList<ParameterExpression> source,
+            IReadOnlyList<ParameterExpression> target)
+            : base(source, target)
         {
-            _source = source; _target = target;
-        }
-        protected override Expression VisitExtension(Expression node) => RicisSpecialExpressionRebinder.Rebind(node, Visit);
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            for (var i = 0; i < _source.Count; i++) if (ReferenceEquals(_source[i], node)) return _target[i];
-            return base.VisitParameter(node);
         }
     }
 
-    private sealed class CoordinateSubstitutionVisitor : ExpressionVisitor
+    private sealed class CoordinateSubstitutionVisitor : ParameterMappingVisitorBase
     {
-        private readonly IReadOnlyList<ParameterExpression> _parameters;
-        private readonly IReadOnlyList<Expression> _replacements;
-        public CoordinateSubstitutionVisitor(IReadOnlyList<ParameterExpression> parameters, IReadOnlyList<Expression> replacements)
+        public CoordinateSubstitutionVisitor(
+            IReadOnlyList<ParameterExpression> parameters,
+            IReadOnlyList<Expression> replacements)
+            : base(parameters, replacements)
         {
-            _parameters = parameters; _replacements = replacements;
-        }
-        protected override Expression VisitExtension(Expression node) => RicisSpecialExpressionRebinder.Rebind(node, Visit);
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            for (var i = 0; i < _parameters.Count; i++) if (ReferenceEquals(_parameters[i], node)) return _replacements[i];
-            return base.VisitParameter(node);
         }
     }
 }

@@ -169,19 +169,13 @@ public sealed class RicisMatrixExpression<T>
             ?? throw new InvalidOperationException("RICIS не сохранил матричный expression tree.");
     }
 
-    private sealed class ParameterRebindVisitor : ExpressionVisitor
+    private sealed class ParameterRebindVisitor : ParameterMappingVisitorBase
     {
-        private readonly IReadOnlyList<ParameterExpression> _source;
-        private readonly IReadOnlyList<ParameterExpression> _target;
-        public ParameterRebindVisitor(IReadOnlyList<ParameterExpression> source, IReadOnlyList<ParameterExpression> target)
+        public ParameterRebindVisitor(
+            IReadOnlyList<ParameterExpression> source,
+            IReadOnlyList<ParameterExpression> target)
+            : base(source, target)
         {
-            _source = source; _target = target;
-        }
-        protected override Expression VisitExtension(Expression node) => RicisSpecialExpressionRebinder.Rebind(node, Visit);
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            for (var i = 0; i < _source.Count; i++) if (ReferenceEquals(_source[i], node)) return _target[i];
-            return base.VisitParameter(node);
         }
     }
 }
