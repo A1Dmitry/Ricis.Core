@@ -52,6 +52,12 @@
 
 В `ExampleCatalog` добавлены representative cases L59–L66 для `max`, `clamp`, `cosh`, `tanh`, `log10`, `sign`, `mod` и `pow`. Отдельная команда `--public-api-demo` проверяет uncovered utility surface и печатает PASS/FAIL для `ExactEvaluator`, `CircleSectors`, `PolarConverter`, `NumericConstants` и `RicisType`.
 
+## Проверка RicisType.GetHashCode и expression tree
+
+После исправления `GetHashCode` выполнена отдельная проверка `API11`. Она подтверждает, что structural comparison двух эквивалентных expression trees не изменился, а `HashSet<RicisType>` находит объект с тем же `Signature` и другим `IsComposite`. Полный Core regression suite завершился результатом **339/339 PASS**.
+
+Причина безопасности изменения: `RicisType.Equals` и `Equals(object)` сравнивают только `Signature`, тогда как прежний hash включал ещё `IsComposite`, нарушая обязательный invariant равенства и hash code. Новый hash использует только `StringComparer.Ordinal` для `Signature`. Поиск usages показал, что `RicisType.GetHashCode` не участвует в expression-tree node hashing или canonical tree traversal; `RicisType` используется как public type metadata и static expression constants.
+
 ## Правило аудита
 
 Нельзя объявлять public method покрытым только потому, что компилируется файл. Для закрытия пробела нужны одновременно: regression test семантики, CLI/example coverage для пользовательского сценария (если метод предназначен для CLI) и quality-gate запуск соответствующей команды.

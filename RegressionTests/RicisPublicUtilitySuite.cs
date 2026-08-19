@@ -18,6 +18,7 @@ internal static class RicisPublicUtilitySuite
         ("API08: NumericConstants отклоняет незарегистрированный тип", NumericConstantsRejectsUnregisteredType),
         ("API09: RicisType сохраняет equality/hash contract и compatibility", RicisTypePreservesEqualityContract),
         ("API10: RicisType строит canonical operations and tuple", RicisTypeBuildsCanonicalOperations),
+        ("API11: GetHashCode не меняет expression tree и HashSet semantics", RicisTypeHashDoesNotAlterTree),
     ];
 
     private static void ExactEvaluatorComputesRationalExpression()
@@ -122,6 +123,17 @@ internal static class RicisPublicUtilitySuite
         Assert(RicisType.Operate(RicisType.Scalar, space, "*").Equals(space), "Scalar*A должен сохранять A.");
         Assert(RicisType.Operate(space, time, "*").Signature == "(Space*Time)", "Разные типы должны образовать operation signature.");
         Assert(RicisType.CreateTuple(time, space).Signature == "Tuple<Space,Time>", "Tuple должен иметь canonical ordering.");
+    }
+
+    private static void RicisTypeHashDoesNotAlterTree()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var left = Expression.Add(x, Expression.Constant(1.0));
+        var right = Expression.Add(Expression.Constant(1.0), x);
+        Assert(left.AreEqual(right), "Изменение RicisType.GetHashCode не должно менять structural expression comparison.");
+
+        var set = new HashSet<RicisType> { new("A", false) };
+        Assert(set.Contains(new RicisType("A", true)), "HashSet должен находить RicisType с равным Signature.");
     }
 
     private static void Assert(bool condition, string message)
