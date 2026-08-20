@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Logging;
+using Ricis.Core.Phases;
 
 internal static class RicisPiecewiseSurfaceSuite
 {
@@ -26,7 +27,8 @@ internal static class RicisPiecewiseSurfaceSuite
     private static void PiecewiseSurfaceLogsIntoTex()
     {
         var log = new RicisProofLog<RicisPiecewiseSurfaceStage>();
-        var function = RicisPiecewiseSurfaceExample.Build(log);
+        var trace = new List<RicisPhaseTraceStep>();
+        var function = RicisPiecewiseSurfaceExample.Build(log, trace);
         var entries = log.Snapshot();
         var tex = RicisPiecewiseSurfaceExample.RenderLog(log, RicisProofLogFormat.Latex);
         var evaluate = function.Compile();
@@ -35,19 +37,27 @@ internal static class RicisPiecewiseSurfaceSuite
                 entries.Select(entry => entry.EventCode).SequenceEqual(
                 [
                     "RICIS_PIECEWISE_START",
+                    "RICIS_PIECEWISE_X_STRIP",
+                    "RICIS_PIECEWISE_Y_STRIP",
+                    "RICIS_PIECEWISE_PARABOLA",
                     "RICIS_PIECEWISE_DOMAIN",
-                    "RICIS_PIECEWISE_VALUE_BRANCH",
-                    "RICIS_PIECEWISE_NULL_BRANCH",
+                    "RICIS_PIECEWISE_VALUE",
+                    "RICIS_PIECEWISE_CONDITIONAL",
                     "RICIS_PIECEWISE_COMPLETE",
                 ]) &&
+                trace.Count == 6 &&
+                trace.All(step => step.Changed && step.BeforeNodeToRoot.Count > 0 && step.AfterNodeToRoot.Count > 0) &&
+                trace[0].Before.ToString().Contains("x >= 0", StringComparison.Ordinal) &&
+                trace[0].After.ToString().Contains("x <= 5", StringComparison.Ordinal) &&
+                trace[2].After.ToString().Contains("x * x", StringComparison.Ordinal) &&
+                trace[5].After.ToString().Contains("IIF", StringComparison.Ordinal) &&
                 entries.Single(entry => entry.EventCode == "RICIS_PIECEWISE_DOMAIN").BeforeExpression?.Contains("x >= 0", StringComparison.Ordinal) == true &&
                 tex.Contains("RICIS\\_PIECEWISE\\_DOMAIN", StringComparison.Ordinal) &&
-                tex.Contains("RICIS\\_PIECEWISE\\_VALUE\\_BRANCH", StringComparison.Ordinal) &&
-                tex.Contains("RICIS\\_PIECEWISE\\_NULL\\_BRANCH", StringComparison.Ordinal) &&
+                tex.Contains("RICIS\\_PIECEWISE\\_VALUE", StringComparison.Ordinal) &&
+                tex.Contains("RICIS\\_PIECEWISE\\_CONDITIONAL", StringComparison.Ordinal) &&
                 tex.Contains("0 <= x <= 5", StringComparison.Ordinal) &&
                 tex.Contains("x\\textasciicircum{}2 / 5", StringComparison.Ordinal) &&
-                tex.Contains("Внутри области выбирается значение", StringComparison.Ordinal) &&
-                tex.Contains("Вне области результатом является null", StringComparison.Ordinal),
+                tex.Contains("Ветви объединяются: внутри x*y, вне области null", StringComparison.Ordinal),
             "Tex report обязан содержать область, value branch, null branch и ordered typed journal.");
     }
 
