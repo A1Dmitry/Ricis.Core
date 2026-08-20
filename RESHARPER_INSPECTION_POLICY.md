@@ -4,7 +4,7 @@
 
 ## 1. Purpose
 
-`IssuesReport.xml`, generated at solution scope by ReSharper, is a mandatory static-analysis inventory for cleanup work in `Ricis.Core`. It is used together with current Release build, direct regression tests, Lean-artifact validation and API compatibility policy. An inspection finding is neither ignored nor converted into an automatic deletion: it starts a dependency-aware remediation decision.
+`IssuesReport.xml`, generated at solution scope by ReSharper, is a mandatory static-analysis inventory for cleanup work in `Ricis.Core`. It is used together with current Release build, direct regression tests, Lean-artifact validation and API compatibility policy. Its primary role is to reveal untested, uncertain or locally unreachable model surface. An inspection finding is neither ignored nor converted into an automatic deletion: it starts a dependency-aware remediation decision.
 
 The project does **not** use reflection as a supported reachability mechanism. Therefore repository call graph, explicit HTTP/JSON/generated-code contracts and direct tests are the admissible evidence for a candidate's reachability. Dynamic reflection is not a justification for preserving otherwise unreferenced code.
 
@@ -31,7 +31,7 @@ A candidate has one of the following classifications.
 
 | Classification | Minimum evidence | Allowed action |
 |---|---|---|
-| `private_leaf` | Exact repository search gives no callers except declaration; no source generation, JSON or test hook; affected behavior covered | Remove in a test-first atomic batch. |
+| `private_leaf` | Exact repository search gives no callers except declaration; no source generation, JSON or test hook; affected behavior covered; architecture review confirms it is not a façade/visitor/proof/lambda contract | Remove only in a test-first atomic batch with a versioned Removal Decision Record and owner approval. |
 | `private_state_decision` | Field has no read but writes occur through a public operation | Redesign public behavior or expose intentional state; do not delete writes blindly. |
 | `public_compatibility` | Public/protected/interface/extension member or type | Preserve or add `[Obsolete]` and migration documentation; no patch removal. |
 | `serialization_contract` | Positional record, `JsonSerializable`, `JsonPropertyName`, HTTP payload or document schema member | Preserve; add/retain serialization contract test. |
@@ -95,4 +95,6 @@ The following are prohibited:
 4. removing a public or extension method without its direct regression and compatibility decision;
 5. suppressing P0/P1 findings without current build/test evidence;
 6. weakening HTTPS, webhook, Lean, trace or public validation guards to satisfy an IDE style finding;
-7. claiming reflection reachability or reflection absence as the sole proof of safety.
+7. claiming reflection reachability or reflection absence as the sole proof of safety;
+8. using `UnusedMember`, zero internal callers or missing tests as an independent authorisation for deletion, reduced visibility or reclassification;
+9. continuing deletion work after a silent-removal incident before the full penalty in `PUBLIC_API_TEST_POLICY.md` is completed and the user approves remediation.

@@ -25,9 +25,11 @@
 
 Existing direct contracts `CHECKED01–CHECKED05` retain coverage for `ProveChecked` and `ProveDocumentChecked`; `INT01–INT07`/`QA08–QA09` retain coverage for compound-interest public extensions.
 
-## Reclassification result
+## Reclassification result and incident correction
 
-`RicisProofDocumentTemplates` and `ExpressionSimplifierVisitor.VisitLogical` were initially grouped from ReSharper output as broadly reachable candidates. Both are internal implementation details. `VisitLogical` had zero callers and duplicated the authoritative `LogicalReductionVisitor`; it was removed under the existing `LOG01–LOG09` safety suite. `RicisProofDocumentTemplates` remains internal and is covered through document-format tests.
+`RicisProofDocumentTemplates` remains an internal implementation detail and is covered through document-format tests. The original conclusion about `ExpressionSimplifierVisitor.VisitLogical` was incorrect as an API decision: even though the method itself was internal and had zero callers, it represented a potential focused logical-reduction façade. Its silent removal triggered `INCIDENT_2026-08-20_SILENT_LOGICAL_API_REMOVAL.md`.
+
+The remediation restores the supported public contract as `LogicalSimplifier.Apply`, which delegates to the normative `LogicalReductionVisitor` and is directly tested by `API32` as well as the authoritative `LOG01–LOG09` suite. The unsafe duplicate implementation is not restored; the public façade is the single supported route.
 
 ## Public surface decision
 

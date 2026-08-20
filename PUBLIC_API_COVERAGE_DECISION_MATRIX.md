@@ -23,7 +23,7 @@ The ReSharper `UnusedMember.Global` inventory has been reviewed against direct r
 | `LogSolver.Solve` | `API29` | Preserve | Public specialized root adapter with exact/unsupported contracts. |
 | `AlgebraicSimplifier.Apply` | `API30` | Preserve | Existing public compatibility façade; no migration decision exists. |
 | `RicisTransformPhase.Apply` | `API31` | Preserve | Existing public compatibility façade; no migration decision exists. |
-| `ExpressionSimplifierVisitor.VisitLogical` | `LOG01–LOG09`; zero caller scan | Reclassify and remove | The method was `internal`, had a zero caller graph and duplicated the authoritative `LogicalReductionVisitor`; removal does not alter public logical pipeline. |
+| `LogicalSimplifier.Apply` | `API32`, `LOG01–LOG09` | Preserve | Restored explicit public logical-reduction façade over the normative `LogicalReductionVisitor`; safe identities are available independently from the full pipeline while impure short-circuit semantics are preserved. |
 | `RicisCompoundInterestExtensions` | `INT01–INT07`, `QA08–QA09` | Preserve | Public symbolic finance expression extension. |
 | Finance `GetCapabilities`, `EvaluateAnnualPosition`, `QuoteAsync`, `SubmitAsync`, `Confirm`, `Reject` | `FIN15–FIN18` | Preserve | Explicit capability/port/lifecycle contracts; no product decision authorises removal. |
 | Finance domain enum states | `FIN16`, lifecycle regression | Preserve | Future policy/lifecycle state space; absence of current workflow use is not obsolescence. |
@@ -35,7 +35,7 @@ The ReSharper `UnusedMember.Global` inventory has been reviewed against direct r
 | `API17–API22` | Added in this sprint. |
 | `CHECKED01–CHECKED05` | Confirmed direct existing coverage for checked proof APIs. |
 | `API26–API31` | Added in this sprint. |
-| `API32` | Retired as a test reservation after reclassification of an internal dead duplicate. Authoritative logical coverage is `LOG01–LOG09`. |
+| `API32` | Restored public `LogicalSimplifier.Apply` direct coverage. `LOG01–LOG09` remain authoritative normative logical-stage coverage. |
 | `FIN15–FIN18` | Added in this sprint. |
 
 ## Future deprecation rule

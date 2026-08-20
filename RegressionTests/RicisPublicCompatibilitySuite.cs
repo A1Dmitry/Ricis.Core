@@ -16,6 +16,7 @@ internal static class RicisPublicCompatibilitySuite
         ("API29: LogSolver public adapter returns exact and unsupported outcomes", LogAdapterRetainsContract),
         ("API30: AlgebraicSimplifier facade preserves safe arithmetic reduction", AlgebraicFacadeRetainsContract),
         ("API31: RicisTransformPhase facade preserves ordinary expression", TransformFacadeRetainsContract),
+        ("API32: LogicalSimplifier exposes safe public Boolean reduction", LogicalSimplifierRetainsSafeBoundary),
     ];
 
     private static void PolarSectorRendersSingularity()
@@ -81,6 +82,29 @@ internal static class RicisPublicCompatibilitySuite
 
         RegressionAssertions.Require(reduced == x, $"AlgebraicSimplifier.Apply должен безопасно сворачивать x+0, получено {reduced}.");
     }
+
+    private static void LogicalSimplifierRetainsSafeBoundary()
+    {
+        var flag = Expression.Parameter(typeof(bool), "flag");
+        var safe = Expression.AndAlso(Expression.Constant(true), flag);
+        var reduced = LogicalSimplifier.Apply(safe);
+
+        RegressionAssertions.Require(reduced == flag,
+            $"LogicalSimplifier должен сворачивать true && flag в flag, получено {reduced}.");
+
+        var impure = Expression.AndAlso(
+            Expression.Call(typeof(RicisPublicCompatibilitySuite).GetMethod(nameof(SideEffectPredicate), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!),
+            Expression.Constant(false));
+        var preserved = LogicalSimplifier.Apply(impure);
+        RegressionAssertions.Require(ReferenceEquals(preserved, impure),
+            "LogicalSimplifier не должен сворачивать impureCall() && false, потому что это изменило бы short-circuit evaluation.");
+
+        var number = Expression.Add(Expression.Constant(1.0), Expression.Constant(2.0));
+        RegressionAssertions.Require(ReferenceEquals(LogicalSimplifier.Apply(number), number),
+            "LogicalSimplifier должен оставить non-Boolean expression вне логической области без изменения.");
+    }
+
+    private static bool SideEffectPredicate() => true;
 
     private static void TransformFacadeRetainsContract()
     {

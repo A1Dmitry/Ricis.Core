@@ -13,7 +13,7 @@ Each public, protected, interface or extension member remains part of the compat
 | Proof compatibility aliases | `ProveChecked`, `ProveDocumentChecked`; `SimplifyWithLog` | Versioned proof/log/document compatibility API | `RicisCheckedProofSuite`, `RicisTypedProofLogSuite` | Preserve. Aliases are intentionally compatibility-facing. `RicisProofDocumentTemplates` is internal and covered as implementation. |
 | Financial expression extension | `RicisCompoundInterestExtensions` | Public symbolic finance expression API | `RicisCompoundInterestSuite` | Preserve; potentially external Console/API client contract. |
 | Solver and polar utilities | `PolarConverter.ToPolarSector`, `PolynomialZeroSolver.FindRootsInRange`, `ExponentialZeroSolver.Solve`, `LogSolver.Solve` | Public calculator/solver API | `RicisPublicUtilitySuite`, solver regression suites | Preserve. Add edge/result/rejection tests. |
-| Legacy simplifier façades | `AlgebraicSimplifier.Apply`, `RicisTransformPhase.Apply` | Potentially redundant public façade over pipeline | `RicisPublicCompatibilitySuite` | Preserve now; only deprecate after a migration decision to `RicisPhasePipeline`. `VisitLogical` was internal, zero-caller and removed as a duplicate of `LogicalReductionVisitor`. |
+| Legacy simplifier façades | `AlgebraicSimplifier.Apply`, `RicisTransformPhase.Apply`, `LogicalSimplifier.Apply` | Focused public simplification façades | `RicisPublicCompatibilitySuite`, `RicisLogicalReductionSuite` | Preserve. `LogicalSimplifier.Apply` is the explicit safe public logical reducer. The previous internal duplicate remains removed only after incident remediation and no longer represents the supported API. |
 | Finance application ports | `PaymentRailRegistry.GetCapabilities`, `IAnnualTaxPolicy.EvaluateAnnualPosition`, `IBankFeeSchedule.QuoteAsync`, `ITaxReceiptGateway.SubmitAsync` | Future-capability/compliance port | Finance regression suite and FIN backlog | Preserve as documented FIN capability. |
 | Finance domain lifecycle | `CounterpartyKind.Individual`, `SettlementStatus.Reconciled`, `PayoutStatus.Allocated`, `Settlement.Confirm`, `Settlement.Reject`, tax status enum states | Domain state model, not current usage metric | Finance domain regression suite | Preserve; usage absence is expected before later FIN workflows. |
 
@@ -24,7 +24,7 @@ Each public, protected, interface or extension member remains part of the compat
 | `API17–API21` | Expression system, matrix and public utility extensions | Extension/direct invocation and positive/negative structural cases. |
 | `API22–API25` | Proof aliases and `SimplifyWithLog` | Same derivation/trace/doc output and controlled Lean boundary; internal templates stay covered by document-format suites. |
 | `API26–API29` | Polar, polynomial, exponential and logarithm public solvers | Exact roots, non-root, invalid shape and deferred-expression behavior. |
-| `API30–API31` | Legacy simplifier façade APIs | Result equivalence with normative pipeline. `API32` was retired after internal zero-caller duplicate removal. |
+| `API30–API32` | Legacy simplifier façade APIs | Result equivalence with normative pipeline plus explicit safe logical reduction boundary. |
 | `FIN15–FIN18` | Finance capabilities, port contracts and lifecycle transitions | Explicit not-supported/reserved behavior, domain transition guards and no payment-fact fabrication. |
 
 The numbers reserve regression identifiers only. Actual tests are added in subsequent atomic batches, with the policy that public API changes require direct tests before modification.
