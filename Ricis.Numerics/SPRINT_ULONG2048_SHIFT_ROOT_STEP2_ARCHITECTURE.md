@@ -1,6 +1,6 @@
 # SPRINT ULong2048 Fixed-Width Shift Root — Step 2: Architecture Contract
 
-**Status:** Proposed — awaiting approval.
+**Status:** Exact fixed-width root architecture approved and implemented; measured performance remains an explicit evidence boundary and is not claimed as improved.
 
 ## 1. Goal and boundary
 

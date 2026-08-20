@@ -1,6 +1,6 @@
 # SPRINT Universal INumber Reduction — Step 2: Architecture Contract
 
-**Status:** Proposed — awaiting explicit user approval.
+**Status:** Generic Core `INumber<T>` reduction architecture implemented and direct-tested; future numeric-domain capabilities beyond this pipeline remain separate proposals.
 
 **Prerequisite:** Step 1 business specification approved.
 

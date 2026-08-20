@@ -1,6 +1,6 @@
 # SPRINT Universal INumber + Immutable Semiprime — Step 3: QA Specification
 
-**Status:** Approved and implemented in progress — revised after explicit user-approved Fermat/Semiprime migration to `Ricis.Numerics`.
+**Status:** Approved; generic Core reduction and immutable `Semiprime<T>` migration implemented and tested. Symbolic BFR/order-band evidence `BFR01–BFR12` remains an explicit research backlog and is not marked complete by this document.
 
 **Prerequisites:** The approved universal `INumber<T>` Core boundary, symbolic-expression-first research contract, and immutable fail-closed `Semiprime` domain contract.
 

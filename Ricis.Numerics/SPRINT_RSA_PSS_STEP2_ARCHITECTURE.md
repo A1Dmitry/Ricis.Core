@@ -1,9 +1,9 @@
 # SPRINT RSA-PSS — Step 2: Architecture Contract
 
-**Status:** Proposed — awaiting explicit user approval
+**Status:** Fixed-profile RSA-PSS architecture approved and implemented; this contract remains normative for the implemented profile.
 **Prerequisite:** Step 1 business/security specification approved
 **Target:** RSA-2048 RSASSA-PSS verification, SHA-256 / MGF1-SHA-256 / fixed 32-byte salt
-**Implementation authorization:** Not granted by this document.
+**Implementation authorization:** The fixed profile is implemented under the separately approved Step 1/Step 3 scope; this document does not authorize additional algorithms or trust/PKI features.
 
 ## 1. Architecture decision
 

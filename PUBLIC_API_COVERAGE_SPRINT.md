@@ -1,6 +1,6 @@
 # Public API coverage sprint — completed evidence
 
-**Status:** completed locally; ready for Git commit.
+**Status:** Implemented and regression-verified; this document is synchronized to the current gate evidence below. Earlier local counts are retained only as historical context where explicitly labelled.
 
 ## Direct coverage added
 
@@ -40,7 +40,7 @@ All actual public candidates are **preserved** in the current version. No `[Obso
 | Gate | Result |
 |---|---:|
 | `dotnet build Ricis.Core.sln --configuration Release` | PASS, **0 warnings, 0 errors** |
-| Core self-contained regression harness | PASS, **370/370** |
+| Core self-contained regression harness | PASS, **386/386** current catalog |
 | Finance self-contained regression harness | PASS, **18/18** |
-| `python3 scripts/verify_lean_artifacts.py` | PASS, **6 artifacts** |
+| `python3 scripts/verify_lean_artifacts.py` | PASS, **8 artifacts** |
 | `git diff --check` | PASS |

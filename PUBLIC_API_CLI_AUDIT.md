@@ -1,6 +1,6 @@
 # Public API и CLI audit
 
-**Статус:** аудит начат.
+**Статус:** CLI smoke-аудит завершён локально; remaining public-utility direct-coverage and output-contract gaps остаются отдельным backlog.
 
 ## Обнаруженная CLI-поверхность
 

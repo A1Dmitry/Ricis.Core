@@ -1,8 +1,8 @@
 # SPRINT RSA-PSS — Step 3: QA Specification and Vector Plan
 
-**Status:** Proposed — awaiting explicit user approval
+**Status:** Fixed RSA-2048 RSASSA-PSS/SHA-256 profile implemented and direct-tested; this document remains the normative QA contract. Any external-vector or additional-profile work not present in the evidence remains open.
 **Prerequisites:** Step 1 business/security specification and Step 2 architecture contract approved
-**Implementation authorization:** Not granted by this document
+**Implementation authorization:** The fixed profile is implemented under the approved sprint scope; this document does not authorize additional profiles, signing, certificate or key-parsing work.
 **Profile under test:** RSA-2048 RSASSA-PSS / SHA-256 / MGF1-SHA256 / fixed 32-octet salt.
 
 ## 1. QA objective

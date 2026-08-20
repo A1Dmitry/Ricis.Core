@@ -1,6 +1,6 @@
 # SPRINT ULong2048 Fixed-Width Shift Root — Step 3: QA Specification
 
-**Status:** Proposed — awaiting approval.
+**Status:** Fixed-width shift-root increment implemented and direct-tested; exactness/allocation evidence is recorded, while performance is explicitly non-improvement on the measured benchmark. This document remains the normative QA contract for future extensions.
 
 ## 1. Test policy
 

@@ -1,6 +1,6 @@
 # SPRINT RSA-PSS — Step 1: Business and Security Specification
 
-**Status:** Proposed — awaiting explicit user approval
+**Status:** Fixed RSA-2048 RSASSA-PSS/SHA-256 business profile approved and implemented; deferred profiles and certificate/PKI work remain out of scope.
 **Owner:** Ricis.Numerics
 **Agile sequence:** Business analysis → Architecture → QA tests → Implementation
 **Target capability:** RSA-2048 public-key signature verification using **RSASSA-PSS / SHA-256**.
@@ -95,7 +95,7 @@ Please approve or amend the following product decision:
 
 > Implement **RSA-2048 RSASSA-PSS verification with SHA-256, MGF1-SHA-256 and a fixed 32-byte salt**, using `ULong2048` for the public fixed-width RSA operation and returning a fail-closed validity result with structured diagnostics. Private-key actions, certificate parsing/trust validation, PKCS#1 v1.5 and algorithm fallback remain out of scope.
 
-Approval authorizes only **Step 2: architecture contract**. It does not authorize code implementation until Step 2 and Step 3 are separately accepted.
+Historical approval gate: implementation was authorized only after the separate Step 2 architecture and Step 3 QA decisions; the fixed profile is now implemented under that approved scope.
 
 ## References
 
