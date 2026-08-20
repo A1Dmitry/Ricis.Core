@@ -83,6 +83,7 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisVectorVisitorSuite.Tests);
         tests.AddRange(RicisTypeConsistencySuite.Tests);
         tests.AddRange(RicisTypedProofLogSuite.Tests);
+        tests.AddRange(RicisSemanticReportSuite.Tests);
         tests.AddRange(RicisGenericScalarPolicySuite.Tests);
         tests.AddRange(RicisCheckedProofSuite.Tests);
         tests.AddRange(RicisProofDocumentFormatSuite.Tests);
