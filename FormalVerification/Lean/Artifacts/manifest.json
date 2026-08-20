@@ -121,6 +121,23 @@
         "mandatoryForModelStudy": true,
         "role": "mandatory-project-knowledge-source"
       }
+    },
+    {
+      "id": "RICIS-CONCRETE-ROOT-TO-LEAF",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/Routes/LongestRouteConcreteEngineProof.lean",
+      "description": "Concrete rank-one determinant payload traverses all ten selected route nodes, all nine explicit edges and the five local RICIS stages to the spectral RICIS-core leaf.",
+      "origin": "Proofs/RicisJacobianProofScenario.cs + RICIS3_LONGEST_ROUTE_FULL_PROOF_GAP_MATRIX.md",
+      "testIds": ["CRL01", "CRL02", "CRL03"],
+      "theoremNames": ["root_determinant_is_zero", "root_payload_invariant", "local_run_preserves", "edge_preserves", "depth0_proof", "depth1_edge_proof", "depth1_proof", "depth2_edge_proof", "depth2_proof", "depth3_edge_proof", "depth3_proof", "depth4_edge_proof", "depth4_proof", "depth5_edge_proof", "depth5_proof", "depth6_edge_proof", "depth6_proof", "depth7_edge_proof", "depth7_proof", "depth8_edge_proof", "depth8_proof", "depth9_edge_proof", "depth9_proof", "full_root_to_leaf_engine_proof", "leaf_is_spectral_ricis_core"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "Concrete RICIS engine route expansion / kernel check",
+      "generatedFrom": "Proofs/RicisJacobianProofScenario.cs + RICIS3_LONGEST_ROUTE_FULL_PROOF_GAP_MATRIX.md",
+      "forbiddenMarkers": ["sorry", "sorryAx", "admit", "axiom ", "LongestRouteEvidence", "LocalRicisCertificate"],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     }
   ]
 }

@@ -88,6 +88,7 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisProofDocumentFormatSuite.Tests);
         tests.AddRange(RicisLeanSingularitySuite.Tests);
         tests.AddRange(RicisLongestRouteLeanSuite.Tests);
+        tests.AddRange(RicisConcreteRouteLeanSuite.Tests);
 
         return tests;
     }

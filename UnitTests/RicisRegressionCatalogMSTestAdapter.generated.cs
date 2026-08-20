@@ -1519,4 +1519,16 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestMethod("LRL03: longest route Lean artifact зарегистрирован как mandatory kernel knowledge source")]
     [TestCategory("Regression")]
     public void Regression_378() => RicisRegressionTestCatalog.Tests[377].Body();
+
+    [TestMethod("CRL01: concrete route Lean source содержит root, десять node labels и depth 0–9 proofs")]
+    [TestCategory("Regression")]
+    public void Regression_379() => RicisRegressionTestCatalog.Tests[378].Body();
+
+    [TestMethod("CRL02: concrete route Lean source задаёт rank-one determinant and explicit invariant")]
+    [TestCategory("Regression")]
+    public void Regression_380() => RicisRegressionTestCatalog.Tests[379].Body();
+
+    [TestMethod("CRL03: concrete route Lean source не использует certificate fields или admitted proof")]
+    [TestCategory("Regression")]
+    public void Regression_381() => RicisRegressionTestCatalog.Tests[380].Body();
 }
