@@ -21,7 +21,40 @@ internal static class RicisProofDocumentFormatSuite
         ("PDF07: Binary overload — использует общий Log renderer", BinarySystemLogTemplate),
         ("PDF08: Injected ILog сохраняет полный typed node-to-root документ", InjectedLogDocumentTemplate),
         ("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут", CheckedMultiFormatArtifacts),
+        ("PDF10: Binary system ILog reaches every solver step and LaTeX", BinarySystemInjectedLogReachesTex),
     ];
+
+    private static void BinarySystemInjectedLogReachesTex()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints = [];
+        Expression<Func<double, double, bool>> claim = (x, y) => x == 3.0;
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var document = new StringBuilder();
+
+        var derived = equations.ProveDocumentWithLog(
+            constraints,
+            claim,
+            CreateProfile(),
+            RicisProofDocumentFormat.Latex,
+            log,
+            document);
+
+        var entries = log.Snapshot();
+        var latex = document.ToString();
+        var eventCodes = entries.Select(entry => entry.EventCode).ToArray();
+        Require(derived.Compile()(3.0, 2.0) &&
+                eventCodes.SequenceEqual(["RICIS_SYSTEM_START", "RICIS_SYSTEM_COEFFICIENTS", "RICIS_SYSTEM_ELIMINATION", "RICIS_SYSTEM_COMPLETE"]) &&
+                latex.Contains("\\section*{RICIS proof document}", StringComparison.Ordinal) &&
+                latex.Contains("RICIS_SYSTEM_COEFFICIENTS", StringComparison.Ordinal) &&
+                latex.Contains("RICIS_SYSTEM_ELIMINATION", StringComparison.Ordinal) &&
+                latex.Contains("### Шаг 4: Выделение второй координаты", StringComparison.Ordinal),
+            "Binary system LaTeX обязан содержать полный solver protocol и все typed ILog events одного запуска.");
+    }
 
     private static void LogTemplate()
     {

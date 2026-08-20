@@ -456,6 +456,38 @@ public static class RicisAcademicProofExtensions
             document);
 
     /// <summary>
+    /// Solves a supported two-variable expression system once with an optional typed
+    /// journal and renders the same derivation through the selected document format.
+    /// The journal is appended to the derivation before the document factory runs,
+    /// so the LaTeX/JSON/Log document contains both system steps and internal events.
+    /// </summary>
+    public static Expression<Func<double, double, bool>> ProveDocumentWithLog(
+        this IEnumerable<Expression<Func<double, double, bool>>> equations,
+        IEnumerable<Expression<Func<double, double, bool>>> constraints,
+        Expression<Func<double, double, bool>> claim,
+        RicisProofDocumentProfile profile,
+        RicisProofDocumentFormat format,
+        ILog<RicisProofOrchestrationStage> log,
+        StringBuilder document)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(document);
+        var documentConstructor = ResolveDocumentConstructor(format);
+        var derivation = new StringBuilder();
+        var derived = equations.Prove(constraints, claim, derivation, log);
+        AppendTypedProofLog(derivation, log.Snapshot());
+        AppendFormattedProofDocument(
+            document,
+            profile,
+            derivation.ToString(),
+            derived,
+            documentConstructor,
+            static text => text);
+        return derived;
+    }
+
+    /// <summary>
     /// Specialized overload: derives a stated coordinate of a supported two-variable
     /// linear system once and renders the existing symbolic protocol through the
     /// selected template. This overload does not restrict the universal generic
@@ -596,13 +628,15 @@ public static class RicisAcademicProofExtensions
     /// <param name="constraints">Optional domain constraints over the same pair of variables.</param>
     /// <param name="claim">A coordinate claim of the form <c>x=c</c> or <c>y=c</c>.</param>
     /// <param name="proof">The output buffer for the academic derivation.</param>
+    /// <param name="log">Optional typed journal receiving system solver events.</param>
     /// <returns>An independent derived equality expression for the proved coordinate.</returns>
     /// <exception cref="ArgumentException">Thrown when the system is unsupported, degenerate, non-finite, overflows its finite double derivation, or the claim contradicts its symbolic solution.</exception>
     public static Expression<Func<double, double, bool>> Prove(
         this IEnumerable<Expression<Func<double, double, bool>>> equations,
         IEnumerable<Expression<Func<double, double, bool>>> constraints,
         Expression<Func<double, double, bool>> claim,
-        StringBuilder proof)
+        StringBuilder proof,
+        ILog<RicisProofOrchestrationStage> log = null)
     {
         ArgumentNullException.ThrowIfNull(equations);
         ArgumentNullException.ThrowIfNull(constraints);
@@ -611,6 +645,15 @@ public static class RicisAcademicProofExtensions
 
         var equationList = equations.ToList();
         var constraintList = constraints.ToList();
+        log?.Info(
+            "RICIS_SYSTEM_START",
+            "Запущено symbolic решение двухпеременной системы выражений.",
+            new Dictionary<string, string>
+            {
+                ["equationCount"] = equationList.Count.ToString(),
+                ["constraintCount"] = constraintList.Count.ToString(),
+                ["claim"] = claim.ToString(),
+            });
         if (equationList.Count != 2)
         {
             throw new ArgumentException("Этот специализированный overload должен получить ровно два линейных уравнения.", nameof(equations));
@@ -621,6 +664,15 @@ public static class RicisAcademicProofExtensions
         var first = ReadSupportedLinearEquation(equationList[0], nameof(equations));
         var second = ReadSupportedLinearEquation(equationList[1], nameof(equations));
         var determinant = (first.X * second.Y) - (second.X * first.Y);
+        log?.Info(
+            "RICIS_SYSTEM_COEFFICIENTS",
+            "Коэффициенты и determinant извлечены из expression tree без исполнения гипотез.",
+            new Dictionary<string, string>
+            {
+                ["first"] = $"{first.X}x + {first.Y}y = {first.Constant}",
+                ["second"] = $"{second.X}x + {second.Y}y = {second.Constant}",
+                ["determinant"] = determinant.ToString("G17"),
+            });
         if (determinant == 0.0)
         {
             throw new ArgumentException("Линейная система вырождена: её determinant равен нулю.", nameof(equations));
@@ -642,6 +694,17 @@ public static class RicisAcademicProofExtensions
         }
 
         var provenValue = coordinate == 0 ? solutionX : solutionY;
+        log?.Trace(
+            "RICIS_SYSTEM_ELIMINATION",
+            "Символическое исключение дало обе координаты решения.",
+            claim.ToString(),
+            $"x = {solutionX:G17}; y = {solutionY:G17}",
+            new Dictionary<string, string>
+            {
+                ["coordinate"] = coordinate == 0 ? "x" : "y",
+                ["claimedValue"] = claimedValue.ToString("G17"),
+                ["provenValue"] = provenValue.ToString("G17"),
+            });
         if (claimedValue != provenValue)
         {
             throw new ArgumentException(
@@ -671,6 +734,14 @@ public static class RicisAcademicProofExtensions
             solutionYExpression,
             coordinate,
             derived);
+        log?.Info(
+            "RICIS_SYSTEM_COMPLETE",
+            "Symbolic решение системы завершено и protocol сформирован.",
+            new Dictionary<string, string>
+            {
+                ["derived"] = derived.ToString(),
+                ["coordinate"] = coordinate == 0 ? "x" : "y",
+            });
         return derived;
     }
 
