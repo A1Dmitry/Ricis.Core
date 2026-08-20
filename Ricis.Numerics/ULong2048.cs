@@ -225,6 +225,44 @@ public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, 
 
     public override string ToString() => ToBigInteger().ToString();
 
+    internal int GetBitLength()
+    {
+        for (var index = LimbCount - 1; index >= 0; index--)
+        {
+            var limb = GetLimb(index);
+            if (limb != 0) return (index * 64) + (64 - BitOperations.LeadingZeroCount(limb));
+        }
+
+        return 0;
+    }
+
+    internal void WriteFixedWidthBigEndian(Span<byte> destination)
+    {
+        if (destination.Length != LimbCount * sizeof(ulong)) throw new ArgumentException("Destination must be exactly 256 bytes.", nameof(destination));
+        for (var index = 0; index < LimbCount; index++)
+        {
+            BinaryPrimitives.WriteUInt64BigEndian(destination.Slice((LimbCount - 1 - index) * sizeof(ulong), sizeof(ulong)), GetLimb(index));
+        }
+    }
+
+    internal static bool TryReadFixedWidthBigEndian(ReadOnlySpan<byte> source, out ULong2048 value)
+    {
+        if (source.Length != LimbCount * sizeof(ulong))
+        {
+            value = default;
+            return false;
+        }
+
+        ULong2048Limbs limbs = default;
+        for (var index = 0; index < LimbCount; index++)
+        {
+            limbs[index] = BinaryPrimitives.ReadUInt64BigEndian(source.Slice((LimbCount - 1 - index) * sizeof(ulong), sizeof(ulong)));
+        }
+
+        value = new ULong2048(limbs);
+        return true;
+    }
+
     private ulong GetLimb(int index) => _limbs[index];
 
     private static ULong2048 CreateMaxValue()
