@@ -14,6 +14,10 @@ internal static class RicisSemanticReportSuite
         ("SEM04: exception сохраняет техническую причину только в Text model", ExceptionHasControlledVisibility),
         ("SEM05: null logger не меняет semantic computation", NullLoggerPreservesComputation),
         ("SEM06: unknown sender/event не проникает в Academic proof", UnknownEventsDoNotBecomeProof),
+        ("JSON01: semantic model имеет versioned schema и public projection", JsonUsesVersionedSemanticSchema),
+        ("JSON02: JSON не раскрывает raw Trace и сохраняет exception cause", JsonDoesNotLeakTrace),
+        ("JSON03: JSON сохраняет порядок и unknown-event isolation", JsonPreservesOrderAndUnknownIsolation),
+        ("JSON04: внешний schema asset соответствует versioned contract", ExternalJsonSchemaIsPublished),
     ];
 
     private static void ClassifierUsesSenderAndMetadata()
@@ -117,6 +121,90 @@ internal static class RicisSemanticReportSuite
         Require(classified.Kind == RicisSemanticEventKind.Unclassified &&
                 academic.Steps.Count == 0,
             "Unknown sender/event не должен автоматически становиться доказательным шагом Academic report.");
+    }
+
+    private static void JsonUsesVersionedSemanticSchema()
+    {
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        log.Info("RICIS_PHASE_COMPLETE", "Public phase completed.", new Dictionary<string, string>
+        {
+            ["phaseName"] = "Phase 1",
+            ["ruleFamily"] = "SP2",
+        });
+        var document = new RicisJsonReportModelFactory().Build(log.Snapshot());
+        var json = new RicisJsonReportSerializer().Serialize(document);
+        using var parsed = System.Text.Json.JsonDocument.Parse(json);
+        var root = parsed.RootElement;
+        Require(root.GetProperty("schema").GetString() == "ricis-semantic-report/v1" &&
+                root.GetProperty("reportType").GetString() == "json-semantic" &&
+                !root.GetProperty("kernelVerification").GetBoolean() &&
+                root.GetProperty("events").GetArrayLength() == 1 &&
+                root.GetProperty("events")[0].GetProperty("sender").GetString() == nameof(RicisProofOrchestrationStage),
+            "JSON должен иметь versioned semantic schema и плоскую sender projection.");
+    }
+
+    private static void JsonDoesNotLeakTrace()
+    {
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        log.For<AlgebraicReductionVisitor>().Trace(
+            "RICIS_PHASE_TRACE",
+            "Private normalization.",
+            "x / x",
+            "1",
+            new Dictionary<string, string>
+            {
+                ["phaseName"] = "Phase 1",
+                ["ruleFamily"] = "SP2",
+            });
+        log.For<StandardOperationsVisitor>().Exception(
+            "RICIS_PHASE_EXCEPTION",
+            new InvalidOperationException("division boundary"),
+            "Handled division boundary.",
+            new Dictionary<string, string>
+            {
+                ["phaseName"] = "Phase 2",
+                ["handlingStatus"] = "Handled",
+                ["publicMessage"] = "Division boundary was handled.",
+            });
+        var json = new RicisJsonReportSerializer().Serialize(new RicisJsonReportModelFactory().Build(log.Snapshot()));
+        Require(json.Contains("division boundary", StringComparison.OrdinalIgnoreCase) &&
+                json.Contains("Division boundary was handled.", StringComparison.Ordinal) &&
+                !json.Contains("beforeExpression", StringComparison.Ordinal) &&
+                !json.Contains("afterExpression", StringComparison.Ordinal) &&
+                !json.Contains("exceptionTrace", StringComparison.Ordinal) &&
+                !json.Contains("x / x", StringComparison.Ordinal),
+            "JSON должен сохранять public exception cause, но не раскрывать raw Trace snapshots и stack trace.");
+    }
+
+    private static void JsonPreservesOrderAndUnknownIsolation()
+    {
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        log.Info("CUSTOM_EVENT", "Internal event.", new Dictionary<string, string> { ["phaseName"] = "Unknown" });
+        log.Info("RICIS_PROOF_COMPLETE", "Proof completed.", new Dictionary<string, string> { ["phaseName"] = "Root" });
+        var document = new RicisJsonReportModelFactory().Build(log.Snapshot());
+        var json = new RicisJsonReportSerializer().Serialize(document);
+        using var parsed = System.Text.Json.JsonDocument.Parse(json);
+        var events = parsed.RootElement.GetProperty("events").EnumerateArray().ToArray();
+        Require(events[0].GetProperty("sequence").GetInt64() == 1 &&
+                events[1].GetProperty("sequence").GetInt64() == 2 &&
+                events[0].GetProperty("kind").GetString() == "unclassified" &&
+                events[0].GetProperty("status").GetString() == "unclassified",
+            "JSON должен сохранять sequence order и явно маркировать unknown event как unclassified.");
+    }
+
+    private static void ExternalJsonSchemaIsPublished()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "ricis-semantic-report.v1.schema.json");
+        Require(File.Exists(path), "Versioned JSON Schema должен поставляться как внешний output asset.");
+        using var schema = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        var root = schema.RootElement;
+        var schemaId = root.GetProperty("$id").GetString();
+        var schemaConst = root.GetProperty("properties").GetProperty("schema").GetProperty("const").GetString();
+        var reportTypeConst = root.GetProperty("properties").GetProperty("reportType").GetProperty("const").GetString();
+        Require(schemaId is not null && schemaId.EndsWith("ricis-semantic-report/v1", StringComparison.Ordinal) &&
+                schemaConst == "ricis-semantic-report/v1" &&
+                reportTypeConst == "json-semantic",
+            "Внешний schema asset должен фиксировать тот же versioned JSON contract, что и serializer.");
     }
 
     private static void NullLoggerPreservesComputation()

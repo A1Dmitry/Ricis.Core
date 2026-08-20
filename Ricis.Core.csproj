@@ -23,6 +23,7 @@
       <LogicalName>Ricis.Core.Logging.Templates.%(Filename).template</LogicalName>
     </EmbeddedResource>
     <Content Include="Logging/Templates/*.template" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
+    <Content Include="Logging/Templates/*.schema.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="RegressionTests/**/*.cs" />
