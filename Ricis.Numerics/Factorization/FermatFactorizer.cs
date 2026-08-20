@@ -8,12 +8,6 @@ namespace Ricis.Numerics.Factorization;
 /// </summary>
 public static class FermatFactorizer
 {
-    // Squares modulo 64 are exactly { 0, 1, 4, 9, 16, 17, 25, 33, 36, 41, 49, 57 }.
-    private const ulong SquareResidueModulo64Mask =
-        (1UL << 0) | (1UL << 1) | (1UL << 4) | (1UL << 9) |
-        (1UL << 16) | (1UL << 17) | (1UL << 25) | (1UL << 33) |
-        (1UL << 36) | (1UL << 41) | (1UL << 49) | (1UL << 57);
-
     /// <summary>
     /// Solves <c>x²-N=y²</c> and returns the exact reconstruction
     /// <c>P=x-y</c>, <c>Q=x+y</c> for a positive odd semiprime baseline input.
@@ -79,11 +73,7 @@ public static class FermatFactorizer
         }
     }
 
-    private static bool CouldBePerfectSquare(BigInteger value)
-    {
-        var residue = (int)(value & 63);
-        return ((SquareResidueModulo64Mask >> residue) & 1UL) != 0;
-    }
+    private static bool CouldBePerfectSquare(BigInteger value) => SquareResidueFilters.CouldBeSquareModulo64(value);
 
     private static BigInteger IntegerSquareRootCeilingByShift(BigInteger value)
     {
