@@ -523,7 +523,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
         var obj = Visit(node.Object);
-        var args = node.Arguments.Select(Visit);
+        var args = node.Arguments.Select(Visit).ToArray();
         if (obj == node.Object && args.SequenceEqual(node.Arguments))
         {
             return node;

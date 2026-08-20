@@ -11,6 +11,11 @@ public class RicisEngine
     private readonly List<InfinityExpression> _terms = [];
 
     /// <summary>
+    /// Gets an immutable snapshot of indexed-infinity terms accepted by this collector.
+    /// </summary>
+    public IReadOnlyList<InfinityExpression> Terms => _terms.ToArray();
+
+    /// <summary>
     /// Simplifies <paramref name="expr"/> and adds its body only when it is an
     /// indexed infinity. Finite expressions are rejected explicitly because
     /// this collector has no finite-term storage or combination contract.

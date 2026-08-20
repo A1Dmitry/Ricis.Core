@@ -11,9 +11,6 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpressionVisitor
 {
-    private readonly Dictionary<string, ParameterExpression> _parameters = new();
-
-
     /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) =>
         RicisSpecialExpressionRebinder.Rebind(node, Visit);
@@ -237,24 +234,6 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         }
     }
 
-    private static Expression SimplifyFraction(BigInteger num, BigInteger den)
-    {
-        if (den == 0)
-        {
-            throw new DivideByZeroException();
-        }
-
-        if (num == 0)
-        {
-            return Expression.Constant(BigInteger.Zero);
-        }
-
-        var gcd = BigInteger.GreatestCommonDivisor(num < 0 ? -num : num, den);
-        return Expression.Divide(
-            Expression.Constant(num / gcd, typeof(BigInteger)),
-            Expression.Constant(den / gcd, typeof(BigInteger)));
-    }
-
     private static Expression SimplifyFractionSum((Expression, Expression) f1, (Expression, Expression) f2)
     {
         var (a, b) = f1;
@@ -335,17 +314,4 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         return e is ConstantExpression c && !(bool)c.Value;
     }
 
-    private static BigInteger ToBigInteger(object value)
-    {
-        return value switch
-        {
-            BigInteger b => b,
-            int i => i,
-            long l => l,
-            decimal m => (BigInteger)m,
-            double d => (BigInteger)d,
-            float f => (BigInteger)f,
-            _ => 0
-        };
-    }
 }

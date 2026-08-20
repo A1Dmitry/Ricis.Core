@@ -19,6 +19,7 @@ var tests = new (string Name, Func<Task> Body)[]
     ("FIN10: Invoice issue сохраняет order reference и идемпотентность", InvoiceIssueIsIdempotentAndAuditable),
     ("FIN11: Invoice lifecycle строго ограничивает cancel и expire transitions", InvoiceLifecycleRejectsInvalidTransitions),
     ("FIN12: Invoice launch допускается только active aggregate и идемпотентен", InvoiceLaunchIsActiveAndIdempotent),
+    ("FIN13: FxSnapshot нормализует валюты и отклоняет некорректный code", FxSnapshotNormalizesCurrency),
 };
 
 var failures = 0;
@@ -49,6 +50,15 @@ static Task MoneyRejectsCurrencyMixing()
 {
     RequireThrows<InvalidOperationException>(() => _ = new Money(1m, "USD").Add(new Money(1m, "EUR")));
     RequireThrows<ArgumentOutOfRangeException>(() => _ = new Money(-0.01m, "USD"));
+    return Task.CompletedTask;
+}
+
+static Task FxSnapshotNormalizesCurrency()
+{
+    var snapshot = new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 20), " usd ", " byn ", 3.2m);
+    Require(snapshot.SourceCurrency == "USD" && snapshot.TargetCurrency == "BYN",
+        "FxSnapshot обязан нормализовать валютные коды через канонический Money contract.");
+    RequireThrows<ArgumentException>(() => _ = new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 20), "", "BYN", 3.2m));
     return Task.CompletedTask;
 }
 

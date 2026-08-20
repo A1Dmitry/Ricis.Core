@@ -85,8 +85,8 @@ public sealed record FxSnapshot
 
         Source = source.Trim();
         EffectiveDate = effectiveDate;
-        SourceCurrency = NormalizeCurrency(sourceCurrency, nameof(sourceCurrency));
-        TargetCurrency = NormalizeCurrency(targetCurrency, nameof(targetCurrency));
+        SourceCurrency = NormalizeCurrency(sourceCurrency);
+        TargetCurrency = NormalizeCurrency(targetCurrency);
         TargetPerSource = targetPerSource;
     }
 
@@ -110,5 +110,5 @@ public sealed record FxSnapshot
         ? new Money(source.Amount * TargetPerSource, TargetCurrency)
         : throw new InvalidOperationException("FX snapshot не соответствует валюте исходной суммы.");
 
-    private static string NormalizeCurrency(string value, string parameterName) => new Money(0m, value).Currency;
+    private static string NormalizeCurrency(string value) => new Money(0m, value).Currency;
 }

@@ -81,7 +81,7 @@ public static class SingularitySolver
                 break;
 
             case MethodCallExpression { Method.Name: "Pow", Arguments.Count: 2 } pow when
-                TryGetPositiveConstant(pow.Arguments[1], out _):
+                IsPositiveConstant(pow.Arguments[1]):
                 CollectRoots(pow.Arguments[0], roots);
                 break;
 
@@ -164,25 +164,23 @@ public static class SingularitySolver
     }
 
     // --- Хелперы ---
-    private static bool TryGetPositiveConstant(Expression expression, out double value)
+    private static bool IsPositiveConstant(Expression expression)
     {
-        if (expression is ConstantExpression constant && TryGetDouble(constant, out value))
+        if (expression is ConstantExpression constant && TryGetDouble(constant, out var value))
         {
             return value > 0;
         }
-
         if (expression is BinaryExpression { NodeType: ExpressionType.Divide } ratio &&
             ratio.Left is ConstantExpression numerator && TryGetDouble(numerator, out var numeratorValue) &&
             ratio.Right is ConstantExpression denominator && TryGetDouble(denominator, out var denominatorValue) &&
             denominatorValue != 0)
         {
-            value = numeratorValue / denominatorValue;
-            return double.IsFinite(value) && value > 0;
+            var ratioValue = numeratorValue / denominatorValue;
+            return double.IsFinite(ratioValue) && ratioValue > 0;
         }
-
-        value = 0;
         return false;
     }
+
 
     private static bool TryGetDouble(ConstantExpression c, out double val)
     {
@@ -195,23 +193,6 @@ public static class SingularitySolver
         try { val = Convert.ToDouble(c.Value); return true; } catch { return false; }
     }
 
-    private static bool IsTranscendentalComposite(Expression expr)
-    {
-        var hasTrig = false;
-        var hasArithmetic = false;
-        new ExpressionTraverser(node =>
-        {
-            if (node is MethodCallExpression call && call.Method.DeclaringType == typeof(Math))
-            {
-                hasTrig = true;
-            }
-            else if (node is BinaryExpression)
-            {
-                hasArithmetic = true;
-            }
-        }).Visit(expr);
-        return hasTrig && hasArithmetic;
-    }
 
     private static ParameterExpression FindParameter(Expression expr)
     {
