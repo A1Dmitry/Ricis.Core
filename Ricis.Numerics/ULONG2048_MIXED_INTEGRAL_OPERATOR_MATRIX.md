@@ -1,5 +1,9 @@
 # ULong2048 Mixed-Integral Operator Matrix
 
+**Status:** Implemented and direct-tested; generated operator surface is the normative source contract. Performance claims remain bounded by the recorded benchmark evidence.
+**Evidence:** [`ULong2048.cs`](ULong2048.cs), [`ULong2048.IntegralOperators.generated.cs`](ULong2048.IntegralOperators.generated.cs), [`scripts/generate_ulong2048_integral_operators.py`](../scripts/generate_ulong2048_integral_operators.py), [`Ricis.Numerics.UnitTests/ULong2048Suite.cs`](Ricis.Numerics.UnitTests/ULong2048Suite.cs), and [`Ricis.Numerics.UnitTests/ULong2048ShiftRootSuite.cs`](Ricis.Numerics.UnitTests/ULong2048ShiftRootSuite.cs).
+**Current gate:** 386/386 Core regression, 18/18 Finance regression, 8/8 Lean artifacts; no performance improvement is claimed without benchmark evidence.
+
 ## Purpose
 
 `ULong2048` represents the exact unsigned fixed-width interval `0..2^2048-1`. This document defines the mixed-operand surface with every built-in C# integer category, while preventing silent loss of sign or range information.

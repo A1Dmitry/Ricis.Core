@@ -1,17 +1,21 @@
 # ReSharper Batch A decision matrix — 2026-08-20
 
 **Iteration:** 1/5
+**Status:** Tested / Deferred where the historical candidate cannot be mapped to current source.
 **Result:** No safe deletion authorized in this increment. The caller graph identified false positives and already-remediated candidates.
+**Evidence:** [`RegressionTests/RicisReSharperBatchASuite.cs`](RegressionTests/RicisReSharperBatchASuite.cs), [`PUBLIC_API_TEST_POLICY.md`](PUBLIC_API_TEST_POLICY.md), and [`RICIS_TASK_TIME_PRIORITY_SPRINT_2026-08-20.md`](RICIS_TASK_TIME_PRIORITY_SPRINT_2026-08-20.md).
 
-| ID | Candidate from remediation plan | Current source evidence | Decision | Required next gate |
-|---|---|---|---|---|
-| A-01 | `ExpressionSimplifierVisitor._parameters` | Must be rechecked against current constructor/state; no deletion based only on IDE reachability. | Preserve pending exact graph. | Direct simplifier regression and reflection/serialization check. |
-| A-02 | `ExpressionSimplifierVisitor.SimplifyFraction` | Current code calls `SimplifyFractionSum` and `SimplifyFractionProduct`; the exact candidate name is absent, while fraction helper behavior is live. | **Do not delete.** ReSharper candidate is stale/misidentified. | Keep fraction/singularity tests; refresh XML candidate mapping. |
-| A-03 | Private `ToBigInteger` | Candidate name is not present in the current production source; remaining `ToBigInteger` matches are intentional numeric/test helpers. | **Already remediated or stale report entry.** No code change. | Refresh report baseline. |
-| A-04 | `SingularitySolver.IsTranscendentalComposite` | Symbol is absent from current source. | **Already remediated or stale report entry.** No code change. | Refresh report baseline. |
-| A-05 | `RicisAcademicProofExtensions.solutionX/solutionY` | Values are used for finite checks, proof expressions, substitutions and rendered proof text. | **Live semantic state; preserve.** | Existing academic/Jacobian proof regressions remain mandatory. |
-| A-06 | `ProviderPayment.NormalizeCurrency.parameterName` | Current helper signature is `NormalizeCurrency(string value)` and callers use it for both source/target currencies; the candidate parameter is absent. | **Already remediated or stale report entry.** No code change. | Refresh report baseline and retain currency regression. |
-| A-07 | `SingularitySolver.TryGetPositiveConstant(..., out value)` | Symbol is absent from current source. | **Already remediated or stale report entry.** No code change. | Refresh report baseline; do not infer deletion from absence alone. |
+The available repository checkout does not contain the original ReSharper XML snapshot. Therefore reflection/serialization results for absent historical symbols remain `Deferred`, not inferred.
+
+| ID | Candidate from remediation plan | Current source evidence | Direct regression evidence | Decision | Reflection / serialization gate |
+|---|---|---|---|---|---|
+| A-01 | `ExpressionSimplifierVisitor._parameters` | Must be rechecked against current constructor/state; no deletion based only on IDE reachability. | `RSH01` typed lambda reduction | `Preserve` pending exact graph | `Deferred` until current XML/caller graph is supplied |
+| A-02 | `ExpressionSimplifierVisitor.SimplifyFraction` | Current code calls `SimplifyFractionSum` and `SimplifyFractionProduct`; exact candidate name is absent, while fraction helper behavior is live. | `RSH02` positive rational Pow/root behavior | `Preserve`; stale/misidentified candidate | `Deferred` until refreshed XML mapping |
+| A-03 | Private `ToBigInteger` | Candidate name is not present in current production source; remaining matches are intentional numeric/test helpers. | `RSH03` method-call traversal preserves method metadata | `Historical` / already remediated or stale | `Deferred`; no deletion from absence alone |
+| A-04 | `SingularitySolver.IsTranscendentalComposite` | Symbol is absent from current source. | `RSH04` immutable engine snapshot contract | `Historical` / already remediated or stale | `Deferred`; refresh report baseline |
+| A-05 | `RicisAcademicProofExtensions.solutionX/solutionY` | Values are used for finite checks, proof expressions, substitutions and rendered proof text. | `RSH05` multivariate exact subtraction contract | `Preserve` live semantic state | `Deferred` until current caller/serialization graph is supplied |
+| A-06 | `ProviderPayment.NormalizeCurrency.parameterName` | Current helper signature is `NormalizeCurrency(string value)` and callers use it for both source/target currencies; candidate parameter is absent. | No honest direct mapping in `RSH01`–`RSH05` | `Historical` / already remediated or stale | `Deferred`; retain currency regression and refresh XML |
+| A-07 | `SingularitySolver.TryGetPositiveConstant(..., out value)` | Symbol is absent from current source. | No honest direct mapping in `RSH01`–`RSH05` | `Historical` / already remediated or stale | `Deferred`; do not infer deletion from absence alone |
 
 ## QA conclusion
 

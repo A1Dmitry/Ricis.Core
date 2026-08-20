@@ -1,6 +1,8 @@
 # INumber Semiprime Path Audit — 2026-08-20
 
-**Status:** Evidence note for the Universal `INumber<T>` Reduction sprint. No production implementation decision is made by this document.
+**Status:** Deferred generic Fermat `INumber<T>` algorithm; current Universal-INumber Core reduction is implemented/tested, while generic factorization capabilities remain a separate research increment.
+**Evidence:** [`SPRINT_UNIVERSAL_INUMBER_REDUCTION_STEP2_ARCHITECTURE.md`](SPRINT_UNIVERSAL_INUMBER_REDUCTION_STEP2_ARCHITECTURE.md), [`SPRINT_UNIVERSAL_INUMBER_SEMIPRIME_STEP3_QA_SPEC.md`](SPRINT_UNIVERSAL_INUMBER_SEMIPRIME_STEP3_QA_SPEC.md), [`Ricis.Numerics.UnitTests/FermatSemiprimeSuite.cs`](Ricis.Numerics/Ricis.Numerics.UnitTests/FermatSemiprimeSuite.cs), and [`Ricis.Numerics.UnitTests/CompositeFermatPruningSuite.cs`](Ricis.Numerics/Ricis.Numerics.UnitTests/CompositeFermatPruningSuite.cs).
+**Current gate:** 386/386 Core regression and 18/18 Finance regression; the generic Fermat entry point remains deferred, not simulated as complete.
 
 ## Evidence supplied by the user
 

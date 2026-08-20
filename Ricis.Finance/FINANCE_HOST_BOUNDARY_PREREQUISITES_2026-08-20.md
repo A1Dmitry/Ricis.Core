@@ -1,5 +1,9 @@
 # Finance host-boundary prerequisites — 2026-08-20
 
+**Status:** Blocked at host boundary; prerequisite map implemented, production integration deferred.
+**Evidence:** [`BACKLOG.md`](BACKLOG.md), [`PAYMENT_LAUNCH_INTEGRATION.md`](PAYMENT_LAUNCH_INTEGRATION.md), and the current `Ricis.Finance` Domain/Application ports.
+**Current gate:** 386/386 Core regression, 18/18 Finance regression, 8/8 Lean artifacts; no provider production claim is made by this checklist.
+
 **Purpose:** дешёвый подготовительный increment перед дорогой FIN-02+ реализацией.
 **Rule:** не создавать fake provider adapter, не принимать test stub за production verifier и не передавать secrets в Domain/Application.
 
@@ -29,6 +33,14 @@ Before implementation of a production bePaid verifier, the host must provide all
 ## FIN-03/04/05/10 prerequisite sequence
 
 `FIN-03` requires a host database and transaction/outbox decision before concrete persistence code. `FIN-04` requires a host Web API/UI decision before treating `PaymentHandoff` as a complete checkout. `FIN-05` requires provider sandbox access and CI-safe secret injection. `FIN-10` requires the deployment’s secret provider, logging/metrics stack and incident ownership. These are host integration choices, not missing Domain abstractions.
+
+| Backlog item | Preparation result | Production status |
+|---|---|---|
+| `FIN-02` webhook verifier | Payload/port boundary mapped; six mandatory external prerequisites listed | `Blocked` |
+| `FIN-03` persistence/outbox | Repository and event boundary identified | `Blocked` on host database/transaction decision |
+| `FIN-04` secure checkout | `PaymentHandoff` boundary identified | `Blocked` on host endpoint/UI and route acceptance |
+| `FIN-05` sandbox contract | Required vector categories listed | `Blocked` on provider sandbox and CI-safe credentials |
+| `FIN-10` observability | Required secret/log/metric/incident boundary listed | `Blocked` on deployment operations stack |
 
 ## Security and non-goals
 

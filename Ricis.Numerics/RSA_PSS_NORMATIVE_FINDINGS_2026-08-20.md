@@ -1,8 +1,12 @@
 # RSA-PSS normative findings — 2026-08-20
 
-## Scope of the proposed next Agile increment
+**Status:** Implemented fixed RSA-2048 RSASSA-PSS/SHA-256 profile; deferred profiles and certificate/PKI work remain out of scope.
+**Evidence:** [`SPRINT_RSA_PSS_STEP1_BUSINESS_SPEC.md`](SPRINT_RSA_PSS_STEP1_BUSINESS_SPEC.md), [`SPRINT_RSA_PSS_STEP2_ARCHITECTURE.md`](SPRINT_RSA_PSS_STEP2_ARCHITECTURE.md), [`SPRINT_RSA_PSS_STEP3_QA_SPEC.md`](SPRINT_RSA_PSS_STEP3_QA_SPEC.md), and [`Ricis.Numerics.UnitTests/RsaPssSha256VerifierSuite.cs`](Ricis.Numerics.UnitTests/RsaPssSha256VerifierSuite.cs).
+**Current gate:** 386/386 Core regression, 18/18 Finance regression, 8/8 Lean artifacts; see [`RICIS_TASK_TIME_PRIORITY_SPRINT_2026-08-20.md`](../RICIS_TASK_TIME_PRIORITY_SPRINT_2026-08-20.md).
 
-The candidate increment is **public-key RSA-PSS verification using SHA-256**. It is not private-key signing, key generation, encryption, OAEP, certificate parsing, ASN.1 parsing, or a replacement for platform cryptographic providers.
+## Scope of the implemented fixed profile
+
+The implemented profile is **public-key RSA-PSS verification using SHA-256**. It is not private-key signing, key generation, encryption, OAEP, certificate parsing, ASN.1 parsing, or a replacement for platform cryptographic providers.
 
 ## Normative algorithm findings
 
