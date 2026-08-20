@@ -1,6 +1,6 @@
 # RICIS III — Longest Dependency Route Audit for Lean Expansion
 
-**Status:** Extracted from `ricis3-map-2026-08-20-13-21-36.json`; formal Lean expansion in progress.
+**Status:** Route extracted; conditional composition artifact and concrete RICIS-engine route are kernel-checked. Subject-matter proofs for the named external domains remain open.
 
 ## Route-selection result
 
@@ -27,7 +27,7 @@ The same 8-node prefix branches only at depth 8–9. The alternate terminal targ
 
 The JSON state `resolved` records that the RICIS route was generated and its proof record contains the expected L1 → SP4 → SP2 → A6 → L1 transformation trace. It is not a claim that the document independently proves the external Hodge, Poincaré, Atiyah–Singer or spectral-asymptotics statements in their standard mathematical meanings.
 
-The Lean expansion will prove the **route-composition theorem**: under explicit per-node reduction certificates, the composition preserves the declared RICIS route invariant from the singularity root to the spectral-asymptotics reduction endpoint. Each domain theorem remains an external premise unless separately formalized in Lean with its standard definitions and hypotheses.
+The earlier `LongestRouteSpectral.lean` proves the **route-composition theorem** under explicit per-node reduction certificates. The later `LongestRouteConcreteEngineProof.lean` proves a concrete rank-one RICIS-engine invariant through all ten labels and nine label transitions. Neither artifact proves the standard external Hodge, group-ring, Weierstrass, Atiyah–Singer, Poincaré, Morse, knot-theory or spectral-asymptotics propositions. Each domain theorem remains an external premise unless separately formalized in Lean with its standard definitions and hypotheses.
 
 ## Extraction evidence
 
