@@ -1,59 +1,26 @@
-using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.UnitTests;
 
+/// <summary>
+/// MSTest adapter for the canonical RICIS regression catalog.
+/// Test bodies remain owned by <see cref="RicisRegressionTestCatalog"/> and are
+/// executed unchanged by both the console runner and Test Explorer.
+/// </summary>
 [TestClass]
-public sealed class LogicalSimplifierUnitTests
+public sealed class RicisRegressionCatalogMSTestAdapter
 {
-    [TestMethod]
-    [TestCategory("PublicApi")]
-    public void Apply_ReducesSafeBooleanIdentity()
+    public static IEnumerable<object[]> Cases() =>
+        RicisRegressionTestCatalog.Tests.Select(test => new object[] { test.Name, test.Body });
+
+    public static string DisplayName(MethodInfo _, object[] data) => (string)data[0];
+
+    [DataTestMethod]
+    [TestCategory("Regression")]
+    [DynamicData(nameof(Cases), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(DisplayName))]
+    public void CanonicalRegressionCase(string _, Action body)
     {
-        var flag = Expression.Parameter(typeof(bool), "flag");
-        var source = Expression.AndAlso(Expression.Constant(true), flag);
-
-        var actual = LogicalSimplifier.Apply(source);
-
-        Assert.IsTrue(ReferenceEquals(flag, actual),
-            "Public logical facade must safely reduce true && flag to the original flag node.");
+        body();
     }
-
-    [TestMethod]
-    [TestCategory("SafetyBoundary")]
-    public void Apply_PreservesImpureShortCircuitExpression()
-    {
-        var source = Expression.AndAlso(
-            Expression.Call(typeof(LogicalSimplifierUnitTests).GetMethod(
-                nameof(SideEffectPredicate),
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!),
-            Expression.Constant(false));
-
-        var actual = LogicalSimplifier.Apply(source);
-
-        Assert.IsTrue(ReferenceEquals(source, actual),
-            "Public logical facade must not rewrite impureCall() && false because that would alter evaluation semantics.");
-    }
-
-    [TestMethod]
-    [TestCategory("SafetyBoundary")]
-    public void Apply_PreservesNonBooleanExpression()
-    {
-        var source = Expression.Add(Expression.Constant(1.0), Expression.Constant(2.0));
-
-        var actual = LogicalSimplifier.Apply(source);
-
-        Assert.IsTrue(ReferenceEquals(source, actual),
-            "Public logical facade must leave expressions outside the Boolean domain unchanged.");
-    }
-
-    [TestMethod]
-    [TestCategory("PublicApi")]
-    public void Apply_RejectsNullExpression()
-    {
-        Assert.ThrowsException<ArgumentNullException>(() => LogicalSimplifier.Apply(null!));
-    }
-
-    private static bool SideEffectPredicate() => true;
 }
