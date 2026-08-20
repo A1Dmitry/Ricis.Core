@@ -28,11 +28,11 @@
 
 | Public type/method group | Текущее покрытие direct tests | Действие |
 |---|---:|---|
-| `ExactEvaluator.TryEvaluate` | Не найден отдельный suite/reference | Добавить rational positive, unsupported node, unknown parameter и division-by-zero cases |
-| `CircleSectors.FromRadians`, `InSectors`, `ToString` | Не найден отдельный suite/reference | Добавить normalization, exact sector, invalid angle/sector и formatting cases |
-| `PolarConverter.ExactSinCos`, `TryCollapseTrig`, `CollapseConstantTrig`, `ToPolarSector` | Не найден отдельный suite/reference | Добавить exact/non-exact sectors, trig poles, non-call passthrough и singular monolith cases |
-| `NumericConstants.Register`, `ZeroOf`, `OneOf`, `TryOneOf`, `IsIntrinsicNumeric`, `IsZero`, `IsOne` | Косвенно используется simplifier; direct suite не найден | Добавить typed constants, intrinsic classification, registered/unregistered and identity predicates |
-| `RicisType.Equals`, `IsCompatibleWith`, `Operate`, `CreateTuple` | Не найден отдельный suite/reference | Добавить equality/hash, scalar compatibility, division identity and canonical tuple cases |
+| `ExactEvaluator.TryEvaluate` | API01–API02 direct regression | Дополнять только при добавлении нового overload/branch; текущий gap закрыт |
+| `CircleSectors.FromRadians`, `InSectors`, `ToString` | API03–API04 direct regression | Дополнять только при добавлении нового overload/branch; текущий gap закрыт |
+| `PolarConverter.ExactSinCos`, `TryCollapseTrig`, `CollapseConstantTrig`, `ToPolarSector` | API05–API06, API26 direct regression | Дополнять только при добавлении нового overload/branch; текущий gap закрыт |
+| `NumericConstants.Register`, `ZeroOf`, `OneOf`, `TryOneOf`, `IsIntrinsicNumeric`, `IsZero`, `IsOne` | API07–API08 direct regression | Дополнять при изменении registry/identity semantics |
+| `RicisType.Equals`, `IsCompatibleWith`, `Operate`, `CreateTuple` | API11–API16 direct regression | Дополнять при добавлении публичной ветви или изменении equality contract |
 | `LinearExtractor` | `internal`, не public API | Не включать в public API обязательный список; покрыть косвенно через solver tests при необходимости |
 
 ## Первичная классификация test coverage
@@ -54,11 +54,11 @@
 
 ## Проверка RicisType.GetHashCode и expression tree
 
-После исправления `GetHashCode` выполнены отдельные проверки `API11–API16`. Они подтверждают structural comparison эквивалентных expression trees, `HashSet<RicisType>`, constructor/properties/static constants, null и unrelated-object equality, полную compatibility matrix, все ветви `Operate`, canonical tuple и `ToString`. Полный Core regression suite завершился результатом **344/344 PASS**.
+После исправления `GetHashCode` выполнены отдельные проверки `API11–API16`. Они подтверждают structural comparison эквивалентных expression trees, `HashSet<RicisType>`, constructor/properties/static constants, null и unrelated-object equality, полную compatibility matrix, все ветви `Operate`, canonical tuple и `ToString`. полный Core regression suite завершился результатом **386/386 PASS**.
 
 Причина безопасности изменения: `RicisType.Equals` и `Equals(object)` сравнивают только `Signature`, тогда как прежний hash включал ещё `IsComposite`, нарушая обязательный invariant равенства и hash code. Новый hash использует только `StringComparer.Ordinal` для `Signature`. Поиск usages показал, что `RicisType.GetHashCode` не участвует в expression-tree node hashing или canonical tree traversal; `RicisType` используется как public type metadata и static expression constants.
 
-Финальный quality gate после расширения suite: Console Release build — 0 warnings/0 errors; Finance regression — **12/12 PASS**; Lean manifest — **6/6 PASS**; `git diff --check` — PASS. NuGet publication не выполнялась.
+Финальный quality gate после расширения suite: Console Release build — 0 warnings/0 errors; Finance regression — **18/18 PASS**; Lean manifest — **8/8 PASS**; `git diff --check` — PASS. NuGet publication не выполнялась.
 
 ## Обязательное правило для нового public API
 
