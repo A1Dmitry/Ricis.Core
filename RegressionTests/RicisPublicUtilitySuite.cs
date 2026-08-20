@@ -155,11 +155,11 @@ internal static class RicisPublicUtilitySuite
     private static void RicisTypeEqualityHandlesNullAndObjects()
     {
         var value = new RicisType("A");
-        RicisType other = null;
+        RicisType? other = null;
         Assert(!value.Equals(other), "Equals(RicisType?) должен вернуть false для null.");
-        Assert(!value.Equals((object)null), "Equals(object) должен вернуть false для null.");
-        Assert(!value.Equals("A"), "RicisType не должен быть равен unrelated object.");
-        Assert(value.Equals((object)new RicisType("A", true)), "Equals(object) должен сравнивать Signature.");
+        Assert(!value.Equals((object?)null), "Equals(object) должен вернуть false для null.");
+        Assert(!object.Equals(value, "A"), "RicisType не должен быть равен unrelated object.");
+        Assert(object.Equals(value, new RicisType("A", true)), "Equals(object) должен сравнивать Signature.");
     }
 
     private static void RicisTypeCompatibilityMatrix()

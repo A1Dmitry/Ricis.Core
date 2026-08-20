@@ -115,12 +115,12 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         var ifTrue = Visit(node.IfTrue);
         var ifFalse = Visit(node.IfFalse);
 
-        if (test is ConstantExpression tc && (bool)tc.Value)
+        if (test is ConstantExpression { Value: true })
         {
             return ifTrue;
         }
 
-        if (test is ConstantExpression tf && !(bool)tf.Value)
+        if (test is ConstantExpression { Value: false })
         {
             return ifFalse;
         }
@@ -304,14 +304,8 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         return Expression.Constant(value, type);
     }
 
-    private static bool IsTrue(Expression e)
-    {
-        return e is ConstantExpression c && (bool)c.Value;
-    }
+    private static bool IsTrue(Expression expression) => expression is ConstantExpression { Value: true };
 
-    private static bool IsFalse(Expression e)
-    {
-        return e is ConstantExpression c && !(bool)c.Value;
-    }
+    private static bool IsFalse(Expression expression) => expression is ConstantExpression { Value: false };
 
 }

@@ -1716,7 +1716,7 @@ public static class RicisAcademicProofExtensions
             : product.Left.AreEqual(factor)
                 ? product.Right
                 : product.Left;
-        if (factor is null || quotient is null || !quotient.AreEqual(after))
+        if (factor is null || !quotient.AreEqual(after))
         {
             return false;
         }

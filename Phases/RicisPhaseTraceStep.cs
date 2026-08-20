@@ -104,7 +104,7 @@ public sealed class RicisPhaseTraceStep
 
         protected override Expression VisitExtension(Expression node)
         {
-            return node.CanReduce ? Visit(node.Reduce()) : node;
+            return node.CanReduce ? Visit(node.Reduce()) ?? node : node;
         }
 
         private static string Describe(Expression node) => node switch

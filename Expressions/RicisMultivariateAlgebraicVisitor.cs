@@ -82,9 +82,7 @@ public sealed class RicisMultivariateAlgebraicVisitor<T> : ExpressionVisitor
             leftBinary.NodeType == operation && rightBinary.NodeType == operation &&
             leftBinary.Right.AreEqual(rightBinary.Right))
         {
-            result = operation == ExpressionType.Add
-                ? Expression.Subtract(leftBinary.Left, rightBinary.Left)
-                : Expression.Subtract(leftBinary.Left, rightBinary.Left);
+            result = Expression.Subtract(leftBinary.Left, rightBinary.Left);
             return true;
         }
 

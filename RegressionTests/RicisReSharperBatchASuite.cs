@@ -11,6 +11,7 @@ internal static class RicisReSharperBatchASuite
         ("RSH02: positive rational Pow exponent сохраняет root lambda", PositiveRationalPowerRetainsRoot),
         ("RSH03: method-call traversal сохраняет method и редуцирует argument", MethodCallTraversalPreservesContract),
         ("RSH04: RicisEngine публикует immutable accepted-infinity snapshot", EngineTermsAreAtomicAndReadOnly),
+        ("RSH05: multivariate common-right subtraction сохраняет exact difference", MultivariateCommonRightSubtractionRemainsExact),
     ];
 
     private static void TypedLambdaSimplificationRemainsObservable()
@@ -56,6 +57,21 @@ internal static class RicisReSharperBatchASuite
             reduced is MethodCallExpression { Method.Name: nameof(Math.Sin), Arguments.Count: 1 } call &&
             call.Arguments[0] == x,
             $"Traversal Math.Sin(x + 0) должна сохранить Math.Sin и редуцировать аргумент до x, получено {reduced}.");
+    }
+
+    private static void MultivariateCommonRightSubtractionRemainsExact()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var y = Expression.Parameter(typeof(double), "y");
+        var shared = Expression.Parameter(typeof(double), "shared");
+        var source = Expression.Subtract(Expression.Add(x, shared), Expression.Add(y, shared));
+
+        var reduced = new RicisMultivariateAlgebraicVisitor<double>().Visit(source);
+
+        RegressionAssertions.Require(
+            reduced is BinaryExpression { NodeType: ExpressionType.Subtract, Left: var left, Right: var right } &&
+            left == x && right == y,
+            $"(x + shared) - (y + shared) должно дать x - y, получено {reduced}.");
     }
 
     private static void EngineTermsAreAtomicAndReadOnly()

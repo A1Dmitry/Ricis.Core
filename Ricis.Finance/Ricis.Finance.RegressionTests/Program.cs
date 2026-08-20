@@ -20,6 +20,7 @@ var tests = new (string Name, Func<Task> Body)[]
     ("FIN11: Invoice lifecycle строго ограничивает cancel и expire transitions", InvoiceLifecycleRejectsInvalidTransitions),
     ("FIN12: Invoice launch допускается только active aggregate и идемпотентен", InvoiceLaunchIsActiveAndIdempotent),
     ("FIN13: FxSnapshot нормализует валюты и отклоняет некорректный code", FxSnapshotNormalizesCurrency),
+    ("FIN14: Bank application отклоняет non-HTTPS provider deep link", BankApplicationRejectsInsecureDeepLink),
 };
 
 var failures = 0;
@@ -59,6 +60,18 @@ static Task FxSnapshotNormalizesCurrency()
     Require(snapshot.SourceCurrency == "USD" && snapshot.TargetCurrency == "BYN",
         "FxSnapshot обязан нормализовать валютные коды через канонический Money contract.");
     RequireThrows<ArgumentException>(() => _ = new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 20), "", "BYN", 3.2m));
+    return Task.CompletedTask;
+}
+
+static Task BankApplicationRejectsInsecureDeepLink()
+{
+    RequireThrows<ArgumentException>(() => _ = new BankApplicationOption(
+        "Example Bank",
+        null,
+        new Dictionary<MobilePlatform, Uri>
+        {
+            [MobilePlatform.Android] = new Uri("http://provider.example/deep-link"),
+        }));
     return Task.CompletedTask;
 }
 

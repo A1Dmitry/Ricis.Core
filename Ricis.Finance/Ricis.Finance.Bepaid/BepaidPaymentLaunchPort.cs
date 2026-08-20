@@ -182,7 +182,7 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
 
     private static PaymentHandoff ToPaymentHandoff(BepaidRedirectForm form)
     {
-        if (string.IsNullOrWhiteSpace(form.Action) || !Uri.TryCreate(form.Action, UriKind.Absolute, out var action) || action is null)
+        if (string.IsNullOrWhiteSpace(form.Action) || !Uri.TryCreate(form.Action, UriKind.Absolute, out var action))
         {
             throw new InvalidOperationException("bePaid вернул некорректный form.action для customer handoff.");
         }
@@ -273,7 +273,7 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
         }
 
         var candidate = string.Concat(prefix.Trim(), qrPayload);
-        if (Uri.TryCreate(candidate, UriKind.Absolute, out var deepLink) && deepLink is not null && StringComparer.OrdinalIgnoreCase.Equals(deepLink.Scheme, Uri.UriSchemeHttps))
+        if (Uri.TryCreate(candidate, UriKind.Absolute, out var deepLink) && StringComparer.OrdinalIgnoreCase.Equals(deepLink.Scheme, Uri.UriSchemeHttps))
         {
             links.Add(platform, deepLink);
         }
