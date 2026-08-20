@@ -91,7 +91,11 @@ internal static class RicisAcademicProofSuite
 
         _ = conditions.Prove(constraints, claim, protocol);
 
-        Require(protocol.ToString().StartsWith("Преамбула исследователя.\n# Формальный вывод RICIS III", StringComparison.Ordinal),
+        var expectedPrefix = string.Concat(
+            "Преамбула исследователя.",
+            Environment.NewLine,
+            "# Формальный вывод RICIS III");
+        Require(protocol.ToString().StartsWith(expectedPrefix, StringComparison.Ordinal),
             "Prove обязан дописывать отдельный раздел, не стирая существующий StringBuilder.");
     }
 
