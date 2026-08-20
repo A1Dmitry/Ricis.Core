@@ -1531,4 +1531,24 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestMethod("CRL03: concrete route Lean source не использует certificate fields или admitted proof")]
     [TestCategory("Regression")]
     public void Regression_381() => RicisRegressionTestCatalog.Tests[380].Body();
+
+    [TestMethod("RSA01: adversarial detector identifies label-only edge simulation")]
+    [TestCategory("Regression")]
+    public void Regression_382() => RicisRegressionTestCatalog.Tests[381].Body();
+
+    [TestMethod("RSA02: adversarial detector identifies identity local stages")]
+    [TestCategory("Regression")]
+    public void Regression_383() => RicisRegressionTestCatalog.Tests[382].Body();
+
+    [TestMethod("RSA03: adversarial detector requires subject propositions per named node")]
+    [TestCategory("Regression")]
+    public void Regression_384() => RicisRegressionTestCatalog.Tests[383].Body();
+
+    [TestMethod("RSA04: detector keeps KernelChecked separate from subject-matter proof")]
+    [TestCategory("Regression")]
+    public void Regression_385() => RicisRegressionTestCatalog.Tests[384].Body();
+
+    [TestMethod("RSA05: detector catches unconstrained preservation fields in structural artifact")]
+    [TestCategory("Regression")]
+    public void Regression_386() => RicisRegressionTestCatalog.Tests[385].Body();
 }
