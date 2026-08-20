@@ -1,4 +1,4 @@
-# Int2048 Domain and Generic-Math Contract
+# Ricis.Numerics Fixed-Width 2048-bit Contract
 
 ## Domain
 
@@ -9,7 +9,13 @@ MinValue = −2^2047
 MaxValue =  2^2047 − 1
 ```
 
-The production representation is thirty-two unsigned 64-bit limbs in little-endian order. `BigInteger` is not used as production storage or as the implementation of arithmetic. It may be used only by explicit diagnostic/interop conversion helpers and test oracles.
+The production representation is thirty-two unsigned 64-bit limbs in little-endian order. `BigInteger` is a **first-class explicit interoperability boundary**: callers can use `FromBigInteger`, `ToBigInteger`, explicit conversions and mixed overloads where the exact result intentionally remains `BigInteger`. It is not the stored representation, and same-type fixed-width arithmetic does not delegate its production result to `BigInteger`.
+
+## Unsigned RSA magnitude domain
+
+`ULong2048` is the unsigned companion with exact range `0..2^2048−1`. It is the canonical type for RSA modulus, public exponent and signature representative. It supplies custom fixed-width addition, subtraction, multiplication, long division, modulo, modular multiplication and the raw public RSA operation `s^e mod n`.
+
+> `RsaPublicOperation` is the mathematical RSAVP1-style primitive, not a complete signature verifier. RSA-PSS and PKCS#1 v1.5 encoding/hash verification remain separate security contracts and must not be inferred from successful modular exponentiation alone.
 
 ## Arithmetic semantics
 
@@ -36,6 +42,10 @@ The type implements `INumber<Int2048>`, `ISignedNumber<Int2048>`, parsing/format
 | `TryConvertFrom*`, `TryConvertTo*` | Supported primitive, `BigInteger`, and `Int2048` conversions; unsupported types return `false` |
 | `Parse`, `TryParse`, `ToString`, `TryFormat` | Culture-aware decimal entry points; numeric storage remains custom limbs |
 | Operators | Addition, subtraction, multiplication, division, modulus, unary sign, increment/decrement, comparison and equality |
+
+## Comparative performance evidence
+
+`Ricis.Numerics.Benchmarks` runs deterministic 2048-bit comparisons against `BigInteger`, checks result parity **before** timing and writes both JSON and Markdown evidence. The evidence is intentionally non-gating: CPU, allocator, JIT and host contention make wall-clock thresholds unsuitable for CI. The current evidence is stored in `PerformanceEvidence/NUMERICS_PERFORMANCE_2026-08-20.{md,json}` and must be interpreted honestly: the initial allocation-oriented custom implementation prioritizes auditability and exact fixed-width semantics; it does not yet outperform the runtime-optimized `BigInteger` for multiplication, division, modular multiplication or public exponentiation.
 
 ## Direct-test obligations
 

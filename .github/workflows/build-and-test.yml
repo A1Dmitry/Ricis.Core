@@ -57,6 +57,12 @@ jobs:
       - name: Run complete regression suite through MSTest
         run: dotnet test UnitTests/Ricis.Core.UnitTests.csproj --configuration Release --no-build
 
+      - name: Run standalone Numerics unit suite
+        run: dotnet test Ricis.Numerics/Ricis.Numerics.UnitTests/Ricis.Numerics.UnitTests.csproj --configuration Release --no-build
+
+      - name: Verify Numerics benchmark parity scenario
+        run: dotnet run --project Ricis.Numerics/Ricis.Numerics.Benchmarks/Ricis.Numerics.Benchmarks.csproj --configuration Release --no-build -- --quick --output /tmp/ricis-numerics-benchmark.json
+
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
 

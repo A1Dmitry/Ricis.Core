@@ -32,6 +32,8 @@
     <None Remove="Ricis.WebAssembly/**" />
     <Compile Remove="Ricis.Finance/**/*.cs" />
     <None Remove="Ricis.Finance/**" />
+    <Compile Remove="Ricis.Numerics/**/*.cs" />
+    <None Remove="Ricis.Numerics/**" />
   </ItemGroup>
 
 </Project>

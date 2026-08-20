@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
-namespace Ricis.Core.Numerics;
+namespace Ricis.Numerics;
 
 /// <summary>
 /// Represents a signed fixed-width 2048-bit integer using thirty-two little-endian 64-bit limbs.
@@ -113,6 +113,23 @@ public readonly struct Int2048 :
     public static implicit operator Int2048(ulong value) => new(value);
     public static explicit operator BigInteger(Int2048 value) => value.ToBigInteger();
     public static explicit operator Int2048(BigInteger value) => FromBigInteger(value);
+
+    /// <summary>Returns an exact BigInteger sum for an explicitly mixed Int2048/BigInteger operation.</summary>
+    public static BigInteger operator +(Int2048 left, BigInteger right) => left.ToBigInteger() + right;
+    /// <summary>Returns an exact BigInteger sum for an explicitly mixed BigInteger/Int2048 operation.</summary>
+    public static BigInteger operator +(BigInteger left, Int2048 right) => left + right.ToBigInteger();
+    /// <summary>Returns an exact BigInteger difference for an explicitly mixed Int2048/BigInteger operation.</summary>
+    public static BigInteger operator -(Int2048 left, BigInteger right) => left.ToBigInteger() - right;
+    /// <summary>Returns an exact BigInteger difference for an explicitly mixed BigInteger/Int2048 operation.</summary>
+    public static BigInteger operator -(BigInteger left, Int2048 right) => left - right.ToBigInteger();
+    /// <summary>Returns an exact BigInteger product for an explicitly mixed Int2048/BigInteger operation.</summary>
+    public static BigInteger operator *(Int2048 left, BigInteger right) => left.ToBigInteger() * right;
+    /// <summary>Returns an exact BigInteger product for an explicitly mixed BigInteger/Int2048 operation.</summary>
+    public static BigInteger operator *(BigInteger left, Int2048 right) => left * right.ToBigInteger();
+    /// <summary>Returns an exact BigInteger quotient for an explicitly mixed Int2048/BigInteger operation.</summary>
+    public static BigInteger operator /(Int2048 left, BigInteger right) => left.ToBigInteger() / right;
+    /// <summary>Returns an exact BigInteger remainder for an explicitly mixed Int2048/BigInteger operation.</summary>
+    public static BigInteger operator %(Int2048 left, BigInteger right) => left.ToBigInteger() % right;
 
     public static Int2048 operator +(Int2048 left, Int2048 right) => AddRaw(left, right);
 
