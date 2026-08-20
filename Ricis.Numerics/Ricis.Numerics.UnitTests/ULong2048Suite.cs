@@ -78,7 +78,55 @@ public sealed class ULong2048Suite
         Assert.AreEqual(BigInteger.ModPow(signatureValue, exponentValue, modulusValue), (BigInteger)result);
     }
 
-    [TestMethod("U2048-07: RSA public operation rejects invalid signature representative")]
+    [TestMethod("U2048-07: inline add subtract and shift hot path is allocation-free")]
+    public void InlineHotOperatorsAreAllocationFree()
+    {
+        var left = ULong2048.FromBigInteger((BigInteger.One << 1700) + 12345);
+        var right = ULong2048.FromBigInteger((BigInteger.One << 1600) + 67890);
+        _ = (left + right) - right;
+        _ = left >> 17;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var result = ULong2048.Zero;
+        for (var index = 0; index < 1_024; index++)
+        {
+            result = ((left + right) - right) >> 17;
+        }
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        Assert.AreEqual(left >> 17, result);
+        Assert.AreEqual(0L, allocated, "Inline ULong2048 hot operators must not allocate on the managed heap.");
+    }
+
+    [TestMethod("U2048-08: Montgomery path matches BigInteger across odd modulus matrix")]
+    public void MontgomeryPathMatchesOracleAcrossOddModulusMatrix()
+    {
+        var cases = new[]
+        {
+            new BigInteger(3233),
+            (BigInteger.One << 1024) - 109,
+            (BigInteger.One << 2047) + (BigInteger.One << 1023) + 1,
+            (BigInteger.One << 2048) - 159,
+        };
+        var exponent = new BigInteger(65537);
+
+        foreach (var modulusValue in cases)
+        {
+            var leftValue = modulusValue - 7;
+            var rightValue = modulusValue - 11;
+            var modulus = ULong2048.FromBigInteger(modulusValue);
+            var left = ULong2048.FromBigInteger(leftValue);
+            var right = ULong2048.FromBigInteger(rightValue);
+
+            Assert.AreEqual((leftValue * rightValue) % modulusValue, (BigInteger)ULong2048.MultiplyModulo(left, right, modulus));
+            Assert.AreEqual(BigInteger.ModPow(leftValue, exponent, modulusValue), (BigInteger)ULong2048.ModPow(left, ULong2048.FromBigInteger(exponent), modulus));
+        }
+    }
+
+    [TestMethod("U2048-09: RSA public operation rejects invalid signature representative")]
     public void RsaPublicOperationRejectsOutOfRangeSignature()
     {
         var modulus = new ULong2048(3233);

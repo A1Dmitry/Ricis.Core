@@ -13,7 +13,9 @@ The production representation is thirty-two unsigned 64-bit limbs in little-endi
 
 ## Unsigned RSA magnitude domain
 
-`ULong2048` is the unsigned companion with exact range `0..2^2048−1`. It is the canonical type for RSA modulus, public exponent and signature representative. It supplies custom fixed-width addition, subtraction, multiplication, long division, modulo, modular multiplication and the raw public RSA operation `s^e mod n`.
+`ULong2048` is the unsigned companion with exact range `0..2^2048−1`. It is the canonical type for RSA modulus, public exponent and signature representative. Its representation is `[InlineArray(32)]` `ulong` limbs embedded directly in the value type: normal add/subtract/shift hot paths are allocation-free and are guarded by a direct allocation regression test. It supplies custom fixed-width addition, subtraction, multiplication, long division, modulo, modular multiplication and the raw public RSA operation `s^e mod n`.
+
+For odd moduli — the normal RSA case — modular multiplication and exponentiation use inline-limb Montgomery reduction with a stack-only 65-limb scratch area. Even moduli retain a mathematically exact generic fallback. Neither custom route stores values in `BigInteger`.
 
 > `RsaPublicOperation` is the mathematical RSAVP1-style primitive, not a complete signature verifier. RSA-PSS and PKCS#1 v1.5 encoding/hash verification remain separate security contracts and must not be inferred from successful modular exponentiation alone.
 
@@ -45,10 +47,12 @@ The type implements `INumber<Int2048>`, `ISignedNumber<Int2048>`, parsing/format
 
 ## Comparative performance evidence
 
-`Ricis.Numerics.Benchmarks` runs deterministic 2048-bit comparisons against `BigInteger`, checks result parity **before** timing and writes both JSON and Markdown evidence. The evidence is intentionally non-gating: CPU, allocator, JIT and host contention make wall-clock thresholds unsuitable for CI. The current evidence is stored in `PerformanceEvidence/NUMERICS_PERFORMANCE_2026-08-20.{md,json}` and must be interpreted honestly: the initial allocation-oriented custom implementation prioritizes auditability and exact fixed-width semantics; it does not yet outperform the runtime-optimized `BigInteger` for multiplication, division, modular multiplication or public exponentiation.
+`Ricis.Numerics.Benchmarks` runs deterministic 2048-bit comparisons against `BigInteger`, checks result parity **before** timing and records both elapsed time and managed allocations in JSON/Markdown. The evidence is intentionally non-gating: CPU, allocator, JIT and host contention make wall-clock thresholds unsuitable for CI. `ULONG2048_PREINLINE_BASELINE_2026-08-20.{md,json}` records the prior heap-backed baseline; `ULONG2048_MONTGOMERY_2026-08-20.{md,json}` records the inline/Montgomery result.
+
+The optimized `ULong2048` hot path now has no per-operation managed allocation, and Montgomery improves raw RSA public exponentiation materially over the original long-division-based modular path. The runtime-optimized `BigInteger` still remains faster in the measured large multiply/divide/modular operations; that is an evidence result, not a claim to be hidden or relaxed by a threshold.
 
 ## Direct-test obligations
 
-Every public member is covered directly. Tests use `BigInteger` only as an external oracle and verify at least: limb-boundary carry, borrow through zero limbs, sign-transfer cases, division/remainder identity, `MinValue` edge behavior, overflow behavior, parse/format round-trip, generic `INumber<T>` execution, and full 2048-bit boundary values.
+Every public member is covered directly. Tests use `BigInteger` only as an external oracle and verify at least: limb-boundary carry, borrow through zero limbs, sign-transfer cases, division/remainder identity, `MinValue` edge behavior, overflow behavior, parse/format round-trip, generic `INumber<T>` execution, full 2048-bit boundary values, ULong2048 allocation-free hot operators, and Montgomery parity over small, mid-width and full 2048-bit odd modulus shapes.
 
 > The implementation must fail closed: any unrepresentable checked operation throws rather than silently narrowing, and no `BigInteger` result may become the stored representation of `Int2048`.

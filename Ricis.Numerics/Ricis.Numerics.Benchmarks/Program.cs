@@ -70,25 +70,29 @@ static Measurement Compare<TCustom, TReference>(
     GC.WaitForPendingFinalizers();
     GC.Collect();
 
-    var customElapsed = Measure(iterations, customOperation);
-    var referenceElapsed = Measure(iterations, referenceOperation);
+    var customMeasurement = Measure(iterations, customOperation);
+    var referenceMeasurement = Measure(iterations, referenceOperation);
+    GC.KeepAlive(customMeasurement.LastResult);
+    GC.KeepAlive(referenceMeasurement.LastResult);
     return new Measurement(
         name,
         iterations,
-        customElapsed.TotalMilliseconds,
-        referenceElapsed.TotalMilliseconds,
-        customElapsed.TotalMilliseconds == 0 ? 0 : referenceElapsed.TotalMilliseconds / customElapsed.TotalMilliseconds,
+        customMeasurement.Elapsed.TotalMilliseconds,
+        referenceMeasurement.Elapsed.TotalMilliseconds,
+        customMeasurement.AllocatedBytes,
+        referenceMeasurement.AllocatedBytes,
+        customMeasurement.Elapsed.TotalMilliseconds == 0 ? 0 : referenceMeasurement.Elapsed.TotalMilliseconds / customMeasurement.Elapsed.TotalMilliseconds,
         customExpected.ToString(CultureInfo.InvariantCulture));
 }
 
-static TimeSpan Measure<T>(int iterations, Func<T> operation)
+static TimedOperation<T> Measure<T>(int iterations, Func<T> operation)
 {
+    var allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
     var stopwatch = Stopwatch.StartNew();
-    object? sink = null;
-    for (var index = 0; index < iterations; index++) sink = operation();
+    var result = default(T)!;
+    for (var index = 0; index < iterations; index++) result = operation();
     stopwatch.Stop();
-    GC.KeepAlive(sink);
-    return stopwatch.Elapsed;
+    return new TimedOperation<T>(stopwatch.Elapsed, GC.GetAllocatedBytesForCurrentThread() - allocatedBefore, result);
 }
 
 static string? GetOption(string[] arguments, string name)
@@ -112,11 +116,11 @@ static string ToMarkdown(Evidence evidence)
     builder.AppendLine($"- Architecture: `{evidence.ProcessArchitecture}`");
     builder.AppendLine($"- Protocol: {evidence.InputProtocol}");
     builder.AppendLine();
-    builder.AppendLine("| Operation | Iterations | Custom ms | BigInteger ms | BigInteger / custom |");
-    builder.AppendLine("|---|---:|---:|---:|---:|");
+    builder.AppendLine("| Operation | Iterations | Custom ms | BigInteger ms | Custom alloc. | BigInteger alloc. | BigInteger / custom |");
+    builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|");
     foreach (var measurement in evidence.Measurements)
     {
-        builder.AppendLine($"| {measurement.Name} | {measurement.Iterations} | {measurement.CustomMilliseconds:F3} | {measurement.BigIntegerMilliseconds:F3} | {measurement.BigIntegerToCustomRatio:F3}× |");
+        builder.AppendLine($"| {measurement.Name} | {measurement.Iterations} | {measurement.CustomMilliseconds:F3} | {measurement.BigIntegerMilliseconds:F3} | {measurement.CustomAllocatedBytes} B | {measurement.BigIntegerAllocatedBytes} B | {measurement.BigIntegerToCustomRatio:F3}× |");
     }
 
     builder.AppendLine();
@@ -129,8 +133,12 @@ internal sealed record Measurement(
     int Iterations,
     double CustomMilliseconds,
     double BigIntegerMilliseconds,
+    long CustomAllocatedBytes,
+    long BigIntegerAllocatedBytes,
     double BigIntegerToCustomRatio,
     string ExactResult);
+
+internal readonly record struct TimedOperation<T>(TimeSpan Elapsed, long AllocatedBytes, T LastResult);
 
 internal sealed record Evidence(
     DateTimeOffset TimestampUtc,

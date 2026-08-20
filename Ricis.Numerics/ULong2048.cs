@@ -1,24 +1,33 @@
 #nullable enable
 #pragma warning disable CS1591
 
+using System.Buffers.Binary;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Ricis.Numerics;
 
+[InlineArray(32)]
+internal struct ULong2048Limbs
+{
+    private ulong _element0;
+}
+
 /// <summary>
-/// Represents an unsigned fixed-width 2048-bit integer backed by thirty-two little-endian <see cref="ulong"/> limbs.
+/// Represents an allocation-free unsigned fixed-width 2048-bit integer backed by thirty-two inline little-endian <see cref="ulong"/> limbs.
 /// This is the canonical magnitude domain for RSA-2048 moduli and signature representatives.
 /// </summary>
 public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatable<ULong2048>
 {
     private const int LimbCount = 32;
-    private readonly ulong[]? _limbs;
+    private const int BitCount = LimbCount * 64;
+    private readonly ULong2048Limbs _limbs;
 
-    private ULong2048(ulong[] limbs, bool takeOwnership) => _limbs = takeOwnership ? limbs : (ulong[])limbs.Clone();
+    private ULong2048(ULong2048Limbs limbs) => _limbs = limbs;
 
     public ULong2048(ulong value)
     {
-        _limbs = new ulong[LimbCount];
+        _limbs = default;
         _limbs[0] = value;
     }
 
@@ -33,60 +42,60 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
     /// <summary>Creates a ULong2048 from a nonnegative BigInteger inside the fixed 2048-bit range.</summary>
     public static ULong2048 FromBigInteger(BigInteger value)
     {
-        if (value < BigInteger.Zero || value > MaxValue.ToBigInteger())
+        if (value.Sign < 0 || value.GetBitLength() > BitCount)
         {
             throw new OverflowException("Value is outside ULong2048 range.");
         }
 
         var bytes = value.ToByteArray(isUnsigned: true, isBigEndian: false);
-        var fixedBytes = new byte[LimbCount * sizeof(ulong)];
-        bytes.AsSpan(0, Math.Min(bytes.Length, fixedBytes.Length)).CopyTo(fixedBytes);
-        var limbs = new ulong[LimbCount];
+        Span<byte> fixedBytes = stackalloc byte[LimbCount * sizeof(ulong)];
+        bytes.AsSpan().CopyTo(fixedBytes);
+        ULong2048Limbs limbs = default;
         for (var index = 0; index < LimbCount; index++)
         {
-            limbs[index] = BitConverter.ToUInt64(fixedBytes, index * sizeof(ulong));
+            limbs[index] = BinaryPrimitives.ReadUInt64LittleEndian(fixedBytes.Slice(index * sizeof(ulong), sizeof(ulong)));
         }
 
-        return new ULong2048(limbs, takeOwnership: true);
+        return new ULong2048(limbs);
     }
 
-    /// <summary>Returns a nonnegative BigInteger interop value without changing custom fixed-width storage.</summary>
+    /// <summary>Returns a nonnegative BigInteger interop value without changing inline custom fixed-width storage.</summary>
     public BigInteger ToBigInteger()
     {
-        var bytes = new byte[LimbCount * sizeof(ulong)];
+        Span<byte> bytes = stackalloc byte[LimbCount * sizeof(ulong)];
         for (var index = 0; index < LimbCount; index++)
         {
-            BitConverter.TryWriteBytes(bytes.AsSpan(index * sizeof(ulong), sizeof(ulong)), GetLimb(index));
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes.Slice(index * sizeof(ulong), sizeof(ulong)), GetLimb(index));
         }
 
         return new BigInteger(bytes, isUnsigned: true, isBigEndian: false);
     }
 
-    public static ULong2048 operator +(ULong2048 left, ULong2048 right) => AddRaw(left, right);
-    public static ULong2048 operator -(ULong2048 left, ULong2048 right) => SubtractRaw(left, right);
-    public static ULong2048 operator *(ULong2048 left, ULong2048 right) => MultiplyRaw(left, right);
-    public static ULong2048 operator /(ULong2048 left, ULong2048 right) => DivideUnsigned(left, right, out _);
+    public static ULong2048 operator +(ULong2048 left, ULong2048 right) => AddRaw(in left, in right);
+    public static ULong2048 operator -(ULong2048 left, ULong2048 right) => SubtractRaw(in left, in right);
+    public static ULong2048 operator *(ULong2048 left, ULong2048 right) => MultiplyRaw(in left, in right);
+    public static ULong2048 operator /(ULong2048 left, ULong2048 right) => DivideUnsigned(in left, in right, out _);
     public static ULong2048 operator %(ULong2048 left, ULong2048 right)
     {
-        _ = DivideUnsigned(left, right, out var remainder);
+        _ = DivideUnsigned(in left, in right, out var remainder);
         return remainder;
     }
 
-    public static ULong2048 operator &(ULong2048 left, ULong2048 right) => Bitwise(left, right, static (x, y) => x & y);
-    public static ULong2048 operator |(ULong2048 left, ULong2048 right) => Bitwise(left, right, static (x, y) => x | y);
-    public static ULong2048 operator ^(ULong2048 left, ULong2048 right) => Bitwise(left, right, static (x, y) => x ^ y);
+    public static ULong2048 operator &(ULong2048 left, ULong2048 right) => And(in left, in right);
+    public static ULong2048 operator |(ULong2048 left, ULong2048 right) => Or(in left, in right);
+    public static ULong2048 operator ^(ULong2048 left, ULong2048 right) => Xor(in left, in right);
     public static ULong2048 operator ~(ULong2048 value)
     {
-        var limbs = new ulong[LimbCount];
+        ULong2048Limbs limbs = default;
         for (var index = 0; index < LimbCount; index++) limbs[index] = ~value.GetLimb(index);
-        return new ULong2048(limbs, takeOwnership: true);
+        return new ULong2048(limbs);
     }
 
-    public static ULong2048 operator <<(ULong2048 value, int shiftAmount) => ShiftLeft(value, shiftAmount);
-    public static ULong2048 operator >>(ULong2048 value, int shiftAmount) => ShiftRight(value, shiftAmount);
-    public static ULong2048 operator >>>(ULong2048 value, int shiftAmount) => ShiftRight(value, shiftAmount);
+    public static ULong2048 operator <<(ULong2048 value, int shiftAmount) => ShiftLeft(in value, shiftAmount);
+    public static ULong2048 operator >>(ULong2048 value, int shiftAmount) => ShiftRight(in value, shiftAmount);
+    public static ULong2048 operator >>>(ULong2048 value, int shiftAmount) => ShiftRight(in value, shiftAmount);
 
-    /// <summary>Returns a BigInteger result for mixed exact arithmetic where a caller explicitly supplies BigInteger.</summary>
+    /// <summary>Returns an exact BigInteger sum for an explicitly mixed ULong2048/BigInteger operation.</summary>
     public static BigInteger operator +(ULong2048 left, BigInteger right) => left.ToBigInteger() + right;
     public static BigInteger operator +(BigInteger left, ULong2048 right) => left + right.ToBigInteger();
     public static BigInteger operator -(ULong2048 left, BigInteger right) => left.ToBigInteger() - right;
@@ -103,40 +112,50 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
     public static bool operator >(ULong2048 left, ULong2048 right) => left.CompareTo(right) > 0;
     public static bool operator >=(ULong2048 left, ULong2048 right) => left.CompareTo(right) >= 0;
 
-    /// <summary>Performs custom fixed-width modular multiplication without materialising a 4096-bit product.</summary>
+    /// <summary>Performs custom allocation-free fixed-width modular multiplication without materialising a 4096-bit product.</summary>
     public static ULong2048 MultiplyModulo(ULong2048 left, ULong2048 right, ULong2048 modulus)
     {
         if (modulus == Zero) throw new DivideByZeroException();
-        var factor = left % modulus;
-        var multiplier = right % modulus;
-        var result = Zero;
-
-        while (multiplier != Zero)
+        var leftReduced = (left % modulus)._limbs;
+        var rightReduced = (right % modulus)._limbs;
+        if ((modulus.GetLimb(0) & 1UL) == 0)
         {
-            if ((multiplier.GetLimb(0) & 1UL) != 0) result = AddModulo(result, factor, modulus);
-            multiplier = multiplier >> 1;
-            if (multiplier != Zero) factor = AddModulo(factor, factor, modulus);
+            return new ULong2048(MultiplyModuloGenericLimbs(in leftReduced, in rightReduced, in modulus._limbs));
         }
 
-        return result;
+        var rSquared = ComputeMontgomeryRSquared(in modulus._limbs);
+        var n0Prime = ComputeMontgomeryN0Prime(modulus.GetLimb(0));
+        var leftMontgomery = MontgomeryMultiplyLimbs(in leftReduced, in rSquared, in modulus._limbs, n0Prime);
+        var rightMontgomery = MontgomeryMultiplyLimbs(in rightReduced, in rSquared, in modulus._limbs, n0Prime);
+        var productMontgomery = MontgomeryMultiplyLimbs(in leftMontgomery, in rightMontgomery, in modulus._limbs, n0Prime);
+        ULong2048Limbs one = default;
+        one[0] = 1;
+        return new ULong2048(MontgomeryMultiplyLimbs(in productMontgomery, in one, in modulus._limbs, n0Prime));
     }
 
-    /// <summary>Performs exact right-to-left modular exponentiation for RSA public operations.</summary>
+    /// <summary>Performs exact allocation-free right-to-left modular exponentiation for RSA public operations.</summary>
     public static ULong2048 ModPow(ULong2048 value, ULong2048 exponent, ULong2048 modulus)
     {
         if (modulus == Zero) throw new DivideByZeroException();
-        var result = One % modulus;
-        var factor = value % modulus;
-        var remainingExponent = exponent;
+        if ((modulus.GetLimb(0) & 1UL) == 0) return ModPowGeneric(value, exponent, modulus);
 
-        while (remainingExponent != Zero)
+        var rSquared = ComputeMontgomeryRSquared(in modulus._limbs);
+        var n0Prime = ComputeMontgomeryN0Prime(modulus.GetLimb(0));
+        ULong2048Limbs one = default;
+        one[0] = 1;
+        var result = MontgomeryMultiplyLimbs(in one, in rSquared, in modulus._limbs, n0Prime);
+        var reducedValue = (value % modulus)._limbs;
+        var factor = MontgomeryMultiplyLimbs(in reducedValue, in rSquared, in modulus._limbs, n0Prime);
+        var remainingExponent = exponent._limbs;
+
+        while (!IsZero(in remainingExponent))
         {
-            if ((remainingExponent.GetLimb(0) & 1UL) != 0) result = MultiplyModulo(result, factor, modulus);
-            remainingExponent = remainingExponent >> 1;
-            if (remainingExponent != Zero) factor = MultiplyModulo(factor, factor, modulus);
+            if ((remainingExponent[0] & 1UL) != 0) result = MontgomeryMultiplyLimbs(in result, in factor, in modulus._limbs, n0Prime);
+            ShiftRightOne(ref remainingExponent);
+            if (!IsZero(in remainingExponent)) factor = MontgomeryMultiplyLimbs(in factor, in factor, in modulus._limbs, n0Prime);
         }
 
-        return result;
+        return new ULong2048(MontgomeryMultiplyLimbs(in result, in one, in modulus._limbs, n0Prime));
     }
 
     /// <summary>Applies the RSA public verification primitive s^e mod n after checking the signature representative range.</summary>
@@ -183,131 +202,244 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
 
     public override string ToString() => ToBigInteger().ToString();
 
-    private ulong GetLimb(int index) => _limbs is null ? 0UL : _limbs[index];
+    private ulong GetLimb(int index) => _limbs[index];
 
     private static ULong2048 CreateMaxValue()
     {
-        var limbs = new ulong[LimbCount];
-        Array.Fill(limbs, ulong.MaxValue);
-        return new ULong2048(limbs, takeOwnership: true);
+        ULong2048Limbs limbs = default;
+        for (var index = 0; index < LimbCount; index++) limbs[index] = ulong.MaxValue;
+        return new ULong2048(limbs);
     }
 
-    private static ULong2048 AddRaw(ULong2048 left, ULong2048 right)
+    private static ULong2048 AddRaw(in ULong2048 left, in ULong2048 right) => new(AddLimbs(in left._limbs, in right._limbs));
+
+    private static ULong2048 SubtractRaw(in ULong2048 left, in ULong2048 right) => new(SubtractLimbsValue(in left._limbs, in right._limbs));
+
+    private static ULong2048Limbs AddLimbs(in ULong2048Limbs left, in ULong2048Limbs right)
     {
-        var limbs = new ulong[LimbCount];
+        var limbs = left;
+        _ = AddLimbsInPlace(ref limbs, in right);
+        return limbs;
+    }
+
+    private static ulong AddLimbsInPlace(ref ULong2048Limbs left, in ULong2048Limbs right)
+    {
         ulong carry = 0;
         for (var index = 0; index < LimbCount; index++)
         {
-            var sum = left.GetLimb(index) + right.GetLimb(index);
-            var carryFromOperands = sum < left.GetLimb(index) ? 1UL : 0UL;
+            var leftValue = left[index];
+            var sum = leftValue + right[index];
+            var carryFromOperands = sum < leftValue ? 1UL : 0UL;
             var result = sum + carry;
-            limbs[index] = result;
+            left[index] = result;
             carry = carryFromOperands | (result < sum ? 1UL : 0UL);
         }
 
-        return new ULong2048(limbs, takeOwnership: true);
+        return carry;
     }
 
-    private static ULong2048 SubtractRaw(ULong2048 left, ULong2048 right)
+    private static ULong2048Limbs SubtractLimbsValue(in ULong2048Limbs left, in ULong2048Limbs right)
     {
-        var limbs = new ulong[LimbCount];
-        ulong borrow = 0;
-        for (var index = 0; index < LimbCount; index++)
-        {
-            var rightWithBorrow = right.GetLimb(index) + borrow;
-            var borrowFromAdd = rightWithBorrow < right.GetLimb(index) ? 1UL : 0UL;
-            var leftValue = left.GetLimb(index);
-            limbs[index] = leftValue - rightWithBorrow;
-            borrow = leftValue < rightWithBorrow || borrowFromAdd != 0 ? 1UL : 0UL;
-        }
-
-        return new ULong2048(limbs, takeOwnership: true);
+        var result = left;
+        SubtractLimbs(ref result, in right);
+        return result;
     }
 
-    private static ULong2048 MultiplyRaw(ULong2048 left, ULong2048 right)
+    private static ULong2048 MultiplyRaw(in ULong2048 left, in ULong2048 right)
     {
-        var limbs = new ulong[LimbCount];
+        ULong2048Limbs limbs = default;
         for (var leftIndex = 0; leftIndex < LimbCount; leftIndex++)
         {
             UInt128 carry = 0;
+            var leftLimb = left.GetLimb(leftIndex);
             for (var rightIndex = 0; leftIndex + rightIndex < LimbCount; rightIndex++)
             {
                 var target = leftIndex + rightIndex;
-                var total = ((UInt128)left.GetLimb(leftIndex) * right.GetLimb(rightIndex)) + limbs[target] + carry;
+                var total = ((UInt128)leftLimb * right.GetLimb(rightIndex)) + limbs[target] + carry;
                 limbs[target] = (ulong)total;
                 carry = total >> 64;
             }
         }
 
-        return new ULong2048(limbs, takeOwnership: true);
+        return new ULong2048(limbs);
     }
 
-    private static ULong2048 DivideUnsigned(ULong2048 numerator, ULong2048 denominator, out ULong2048 remainder)
+    private static ULong2048 DivideUnsigned(in ULong2048 numerator, in ULong2048 denominator, out ULong2048 remainder)
     {
         if (denominator == Zero) throw new DivideByZeroException();
-        var quotientLimbs = new ulong[LimbCount];
-        var remainderLimbs = new ulong[LimbCount];
-        var denominatorLimbs = denominator.CopyLimbs();
+        ULong2048Limbs quotient = default;
+        ULong2048Limbs partialRemainder = default;
 
-        for (var bit = (LimbCount * 64) - 1; bit >= 0; bit--)
+        for (var bit = BitCount - 1; bit >= 0; bit--)
         {
-            ShiftLeftOne(remainderLimbs);
-            remainderLimbs[0] |= (numerator.GetLimb(bit / 64) >> (bit % 64)) & 1UL;
-            if (CompareLimbs(remainderLimbs, denominatorLimbs) >= 0)
+            ShiftLeftOne(ref partialRemainder);
+            partialRemainder[0] |= (numerator.GetLimb(bit / 64) >> (bit % 64)) & 1UL;
+            if (CompareLimbs(in partialRemainder, in denominator._limbs) >= 0)
             {
-                SubtractLimbs(remainderLimbs, denominatorLimbs);
-                quotientLimbs[bit / 64] |= 1UL << (bit % 64);
+                SubtractLimbs(ref partialRemainder, in denominator._limbs);
+                quotient[bit / 64] |= 1UL << (bit % 64);
             }
         }
 
-        remainder = new ULong2048(remainderLimbs, takeOwnership: true);
-        return new ULong2048(quotientLimbs, takeOwnership: true);
+        remainder = new ULong2048(partialRemainder);
+        return new ULong2048(quotient);
     }
 
-    private static ULong2048 AddModulo(ULong2048 left, ULong2048 right, ULong2048 modulus)
+    private static ULong2048 ModPowGeneric(ULong2048 value, ULong2048 exponent, ULong2048 modulus)
     {
-        // left and right are reduced. Comparing to modulus-right avoids any 2048-bit overflow.
-        var complement = modulus - right;
-        return left >= complement ? left - complement : left + right;
+        var result = (One % modulus)._limbs;
+        var factor = (value % modulus)._limbs;
+        var remainingExponent = exponent._limbs;
+        while (!IsZero(in remainingExponent))
+        {
+            if ((remainingExponent[0] & 1UL) != 0) result = MultiplyModuloGenericLimbs(in result, in factor, in modulus._limbs);
+            ShiftRightOne(ref remainingExponent);
+            if (!IsZero(in remainingExponent)) factor = MultiplyModuloGenericLimbs(in factor, in factor, in modulus._limbs);
+        }
+
+        return new ULong2048(result);
     }
 
-    private ulong[] CopyLimbs()
+    private static ULong2048Limbs MultiplyModuloGenericLimbs(in ULong2048Limbs left, in ULong2048Limbs right, in ULong2048Limbs modulus)
     {
-        var limbs = new ulong[LimbCount];
-        for (var index = 0; index < LimbCount; index++) limbs[index] = GetLimb(index);
-        return limbs;
+        var factor = left;
+        var multiplier = right;
+        ULong2048Limbs result = default;
+
+        while (!IsZero(in multiplier))
+        {
+            if ((multiplier[0] & 1UL) != 0) AddModuloInPlace(ref result, in factor, in modulus);
+            ShiftRightOne(ref multiplier);
+            if (!IsZero(in multiplier)) AddModuloInPlace(ref factor, in factor, in modulus);
+        }
+
+        return result;
     }
 
-    private static ULong2048 Bitwise(ULong2048 left, ULong2048 right, Func<ulong, ulong, ulong> operation)
+    private static void AddModuloInPlace(ref ULong2048Limbs left, in ULong2048Limbs right, in ULong2048Limbs modulus)
     {
-        var limbs = new ulong[LimbCount];
-        for (var index = 0; index < LimbCount; index++) limbs[index] = operation(left.GetLimb(index), right.GetLimb(index));
-        return new ULong2048(limbs, takeOwnership: true);
+        // Both inputs are reduced. If the raw 2048-bit sum carries, or is at least modulus, one subtraction yields the exact reduced sum.
+        var carry = AddLimbsInPlace(ref left, in right);
+        if (carry != 0 || CompareLimbs(in left, in modulus) >= 0) SubtractLimbs(ref left, in modulus);
     }
 
-    private static ULong2048 ShiftLeft(ULong2048 value, int shiftAmount)
+    private static ulong ComputeMontgomeryN0Prime(ulong modulusLeastSignificantLimb)
     {
-        if (shiftAmount < 0) return ShiftRight(value, -shiftAmount);
-        if (shiftAmount >= LimbCount * 64) return Zero;
+        // Newton iteration in Z/(2^64): inverse doubles the valid bit count per iteration.
+        ulong inverse = 1;
+        for (var iteration = 0; iteration < 6; iteration++) inverse *= 2UL - (modulusLeastSignificantLimb * inverse);
+        return 0UL - inverse;
+    }
+
+    private static ULong2048Limbs ComputeMontgomeryRSquared(in ULong2048Limbs modulus)
+    {
+        // R = 2^2048. Repeated exact doubling derives R^2 mod modulus using only inline limbs.
+        ULong2048Limbs result = default;
+        result[0] = 1;
+        for (var bit = 0; bit < BitCount * 2; bit++) AddModuloInPlace(ref result, in result, in modulus);
+        return result;
+    }
+
+    private static ULong2048Limbs MontgomeryMultiplyLimbs(in ULong2048Limbs left, in ULong2048Limbs right, in ULong2048Limbs modulus, ulong n0Prime)
+    {
+        Span<ulong> workspace = stackalloc ulong[(LimbCount * 2) + 1];
+        for (var leftIndex = 0; leftIndex < LimbCount; leftIndex++)
+        {
+            UInt128 carry = 0;
+            var leftLimb = left[leftIndex];
+            for (var rightIndex = 0; rightIndex < LimbCount; rightIndex++)
+            {
+                var target = leftIndex + rightIndex;
+                var total = ((UInt128)leftLimb * right[rightIndex]) + workspace[target] + carry;
+                workspace[target] = (ulong)total;
+                carry = total >> 64;
+            }
+
+            PropagateWorkspaceCarry(workspace, leftIndex + LimbCount, carry);
+        }
+
+        for (var index = 0; index < LimbCount; index++)
+        {
+            var reductionFactor = unchecked(workspace[index] * n0Prime);
+            UInt128 carry = 0;
+            for (var modulusIndex = 0; modulusIndex < LimbCount; modulusIndex++)
+            {
+                var target = index + modulusIndex;
+                var total = ((UInt128)reductionFactor * modulus[modulusIndex]) + workspace[target] + carry;
+                workspace[target] = (ulong)total;
+                carry = total >> 64;
+            }
+
+            PropagateWorkspaceCarry(workspace, index + LimbCount, carry);
+        }
+
+        ULong2048Limbs result = default;
+        for (var index = 0; index < LimbCount; index++) result[index] = workspace[index + LimbCount];
+        if (workspace[LimbCount * 2] != 0 || CompareLimbs(in result, in modulus) >= 0)
+        {
+            SubtractLimbs(ref result, in modulus);
+        }
+
+        return result;
+    }
+
+    private static void PropagateWorkspaceCarry(Span<ulong> workspace, int startIndex, UInt128 carry)
+    {
+        var index = startIndex;
+        while (carry != 0)
+        {
+            if (index >= workspace.Length) throw new InvalidOperationException("Montgomery workspace overflow.");
+            var total = ((UInt128)workspace[index]) + carry;
+            workspace[index] = (ulong)total;
+            carry = total >> 64;
+            index++;
+        }
+    }
+
+    private static ULong2048 And(in ULong2048 left, in ULong2048 right)
+    {
+        ULong2048Limbs limbs = default;
+        for (var index = 0; index < LimbCount; index++) limbs[index] = left.GetLimb(index) & right.GetLimb(index);
+        return new ULong2048(limbs);
+    }
+
+    private static ULong2048 Or(in ULong2048 left, in ULong2048 right)
+    {
+        ULong2048Limbs limbs = default;
+        for (var index = 0; index < LimbCount; index++) limbs[index] = left.GetLimb(index) | right.GetLimb(index);
+        return new ULong2048(limbs);
+    }
+
+    private static ULong2048 Xor(in ULong2048 left, in ULong2048 right)
+    {
+        ULong2048Limbs limbs = default;
+        for (var index = 0; index < LimbCount; index++) limbs[index] = left.GetLimb(index) ^ right.GetLimb(index);
+        return new ULong2048(limbs);
+    }
+
+    private static ULong2048 ShiftLeft(in ULong2048 value, int shiftAmount)
+    {
+        if (shiftAmount < 0) return ShiftRight(in value, -shiftAmount);
+        if (shiftAmount >= BitCount) return Zero;
         var limbShift = shiftAmount / 64;
         var bitShift = shiftAmount % 64;
-        var limbs = new ulong[LimbCount];
+        ULong2048Limbs limbs = default;
         for (var index = LimbCount - 1; index >= limbShift; index--)
         {
             limbs[index] = value.GetLimb(index - limbShift) << bitShift;
             if (bitShift != 0 && index > limbShift) limbs[index] |= value.GetLimb(index - limbShift - 1) >> (64 - bitShift);
         }
 
-        return new ULong2048(limbs, takeOwnership: true);
+        return new ULong2048(limbs);
     }
 
-    private static ULong2048 ShiftRight(ULong2048 value, int shiftAmount)
+    private static ULong2048 ShiftRight(in ULong2048 value, int shiftAmount)
     {
-        if (shiftAmount < 0) return ShiftLeft(value, -shiftAmount);
-        if (shiftAmount >= LimbCount * 64) return Zero;
+        if (shiftAmount < 0) return ShiftLeft(in value, -shiftAmount);
+        if (shiftAmount >= BitCount) return Zero;
         var limbShift = shiftAmount / 64;
         var bitShift = shiftAmount % 64;
-        var limbs = new ulong[LimbCount];
+        ULong2048Limbs limbs = default;
         for (var index = 0; index < LimbCount; index++)
         {
             var source = index + limbShift;
@@ -316,10 +448,27 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
             if (bitShift != 0 && source + 1 < LimbCount) limbs[index] |= value.GetLimb(source + 1) << (64 - bitShift);
         }
 
-        return new ULong2048(limbs, takeOwnership: true);
+        return new ULong2048(limbs);
     }
 
-    private static void ShiftLeftOne(ulong[] value)
+    private static bool IsZero(in ULong2048Limbs value)
+    {
+        for (var index = 0; index < LimbCount; index++) if (value[index] != 0) return false;
+        return true;
+    }
+
+    private static void ShiftRightOne(ref ULong2048Limbs value)
+    {
+        ulong carry = 0;
+        for (var index = LimbCount - 1; index >= 0; index--)
+        {
+            var nextCarry = value[index] << 63;
+            value[index] = (value[index] >> 1) | carry;
+            carry = nextCarry;
+        }
+    }
+
+    private static void ShiftLeftOne(ref ULong2048Limbs value)
     {
         ulong carry = 0;
         for (var index = 0; index < LimbCount; index++)
@@ -330,7 +479,7 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
         }
     }
 
-    private static int CompareLimbs(ulong[] left, ulong[] right)
+    private static int CompareLimbs(in ULong2048Limbs left, in ULong2048Limbs right)
     {
         for (var index = LimbCount - 1; index >= 0; index--)
         {
@@ -341,13 +490,14 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
         return 0;
     }
 
-    private static void SubtractLimbs(ulong[] left, ulong[] right)
+    private static void SubtractLimbs(ref ULong2048Limbs left, in ULong2048Limbs right)
     {
         ulong borrow = 0;
         for (var index = 0; index < LimbCount; index++)
         {
-            var rightWithBorrow = right[index] + borrow;
-            var borrowFromAdd = rightWithBorrow < right[index] ? 1UL : 0UL;
+            var rightValue = right[index];
+            var rightWithBorrow = rightValue + borrow;
+            var borrowFromAdd = rightWithBorrow < rightValue ? 1UL : 0UL;
             var leftValue = left[index];
             left[index] = leftValue - rightWithBorrow;
             borrow = leftValue < rightWithBorrow || borrowFromAdd != 0 ? 1UL : 0UL;
