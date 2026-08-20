@@ -50,6 +50,7 @@ public static class RicisRegressionTestCatalog
             ("Generic INumber: X/X возвращает типизированную единицу", GenericBigIntegerIdentityReduction),
         ]);
 
+        tests.AddRange(Int2048Suite.Tests);
         tests.AddRange(RicisStressSuite.Tests);
         tests.AddRange(KnownRicisLimitsSuite.Tests);
         tests.AddRange(RicisClassicalComparisonSuite.Tests);
