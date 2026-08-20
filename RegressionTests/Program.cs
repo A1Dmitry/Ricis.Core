@@ -1,3 +1,13 @@
+if (args.Length == 1 && string.Equals(args[0], "--list-tests", StringComparison.Ordinal))
+{
+    foreach (var (name, _) in RicisRegressionTestCatalog.Tests)
+    {
+        Console.WriteLine(name);
+    }
+
+    return;
+}
+
 var failures = new List<string>();
 
 foreach (var (name, body) in RicisRegressionTestCatalog.Tests)

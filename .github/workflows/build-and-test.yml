@@ -35,6 +35,9 @@ jobs:
       - name: Build solution
         run: dotnet build Ricis.Core.sln --configuration Release --no-restore
 
+      - name: Verify generated independent MSTest catalog
+        run: python3 scripts/generate_mstest_regression_adapter.py --check
+
       - name: Verify unified Ricis.Core version
         shell: bash
         run: |
