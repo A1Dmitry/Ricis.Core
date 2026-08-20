@@ -247,6 +247,50 @@ public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, 
         return 0;
     }
 
+    /// <summary>
+    /// Computes the exact nonnegative floor square root with the fixed-width binary restoring shift algorithm.
+    /// The result <c>r</c> satisfies <c>r² ≤ value &lt; (r+1)²</c> without using BigInteger,
+    /// byte-array conversion or floating-point arithmetic.
+    /// </summary>
+    /// <param name="value">The unsigned 2048-bit input.</param>
+    /// <returns>The exact floor square root.</returns>
+    public static ULong2048 IntegerSquareRootFloor(ULong2048 value)
+    {
+        if (value == Zero) return Zero;
+
+        var initialBitPosition = (value.GetBitLength() - 1) & ~1;
+        ULong2048Limbs bit = default;
+        bit[initialBitPosition / 64] = 1UL << (initialBitPosition % 64);
+        var remainder = value._limbs;
+        ULong2048Limbs root = default;
+
+        while (!IsZero(in bit))
+        {
+            var trial = root;
+            var trialOverflow = AddLimbsInPlace(ref trial, in bit) != 0;
+            if (!trialOverflow && CompareLimbs(in remainder, in trial) >= 0)
+            {
+                SubtractLimbs(ref remainder, in trial);
+                ShiftRightOne(ref root);
+                var rootOverflow = AddLimbsInPlace(ref root, in bit);
+                if (rootOverflow != 0)
+                {
+                    throw new InvalidOperationException("ULong2048 restoring square-root invariant overflowed.");
+                }
+            }
+            else
+            {
+                ShiftRightOne(ref root);
+            }
+
+            ShiftRightOne(ref bit);
+            ShiftRightOne(ref bit);
+        }
+
+        var result = new ULong2048(root);
+        return CorrectFloorSquareRoot(value, result);
+    }
+
     internal void WriteFixedWidthBigEndian(Span<byte> destination)
     {
         if (destination.Length != LimbCount * sizeof(ulong)) throw new ArgumentException("Destination must be exactly 256 bytes.", nameof(destination));
@@ -541,6 +585,24 @@ public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, 
         }
 
         return new ULong2048(limbs);
+    }
+
+    private static ULong2048 CorrectFloorSquareRoot(ULong2048 value, ULong2048 root)
+    {
+        var square = root * root;
+        if (square > value)
+        {
+            root -= One;
+            square = root * root;
+        }
+
+        var next = root + One;
+        if (next.GetBitLength() <= BitCount / 2 && (next * next) <= value)
+        {
+            root = next;
+        }
+
+        return root;
     }
 
     private static bool IsZero(in ULong2048Limbs value)

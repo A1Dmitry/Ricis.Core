@@ -13,6 +13,9 @@ var data = BenchmarkData.Create();
 var measurements = new List<Measurement>();
 var rootOperand = ((BigInteger.One << 2046) + (BigInteger.One << 1001) + 12345);
 var rootSquare = rootOperand * rootOperand;
+var fixedWidthRootOperand = (BigInteger.One << 1023) + (BigInteger.One << 511) + 12345;
+var fixedWidthRootSquare = fixedWidthRootOperand * fixedWidthRootOperand;
+var fixedWidthRootInput = ULong2048.FromBigInteger(fixedWidthRootSquare);
 
 measurements.Add(Compare("Int2048 addition", quick ? 1_000 : 25_000,
     () => data.IntLeft + data.IntRight,
@@ -38,17 +41,21 @@ measurements.Add(Compare("RSA public operation e=65537", quick ? 1 : 3,
     () => ULong2048.RsaPublicOperation(data.Signature, data.PublicExponent, data.Modulus),
     () => BigInteger.ModPow(data.BigSignature, data.BigPublicExponent, data.BigModulus),
     value => value.ToBigInteger(), value => value));
-measurements.Add(Compare("Shift floor root with one-bit correction", quick ? 5 : 100,
+measurements.Add(Compare("BigInteger shift floor root with one-bit correction", quick ? 5 : 100,
     () => FermatFactorizer.IntegerSquareRootFloorByShift(rootSquare),
     () => NewtonFloorRoot(rootSquare),
     value => value, value => value));
+measurements.Add(Compare("ULong2048 fixed-width shift floor root", quick ? 100 : 10_000,
+    () => ULong2048.IntegerSquareRootFloor(fixedWidthRootInput),
+    () => NewtonFloorRoot(fixedWidthRootSquare),
+    value => value.ToBigInteger(), value => value));
 
 var evidence = new Evidence(
     DateTimeOffset.UtcNow,
     RuntimeInformation.FrameworkDescription,
     RuntimeInformation.OSDescription,
     RuntimeInformation.ProcessArchitecture.ToString(),
-    "Fixed deterministic 2048-bit operands plus one deterministic large perfect square; Release build; one warmup operation; result equality is checked against an independent Newton baseline before timing.",
+    "Fixed deterministic 2048-bit operands plus deterministic large perfect squares; Release build; one warmup operation; result equality is checked against an independent Newton baseline before timing.",
     measurements);
 
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputPath))!);
