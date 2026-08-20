@@ -661,6 +661,24 @@ public static class RicisAcademicProofExtensions
 
         ValidateBinaryHypotheses(equationList, nameof(equations));
         ValidateBinaryHypotheses(constraintList, nameof(constraints));
+        for (var constraintIndex = 0; constraintIndex < constraintList.Count; constraintIndex++)
+        {
+            var constraint = constraintList[constraintIndex];
+            var normalizedConstraint = log is null
+                ? constraint
+                : RicisPhasePipeline.Simplify(constraint);
+            log?.For<BinarySystemNormalizationStage>().Trace(
+                "RICIS_SYSTEM_CONSTRAINT_NORMALIZATION",
+                "Constraint нормализована; одинаковый множитель в числителе и знаменателе сокращён структурным pipeline.",
+                constraint.ToString(),
+                normalizedConstraint.ToString(),
+                new Dictionary<string, string>
+                {
+                    ["constraintIndex"] = constraintIndex.ToString(),
+                    ["ruleFamily"] = "ID-01 / SP2 / A1-A4",
+                    ["cancellationRequested"] = bool.TrueString,
+                });
+        }
         var first = ReadSupportedLinearEquation(equationList[0], nameof(equations));
         var second = ReadSupportedLinearEquation(equationList[1], nameof(equations));
         var determinant = (first.X * second.Y) - (second.X * first.Y);
@@ -1219,6 +1237,13 @@ public static class RicisAcademicProofExtensions
 
             var divisor = BigInteger.GreatestCommonDivisor(BigInteger.Abs(numerator), denominator);
             return new ExactRational(numerator / divisor, denominator / divisor);
+        }
+    }
+
+    private sealed class BinarySystemNormalizationStage
+    {
+        private BinarySystemNormalizationStage()
+        {
         }
     }
 

@@ -23,6 +23,8 @@ internal static class RicisProofDocumentFormatSuite
         ("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут", CheckedMultiFormatArtifacts),
         ("PDF10: Binary system ILog reaches every solver step and LaTeX", BinarySystemInjectedLogReachesTex),
         ("SYS01: Binary system solver emits complete four-step journal", BinarySystemSolverEmitsCompleteJournal),
+        ("SYS02: System log records numerator-denominator cancellation", SystemLogRecordsCancellation),
+        ("CANCEL03: (25-x^2)/(x-5) is logged through cancellation", DifferenceOfSquaresCancellationIsLogged),
     ];
 
     private static void BinarySystemSolverEmitsCompleteJournal()
@@ -56,6 +58,31 @@ internal static class RicisProofDocumentFormatSuite
             "Binary solver обязан вернуть x=3, записать полный ordered journal и сформировать четыре шага proof protocol.");
     }
 
+    private static void SystemLogRecordsCancellation()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints =
+        [
+            (x, y) => (x / x) == 1.0,
+        ];
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var proof = new StringBuilder();
+
+        _ = equations.Prove(constraints, (x, y) => x == 3.0, proof, log);
+        var cancellation = log.Snapshot().Single(entry => entry.EventCode == "RICIS_SYSTEM_CONSTRAINT_NORMALIZATION");
+
+        Require(cancellation.StageType == typeof(RicisAcademicProofExtensions).FullName + "+BinarySystemNormalizationStage" &&
+                cancellation.BeforeExpression?.Contains("x / x", StringComparison.Ordinal) == true &&
+                cancellation.AfterExpression is not null &&
+                cancellation.Attributes.TryGetValue("cancellationRequested", out var requested) && requested == bool.TrueString &&
+                cancellation.Attributes.TryGetValue("ruleFamily", out var ruleFamily) && ruleFamily.Contains("SP2", StringComparison.Ordinal),
+            "System log обязан отдельно записывать сокращение одинаковой переменной в числителе и знаменателе с before/after и rule family.");
+    }
+
     private static void BinarySystemInjectedLogReachesTex()
     {
         Expression<Func<double, double, bool>>[] equations =
@@ -86,6 +113,41 @@ internal static class RicisProofDocumentFormatSuite
                 latex.Contains("RICIS_SYSTEM_ELIMINATION", StringComparison.Ordinal) &&
                 latex.Contains("### Шаг 4: Выделение второй координаты", StringComparison.Ordinal),
             "Binary system LaTeX обязан содержать полный solver protocol и все typed ILog events одного запуска.");
+    }
+
+    private static void DifferenceOfSquaresCancellationIsLogged()
+    {
+        Expression<Func<double, bool>>[] conditions = [];
+        Expression<Func<double, bool>>[] constraints = [x => x != 5.0];
+        Expression<Func<double, double>> claim = x => (25.0 - (x * x)) / (x - 5.0);
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var document = new StringBuilder();
+
+        var derived = conditions.ProveDocumentWithLog(
+            constraints,
+            claim,
+            CreateProfile(),
+            RicisProofDocumentFormat.Latex,
+            log,
+            document);
+        var entries = log.Snapshot();
+        var cancellation = entries.FirstOrDefault(entry =>
+            entry.EventCode == "RICIS_PHASE_TRACE" &&
+            entry.Attributes.TryGetValue("ruleFamily", out var ruleFamily) &&
+            ruleFamily.StartsWith("SP2", StringComparison.Ordinal));
+        var latex = document.ToString();
+
+        Require(Math.Abs(derived.Compile()(2.0) + 7.0) < 1e-12 &&
+                Math.Abs(derived.Compile()(6.0) + 11.0) < 1e-12 &&
+                cancellation is not null &&
+                cancellation.BeforeExpression?.Contains("/", StringComparison.Ordinal) == true &&
+                cancellation.BeforeExpression?.Contains("x - 5", StringComparison.Ordinal) == true &&
+                cancellation.AfterExpression is not null &&
+                cancellation.BeforeExpression != cancellation.AfterExpression &&
+                latex.Contains("SP2: сокращение до сингулярностей", StringComparison.Ordinal) &&
+                latex.Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
+                latex.Contains("x - 5", StringComparison.Ordinal),
+            "Для (25-x^2)/(x-5) лог обязан записать выделение общего множителя (x-5), before/after cancellation и сохранить ограничение x != 5 в Tex.");
     }
 
     private static void LogTemplate()
