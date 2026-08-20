@@ -4,8 +4,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core", "Ricis.Core.csproj", "{48D1DD38-E25D-498A-8029-312D32FDD733}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core.RegressionTests", "RegressionTests\Ricis.Core.RegressionTests.csproj", "{6B5C5340-778C-47C9-82D9-6FE5DDBF4E35}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Console", "Ricis.Console\Ricis.Console.csproj", "{223F0FA4-322C-4E4D-BB83-E8029805DDD0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.NavierStokes.Console", "Ricis.NavierStokes.Console\Ricis.NavierStokes.Console.csproj", "{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}"
@@ -20,9 +18,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Domain", "Ric
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Application", "Ricis.Finance\Ricis.Finance.Application\Ricis.Finance.Application.csproj", "{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.RegressionTests", "Ricis.Finance\Ricis.Finance.RegressionTests\Ricis.Finance.RegressionTests.csproj", "{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.Bepaid", "Ricis.Finance\Ricis.Finance.Bepaid\Ricis.Finance.Bepaid.csproj", "{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DE135980-82A6-48C1-B2BB-38F2505BE87F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core.RegressionTests", "RegressionTests\Ricis.Core.RegressionTests.csproj", "{CA958B58-B29E-4C1E-9F83-83894305002C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Finance.RegressionTests", "Ricis.Finance\Ricis.Finance.RegressionTests\Ricis.Finance.RegressionTests.csproj", "{1446BA58-A861-4BF0-B595-B2538FA24741}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +39,6 @@ Global
 		{48D1DD38-E25D-498A-8029-312D32FDD733}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48D1DD38-E25D-498A-8029-312D32FDD733}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48D1DD38-E25D-498A-8029-312D32FDD733}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B5C5340-778C-47C9-82D9-6FE5DDBF4E35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B5C5340-778C-47C9-82D9-6FE5DDBF4E35}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B5C5340-778C-47C9-82D9-6FE5DDBF4E35}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B5C5340-778C-47C9-82D9-6FE5DDBF4E35}.Release|Any CPU.Build.0 = Release|Any CPU
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{223F0FA4-322C-4E4D-BB83-E8029805DDD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -65,19 +63,24 @@ Global
 		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA958B58-B29E-4C1E-9F83-83894305002C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA958B58-B29E-4C1E-9F83-83894305002C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA958B58-B29E-4C1E-9F83-83894305002C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA958B58-B29E-4C1E-9F83-83894305002C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1446BA58-A861-4BF0-B595-B2538FA24741}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1446BA58-A861-4BF0-B595-B2538FA24741}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1446BA58-A861-4BF0-B595-B2538FA24741}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1446BA58-A861-4BF0-B595-B2538FA24741}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ADB89228-7479-4389-8EF3-5AC79E42C9AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 		{C223FC55-C2FF-46C1-8480-CD59A8B40B1B} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
-		{3713C5F7-1A1B-46DF-84BD-9AA87DFCEBD8} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
 		{4C6F4BC2-96CE-4DC2-AF74-3F67F574F2AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
+		{CA958B58-B29E-4C1E-9F83-83894305002C} = {DE135980-82A6-48C1-B2BB-38F2505BE87F}
+		{1446BA58-A861-4BF0-B595-B2538FA24741} = {DE135980-82A6-48C1-B2BB-38F2505BE87F}
 	EndGlobalSection
 EndGlobal
