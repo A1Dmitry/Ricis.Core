@@ -109,6 +109,7 @@ public static partial class RicisProofLogReportRenderer
                 builder.Append(entry.Sequence).Append(" & ")
                     .Append(EscapeLatex(entry.Severity.ToString())).Append(" & ")
                     .Append(EscapeLatex(entry.StageType)).Append(" & ")
+                    .Append(EscapeLatex(entry.EventCode)).Append(" — ")
                     .Append(EscapeLatex(entry.Message)).AppendLine(@" \\ ");
             }
 
