@@ -22,7 +22,39 @@ internal static class RicisProofDocumentFormatSuite
         ("PDF08: Injected ILog сохраняет полный typed node-to-root документ", InjectedLogDocumentTemplate),
         ("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут", CheckedMultiFormatArtifacts),
         ("PDF10: Binary system ILog reaches every solver step and LaTeX", BinarySystemInjectedLogReachesTex),
+        ("SYS01: Binary system solver emits complete four-step journal", BinarySystemSolverEmitsCompleteJournal),
     ];
+
+    private static void BinarySystemSolverEmitsCompleteJournal()
+    {
+        Expression<Func<double, double, bool>>[] equations =
+        [
+            (x, y) => x + y == 5.0,
+            (x, y) => x - y == 1.0,
+        ];
+        Expression<Func<double, double, bool>>[] constraints = [];
+        Expression<Func<double, double, bool>> claim = (x, y) => x == 3.0;
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var proof = new StringBuilder();
+
+        var derived = equations.Prove(constraints, claim, proof, log);
+        var entries = log.Snapshot();
+        var eventCodes = entries.Select(entry => entry.EventCode).ToArray();
+        var elimination = entries.Single(entry => entry.EventCode == "RICIS_SYSTEM_ELIMINATION");
+        var text = proof.ToString();
+
+        Require(derived.ToString().Contains("x == 3", StringComparison.Ordinal) &&
+                derived.Compile()(3.0, 2.0) &&
+                eventCodes.SequenceEqual(["RICIS_SYSTEM_START", "RICIS_SYSTEM_COEFFICIENTS", "RICIS_SYSTEM_ELIMINATION", "RICIS_SYSTEM_COMPLETE"]) &&
+                elimination.BeforeExpression?.Contains("x == 3", StringComparison.Ordinal) == true &&
+                elimination.AfterExpression?.Contains("x = 3", StringComparison.Ordinal) == true &&
+                text.Contains("### Шаг 1: Линейная комбинация уравнений системы", StringComparison.Ordinal) &&
+                text.Contains("### Шаг 2: Выделение первой координаты", StringComparison.Ordinal) &&
+                text.Contains("### Шаг 3: Подстановка найденной координаты в первое уравнение", StringComparison.Ordinal) &&
+                text.Contains("### Шаг 4: Выделение второй координаты", StringComparison.Ordinal) &&
+                text.Contains("Следовательно, система выводит", StringComparison.Ordinal),
+            "Binary solver обязан вернуть x=3, записать полный ordered journal и сформировать четыре шага proof protocol.");
+    }
 
     private static void BinarySystemInjectedLogReachesTex()
     {
