@@ -12,6 +12,7 @@ internal static class RicisFermatSystemSuite
         ("FERMAT01: RICIS решает общую систему только по N и пишет штатный Log", NOnlySystemUsesProofLog),
         ("FERMAT02: универсальный Log принимает F=x² и доказывает F/F=1", UniversalDeferredIdentityUsesLog),
         ("FERMAT03: public Solve возвращает точную ферматову реконструкцию", DirectSolveRetainsExactInvariants),
+        ("FERMAT04: public Solve принимает все классы квадратов modulo 64", SolveAcceptsEverySquareResidueClass),
     ];
 
     private static void NOnlySystemUsesProofLog()
@@ -82,6 +83,30 @@ internal static class RicisFermatSystemSuite
             "Public Solve обязан сохранить точное равенство x²−N=y².");
         Require(result.X - result.Y == result.P && result.X + result.Y == result.Q,
             "Public Solve обязан сохранить структурные подстановки P=x−y и Q=x+y.");
+    }
+
+    private static void SolveAcceptsEverySquareResidueClass()
+    {
+        // Each pair is semiprime and realizes a distinct y² modulo 64 class:
+        // { 0, 1, 4, 9, 16, 17, 25, 33, 36, 41, 49, 57 }.
+        (int P, int Q)[] factorPairs =
+        [
+            (101, 101), (101, 103), (103, 107), (101, 107),
+            (101, 109), (103, 113), (101, 113), (113, 127),
+            (109, 127), (109, 131), (101, 127), (101, 131),
+        ];
+        var observedResidues = new HashSet<int>();
+
+        foreach (var (p, q) in factorPairs)
+        {
+            var result = FermatFactorizer.Solve(new BigInteger(p * q));
+            observedResidues.Add((int)((result.Y * result.Y) & 63));
+            Require(result.P * result.Q == result.N && result.X * result.X - result.N == result.Y * result.Y,
+                $"Public Solve обязан сохранить exact reconstruction для {p}·{q}.");
+        }
+
+        Require(observedResidues.SetEquals([0, 1, 4, 9, 16, 17, 25, 33, 36, 41, 49, 57]),
+            $"Fermat examples должны покрыть все exact square residue classes modulo 64, получено [{string.Join(", ", observedResidues.Order())}].");
     }
 
     private static void UniversalDeferredIdentityUsesLog()

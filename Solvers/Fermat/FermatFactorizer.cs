@@ -11,6 +11,13 @@ namespace Ricis.Core.Solvers.Fermat;
 /// </summary>
 public static class FermatFactorizer
 {
+    // Squares modulo 64 are exactly { 0, 1, 4, 9, 16, 17, 25, 33, 36, 41, 49, 57 }.
+    // This is an exact necessary condition, used only to skip impossible root checks.
+    private const ulong SquareResidueModulo64Mask =
+        (1UL << 0) | (1UL << 1) | (1UL << 4) | (1UL << 9) |
+        (1UL << 16) | (1UL << 17) | (1UL << 25) | (1UL << 33) |
+        (1UL << 36) | (1UL << 41) | (1UL << 49) | (1UL << 57);
+
     /// <summary>
     /// Solves <c>x² - N = y²</c> and returns <c>P=x-y</c>, <c>Q=x+y</c>.
     /// The search starts at the exact integer ceiling of sqrt(N) and advances
@@ -27,18 +34,21 @@ public static class FermatFactorizer
         var delta = x * x - n;
         while (true)
         {
-            var y = IntegerSqrtExact(delta);
-            if (y >= 0 && y * y == delta)
+            if (CouldBePerfectSquare(delta))
             {
-                var p = x - y;
-                var q = x + y;
-                if (p > 1 && q > 1 && p * q == n)
+                var y = IntegerSqrtExact(delta);
+                if (y >= 0 && y * y == delta)
                 {
+                    var p = x - y;
+                    var q = x + y;
+                    if (p > 1 && q > 1 && p * q == n)
+                    {
             var inputBits = checked((int)n.GetBitLength());
             var factorBits = checked((int)Math.Max(p.GetBitLength(), q.GetBitLength()));
             var scale = BigInteger.One << factorBits;
-                    return new FermatFactorizationResult(
-                        n, p, q, x, y, delta, inputBits, factorBits, scale);
+                        return new FermatFactorizationResult(
+                            n, p, q, x, y, delta, inputBits, factorBits, scale);
+                    }
                 }
             }
 
@@ -82,6 +92,12 @@ public static class FermatFactorizer
         var rendered = documentConstructor(profile, derivation.ToString(), derived);
         document.Append(rendered);
         return result;
+    }
+
+    private static bool CouldBePerfectSquare(BigInteger value)
+    {
+        var residue = (int)(value & 63);
+        return ((SquareResidueModulo64Mask >> residue) & 1UL) != 0;
     }
 
     private static BigInteger IntegerSqrtCeiling(BigInteger value)
