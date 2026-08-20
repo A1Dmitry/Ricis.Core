@@ -126,7 +126,34 @@ public sealed class ULong2048Suite
         }
     }
 
-    [TestMethod("U2048-09: RSA public operation rejects invalid signature representative")]
+    [TestMethod("U2048-09: BigInteger symmetric arithmetic bitwise and comparison overloads are exact")]
+    public void BigIntegerSymmetricOperatorsAreExact()
+    {
+        var value = ULong2048.FromBigInteger((BigInteger.One << 240) + 12345);
+        var left = -((BigInteger.One << 250) + 7);
+        var right = new BigInteger(7);
+        var valueBigInteger = value.ToBigInteger();
+
+        Assert.AreEqual(valueBigInteger + left, value + left);
+        Assert.AreEqual(left + valueBigInteger, left + value);
+        Assert.AreEqual(valueBigInteger - left, value - left);
+        Assert.AreEqual(left - valueBigInteger, left - value);
+        Assert.AreEqual(valueBigInteger * right, value * right);
+        Assert.AreEqual(right * valueBigInteger, right * value);
+        Assert.AreEqual(valueBigInteger / right, value / right);
+        Assert.AreEqual(right / valueBigInteger, right / value);
+        Assert.AreEqual(valueBigInteger % right, value % right);
+        Assert.AreEqual(right % valueBigInteger, right % value);
+        Assert.AreEqual(valueBigInteger & left, value & left);
+        Assert.AreEqual(left & valueBigInteger, left & value);
+        Assert.AreEqual(valueBigInteger | left, value | left);
+        Assert.AreEqual(left | valueBigInteger, left | value);
+        Assert.AreEqual(valueBigInteger ^ left, value ^ left);
+        Assert.AreEqual(left ^ valueBigInteger, left ^ value);
+        Assert.IsTrue(value > left && left < value && value != left && left != value);
+    }
+
+    [TestMethod("U2048-10: RSA public operation rejects invalid signature representative")]
     public void RsaPublicOperationRejectsOutOfRangeSignature()
     {
         var modulus = new ULong2048(3233);

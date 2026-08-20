@@ -17,7 +17,7 @@ internal struct ULong2048Limbs
 /// Represents an allocation-free unsigned fixed-width 2048-bit integer backed by thirty-two inline little-endian <see cref="ulong"/> limbs.
 /// This is the canonical magnitude domain for RSA-2048 moduli and signature representatives.
 /// </summary>
-public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatable<ULong2048>
+public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatable<ULong2048>
 {
     private const int LimbCount = 32;
     private const int BitCount = LimbCount * 64;
@@ -72,8 +72,11 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
     }
 
     public static ULong2048 operator +(ULong2048 left, ULong2048 right) => AddRaw(in left, in right);
+    public static ULong2048 operator checked +(ULong2048 left, ULong2048 right) => CheckedAdd(left, right);
     public static ULong2048 operator -(ULong2048 left, ULong2048 right) => SubtractRaw(in left, in right);
+    public static ULong2048 operator checked -(ULong2048 left, ULong2048 right) => CheckedSubtract(left, right);
     public static ULong2048 operator *(ULong2048 left, ULong2048 right) => MultiplyRaw(in left, in right);
+    public static ULong2048 operator checked *(ULong2048 left, ULong2048 right) => CheckedMultiply(left, right);
     public static ULong2048 operator /(ULong2048 left, ULong2048 right) => DivideUnsigned(in left, in right, out _);
     public static ULong2048 operator %(ULong2048 left, ULong2048 right)
     {
@@ -103,7 +106,27 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
     public static BigInteger operator *(ULong2048 left, BigInteger right) => left.ToBigInteger() * right;
     public static BigInteger operator *(BigInteger left, ULong2048 right) => left * right.ToBigInteger();
     public static BigInteger operator /(ULong2048 left, BigInteger right) => left.ToBigInteger() / right;
+    public static BigInteger operator /(BigInteger left, ULong2048 right) => left / right.ToBigInteger();
     public static BigInteger operator %(ULong2048 left, BigInteger right) => left.ToBigInteger() % right;
+    public static BigInteger operator %(BigInteger left, ULong2048 right) => left % right.ToBigInteger();
+    public static BigInteger operator &(ULong2048 left, BigInteger right) => left.ToBigInteger() & right;
+    public static BigInteger operator &(BigInteger left, ULong2048 right) => left & right.ToBigInteger();
+    public static BigInteger operator |(ULong2048 left, BigInteger right) => left.ToBigInteger() | right;
+    public static BigInteger operator |(BigInteger left, ULong2048 right) => left | right.ToBigInteger();
+    public static BigInteger operator ^(ULong2048 left, BigInteger right) => left.ToBigInteger() ^ right;
+    public static BigInteger operator ^(BigInteger left, ULong2048 right) => left ^ right.ToBigInteger();
+    public static bool operator ==(ULong2048 left, BigInteger right) => left.ToBigInteger() == right;
+    public static bool operator ==(BigInteger left, ULong2048 right) => left == right.ToBigInteger();
+    public static bool operator !=(ULong2048 left, BigInteger right) => left.ToBigInteger() != right;
+    public static bool operator !=(BigInteger left, ULong2048 right) => left != right.ToBigInteger();
+    public static bool operator <(ULong2048 left, BigInteger right) => left.ToBigInteger() < right;
+    public static bool operator <(BigInteger left, ULong2048 right) => left < right.ToBigInteger();
+    public static bool operator <=(ULong2048 left, BigInteger right) => left.ToBigInteger() <= right;
+    public static bool operator <=(BigInteger left, ULong2048 right) => left <= right.ToBigInteger();
+    public static bool operator >(ULong2048 left, BigInteger right) => left.ToBigInteger() > right;
+    public static bool operator >(BigInteger left, ULong2048 right) => left > right.ToBigInteger();
+    public static bool operator >=(ULong2048 left, BigInteger right) => left.ToBigInteger() >= right;
+    public static bool operator >=(BigInteger left, ULong2048 right) => left >= right.ToBigInteger();
 
     public static bool operator ==(ULong2048 left, ULong2048 right) => left.Equals(right);
     public static bool operator !=(ULong2048 left, ULong2048 right) => !left.Equals(right);
@@ -209,6 +232,26 @@ public readonly struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatab
         ULong2048Limbs limbs = default;
         for (var index = 0; index < LimbCount; index++) limbs[index] = ulong.MaxValue;
         return new ULong2048(limbs);
+    }
+
+    private static ULong2048 CheckedAdd(ULong2048 left, ULong2048 right)
+    {
+        var result = left + right;
+        if (result < left) throw new OverflowException("ULong2048 addition overflow.");
+        return result;
+    }
+
+    private static ULong2048 CheckedSubtract(ULong2048 left, ULong2048 right)
+    {
+        if (left < right) throw new OverflowException("ULong2048 subtraction overflow.");
+        return left - right;
+    }
+
+    private static ULong2048 CheckedMultiply(ULong2048 left, ULong2048 right)
+    {
+        var exact = left.ToBigInteger() * right.ToBigInteger();
+        if (exact.GetBitLength() > BitCount) throw new OverflowException("ULong2048 multiplication overflow.");
+        return left * right;
     }
 
     private static ULong2048 AddRaw(in ULong2048 left, in ULong2048 right) => new(AddLimbs(in left._limbs, in right._limbs));

@@ -38,6 +38,9 @@ jobs:
       - name: Verify generated independent MSTest catalog
         run: python3 scripts/generate_mstest_regression_adapter.py --check
 
+      - name: Verify generated ULong2048 mixed-integral operator matrix
+        run: python3 scripts/generate_ulong2048_integral_operators.py --check
+
       - name: Verify unified Ricis.Core version
         shell: bash
         run: |
