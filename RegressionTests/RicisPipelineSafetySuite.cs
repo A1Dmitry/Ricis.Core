@@ -10,6 +10,7 @@ internal static class RicisPipelineSafetySuite
         ("SAFE01: pipeline не исполняет caller MethodCall при поиске корней", PipelineDoesNotExecuteCallerMethod),
         ("SAFE02: дробный индексированный zero сохраняет тип Double", FractionalIndexedZeroPreservesScalarType),
         ("SAFE03: LazyInfinity не исполняет небезопасный payload при Reduce", UnsafeLazyInfinityDoesNotExecutePayload),
+        ("SAFE04: NumericalEvaluationSafety принимает безопасное conditional expression", ConditionalExpressionIsSafe),
     ];
 
     private static void PipelineDoesNotExecuteCallerMethod()
@@ -61,6 +62,18 @@ internal static class RicisPipelineSafetySuite
             $"Небезопасный LazyInfinity должен завершаться controlled ErrorInfinity, получено: {reduced}.");
         Require(SideEffectProbe.CallCount == 0,
             $"Reduce не должен исполнять небезопасный payload; зафиксировано вызовов: {SideEffectProbe.CallCount}.");
+    }
+
+    private static void ConditionalExpressionIsSafe()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var condition = Expression.GreaterThan(x, Expression.Constant(0d));
+        var conditional = Expression.Condition(condition, x, Expression.Negate(x));
+
+        var infinity = InfinityExpression.CreateLazy(conditional, x, 0d);
+
+        Require(infinity.CanReduce,
+            "Безопасное conditional expression должно проходить numerical safety через LazyInfinity.CanReduce.");
     }
 
     private static void Require(bool condition, string message)

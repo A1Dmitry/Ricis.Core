@@ -28,7 +28,16 @@ internal static class RicisPublicUtilitySuite
         ("API19: Expression extensions evaluate finite scalar contracts", ExpressionExtensionsEvaluateFiniteScalars),
         ("API20: Expression extensions expose ordering and parameter discovery", ExpressionExtensionsOrderAndFindParameters),
         ("API21: Expression extensions classify transcendental shape and BigInteger conversion", ExpressionExtensionsClassifyAndConvert),
+        ("API24: ToBigInteger preserves ulong values above Int64", ToBigIntegerPreservesUlong),
     ];
+
+    private static void ToBigIntegerPreservesUlong()
+    {
+        const ulong source = 18_446_744_073_709_551_000UL;
+        var converted = ((object)source).ToBigInteger();
+        Assert(converted == new BigInteger(source),
+            $"ulong ToBigInteger должен сохранить значение без double-потери: {converted}.");
+    }
 
     private static void ExactEvaluatorComputesRationalExpression()
     {

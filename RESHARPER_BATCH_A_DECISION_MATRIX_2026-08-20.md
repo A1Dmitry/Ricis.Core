@@ -21,4 +21,12 @@ The available repository checkout does not contain the original ReSharper XML sn
 
 The Batch A source graph prevents a false cleanup: three candidates are live or structurally represented by different current helper names, while four candidate names are absent and therefore cannot be safely edited from the old ReSharper snapshot. No public API or contract member was deleted. Existing logical, proof, fraction, solver and Finance regression suites remain the required behavioral evidence.
 
+## Remainder sprint review — 2026-08-20
+
+The matrix was re-reviewed as the first unresolved package after the owner-acceptance blocker. The current checkout still does not contain the original ReSharper XML snapshot, and no owner approval for deletion is present. Therefore A-01…A-07 remain an audit/test-first result: live candidates are preserved, stale or absent candidates are Deferred/Historical, and no cleanup is authorized. This review is not owner approval and does not close the package.
+
+## Next action
+
+Supply the current XML/caller/reflection/serialization evidence and record owner approval before any eligible private cleanup; otherwise continue to the next priority package without deleting or silently downgrading API surface.
+
 This matrix closes only the **audit/test-first** layer. It does not authorize public removal, private deletion, or a new ReSharper batch. A future cleanup may begin only from a refreshed current XML snapshot and a new owner-approved decision record.

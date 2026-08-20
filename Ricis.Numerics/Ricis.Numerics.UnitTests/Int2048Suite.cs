@@ -117,6 +117,15 @@ public sealed class Int2048Suite
         Assert.AreEqual(custom.ToBigInteger() * external, custom * external);
         Assert.AreEqual(custom.ToBigInteger() / 7, custom / new BigInteger(7));
         Assert.AreEqual(custom.ToBigInteger() % 7, custom % new BigInteger(7));
+
+        checked
+        {
+            Assert.AreEqual(custom.ToBigInteger() + external, checked(custom + external));
+            Assert.AreEqual(custom.ToBigInteger() - external, checked(custom - external));
+            Assert.AreEqual(custom.ToBigInteger() * external, checked(custom * external));
+            Assert.AreEqual(custom.ToBigInteger() / 7, checked(custom / new BigInteger(7)));
+            Assert.AreEqual(custom.ToBigInteger() % 7, checked(custom % new BigInteger(7)));
+        }
     }
 
     [TestMethod("I2048-12: CopySign, Clamp and predicates retain signed semantics")]

@@ -212,6 +212,24 @@ public sealed class CompositeFermatPruningSuite
         Assert.IsTrue(result.Trace.DivisibilityChecks > BigInteger.Zero);
     }
 
+    [TestMethod("CFP-16A: tangent trace uses selected orientation count without losing total band count")]
+    public void TangentTraceUsesSelectedOrientationCountWithoutLosingTotalBandCount()
+    {
+        var lower = CompositeFermatSearch.Search(
+            new BigInteger(5959),
+            FermatPruningProfile.Create(FermatSearchOrdering.TangentLowerFactor, new BigInteger(2)));
+        var upper = CompositeFermatSearch.Search(
+            new BigInteger(5959),
+            FermatPruningProfile.Create(FermatSearchOrdering.TangentUpperFactor, new BigInteger(2)));
+
+        Assert.AreEqual(lower.Trace.PFactorCandidates, lower.Trace.InitialCandidates);
+        Assert.AreEqual(upper.Trace.QFactorCandidates, upper.Trace.InitialCandidates);
+        Assert.AreEqual(lower.Trace.PFactorCandidates + lower.Trace.QFactorCandidates,
+            lower.Trace.TangentBandCandidateCount);
+        Assert.AreEqual(upper.Trace.PFactorCandidates + upper.Trace.QFactorCandidates,
+            upper.Trace.TangentBandCandidateCount);
+    }
+
     [TestMethod("CFP-16: geometry-dominant span is retained without calculated extension")]
     public void GeometryDominantSpanIsRetainedWithoutCalculatedExtension()
     {

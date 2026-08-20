@@ -25,6 +25,7 @@ var tests = new (string Name, Func<Task> Body)[]
     ("FIN16: Annual tax policy evaluates every declared counterparty kind", TaxPolicyEvaluatesDeclaredCounterpartyKind),
     ("FIN17: Reserved bank fee and tax receipt ports remain explicit contracts", ReservedFinancePortsRemainExplicit),
     ("FIN18: Payout confirmation and rejection enforce submitted lifecycle", PayoutConfirmationAndRejectionEnforceLifecycle),
+    ("FIN19: lifecycle enums expose reconciled and review-required states", LifecycleEnumsExposeDeclaredStates),
 };
 
 var failures = 0;
@@ -50,6 +51,18 @@ if (failures > 0)
 
 Console.WriteLine($"All {tests.Length} finance regression tests passed.");
 return 0;
+
+static Task LifecycleEnumsExposeDeclaredStates()
+{
+    Require(Enum.IsDefined(SettlementStatus.Reconciled),
+        "Settlement lifecycle обязан публиковать state Reconciled.");
+    Require(Enum.IsDefined(TaxThresholdStatus.ReviewRequired),
+        "Tax policy обязан публиковать state ReviewRequired.");
+    Require(SettlementStatus.Reconciled != SettlementStatus.Confirmed &&
+            TaxThresholdStatus.ReviewRequired != TaxThresholdStatus.Warning,
+        "Declared lifecycle states должны оставаться различимыми.");
+    return Task.CompletedTask;
+}
 
 static Task MoneyRejectsCurrencyMixing()
 {
@@ -132,8 +145,10 @@ static async Task PayoutIsAuthorisedAndIdempotent()
 
     Require(first.Status == PayoutStatus.Submitted && first.ProviderPayoutId == "payout-001" && provider.CallCount == 1,
         "Разрешённый payout должен быть отправлен provider один раз.");
-    Require(ReferenceEquals(first, duplicate) && settlement.AvailableToAllocate.Amount == 44m,
-        "Идемпотентный payout должен вернуть сохранённый aggregate и не резервировать сумму повторно.");
+    Require(ReferenceEquals(first, duplicate) &&
+            settlement.AvailableToAllocate.Amount == 44m &&
+            settlement.Allocated.Amount == 50m,
+        "Идемпотентный payout должен вернуть сохранённый aggregate, сохранить allocated=50 и не резервировать сумму повторно.");
 }
 
 static async Task PayoutPolicyBlocksProviderCall()

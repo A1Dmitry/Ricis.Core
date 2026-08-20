@@ -14,6 +14,7 @@ internal static class RicisTypedProofLogSuite
         ("TLOG03: JSON LaTeX Lean reports рендерят один canonical snapshot", ReportsRenderOneCanonicalSnapshot),
         ("TLOG04: renderer отклоняет неупорядоченный journal и неизвестный format", RendererRejectsInvalidInput),
         ("API22: SimplifyWithLog publishes typed public pipeline audit", SimplifyWithLogPublishesTypedAudit),
+        ("API23: SimplifyWithTraceAndLog preserves trace and typed audit", SimplifyWithTraceAndLogPreservesBothJournals),
     ];
 
     private static void TypedJournalPreservesOrderAndStageTypes()
@@ -81,6 +82,27 @@ internal static class RicisTypedProofLogSuite
                 entries.Any(entry => entry.EventCode == "RICIS_PHASE_TRACE" && entry.StageType == typeof(IdentityReductionVisitor).FullName) &&
                 entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_COMPLETE"),
             "SimplifyWithLog должен публиковать typed start, phase trace и completion audit events.");
+    }
+
+    private static void SimplifyWithTraceAndLogPreservesBothJournals()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var trace = new List<RicisPhaseTraceStep>();
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+
+        var result = RicisPhasePipeline.SimplifyWithTraceAndLog(
+            Expression.Divide(x, x),
+            trace,
+            log);
+        var entries = log.Snapshot();
+
+        Require(result is ConstantExpression { Value: double value } && value == 1.0,
+            $"Combined trace/log overload должен вернуть L1 identity, получено {result}.");
+        Require(trace.Count >= 8 &&
+                entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_START") &&
+                entries.Any(entry => entry.EventCode == "RICIS_PHASE_TRACE") &&
+                entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_COMPLETE"),
+            "Combined overload должен сохранить phase trace и typed journal в одном запуске.");
     }
 
     private static void ReportsRenderOneCanonicalSnapshot()

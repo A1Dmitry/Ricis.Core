@@ -191,6 +191,15 @@ public sealed class RsaPssSha256VerifierSuite
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new Rsa2048PublicKey(Rsa2048PssFixture.Modulus2048, Rsa2048PssFixture.Modulus2048));
     }
 
+    [TestMethod("PSSN16: InvalidPublicKey failure state remains explicitly declared")]
+    public void Pssn16_InvalidPublicKeyFailureStateIsDeclared()
+    {
+        Assert.IsTrue(Enum.IsDefined(RsaPssVerificationFailure.InvalidPublicKey));
+        var result = RsaPssVerificationResult.Invalid(RsaPssVerificationFailure.InvalidPublicKey);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(RsaPssVerificationFailure.InvalidPublicKey, result.Failure);
+    }
+
     [TestMethod("PAR01: ULong2048 public operation matches BigInteger for valid and mutated representatives")]
     public void Par01_PublicOperationMatchesBigIntegerOracle()
     {

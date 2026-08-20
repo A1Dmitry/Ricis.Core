@@ -38,6 +38,13 @@ public sealed class ULong2048Suite
         Assert.AreEqual(addend + value.ToBigInteger(), addend + value);
         Assert.AreEqual(value.ToBigInteger() * addend, value * addend);
         Assert.AreEqual(value.ToBigInteger() % addend, value % addend);
+
+        checked
+        {
+            Assert.AreEqual(value.ToBigInteger() + addend, checked(value + addend));
+            Assert.AreEqual(value.ToBigInteger() * addend, checked(value * addend));
+            Assert.AreEqual(value.ToBigInteger() % addend, checked(value % addend));
+        }
     }
 
     [TestMethod("U2048-04: custom modular multiplication matches BigInteger")]

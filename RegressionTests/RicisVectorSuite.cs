@@ -13,6 +13,7 @@ internal static class RicisVectorSuite
         ("VECTOR06: разные размерности отклоняются явно", MismatchedDimensionsAreRejected),
         ("VECTOR07: пустой вектор отклоняется", EmptyVectorIsRejected),
         ("VECTOR08: generic BigInteger поддерживает векторные операции", BigIntegerVectorOperations),
+        ("VECTOR09: GetEnumerator выдаёт координаты и освобождается через IDisposable", EnumeratorPreservesCoordinatesAndDisposes),
     ];
 
     private static void StoresOrderedCoordinates()
@@ -68,6 +69,20 @@ internal static class RicisVectorSuite
 
     private static void EmptyVectorIsRejected() =>
         RegressionAssertions.Expect<ArgumentException>(() => _ = new RicisVector<int>(Array.Empty<int>()), "Пустой вектор недопустим.");
+
+    private static void EnumeratorPreservesCoordinatesAndDisposes()
+    {
+        var vector = new RicisVector<int>([2, 7, 1]);
+        using var enumerator = vector.GetEnumerator();
+        var values = new List<int>();
+        while (enumerator.MoveNext())
+        {
+            values.Add(enumerator.Current);
+        }
+
+        RegressionAssertions.Require(values.SequenceEqual([2, 7, 1]),
+            "GetEnumerator должен вернуть координаты в исходном порядке.");
+    }
 
     private static void BigIntegerVectorOperations()
     {
