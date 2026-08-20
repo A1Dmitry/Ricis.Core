@@ -10,6 +10,19 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public sealed class LimitBridgeVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public LimitBridgeVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal LimitBridgeVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
@@ -19,7 +32,7 @@ public sealed class LimitBridgeVisitor : ExpressionVisitor, IExpressionVisitor
             ? node
             : Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
 
-        return LimitBridge.TryApply(rebuilt, out var bridge) ? bridge : rebuilt;
+        return LimitBridge.TryApply(rebuilt, scalarPolicy, out var bridge) ? bridge : rebuilt;
     }
 
     /// <inheritdoc />

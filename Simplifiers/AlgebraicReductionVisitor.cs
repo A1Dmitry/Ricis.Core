@@ -18,6 +18,19 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public AlgebraicReductionVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal AlgebraicReductionVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
@@ -29,30 +42,29 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
             // Safe ordinary structural algebra. RICIS extension payloads are
             // deliberately excluded so indexed zero/infinity semantics remain
             // available to the later O(1) and A phases.
-            if ((node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)) &&
+            if (scalarPolicy.SupportsRicisArithmetic(node) &&
                 left is not RicisExpression && right is not RicisExpression)
             {
                 if (node.NodeType == ExpressionType.Add)
                 {
-                    if (left.IsZero()) return right;
-                    if (right.IsZero()) return left;
+                    if (IsZero(left)) return right;
+                    if (IsZero(right)) return left;
                 }
 
                 if (node.NodeType == ExpressionType.Subtract)
                 {
-                    if (right.IsZero()) return left;
-                    if (left.IsZero()) return Expression.Negate(right);
-                    if (left.AreEqual(right)) return NumericConstants.ZeroOf(left.Type);
+                    if (IsZero(right)) return left;
+                    if (IsZero(left) && scalarPolicy.SupportsUnaryNegation(right)) return Expression.Negate(right);
+                    if (left.AreEqual(right)) return scalarPolicy.ZeroOf(left.Type);
                 }
             }
 
             // Safe structural units. Deliberately do not reduce F·0 here:
             // the later O(1) bridge must retain the parent index 0_F.
-            if (node.NodeType == ExpressionType.Multiply &&
-                (node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)))
+            if (node.NodeType == ExpressionType.Multiply && scalarPolicy.SupportsRicisArithmetic(node))
             {
-                if (left.IsOne()) return right;
-                if (right.IsOne()) return left;
+                if (IsOne(left)) return right;
+                if (IsOne(right)) return left;
             }
 
             return left == node.Left && right == node.Right
@@ -63,7 +75,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         // RICIS only overrides the built-in arithmetic algebra. A custom
         // operator may have non-classical side effects or semantics, so it
         // remains an untouched classical expression.
-        if (node.Method is not null && !NumericConstants.IsIntrinsicNumeric(node.Type))
+        if (!scalarPolicy.SupportsRicisArithmetic(node))
         {
             return left == node.Left && right == node.Right
                 ? node
@@ -71,7 +83,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         }
 
         // Structural units are simplified before any singularity analysis.
-        if (right.IsOne())
+        if (IsOne(right))
         {
             return left;
         }
@@ -96,7 +108,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         // SP2 / L1: identical subtrees → 1
         if (left.AreEqual(right))
         {
-            return NumericConstants.OneOf(left.Type);
+            return scalarPolicy.OneOf(left.Type);
         }
 
         // SP2 adjacent powers: F^n / F^(n−1) → F. The base and
@@ -348,7 +360,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
     /// SP2 cancellation for a single common deferred factor. This covers ratios
     /// such as F/(F·G) → 1/G and (F·G)/F → G before polynomial division runs.
     /// </summary>
-    private static Expression TryReduceAdjacentFactorials(Expression numerator, Expression denominator)
+    private Expression TryReduceAdjacentFactorials(Expression numerator, Expression denominator)
     {
         if (numerator is not MethodCallExpression { Method: var numeratorMethod, Arguments.Count: 1 } numeratorFactorial ||
             denominator is not MethodCallExpression { Method: var denominatorMethod, Arguments.Count: 1 } denominatorFactorial ||
@@ -383,9 +395,9 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return n;
     }
 
-    private static bool IsOneOrStaticOne(Expression expression, Type scalarType)
+    private bool IsOneOrStaticOne(Expression expression, Type scalarType)
     {
-        if (expression.IsOne())
+        if (IsOne(expression))
         {
             return true;
         }
@@ -401,7 +413,7 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
     /// factors as a multiset. Thus (a·a·a·a·a)/(a·a·a·a) → a regardless of
     /// the binary-tree association used by the expression builder.
     /// </summary>
-    private static Expression TryCancelAssociativeFactors(Expression numerator, Expression denominator)
+    private Expression TryCancelAssociativeFactors(Expression numerator, Expression denominator)
     {
         var numeratorFactors = FlattenBuiltInMultiplication(numerator);
         var denominatorFactors = FlattenBuiltInMultiplication(denominator);
@@ -439,22 +451,22 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
 
         var reducedNumerator = BuildProduct(remainingNumerator, numerator.Type);
         var reducedDenominator = BuildProduct(remainingDenominator, denominator.Type);
-        return reducedDenominator.IsOne()
+        return IsOne(reducedDenominator)
             ? reducedNumerator
             : Expression.Divide(reducedNumerator, reducedDenominator);
     }
 
-    private static List<Expression> FlattenBuiltInMultiplication(Expression expression)
+    private List<Expression> FlattenBuiltInMultiplication(Expression expression)
     {
         var factors = new List<Expression>();
         CollectBuiltInMultiplicationFactors(expression, factors);
         return factors;
     }
 
-    private static void CollectBuiltInMultiplicationFactors(Expression expression, List<Expression> factors)
+    private void CollectBuiltInMultiplicationFactors(Expression expression, List<Expression> factors)
     {
         if (expression is BinaryExpression { NodeType: ExpressionType.Multiply } product &&
-            (product.Method is null || NumericConstants.IsIntrinsicNumeric(product.Type)))
+            scalarPolicy.SupportsRicisArithmetic(product))
         {
             CollectBuiltInMultiplicationFactors(product.Left, factors);
             CollectBuiltInMultiplicationFactors(product.Right, factors);
@@ -464,17 +476,17 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         factors.Add(expression);
     }
 
-    private static Expression BuildProduct(IReadOnlyList<Expression> factors, Type scalarType)
+    private Expression BuildProduct(IReadOnlyList<Expression> factors, Type scalarType)
     {
         return factors.Count switch
         {
-            0 => NumericConstants.OneOf(scalarType),
+            0 => scalarPolicy.OneOf(scalarType),
             1 => factors[0],
             _ => factors.Aggregate(Expression.Multiply),
         };
     }
 
-    private static Expression TryCancelCommonFactor(Expression numerator, Expression denominator)
+    private Expression TryCancelCommonFactor(Expression numerator, Expression denominator)
     {
         if (denominator is BinaryExpression { NodeType: ExpressionType.Multiply } denProduct)
         {
@@ -505,7 +517,13 @@ public class AlgebraicReductionVisitor : ExpressionVisitor, IExpressionVisitor
         return null;
     }
 
-    private static Expression OneOf(Type type) => NumericConstants.OneOf(type);
+    private Expression OneOf(Type type) => scalarPolicy.OneOf(type);
+
+    private bool IsZero(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsZeroValue(constant.Value);
+
+    private bool IsOne(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsOneValue(constant.Value);
 
     private static bool IsSafePolynomialDenominator(Expression denominator, ParameterExpression param)
     {

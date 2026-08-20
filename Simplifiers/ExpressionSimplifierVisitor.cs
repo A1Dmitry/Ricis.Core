@@ -11,6 +11,19 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public ExpressionSimplifierVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal ExpressionSimplifierVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) =>
         RicisSpecialExpressionRebinder.Rebind(node, Visit);
@@ -34,7 +47,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         {
             case ExpressionType.Add when IsZero(left): return right;
             case ExpressionType.Add when IsZero(right): return left;
-            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return NumericConstants.ZeroOf(node.Type);
+            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsOne(left): return right;
             case ExpressionType.Multiply when IsOne(right): return left;
             case ExpressionType.Divide when IsZero(left): return left;
@@ -212,7 +225,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
             Expression.Multiply(b, d));
     }
 
-    private static Expression CreatePowerOrProduct(Expression @base)
+    private Expression CreatePowerOrProduct(Expression @base)
     {
         try
         {
@@ -227,15 +240,11 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         }
     }
 
-    private static bool IsZero(Expression e)
-    {
-        return e is ConstantExpression c && IsNumericValue(c.Value, 0);
-    }
+    private bool IsZero(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsZeroValue(constant.Value);
 
-    private static bool IsOne(Expression e)
-    {
-        return e is ConstantExpression c && IsNumericValue(c.Value, 1);
-    }
+    private bool IsOne(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsOneValue(constant.Value);
 
     private static bool IsNumericValue(object value, int expected) => value switch
     {
@@ -254,14 +263,6 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         _ => false,
     };
 
-    private static Expression CreateNumericConstant(int value, Type type)
-    {
-        if (type == typeof(double)) return Expression.Constant((double)value);
-        if (type == typeof(float)) return Expression.Constant((float)value);
-        if (type == typeof(decimal)) return Expression.Constant((decimal)value);
-        if (type == typeof(long)) return Expression.Constant((long)value);
-        if (type == typeof(BigInteger)) return Expression.Constant(new BigInteger(value));
-        return Expression.Constant(value, type);
-    }
+    private Expression CreateNumericConstant(int value, Type type) => scalarPolicy.FromInt32(value, type);
 
 }

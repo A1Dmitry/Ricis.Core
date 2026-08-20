@@ -18,6 +18,19 @@ namespace Ricis.Core.Simplifiers;
 /// </summary>
 public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public RicisTransformVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal RicisTransformVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
@@ -31,8 +44,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
 
         // A1/A4 redefine only built-in division. Overloaded operators belong to
         // their scalar type and therefore follow classical evaluation exactly.
-        if (node.NodeType == ExpressionType.Divide &&
-            (node.Method is null || NumericConstants.IsIntrinsicNumeric(node.Type)))
+        if (node.NodeType == ExpressionType.Divide && scalarPolicy.SupportsRicisArithmetic(node))
         {
             return SimplifyDivision(node.Left, node.Right);
         }
@@ -42,11 +54,14 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
     /// <inheritdoc />
     protected override Expression VisitExtension(Expression node) => node;
 
+    private bool IsZero(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsZeroValue(constant.Value);
+
     private Expression SimplifyDivision(Expression numerator, Expression denominator)
     {
         // Limit form: F/0 → ∞_F. The index F stays deferred; an explicit
         // limit point is not required for this symbolic representation.
-        if (denominator.IsZero())
+        if (IsZero(denominator))
         {
             return InfinityExpression.CreateLazy(numerator, []);
         }
@@ -78,7 +93,7 @@ public class RicisTransformVisitor : ExpressionVisitor, IExpressionVisitor
         // keep as safety net).
         if (numerator.AreEqual(denominator))
         {
-            return NumericConstants.OneOf(numerator.Type);
+            return scalarPolicy.OneOf(numerator.Type);
         }
 
         var tempSingularities = new List<InfinityExpression>();

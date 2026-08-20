@@ -1,6 +1,7 @@
 // RicisPhasePipeline.cs — strict RICIS v7.7 (no classical limits)
 
 using System.Linq.Expressions;
+using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Logging;
@@ -17,20 +18,21 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public static class RicisPhasePipeline
 {
-    private static readonly IReadOnlyList<IRicisPipelineStage> Stages =
+    private static IReadOnlyList<IRicisPipelineStage> CreateStages(IRicisScalarPolicy scalarPolicy) =>
     [
-        new RicisPipelineStage<IdentityReductionVisitor>(new IdentityReductionVisitor()),
+        new RicisPipelineStage<IdentityReductionVisitor>(new IdentityReductionVisitor(scalarPolicy)),
         new RicisPipelineStage<PolarTrigVisitor>(new PolarTrigVisitor()),
-        new RicisPipelineStage<AlgebraicReductionVisitor>(new AlgebraicReductionVisitor()),
+        new RicisPipelineStage<AlgebraicReductionVisitor>(new AlgebraicReductionVisitor(scalarPolicy)),
         new RicisPipelineStage<LogicalReductionVisitor>(new LogicalReductionVisitor()),
-        new RicisPipelineStage<LimitBridgeVisitor>(new LimitBridgeVisitor()),
-        new RicisPipelineStage<RicisTransformVisitor>(new RicisTransformVisitor()),
+        new RicisPipelineStage<LimitBridgeVisitor>(new LimitBridgeVisitor(scalarPolicy)),
+        new RicisPipelineStage<RicisTransformVisitor>(new RicisTransformVisitor(scalarPolicy)),
         new RicisPipelineStage<TypeConsistencyVisitor>(new TypeConsistencyVisitor()),
-        new RicisPipelineStage<StandardOperationsVisitor>(new StandardOperationsVisitor()),
+        new RicisPipelineStage<StandardOperationsVisitor>(new StandardOperationsVisitor(scalarPolicy)),
     ];
 
     /// <summary>Simplifies an expression through the complete normative RICIS pipeline.</summary>
-    public static Expression Simplify(Expression expr) => SimplifyCore<object>(expr, null, null);
+    public static Expression Simplify(Expression expr) =>
+        SimplifyCore<object>(expr, null, null, RicisScalarPolicies.Legacy);
 
     /// <summary>
     /// Simplifies an expression through the normative RICIS pipeline and appends
@@ -41,7 +43,7 @@ public static class RicisPhasePipeline
     public static Expression SimplifyWithTrace(Expression expr, ICollection<RicisPhaseTraceStep> trace)
     {
         ArgumentNullException.ThrowIfNull(trace);
-        return SimplifyCore<object>(expr, trace, null);
+        return SimplifyCore<object>(expr, trace, null, RicisScalarPolicies.Legacy);
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ public static class RicisPhasePipeline
     public static Expression SimplifyWithLog<TLogStage>(Expression expr, ILog<TLogStage> log)
     {
         ArgumentNullException.ThrowIfNull(log);
-        return SimplifyCore(expr, null, log);
+        return SimplifyCore(expr, null, log, RicisScalarPolicies.Legacy);
     }
 
     /// <summary>
@@ -67,15 +69,70 @@ public static class RicisPhasePipeline
     {
         ArgumentNullException.ThrowIfNull(trace);
         ArgumentNullException.ThrowIfNull(log);
-        return SimplifyCore(expr, trace, log);
+        return SimplifyCore(expr, trace, log, RicisScalarPolicies.Legacy);
+    }
+
+    /// <summary>
+    /// Simplifies a unary expression through the universal generic numeric route.
+    /// The scalar type remains explicit for every phase and no registration is required.
+    /// </summary>
+    public static Expression<Func<T, T>> Simplify<T>(Expression<Func<T, T>> expression)
+        where T : INumber<T> =>
+        SimplifyGenericCore<T, object>(expression, null, null);
+
+    /// <summary>Generic unary simplification with an immutable phase trace.</summary>
+    public static Expression<Func<T, T>> SimplifyWithTrace<T>(
+        Expression<Func<T, T>> expression,
+        ICollection<RicisPhaseTraceStep> trace)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(trace);
+        return SimplifyGenericCore<T, object>(expression, trace, null);
+    }
+
+    /// <summary>Generic unary simplification with a typed proof-log journal.</summary>
+    public static Expression<Func<T, T>> SimplifyWithLog<T, TLogStage>(
+        Expression<Func<T, T>> expression,
+        ILog<TLogStage> log)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        return SimplifyGenericCore(expression, null, log);
+    }
+
+    /// <summary>Generic unary simplification with both trace and typed proof log.</summary>
+    public static Expression<Func<T, T>> SimplifyWithTraceAndLog<T, TLogStage>(
+        Expression<Func<T, T>> expression,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(trace);
+        ArgumentNullException.ThrowIfNull(log);
+        return SimplifyGenericCore(expression, trace, log);
+    }
+
+    private static Expression<Func<T, T>> SimplifyGenericCore<T, TLogStage>(
+        Expression<Func<T, T>> expression,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(expression);
+        var simplified = SimplifyCore(expression, trace, log, RicisScalarPolicies.For<T>());
+        return simplified as Expression<Func<T, T>>
+            ?? throw new InvalidOperationException(
+                $"Generic RICIS pipeline changed lambda type {typeof(Func<T, T>)} to {simplified.Type}.");
     }
 
     private static Expression SimplifyCore<TLogStage>(
         Expression expr,
         ICollection<RicisPhaseTraceStep> trace,
-        ILog<TLogStage> log)
+        ILog<TLogStage> log,
+        IRicisScalarPolicy scalarPolicy)
     {
         ArgumentNullException.ThrowIfNull(expr);
+        ArgumentNullException.ThrowIfNull(scalarPolicy);
         log?.Info(
             "RICIS_PIPELINE_START",
             "Запущен нормативный RICIS phase pipeline.",
@@ -92,7 +149,7 @@ public static class RicisPhasePipeline
             : null;
 
         var result = expr;
-        foreach (var stage in Stages)
+        foreach (var stage in CreateStages(scalarPolicy))
         {
             result = stage.Apply(result, trace, log);
         }

@@ -12,6 +12,19 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public StandardOperationsVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal StandardOperationsVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitExtension(Expression node)
     {
@@ -31,7 +44,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
 
         // RICIS standard operations redefine only intrinsic .NET arithmetic.
         // User-defined operator semantics stay strictly classical.
-        if (node.Method is not null && !NumericConstants.IsIntrinsicNumeric(node.Type))
+        if (!scalarPolicy.SupportsRicisArithmetic(node))
         {
             return Rebuild(node, left, right);
         }
@@ -66,7 +79,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                 ExpressionType.Multiply => BuildZeroOperation(zeroLeft, zeroRight, ExpressionType.Multiply),
                 // A4: 0_F / 0_G -> F/G; equal identities preserve L1.
                 ExpressionType.Divide when zeroLeft.Numerator.AreEqual(zeroRight.Numerator) =>
-                    NumericConstants.OneOf(zeroLeft.Numerator.Type),
+                    scalarPolicy.OneOf(zeroLeft.Numerator.Type),
                 ExpressionType.Divide => Expression.Divide(zeroLeft.Numerator, zeroRight.Numerator),
                 _ => Rebuild(node, left, right)
             };
@@ -133,12 +146,12 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
             }
 
             // O(1): F·0 -> 0_F. The deferred parent index is retained.
-            if (left.IsZero())
+            if (IsZero(left))
             {
                 return new ZeroInfinityExpression(right, []);
             }
 
-            if (right.IsZero())
+            if (IsZero(right))
             {
                 return new ZeroInfinityExpression(left, []);
             }
@@ -149,7 +162,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         if (node.NodeType == ExpressionType.Divide &&
             left is ZeroInfinityExpression indexedDividend &&
             IsScalar(right) &&
-            !right.IsZero())
+            !IsZero(right))
         {
             var rawIndex = Expression.Divide(indexedDividend.Numerator, right);
             var index = SimplifyIndexedPayload(rawIndex);
@@ -173,7 +186,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
                         return MergeInfinities(infinityLeft, infinityRight, ExpressionType.Multiply);
                     case ExpressionType.Divide:
                         return infinityLeft.Numerator.AreEqual(infinityRight.Numerator)
-                            ? NumericConstants.OneOf(infinityLeft.Numerator.Type)
+                            ? scalarPolicy.OneOf(infinityLeft.Numerator.Type)
                             : Expression.Divide(infinityLeft.Numerator, infinityRight.Numerator);
                 }
             }
@@ -203,16 +216,16 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
 
         if (node.NodeType == ExpressionType.Multiply)
         {
-            if (left.IsOne()) return right;
-            if (right.IsOne()) return left;
-            if (left.IsZero()) return left;
-            if (right.IsZero()) return right;
+            if (IsOne(left)) return right;
+            if (IsOne(right)) return left;
+            if (IsZero(left)) return left;
+            if (IsZero(right)) return right;
         }
 
         if (node.NodeType == ExpressionType.Add)
         {
-            if (left.IsZero()) return right;
-            if (right.IsZero()) return left;
+            if (IsZero(left)) return right;
+            if (IsZero(right)) return left;
         }
 
         return Rebuild(node, left, right);
@@ -226,7 +239,7 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         return new ZeroInfinityExpression(index, indexedZero.Roots);
     }
 
-    private static Expression BuildZeroOperation(
+    private Expression BuildZeroOperation(
         ZeroInfinityExpression left,
         ZeroInfinityExpression right,
         ExpressionType operation)
@@ -236,9 +249,9 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
         return new ZeroInfinityExpression(index, left.Roots);
     }
 
-    private static Expression SimplifyIndexedPayload(Expression rawIndex)
+    private Expression SimplifyIndexedPayload(Expression rawIndex)
     {
-        var simplified = new ExpressionSimplifierVisitor().Visit(rawIndex);
+        var simplified = new ExpressionSimplifierVisitor(scalarPolicy).Visit(rawIndex);
         return simplified is not null && simplified.Type == rawIndex.Type
             ? simplified
             : rawIndex;
@@ -292,6 +305,12 @@ public class StandardOperationsVisitor : ExpressionVisitor, IExpressionVisitor
     }
 
     private static bool IsScalar(Expression expression) => !IsTrueInfinity(expression) && expression is not ZeroInfinityExpression;
+
+    private bool IsZero(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsZeroValue(constant.Value);
+
+    private bool IsOne(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsOneValue(constant.Value);
 
     private static Expression Rebuild(BinaryExpression node, Expression left, Expression right) =>
         left == node.Left && right == node.Right

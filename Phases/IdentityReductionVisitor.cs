@@ -13,6 +13,19 @@ namespace Ricis.Core.Phases;
 /// </summary>
 public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVisitor
 {
+    private readonly IRicisScalarPolicy scalarPolicy;
+
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public IdentityReductionVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
+
+    internal IdentityReductionVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
     /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
@@ -20,11 +33,10 @@ public sealed class IdentityReductionVisitor : ExpressionVisitor, IExpressionVis
         var right = Visit(node.Right);
 
         if (node.NodeType == ExpressionType.Divide &&
-            NumericConstants.IsIntrinsicNumeric(left.Type) &&
-            left.AreEqual(right) &&
-            NumericConstants.TryOneOf(left.Type, out var one))
+            scalarPolicy.IsScalarType(left.Type) &&
+            left.AreEqual(right))
         {
-            return one;
+            return scalarPolicy.OneOf(left.Type);
         }
 
         return left == node.Left && right == node.Right

@@ -5,11 +5,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using Ricis.Numerics;
+using Ricis.Numerics.Factorization;
 
 var outputPath = GetOption(args, "--output") ?? Path.Combine(Environment.CurrentDirectory, "numerics-performance-evidence.json");
 var quick = args.Contains("--quick", StringComparer.Ordinal);
 var data = BenchmarkData.Create();
 var measurements = new List<Measurement>();
+var rootOperand = ((BigInteger.One << 2046) + (BigInteger.One << 1001) + 12345);
+var rootSquare = rootOperand * rootOperand;
 
 measurements.Add(Compare("Int2048 addition", quick ? 1_000 : 25_000,
     () => data.IntLeft + data.IntRight,
@@ -35,13 +38,17 @@ measurements.Add(Compare("RSA public operation e=65537", quick ? 1 : 3,
     () => ULong2048.RsaPublicOperation(data.Signature, data.PublicExponent, data.Modulus),
     () => BigInteger.ModPow(data.BigSignature, data.BigPublicExponent, data.BigModulus),
     value => value.ToBigInteger(), value => value));
+measurements.Add(Compare("Shift floor root with one-bit correction", quick ? 5 : 100,
+    () => FermatFactorizer.IntegerSquareRootFloorByShift(rootSquare),
+    () => NewtonFloorRoot(rootSquare),
+    value => value, value => value));
 
 var evidence = new Evidence(
     DateTimeOffset.UtcNow,
     RuntimeInformation.FrameworkDescription,
     RuntimeInformation.OSDescription,
     RuntimeInformation.ProcessArchitecture.ToString(),
-    "Fixed deterministic 2048-bit operands; Release build; one warmup operation; result equality is checked against BigInteger before timing.",
+    "Fixed deterministic 2048-bit operands plus one deterministic large perfect square; Release build; one warmup operation; result equality is checked against an independent Newton baseline before timing.",
     measurements);
 
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputPath))!);
@@ -83,6 +90,20 @@ static Measurement Compare<TCustom, TReference>(
         referenceMeasurement.AllocatedBytes,
         customMeasurement.Elapsed.TotalMilliseconds == 0 ? 0 : referenceMeasurement.Elapsed.TotalMilliseconds / customMeasurement.Elapsed.TotalMilliseconds,
         customExpected.ToString(CultureInfo.InvariantCulture));
+}
+
+static BigInteger NewtonFloorRoot(BigInteger value)
+{
+    if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+    if (value < 2) return value;
+
+    var root = BigInteger.One << checked((int)((value.GetBitLength() + 1) / 2));
+    while (true)
+    {
+        var next = (root + (value / root)) >> 1;
+        if (next >= root) return root;
+        root = next;
+    }
 }
 
 static TimedOperation<T> Measure<T>(int iterations, Func<T> operation)

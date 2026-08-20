@@ -7,8 +7,9 @@ namespace Ricis.Core;
 /// <summary>
 /// Typed additive and multiplicative identities for scalar types used in RICIS
 /// expressions. Built-in numeric types are registered automatically. A custom
-/// <c>INumber&lt;TSelf&gt;</c> type is registered by either
-/// <see cref="Register{T}"/> or the generic finite-expression API.
+/// <c>INumber&lt;TSelf&gt;</c> type is registered only when it is passed to a
+/// legacy non-generic API; universal generic pipeline entry points use an
+/// explicit immutable scalar policy and do not register the type.
 /// </summary>
 public static class NumericConstants
 {
@@ -43,8 +44,8 @@ public static class NumericConstants
 
     /// <summary>
     /// Registers a scalar implementing .NET generic math. Call this once before
-    /// passing a custom scalar directly into the non-generic phase pipeline.
-    /// Generic entry points register their <c>T</c> automatically.
+/// passing a custom scalar directly into the non-generic phase pipeline.
+/// Generic entry points do not use this registry.
     /// </summary>
     public static void Register<T>() where T : INumber<T>
     {

@@ -17,7 +17,16 @@ internal struct ULong2048Limbs
 /// Represents an allocation-free unsigned fixed-width 2048-bit integer backed by thirty-two inline little-endian <see cref="ulong"/> limbs.
 /// This is the canonical magnitude domain for RSA-2048 moduli and signature representatives.
 /// </summary>
-public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatable<ULong2048>
+public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, IEquatable<ULong2048>,
+    IAdditionOperators<ULong2048, ULong2048, ULong2048>,
+    ISubtractionOperators<ULong2048, ULong2048, ULong2048>,
+    IMultiplyOperators<ULong2048, ULong2048, ULong2048>,
+    IDivisionOperators<ULong2048, ULong2048, ULong2048>,
+    IModulusOperators<ULong2048, ULong2048, ULong2048>,
+    IEqualityOperators<ULong2048, ULong2048, bool>,
+    IComparisonOperators<ULong2048, ULong2048, bool>,
+    IAdditiveIdentity<ULong2048, ULong2048>,
+    IMultiplicativeIdentity<ULong2048, ULong2048>
 {
     private const int LimbCount = 32;
     private const int BitCount = LimbCount * 64;
@@ -33,6 +42,8 @@ public readonly partial struct ULong2048 : IComparable, IComparable<ULong2048>, 
 
     public static ULong2048 Zero => default;
     public static ULong2048 One => new(1UL);
+    public static ULong2048 AdditiveIdentity => Zero;
+    public static ULong2048 MultiplicativeIdentity => One;
     public static ULong2048 MaxValue { get; } = CreateMaxValue();
 
     public static implicit operator ULong2048(ulong value) => new(value);

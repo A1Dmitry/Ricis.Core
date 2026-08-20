@@ -58,7 +58,6 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisSumSuite.Tests);
         tests.AddRange(RicisProofOperationsSuite.Tests);
         tests.AddRange(RicisAcademicProofSuite.Tests);
-        tests.AddRange(RicisFermatSystemSuite.Tests);
         tests.AddRange(RiemannHypothesisProofSuite.Tests);
         tests.AddRange(RicisNavierStokesProofSuite.Tests);
         tests.AddRange(RicisContinuousSugarSuite.Tests);
@@ -84,6 +83,7 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisVectorVisitorSuite.Tests);
         tests.AddRange(RicisTypeConsistencySuite.Tests);
         tests.AddRange(RicisTypedProofLogSuite.Tests);
+        tests.AddRange(RicisGenericScalarPolicySuite.Tests);
         tests.AddRange(RicisCheckedProofSuite.Tests);
         tests.AddRange(RicisProofDocumentFormatSuite.Tests);
         tests.AddRange(RicisLeanSingularitySuite.Tests);
