@@ -20,6 +20,7 @@ internal static class RicisProofDocumentFormatSuite
         ("PDF06: Format API — отклоняет неизвестный enum и null callback", InvalidFormatAndCallbackAreRejected),
         ("PDF07: Binary overload — использует общий Log renderer", BinarySystemLogTemplate),
         ("PDF08: Injected ILog сохраняет полный typed node-to-root документ", InjectedLogDocumentTemplate),
+        ("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут", CheckedMultiFormatArtifacts),
     ];
 
     private static void LogTemplate()
@@ -255,6 +256,41 @@ internal static class RicisProofDocumentFormatSuite
                 derivation.Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
                 log.Snapshot().Count > 0,
             "Injected ILog должен за один proof-run дать factory полную типизированную и node-to-root трассировку.");
+    }
+
+    private static void CheckedMultiFormatArtifacts()
+    {
+        Expression<Func<double, bool>>[] conditions = [value => value != 0.0];
+        Expression<Func<double, bool>>[] constraints = [];
+        Expression<Func<double, double>> claim = value => value / value;
+        Expression<Func<double, double>> expected = value => 1.0;
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+
+        var artifacts = conditions.ProveDocumentsCheckedWithLog(
+            constraints,
+            claim,
+            expected,
+            CreateProfile(),
+            [
+                RicisProofDocumentFormat.Json,
+                RicisProofDocumentFormat.Latex,
+                RicisProofDocumentFormat.Json,
+            ],
+            log);
+
+        var jsonSource = artifacts.GetDocument(RicisProofDocumentFormat.Json);
+        var latexSource = artifacts.GetDocument(RicisProofDocumentFormat.Latex);
+        using var json = JsonDocument.Parse(jsonSource);
+        var jsonDerivation = json.RootElement.GetProperty("derivation").GetString() ?? string.Empty;
+
+        Require(artifacts.Proof.IsVerified &&
+                artifacts.Documents.Count == 2 &&
+                artifacts.Trace.SequenceEqual(log.Snapshot()) &&
+                jsonDerivation.Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
+                jsonDerivation.Contains("Verification", StringComparison.Ordinal) &&
+                latexSource.Contains("Node-to-root маршрут", StringComparison.Ordinal) &&
+                latexSource.Contains("Verification", StringComparison.Ordinal),
+            "Checked multi-format API обязан выполнить одну структурную проверку, удалить дубликаты format и передать общий node-to-root маршрут во все экспортируемые документы.");
     }
 
     private static RicisProofDocumentProfile CreateProfile() => new(
