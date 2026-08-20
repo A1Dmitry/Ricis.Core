@@ -35,6 +35,13 @@ public static class RicisPhasePipeline
         SimplifyCore<object>(expr, null, null, RicisScalarPolicies.Legacy);
 
     /// <summary>
+    /// Simplifies an expression through the normative RICIS pipeline with an
+    /// optional typed audit journal. A null journal preserves the legacy route.
+    /// </summary>
+    public static Expression Simplify<TLogStage>(Expression expr, ILog<TLogStage> log = null) =>
+        SimplifyCore(expr, null, log, RicisScalarPolicies.Legacy);
+
+    /// <summary>
     /// Simplifies an expression through the normative RICIS pipeline and appends
     /// one immutable trace record for every phase attempt. The supplied trace is
     /// output-only: existing records are preserved and the input expression is
@@ -47,6 +54,19 @@ public static class RicisPhasePipeline
     }
 
     /// <summary>
+    /// Simplifies an expression with an optional trace collection and optional
+    /// typed journal. The existing two-argument trace overload remains unchanged.
+    /// </summary>
+    public static Expression SimplifyWithTrace<TLogStage>(
+        Expression expr,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log = null)
+    {
+        ArgumentNullException.ThrowIfNull(trace);
+        return SimplifyCore(expr, trace, log, RicisScalarPolicies.Legacy);
+    }
+
+    /// <summary>
     /// Simplifies an expression and records a typed, renderer-independent audit
     /// event sequence. The source type of orchestration events is
     /// <typeparamref name="TLogStage"/>; individual visitor events use typed
@@ -55,7 +75,7 @@ public static class RicisPhasePipeline
     public static Expression SimplifyWithLog<TLogStage>(Expression expr, ILog<TLogStage> log)
     {
         ArgumentNullException.ThrowIfNull(log);
-        return SimplifyCore(expr, null, log, RicisScalarPolicies.Legacy);
+        return Simplify(expr, log);
     }
 
     /// <summary>
@@ -80,6 +100,15 @@ public static class RicisPhasePipeline
         where T : INumber<T> =>
         SimplifyGenericCore<T, object>(expression, null, null);
 
+    /// <summary>
+    /// Generic unary simplification with an optional typed journal. A null journal
+    /// is intentionally equivalent to the legacy generic simplifier.
+    /// </summary>
+    public static Expression<Func<T, T>> Simplify<T, TLogStage>(
+        Expression<Func<T, T>> expression,
+        ILog<TLogStage> log = null)
+        where T : INumber<T> => SimplifyGenericCore(expression, null, log);
+
     /// <summary>Generic unary simplification with an immutable phase trace.</summary>
     public static Expression<Func<T, T>> SimplifyWithTrace<T>(
         Expression<Func<T, T>> expression,
@@ -97,7 +126,21 @@ public static class RicisPhasePipeline
         where T : INumber<T>
     {
         ArgumentNullException.ThrowIfNull(log);
-        return SimplifyGenericCore(expression, null, log);
+        return Simplify(expression, log);
+    }
+
+    /// <summary>
+    /// Generic unary simplification with an optional trace collection and typed
+    /// journal. Null log disables event publication without changing the result.
+    /// </summary>
+    public static Expression<Func<T, T>> SimplifyWithTrace<T, TLogStage>(
+        Expression<Func<T, T>> expression,
+        ICollection<RicisPhaseTraceStep> trace,
+        ILog<TLogStage> log = null)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(trace);
+        return SimplifyGenericCore(expression, trace, log);
     }
 
     /// <summary>Generic unary simplification with both trace and typed proof log.</summary>

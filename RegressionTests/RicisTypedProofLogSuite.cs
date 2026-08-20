@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Text.Json;
 using Ricis.Core.Extensions;
+using Ricis.Core.Expressions;
 using Ricis.Core.Logging;
 using Ricis.Core.Phases;
 using Ricis.Core.Simplifiers;
@@ -15,7 +16,30 @@ internal static class RicisTypedProofLogSuite
         ("TLOG04: renderer отклоняет неупорядоченный journal и неизвестный format", RendererRejectsInvalidInput),
         ("API22: SimplifyWithLog publishes typed public pipeline audit", SimplifyWithLogPublishesTypedAudit),
         ("API23: SimplifyWithTraceAndLog preserves trace and typed audit", SimplifyWithTraceAndLogPreservesBothJournals),
+        ("API24: optional log captures every RICIS normalization layer", OptionalLogCapturesAllNormalizationLayers),
     ];
+
+    private static void OptionalLogCapturesAllNormalizationLayers()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var source = Expression.Divide(x, x);
+        var trace = new List<RicisPhaseTraceStep>();
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        var withLog = RicisPhasePipeline.SimplifyWithTrace(source, trace, log);
+        var nullTrace = new List<RicisPhaseTraceStep>();
+        var withNullLog = RicisPhasePipeline.SimplifyWithTrace<RicisProofOrchestrationStage>(source, nullTrace, null);
+        var legacy = RicisPhasePipeline.Simplify(source);
+        var legacyWithNull = RicisPhasePipeline.Simplify<RicisProofOrchestrationStage>(source, null);
+        var entries = log.Snapshot().Where(entry => entry.EventCode == "RICIS_PHASE_TRACE").ToArray();
+        var expectedRules = new[] { "ID-01", "POL", "SP2", "LOG", "LIM", "A1/A4", "SP3", "Z-01/Z-02" };
+
+        Require(withLog.AreEqual(legacy) && withNullLog.AreEqual(legacy) && legacyWithNull.AreEqual(legacy) &&
+                nullTrace.Count >= 8 && trace.Count >= 8 &&
+                entries.Length >= expectedRules.Length &&
+                expectedRules.All(rule => entries.Any(entry => entry.Attributes.TryGetValue("ruleFamily", out var family) && family.StartsWith(rule, StringComparison.Ordinal))) &&
+                entries.Select(entry => entry.Sequence).SequenceEqual(entries.Select(entry => entry.Sequence).OrderBy(sequence => sequence)),
+            "Optional nullable log должен сохранять legacy result при null и публиковать все normative RICIS layers в ordered journal.");
+    }
 
     private static void TypedJournalPreservesOrderAndStageTypes()
     {
