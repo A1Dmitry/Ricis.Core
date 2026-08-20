@@ -13,6 +13,7 @@ internal static class RicisTypedProofLogSuite
         ("TLOG02: proof pipeline публикует visitor trace без исполнения условий", PipelinePublishesTypedTraceWithoutExecutingConditions),
         ("TLOG03: JSON LaTeX Lean reports рендерят один canonical snapshot", ReportsRenderOneCanonicalSnapshot),
         ("TLOG04: renderer отклоняет неупорядоченный journal и неизвестный format", RendererRejectsInvalidInput),
+        ("API22: SimplifyWithLog publishes typed public pipeline audit", SimplifyWithLogPublishesTypedAudit),
     ];
 
     private static void TypedJournalPreservesOrderAndStageTypes()
@@ -64,6 +65,22 @@ internal static class RicisTypedProofLogSuite
                                      entry.StageType == typeof(IdentityReductionVisitor).FullName) &&
                 entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_COMPLETE"),
             "Proof pipeline обязан публиковать orchestration и visitor этапы в общем typed journal.");
+    }
+
+    private static void SimplifyWithLogPublishesTypedAudit()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+
+        var result = RicisPhasePipeline.SimplifyWithLog(Expression.Divide(x, x), log);
+        var entries = log.Snapshot();
+
+        Require(result is ConstantExpression { Value: double value } && value == 1.0,
+            $"SimplifyWithLog должен вернуть normative L1 identity, получено {result}.");
+        Require(entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_START") &&
+                entries.Any(entry => entry.EventCode == "RICIS_PHASE_TRACE" && entry.StageType == typeof(IdentityReductionVisitor).FullName) &&
+                entries.Any(entry => entry.EventCode == "RICIS_PIPELINE_COMPLETE"),
+            "SimplifyWithLog должен публиковать typed start, phase trace и completion audit events.");
     }
 
     private static void ReportsRenderOneCanonicalSnapshot()

@@ -10,6 +10,7 @@ internal static class ExpressionSystemSuite
         ("ES03: ExpressionSystem использует существующий vector overload", ReusesVectorOperations),
         ("ES04: ExpressionSystem отклоняет несовместимые сигнатуры", RejectsIncompatibleSignatures),
         ("ES05: ExpressionSystem не схлопывается в скаляр", KeepsStructuredRepresentation),
+        ("API17: ExpressionSystem exposes structural-zero and vector interoperability APIs", ExposesStructuralZeroAndVector),
     ];
 
     private static void StoresLambdaExpressions()
@@ -66,6 +67,20 @@ internal static class ExpressionSystemSuite
         Require(text.Contains(","), "Структурная запись должна сохранять разделение координат.");
         Require(!text.Equals(system[0].ToString(), StringComparison.Ordinal),
             "Система не должна схлопываться в одну lambda.");
+    }
+
+    private static void ExposesStructuralZeroAndVector()
+    {
+        var system = CreateSystem();
+        RegressionAssertions.Require(
+            ReferenceEquals(system.ToVector(), system.Vector),
+            "ToVector должен возвращать тот же interoperability vector, что и свойство Vector.");
+        RegressionAssertions.Require(!system.IsStructuralZero(), "Система с ненулевыми coordinates не может быть structural zero.");
+
+        var x = Expression.Parameter(typeof(double), "x");
+        var zeroSystem = ExpressionSystem<double>.FromLambdas(
+            Expression.Lambda<Func<double, double>>(Expression.Constant(0.0), x));
+        RegressionAssertions.Require(zeroSystem.IsStructuralZero(), "Система из нулевой lambda должна быть structural zero.");
     }
 
     private static ExpressionSystem<double> CreateSystem()

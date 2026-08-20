@@ -11,6 +11,7 @@ internal static class RicisMatrixExpressionSuite
         ("MEX03: нулевая матрица распознаётся структурно", RecognizesStructuralZero),
         ("MEX04: determinant отклоняет матрицу не 2x2", RejectsNonTwoByTwoDeterminant),
         ("MEX05: determinant 3x3 нормализует треугольную матрицу в 1", BuildsThreeByThreeDeterminant),
+        ("API18: matrix exposes immutable row view", ExposesRows),
     ];
 
     private static void StoresCommonSignature()
@@ -61,6 +62,16 @@ internal static class RicisMatrixExpressionSuite
         ]);
         var determinant = matrix.Determinant3x3();
         Require(determinant.Body.IsOne(), $"Треугольный determinant 3×3 должен дать 1, получено: {determinant}");
+    }
+
+    private static void ExposesRows()
+    {
+        var matrix = CreateJacobianMatrix();
+
+        RegressionAssertions.Require(matrix.Rows.Count == matrix.RowCount, "Rows должен отражать точное число строк матрицы.");
+        RegressionAssertions.Require(
+            matrix.Rows[0].Count == matrix.ColumnCount && ReferenceEquals(matrix.Rows[0][0], matrix[0, 0]),
+            "Rows должен предоставлять исходные lambda coordinates без потери структуры.");
     }
 
     private static RicisMatrixExpression<double> CreateJacobianMatrix()

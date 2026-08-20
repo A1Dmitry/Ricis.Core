@@ -21,6 +21,10 @@ var tests = new (string Name, Func<Task> Body)[]
     ("FIN12: Invoice launch допускается только active aggregate и идемпотентен", InvoiceLaunchIsActiveAndIdempotent),
     ("FIN13: FxSnapshot нормализует валюты и отклоняет некорректный code", FxSnapshotNormalizesCurrency),
     ("FIN14: Bank application отклоняет non-HTTPS provider deep link", BankApplicationRejectsInsecureDeepLink),
+    ("FIN15: Payment rail registry publishes explicit country capabilities", PaymentRailRegistryPublishesCapabilities),
+    ("FIN16: Annual tax policy evaluates every declared counterparty kind", TaxPolicyEvaluatesDeclaredCounterpartyKind),
+    ("FIN17: Reserved bank fee and tax receipt ports remain explicit contracts", ReservedFinancePortsRemainExplicit),
+    ("FIN18: Payout confirmation and rejection enforce submitted lifecycle", PayoutConfirmationAndRejectionEnforceLifecycle),
 };
 
 var failures = 0;
@@ -158,6 +162,77 @@ static Task TaxPositionIsPolicyOwned()
     var position = policy.EvaluateAnnualPosition(2026, CounterpartyKind.BelarusRegisteredBusiness, new Money(48_000m, "BYN"));
     Require(position.Status == TaxThresholdStatus.Warning && position.CounterpartyKind == CounterpartyKind.BelarusRegisteredBusiness,
         "Пороговая оценка должна возвращаться политикой для конкретной категории контрагента.");
+    return Task.CompletedTask;
+}
+
+static Task PaymentRailRegistryPublishesCapabilities()
+{
+    var provider = new StubPaymentLaunchPort(
+        [new PaymentRailCapability("BY", PaymentRail.BelarusEripEpos, ["BYN"])],
+        new PaymentLaunchSession(
+            "test-provider",
+            "session-capabilities",
+            PaymentRail.BelarusEripEpos,
+            new Money(10m, "BYN"),
+            new PaymentHandoff(new Uri("https://provider.example/select"), PaymentHandoffMethod.Get),
+            null,
+            null,
+            null));
+    var registry = new PaymentRailRegistry([provider]);
+
+    var by = registry.GetCapabilities("by");
+    var unknown = registry.GetCapabilities("KZ");
+
+    Require(by.Count == 1 && by[0].PayerCountryCode == "BY" && unknown.Count == 0,
+        "GetCapabilities обязан normalise country и не выводить default route для неизвестной страны.");
+    return Task.CompletedTask;
+}
+
+static Task TaxPolicyEvaluatesDeclaredCounterpartyKind()
+{
+    ITaxPolicy policy = new StubTaxPolicy("tax-policy/2026-08", createCandidate: true);
+    var position = policy.EvaluateAnnualPosition(2026, CounterpartyKind.Individual, new Money(1m, "BYN"));
+
+    Require(position.CounterpartyKind == CounterpartyKind.Individual && position.TaxYear == 2026,
+        "ITaxPolicy должен принимать declared Individual partition без hardcoded tax decision в aggregate.");
+    return Task.CompletedTask;
+}
+
+static async Task ReservedFinancePortsRemainExplicit()
+{
+    var payout = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "fee-quote-001", new Money(10m, "BYN"), DateTimeOffset.UtcNow);
+    IBankFeeSchedule fees = new StubBankFeeSchedule(new Money(0.5m, "BYN"));
+    var fee = await fees.QuoteAsync(payout, new DateOnly(2026, 8, 20), CancellationToken.None);
+
+    var candidate = new TaxReceiptCandidate(
+        Guid.NewGuid(),
+        Guid.NewGuid(),
+        new Money(10m, "USD"),
+        new Money(32m, "BYN"),
+        CounterpartyKind.Individual,
+        DateTimeOffset.UtcNow,
+        "tax-policy/2026-08");
+    ITaxReceiptGateway gateway = new StubTaxReceiptGateway(new TaxReceiptSubmission("receipt-001", DateTimeOffset.UtcNow));
+    var submission = await gateway.SubmitAsync(candidate, CancellationToken.None);
+
+    Require(fee.Amount == 0.5m && fee.Currency == "BYN" && submission.ExternalReceiptId == "receipt-001",
+        "Reserved port contracts обязаны оставаться явными asynchronous boundaries без hidden fallback.");
+}
+
+static Task PayoutConfirmationAndRejectionEnforceLifecycle()
+{
+    var confirmed = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "confirm-001", new Money(10m, "USD"), DateTimeOffset.UtcNow);
+    confirmed.MarkSubmitted("provider-confirmed");
+    confirmed.Confirm(new Money(0.25m, "USD"));
+    Require(confirmed.Status == PayoutStatus.Confirmed && confirmed.ActualBankFee?.Amount == 0.25m,
+        "Confirm должен установить confirmed status и actual bank fee только после provider submission.");
+
+    var rejected = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "reject-001", new Money(10m, "USD"), DateTimeOffset.UtcNow);
+    rejected.MarkSubmitted("provider-rejected");
+    rejected.Reject();
+    Require(rejected.Status == PayoutStatus.Rejected,
+        "Reject должен установить rejected status только после provider submission.");
+    RequireThrows<InvalidOperationException>(() => rejected.Reject());
     return Task.CompletedTask;
 }
 
@@ -507,6 +582,16 @@ sealed class StubTaxPolicy(string version, bool createCandidate) : ITaxPolicy
 
     public AnnualTaxPosition EvaluateAnnualPosition(int taxYear, CounterpartyKind counterpartyKind, Money taxableIncomeByN) =>
         new(taxYear, counterpartyKind, taxableIncomeByN, TaxThresholdStatus.Warning, version);
+}
+
+sealed class StubBankFeeSchedule(Money quote) : IBankFeeSchedule
+{
+    public ValueTask<Money> QuoteAsync(PayoutRequest request, DateOnly effectiveDate, CancellationToken cancellationToken) => ValueTask.FromResult(quote);
+}
+
+sealed class StubTaxReceiptGateway(TaxReceiptSubmission submission) : ITaxReceiptGateway
+{
+    public ValueTask<TaxReceiptSubmission> SubmitAsync(TaxReceiptCandidate candidate, CancellationToken cancellationToken) => ValueTask.FromResult(submission);
 }
 
 sealed class StubPayoutReleasePolicy(bool isAllowed) : IPayoutReleasePolicy

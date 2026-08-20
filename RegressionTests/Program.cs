@@ -53,6 +53,7 @@ tests.AddRange(RicisNavierStokesProofSuite.Tests);
 tests.AddRange(RicisContinuousSugarSuite.Tests);
 tests.AddRange(RicisComplexSuite.Tests);
 tests.AddRange(RicisPublicUtilitySuite.Tests);
+tests.AddRange(RicisPublicCompatibilitySuite.Tests);
 tests.AddRange(RicisCompoundInterestSuite.Tests);
 tests.AddRange(RicisAnalyticSugarSuite.Tests);
 tests.AddRange(RicisModernClassicalComparisonSuite.Tests);

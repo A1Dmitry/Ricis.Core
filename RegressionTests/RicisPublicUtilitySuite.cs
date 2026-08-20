@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core;
 using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
 using Ricis.Core.Rationals;
 
 internal static class RicisPublicUtilitySuite
@@ -24,6 +25,9 @@ internal static class RicisPublicUtilitySuite
         ("API14: RicisType compatibility matrix is complete", RicisTypeCompatibilityMatrix),
         ("API15: RicisType Operate covers scalar, identity and composite branches", RicisTypeOperateCoversBranches),
         ("API16: RicisType tuple and string representations are canonical", RicisTypeRepresentationsAreCanonical),
+        ("API19: Expression extensions evaluate finite scalar contracts", ExpressionExtensionsEvaluateFiniteScalars),
+        ("API20: Expression extensions expose ordering and parameter discovery", ExpressionExtensionsOrderAndFindParameters),
+        ("API21: Expression extensions classify transcendental shape and BigInteger conversion", ExpressionExtensionsClassifyAndConvert),
     ];
 
     private static void ExactEvaluatorComputesRationalExpression()
@@ -107,6 +111,36 @@ internal static class RicisPublicUtilitySuite
     {
         Assert(!NumericConstants.TryOneOf(typeof(string), out _), "TryOneOf(string) должен вернуть false.");
         AssertThrows<NotSupportedException>(() => NumericConstants.ZeroOf(typeof(string)));
+    }
+
+    private static void ExpressionExtensionsEvaluateFiniteScalars()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var squarePlusOne = Expression.Add(Expression.Multiply(x, x), Expression.Constant(1.0));
+
+        Assert(squarePlusOne.Evaluate(x, 3.0) == 10.0, "Evaluate(expr, parameter, value) должен вычислять finite expression.");
+        Assert(squarePlusOne.Evaluate("x", 4.0) == 17.0, "Evaluate(expr, parameterName, value) должен применять named substitution.");
+    }
+
+    private static void ExpressionExtensionsOrderAndFindParameters()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var complex = Expression.Add(x, Expression.Constant(1.0));
+
+        Assert(complex.ShouldCommute(x), "Более сложное левое поддерево должно иметь больший ordering score.");
+        Assert(!x.ShouldCommute(complex), "Простое левое поддерево не должно требовать commute.");
+        Assert(ReferenceEquals(complex.FindParameter(), x), "FindParameter должен вернуть первый structural parameter.");
+    }
+
+    private static void ExpressionExtensionsClassifyAndConvert()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var sine = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, x);
+
+        Assert(sine.IsTranscendentalCandidate(), "Math.Sin должен классифицироваться как трансцендентный candidate.");
+        Assert(!Expression.Add(x, Expression.Constant(1.0)).IsTranscendentalCandidate(), "Обычная алгебраическая сумма не должна классифицироваться как трансцендентная.");
+        Assert(((object)123L).ToBigInteger() == new BigInteger(123) && ((object)"unsupported").ToBigInteger() == BigInteger.Zero,
+            "ToBigInteger должен сохранять поддерживаемый long и безопасно нормализовать unsupported value к нулю.");
     }
 
     private static void RicisTypePreservesEqualityContract()

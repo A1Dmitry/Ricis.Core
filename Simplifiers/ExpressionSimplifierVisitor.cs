@@ -128,46 +128,6 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         return node.Update(test, ifTrue, ifFalse);
     }
 
-    internal Expression VisitLogical(BinaryExpression node)
-    {
-        var left = Visit(node.Left);
-        var right = Visit(node.Right);
-
-        // Идемпотентность: x && x → x, x || x → x
-        if (AreIdentical(left, right))
-        {
-            return node.NodeType == ExpressionType.AndAlso ? left : right;
-        }
-
-        // x && true → x, x || false → x
-        if (node.NodeType == ExpressionType.AndAlso)
-        {
-            if (IsTrue(right))
-            {
-                return left;
-            }
-
-            if (IsFalse(right))
-            {
-                return Expression.Constant(false, node.Type);
-            }
-        }
-        else
-        {
-            if (IsTrue(right))
-            {
-                return right;
-            }
-
-            if (IsFalse(right))
-            {
-                return left;
-            }
-        }
-
-        return node.Update(left, node.Conversion, right);
-    }
-
     // Распределение: (a+b)*c → a*c + b*c
     private Expression DistributeMultiplySum(BinaryExpression node)
     {
@@ -303,9 +263,5 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         if (type == typeof(BigInteger)) return Expression.Constant(new BigInteger(value));
         return Expression.Constant(value, type);
     }
-
-    private static bool IsTrue(Expression expression) => expression is ConstantExpression { Value: true };
-
-    private static bool IsFalse(Expression expression) => expression is ConstantExpression { Value: false };
 
 }
