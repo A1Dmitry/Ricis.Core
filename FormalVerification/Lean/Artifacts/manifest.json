@@ -104,6 +104,23 @@
         "mandatoryForModelStudy": true,
         "role": "mandatory-project-knowledge-source"
       }
+    },
+    {
+      "id": "RICIS-LONGEST-ROUTE-SPECTRAL",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/Routes/LongestRouteSpectral.lean",
+      "description": "Detailed ten-node longest RICIS map route: composition of explicit local L1/SP4/SP2/A6/L1 certificates and nine named dependency certificates to the spectral RICIS-core endpoint.",
+      "origin": "RICIS3_LONGEST_ROUTE_LEAN_AUDIT.md",
+      "testIds": ["LRL01", "LRL02", "LRL03"],
+      "theoremNames": ["local_verify_preserves", "longest_route_depth_0", "longest_route_depth_1", "longest_route_depth_2", "longest_route_depth_3", "longest_route_depth_4", "longest_route_depth_5", "longest_route_depth_6", "longest_route_depth_7", "longest_route_depth_8", "longest_route_to_spectral_ricis_core", "a6_bridge_exact", "a6_bridge_commutative"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "Manus detailed route expansion / kernel check",
+      "generatedFrom": "ricis3-map-2026-08-20-13-21-36.json + extracted longest dependency route",
+      "forbiddenMarkers": ["sorry", "sorryAx", "admit", "axiom "],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     }
   ]
 }

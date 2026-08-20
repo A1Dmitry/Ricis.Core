@@ -1507,4 +1507,16 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestMethod("SQA03: сложная singularity генерирует structured A6 LeanDoc")]
     [TestCategory("Regression")]
     public void Regression_375() => RicisRegressionTestCatalog.Tests[374].Body();
+
+    [TestMethod("LRL01: longest route Lean source содержит десять узлов, девять checkpoint и terminal theorem")]
+    [TestCategory("Regression")]
+    public void Regression_376() => RicisRegressionTestCatalog.Tests[375].Body();
+
+    [TestMethod("LRL02: longest route Lean source не подменяет route composition внешними научными claims")]
+    [TestCategory("Regression")]
+    public void Regression_377() => RicisRegressionTestCatalog.Tests[376].Body();
+
+    [TestMethod("LRL03: longest route Lean artifact зарегистрирован как mandatory kernel knowledge source")]
+    [TestCategory("Regression")]
+    public void Regression_378() => RicisRegressionTestCatalog.Tests[377].Body();
 }
