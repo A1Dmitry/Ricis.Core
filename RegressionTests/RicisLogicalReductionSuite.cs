@@ -25,7 +25,7 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
             $"Ожидался x после true && (x && true), получено: {result}.");
     }
 
@@ -37,7 +37,7 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
             $"Ожидался x после false || (x || false), получено: {result}.");
     }
 
@@ -48,7 +48,7 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
             $"Ожидался x после !!x, получено: {result}.");
     }
 
@@ -57,7 +57,7 @@ internal static class RicisLogicalReductionSuite
         var source = Expression.Lambda<Func<bool>>(Expression.Not(Expression.Constant(true)));
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ConstantExpression { Value: false } },
+        RegressionAssertions.Require(result is LambdaExpression { Body: ConstantExpression { Value: false } },
             $"Ожидался false после !true, получено: {result}.");
     }
 
@@ -69,7 +69,7 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
             $"Ожидалась true-ветвь x, получено: {result}.");
     }
 
@@ -83,9 +83,9 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.SimplifyWithTrace(source, trace);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } && parameter.Name == "x",
             $"Ожидалась общая ветвь x, получено: {result}.");
-        Require(trace.Any(step => step.RuleFamily.Contains("logical", StringComparison.OrdinalIgnoreCase) ||
+        RegressionAssertions.Require(trace.Any(step => step.RuleFamily.Contains("logical", StringComparison.OrdinalIgnoreCase) ||
                                  step.PhaseName.Contains("логичес", StringComparison.OrdinalIgnoreCase)),
             "Logical phase должна присутствовать в trace.");
     }
@@ -106,7 +106,7 @@ internal static class RicisLogicalReductionSuite
         {
             var source = Expression.Lambda<Func<bool, bool>>(body, x);
             var result = RicisPhasePipeline.Simplify(source);
-            Require(result is LambdaExpression { Body: BinaryExpression binary } &&
+            RegressionAssertions.Require(result is LambdaExpression { Body: BinaryExpression binary } &&
                     binary.NodeType == body.NodeType,
                 $"Опасная short-circuit форма {body} не должна схлопываться, получено: {result}.");
         }
@@ -122,7 +122,7 @@ internal static class RicisLogicalReductionSuite
 
         var result = RicisPhasePipeline.Simplify(source);
 
-        Require(result is LambdaExpression { Body: ParameterExpression parameter } &&
+        RegressionAssertions.Require(result is LambdaExpression { Body: ParameterExpression parameter } &&
                 ReferenceEquals(parameter, a),
             $"Quine-McCluskey должен вывести a из a·b + a·¬b, получено: {result}.");
     }
@@ -134,7 +134,7 @@ internal static class RicisLogicalReductionSuite
         RicisPhasePipeline.SimplifyWithTrace(
             Expression.Lambda<Func<bool, bool>>(Expression.AndAlso(x, Expression.Constant(true)), x), trace);
 
-        Require(trace.Any(step => step.PhaseName.Contains("логичес", StringComparison.OrdinalIgnoreCase)),
+        RegressionAssertions.Require(trace.Any(step => step.PhaseName.Contains("логичес", StringComparison.OrdinalIgnoreCase)),
             "Полный phase trace должен содержать logical reduction stage.");
     }
 
@@ -143,8 +143,4 @@ internal static class RicisLogicalReductionSuite
         public static bool Value() => true;
     }
 
-    private static void Require(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
-    }
 }

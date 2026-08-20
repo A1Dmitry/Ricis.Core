@@ -2,7 +2,7 @@
 
 ## Статус
 
-Аудит завершён как Phase 1 следующего спринта. Baseline Core regression: **344/344 PASS**.
+Аудит завершён как Phase 1 следующего спринта. Historical baseline Core regression: **344/344 PASS**. Current verified Core gate: **386/386 PASS**; measured evidence is recorded in `RICIS_TASK_TIME_2H_SPRINT_2026-08-20_02.md`.
 
 ## Фактическое поведение .NET Expression.Reduce
 

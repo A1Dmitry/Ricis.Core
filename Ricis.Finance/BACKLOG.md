@@ -1,12 +1,14 @@
 # Backlog развития `Ricis.Finance`
 
-**Статус:** единый источник незавершённых работ после релиза `v0.5.0`.  
-**Владелец продукта:** пользователь проекта.  
+**Статус:** единый источник незавершённых работ после релиза `v0.5.0`.
+**Владелец продукта:** пользователь проекта.
 **Правило приоритета:** сначала безопасность факта платежа и идемпотентность, затем автоматизация, затем расширение географии и UX.
 
 > Этот backlog отделяет **готовый контракт** от **готовой production-интеграции**. Наличие `IPaymentLaunchPort` или bePaid adapter означает, что библиотека умеет сформировать provider session по документированному протоколу. Это не означает, что у конкретного merchant account уже есть договор, credentials, доступный метод оплаты или принятый webhook на production.
 
 ## Текущее состояние
+
+**Count provenance:** The `328 + 12` values below are retained as a historical v0.5.0 snapshot. They are not the current gate. Current verified counts are recorded in `PUBLIC_API_CLI_AUDIT.md` and the sprint time-evidence files.
 
 | Область | Что уже сделано | Что всё ещё отсутствует |
 |---|---|---|
@@ -14,7 +16,7 @@
 | Application | Запись подтверждённого provider payment, idempotent payout request, policy ports, launch registry, Invoice issue/cancel/expire и invoice-owned launch workflow. | Реальные persistence adapters, reconciliation/status workflow. |
 | Payment launch | `BY + ЕРИП/E-POS + BYN`: QR и provider-issued bank deep links. `RU + СБП + RUB`: provider-hosted QR/bank selector. | Конфигурация конкретного merchant account, host UI, реальный webhook verifier и production E2E. |
 | Compliance | Tax, fee и payout rules вынесены за versioned/effective-dated ports. | Заполненные и утверждённые policy implementations, authorised tax route, действующие тарифы/условия конкретного банка и провайдера. |
-| QA / DevOps | `328` Core + `12` Finance regressions, GitHub CI, Swagger smoke-test, LeanDoc compilation. | Contract tests с sandbox merchant account, secret scanning, production observability, incident drill. |
+| QA / DevOps | Historical v0.5.0 snapshot: `328` Core + `12` Finance regressions, GitHub CI, Swagger smoke-test, LeanDoc compilation. Current gate evidence is maintained separately: `386/386` Core, `18/18` Finance, `8/8` Lean artifacts. | Contract tests с sandbox merchant account, secret scanning, production observability, incident drill. |
 
 ## Неподвижные границы
 

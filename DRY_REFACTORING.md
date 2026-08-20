@@ -24,7 +24,7 @@ DRY-рефакторинг выполняется атомарно. Каждый
 
 Тестовые сообщения, порядок проверок и exception behavior сохранены. Production code не изменялся.
 
-Проверка DRY-01: **344/344 Core regression tests passed**, включая `VECTOR01–VECTOR08` и `VEX01–VEX06`.
+Проверка DRY-01: исторический snapshot на момент этого increment — **344/344 Core regression tests passed**, включая `VECTOR01–VECTOR08` и `VEX01–VEX06`. Текущая Core gate boundary: **386/386 PASS**; см. `RICIS_TASK_TIME_2H_SPRINT_2026-08-20_02.md`.
 
 ## Завершённый шаг DRY-02
 
@@ -36,7 +36,7 @@ DRY-рефакторинг выполняется атомарно. Каждый
 - `RegressionTests/RicisVectorSuite.cs`;
 - `RegressionTests/RicisVectorExpressionSuite.cs`.
 
-Удалены пять идентичных локальных generic exception helpers. Rejection behavior сохранён и проверен тестами `ES04`, `JSG04`, `MEX04`, `VECTOR06`, `VECTOR07` и `VEX06`. DRY-02 quality gate: **344/344 Core regression tests**, Console Release build без warnings/errors, **12/12 Finance tests**, **6/6 Lean artifacts**.
+Удалены пять идентичных локальных generic exception helpers. Rejection behavior сохранён и проверен тестами `ES04`, `JSG04`, `MEX04`, `VECTOR06`, `VECTOR07` и `VEX06`. DRY-02 historical quality snapshot: **344/344 Core regression tests**, Console Release build без warnings/errors, **12/12 Finance tests**, **6/6 Lean artifacts**. Current verified boundary: **386/386 Core**, **18/18 Finance**, **8/8 Lean artifacts**; historical counts remain unchanged for provenance.
 
 ## Следующие шаги
 

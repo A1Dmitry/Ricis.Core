@@ -40,4 +40,4 @@
 
 ## Regression evidence
 
-После FIN-01 Finance regression suite содержит **12 PASS тестов**. Следующий незавершённый P0 — `FIN-02` inbound bePaid confirmation; его production implementation заблокирована до получения официальной callback specification, test credentials и webhook endpoint.
+На момент исторического FIN-01 snapshot Finance regression suite содержал **12 PASS тестов**. Текущая quality-gate boundary проекта — **18/18 Finance PASS**; историческое значение не заменяется задним числом. Следующий незавершённый P0 — `FIN-02` inbound bePaid confirmation; его production implementation заблокирована до получения официальной callback specification, test credentials и webhook endpoint.

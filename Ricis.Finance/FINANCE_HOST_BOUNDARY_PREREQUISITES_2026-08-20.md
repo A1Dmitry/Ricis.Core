@@ -17,14 +17,14 @@
 
 Before implementation of a production bePaid verifier, the host must provide all of the following:
 
-| Prerequisite | Required evidence | Blocking if absent |
-|---|---|---:|
-| Official callback specification | Provider-owned fields, signature algorithm, status vocabulary, amount/currency/reference semantics | Yes |
-| Test credentials | Non-production merchant/shop identity and secret delivery outside source control | Yes |
-| Host webhook endpoint | HTTPS route, authentication boundary, body/header preservation and provider allow-list | Yes |
-| Replay/idempotency contract | Event identifier, duplicate/out-of-order behavior and retention window | Yes |
-| Route choice | Explicit country + rail + currency; no generic CIS fallback | Yes |
-| Sandbox vectors | Valid, malformed, wrong-secret, wrong-amount/currency, duplicate and failed callbacks | Yes |
+| Prerequisite | Required evidence | Blocking if absent | Current status | Evidence boundary |
+|---|---|---:|---|---|
+| Official callback specification | Provider-owned fields, signature algorithm, status vocabulary, amount/currency/reference semantics | Yes | `Blocked` | No official provider specification is present in this repository |
+| Test credentials | Non-production merchant/shop identity and secret delivery outside source control | Yes | `Blocked` | No credentials are accepted or stored by this preparation increment |
+| Host webhook endpoint | HTTPS route, authentication boundary, body/header preservation and provider allow-list | Yes | `Blocked` | No host endpoint or deployment boundary is supplied |
+| Replay/idempotency contract | Event identifier, duplicate/out-of-order behavior and retention window | Yes | `Blocked` | No provider event contract or retention decision is supplied |
+| Route choice | Explicit country + rail + currency; no generic CIS fallback | Yes | `Blocked` | Domain supports explicit rails, but no production merchant route is selected |
+| Sandbox vectors | Valid, malformed, wrong-secret, wrong-amount/currency, duplicate and failed callbacks | Yes | `Blocked` | No provider sandbox vector package is supplied |
 
 ## FIN-03/04/05/10 prerequisite sequence
 
@@ -36,4 +36,8 @@ No direct MNS, EasyStaff, universal CIS selector or universal bank-fee adapter i
 
 ## Acceptance
 
-This preparation increment is complete when the host owner supplies or explicitly marks each prerequisite as `Provided`, `Blocked` or `Not applicable`, with source evidence. `Blocked` is an acceptable result and must not be replaced with a placeholder implementation. Production FIN-02 remains blocked until all mandatory rows are provided.
+This preparation increment is complete when the host owner supplies or explicitly marks each prerequisite as `Provided`, `Blocked` or `Not applicable`, with source evidence. The current repository evidence supports only `Blocked` for all six mandatory FIN-02 rows; this is a truthful preparation result, not a production implementation. `Blocked` is an acceptable result and must not be replaced with a placeholder implementation. Production FIN-02 remains blocked until all mandatory rows are provided.
+
+### Task 2 evidence boundary
+
+No provider verifier, webhook endpoint, credential, sandbox adapter or production persistence code was added. The status table records the absence of external prerequisites and prevents an unsupported transition to `Provided`. The existing domain/application ports remain available for later host integration.
