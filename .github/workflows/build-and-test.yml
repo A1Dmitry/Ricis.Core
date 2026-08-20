@@ -26,55 +26,19 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore core library
-        run: dotnet restore Ricis.Core.csproj
+      - name: Verify every repository project belongs to the solution
+        run: python3 scripts/verify_solution_projects.py
 
-      - name: Restore regression tests
-        run: dotnet restore RegressionTests/Ricis.Core.RegressionTests.csproj
+      - name: Restore solution
+        run: dotnet restore Ricis.Core.sln
 
-      - name: Restore application projects
-        run: |
-          dotnet restore Ricis.Console/Ricis.Console.csproj
-          dotnet restore Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj
-          dotnet restore Ricis.WebApi/Ricis.WebApi.csproj
-          dotnet restore Ricis.WebAssembly/Ricis.WebAssembly.csproj
-          dotnet restore Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
-          dotnet restore Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
-          dotnet restore Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj
-          dotnet restore Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
-
-      - name: Build core library
-        run: dotnet build Ricis.Core.csproj --configuration Release --no-restore
-
-      - name: Build regression tests
-        run: dotnet build RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-restore
-
-      - name: Build application projects
-        run: |
-          dotnet build Ricis.Console/Ricis.Console.csproj --configuration Release --no-restore
-          dotnet build Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj --configuration Release --no-restore
-          dotnet build Ricis.WebApi/Ricis.WebApi.csproj --configuration Release --no-restore
-          dotnet build Ricis.WebAssembly/Ricis.WebAssembly.csproj --configuration Release --no-restore
-          dotnet build Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj --configuration Release --no-restore
-          dotnet build Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj --configuration Release --no-restore
-          dotnet build Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj --configuration Release --no-restore
-          dotnet build Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build Ricis.Core.sln --configuration Release --no-restore
 
       - name: Verify unified Ricis.Core version
         shell: bash
         run: |
-          projects=(
-            Ricis.Core.csproj
-            Ricis.Console/Ricis.Console.csproj
-            Ricis.NavierStokes.Console/Ricis.NavierStokes.Console.csproj
-            Ricis.WebApi/Ricis.WebApi.csproj
-            Ricis.WebAssembly/Ricis.WebAssembly.csproj
-            RegressionTests/Ricis.Core.RegressionTests.csproj
-            Ricis.Finance/Ricis.Finance.Domain/Ricis.Finance.Domain.csproj
-            Ricis.Finance/Ricis.Finance.Application/Ricis.Finance.Application.csproj
-            Ricis.Finance/Ricis.Finance.Bepaid/Ricis.Finance.Bepaid.csproj
-            Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj
-          )
+          mapfile -t projects < <(dotnet sln Ricis.Core.sln list | awk '/\.csproj$/ { print }')
           expected=""
           for project in "${projects[@]}"; do
             current=$(dotnet msbuild "$project" -getProperty:Version | tail -n 1)
