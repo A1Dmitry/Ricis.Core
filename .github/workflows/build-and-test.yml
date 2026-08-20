@@ -51,6 +51,9 @@ jobs:
           done
           echo "All projects use Ricis.Core version $expected"
 
+      - name: Run unit test project
+        run: dotnet test UnitTests/Ricis.Core.UnitTests.csproj --configuration Release --no-build
+
       - name: Run regression suite
         run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
 

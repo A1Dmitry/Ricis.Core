@@ -22,6 +22,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="RegressionTests/**/*.cs" />
+    <Compile Remove="UnitTests/**/*.cs" />
+    <None Remove="UnitTests/**" />
     <Compile Remove="Ricis.Console/**/*.cs" />
     <Compile Remove="Ricis.NavierStokes.Console/**/*.cs" />
     <Compile Remove="Ricis.WebApi/**/*.cs" />
