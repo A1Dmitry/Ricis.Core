@@ -94,16 +94,20 @@ public static class FermatFactorizer
     {
         if (value < 0) return -1;
         if (value < 2) return value;
-        var low = BigInteger.One;
-        var high = BigInteger.One << checked((int)((value.GetBitLength() + 1) / 2));
-        while (low <= high)
+
+        // The initial value is a proven upper bound: 2^ceil(bitLength(value)/2) ≥ √value.
+        // Newton's decreasing integer iteration converges to floor(√value). Unlike binary search,
+        // it avoids a full-width square multiplication for every candidate in the Fermat loop.
+        var root = BigInteger.One << checked((int)((value.GetBitLength() + 1) / 2));
+        while (true)
         {
-            var mid = (low + high) >> 1;
-            var square = mid * mid;
-            if (square == value) return mid;
-            if (square < value) low = mid + 1;
-            else high = mid - 1;
+            var next = (root + (value / root)) >> 1;
+            if (next >= root)
+            {
+                return root;
+            }
+
+            root = next;
         }
-        return high;
     }
 }

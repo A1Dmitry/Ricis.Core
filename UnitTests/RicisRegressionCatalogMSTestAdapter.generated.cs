@@ -580,919 +580,923 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_143() => RicisRegressionTestCatalog.Tests[142].Body();
 
-    [TestMethod("RIEMANN01: ID-01–ID-06 выводят σ=1/2 как точную дробь")]
+    [TestMethod("FERMAT03: public Solve возвращает точную ферматову реконструкцию")]
     [TestCategory("Regression")]
     public void Regression_144() => RicisRegressionTestCatalog.Tests[143].Body();
 
-    [TestMethod("RIEMANN02: ID-цепочка отвергает ложное следствие")]
+    [TestMethod("RIEMANN01: ID-01–ID-06 выводят σ=1/2 как точную дробь")]
     [TestCategory("Regression")]
     public void Regression_145() => RicisRegressionTestCatalog.Tests[144].Body();
 
-    [TestMethod("RIEMANN03: ID-цепочка сохраняет однопроходные ограничения")]
+    [TestMethod("RIEMANN02: ID-цепочка отвергает ложное следствие")]
     [TestCategory("Regression")]
     public void Regression_146() => RicisRegressionTestCatalog.Tests[145].Body();
 
-    [TestMethod("RIEMANN04: специализированный case отделяет аналитику от RICIS-алгебры")]
+    [TestMethod("RIEMANN03: ID-цепочка сохраняет однопроходные ограничения")]
     [TestCategory("Regression")]
     public void Regression_147() => RicisRegressionTestCatalog.Tests[146].Body();
 
-    [TestMethod("NS01: частная производная строится точным expression tree")]
+    [TestMethod("RIEMANN04: специализированный case отделяет аналитику от RICIS-алгебры")]
     [TestCategory("Regression")]
     public void Regression_148() => RicisRegressionTestCatalog.Tests[147].Body();
 
-    [TestMethod("NS02: градиент, дивергенция и лапласиан покрывают типовые операторы поля")]
+    [TestMethod("NS01: частная производная строится точным expression tree")]
     [TestCategory("Regression")]
     public void Regression_149() => RicisRegressionTestCatalog.Tests[148].Body();
 
-    [TestMethod("NS03: стационарный вихрь имеет нулевой остаток Навье—Стокса")]
+    [TestMethod("NS02: градиент, дивергенция и лапласиан покрывают типовые операторы поля")]
     [TestCategory("Regression")]
     public void Regression_150() => RicisRegressionTestCatalog.Tests[149].Body();
 
-    [TestMethod("NS04: proof отвергает сжимаемое поле")]
+    [TestMethod("NS03: стационарный вихрь имеет нулевой остаток Навье—Стокса")]
     [TestCategory("Regression")]
     public void Regression_151() => RicisRegressionTestCatalog.Tests[150].Body();
 
-    [TestMethod("NS05: proof отвергает невалидную вязкость")]
+    [TestMethod("NS04: proof отвергает сжимаемое поле")]
     [TestCategory("Regression")]
     public void Regression_152() => RicisRegressionTestCatalog.Tests[151].Body();
 
-    [TestMethod("NS06: стационарная производная канонизирует -0 в 0")]
+    [TestMethod("NS05: proof отвергает невалидную вязкость")]
     [TestCategory("Regression")]
     public void Regression_153() => RicisRegressionTestCatalog.Tests[152].Body();
 
-    [TestMethod("NS07: производная F·0 сохраняет индексированный ноль 0_F")]
+    [TestMethod("NS06: стационарная производная канонизирует -0 в 0")]
     [TestCategory("Regression")]
     public void Regression_154() => RicisRegressionTestCatalog.Tests[153].Body();
 
-    [TestMethod("NS08: конечное F/∞_G даёт индексированный ноль 0_F")]
+    [TestMethod("NS07: производная F·0 сохраняет индексированный ноль 0_F")]
     [TestCategory("Regression")]
     public void Regression_155() => RicisRegressionTestCatalog.Tests[154].Body();
 
-    [TestMethod("SUGAR01: Abs — строит конечное условное дерево |F|")]
+    [TestMethod("NS08: конечное F/∞_G даёт индексированный ноль 0_F")]
     [TestCategory("Regression")]
     public void Regression_156() => RicisRegressionTestCatalog.Tests[155].Body();
 
-    [TestMethod("SUGAR02: Abs — одинаковые |F| сохраняют L1 в отношении")]
+    [TestMethod("SUGAR01: Abs — строит конечное условное дерево |F|")]
     [TestCategory("Regression")]
     public void Regression_157() => RicisRegressionTestCatalog.Tests[156].Body();
 
-    [TestMethod("SUGAR03: Min/Max — связывают разные параметры без вычисления")]
+    [TestMethod("SUGAR02: Abs — одинаковые |F| сохраняют L1 в отношении")]
     [TestCategory("Regression")]
     public void Regression_158() => RicisRegressionTestCatalog.Tests[157].Body();
 
-    [TestMethod("SUGAR04: Max — одинаковые нормализованные функции дают F")]
+    [TestMethod("SUGAR03: Min/Max — связывают разные параметры без вычисления")]
     [TestCategory("Regression")]
     public void Regression_159() => RicisRegressionTestCatalog.Tests[158].Body();
 
-    [TestMethod("SUGAR05: Clamp — постоянные границы задают min(max(F,L),U)")]
+    [TestMethod("SUGAR04: Max — одинаковые нормализованные функции дают F")]
     [TestCategory("Regression")]
     public void Regression_160() => RicisRegressionTestCatalog.Tests[159].Body();
 
-    [TestMethod("SUGAR06: Clamp — отложенные границы остаются expression tree")]
+    [TestMethod("SUGAR05: Clamp — постоянные границы задают min(max(F,L),U)")]
     [TestCategory("Regression")]
     public void Regression_161() => RicisRegressionTestCatalog.Tests[160].Body();
 
-    [TestMethod("SUGAR07: Положительная и отрицательная части сохраняют BigInteger")]
+    [TestMethod("SUGAR06: Clamp — отложенные границы остаются expression tree")]
     [TestCategory("Regression")]
     public void Regression_162() => RicisRegressionTestCatalog.Tests[161].Body();
 
-    [TestMethod("SUGAR08: Distance — строит |F−G| из независимых лямбд")]
+    [TestMethod("SUGAR07: Положительная и отрицательная части сохраняют BigInteger")]
     [TestCategory("Regression")]
     public void Regression_163() => RicisRegressionTestCatalog.Tests[162].Body();
 
-    [TestMethod("CPLX01: AsComplex — вещественная функция получает нулевую Im-компоненту")]
+    [TestMethod("SUGAR08: Distance — строит |F−G| из независимых лямбд")]
     [TestCategory("Regression")]
     public void Regression_164() => RicisRegressionTestCatalog.Tests[163].Body();
 
-    [TestMethod("CPLX02: AsComplex — Re и Im связываются с одним параметром")]
+    [TestMethod("CPLX01: AsComplex — вещественная функция получает нулевую Im-компоненту")]
     [TestCategory("Regression")]
     public void Regression_165() => RicisRegressionTestCatalog.Tests[164].Body();
 
-    [TestMethod("CPLX03: Conjugate — меняет знак Im без вычисления Re")]
+    [TestMethod("CPLX02: AsComplex — Re и Im связываются с одним параметром")]
     [TestCategory("Regression")]
     public void Regression_166() => RicisRegressionTestCatalog.Tests[165].Body();
 
-    [TestMethod("CPLX04: Add/Subtract — сохраняют покомпонентную комплексную алгебру")]
+    [TestMethod("CPLX03: Conjugate — меняет знак Im без вычисления Re")]
     [TestCategory("Regression")]
     public void Regression_167() => RicisRegressionTestCatalog.Tests[166].Body();
 
-    [TestMethod("CPLX05: Multiply — реализует (ac−bd)+i(ad+bc)")]
+    [TestMethod("CPLX04: Add/Subtract — сохраняют покомпонентную комплексную алгебру")]
     [TestCategory("Regression")]
     public void Regression_168() => RicisRegressionTestCatalog.Tests[167].Body();
 
-    [TestMethod("CPLX06: SquaredNorm — сохраняет точность BigInteger")]
+    [TestMethod("CPLX05: Multiply — реализует (ac−bd)+i(ad+bc)")]
     [TestCategory("Regression")]
     public void Regression_169() => RicisRegressionTestCatalog.Tests[168].Body();
 
-    [TestMethod("CPLX07: Norm — строит sqrt(Re²+Im²) как дерево Math.Sqrt")]
+    [TestMethod("CPLX06: SquaredNorm — сохраняет точность BigInteger")]
     [TestCategory("Regression")]
     public void Regression_170() => RicisRegressionTestCatalog.Tests[169].Body();
 
-    [TestMethod("API01: ExactEvaluator вычисляет рациональное expression")]
+    [TestMethod("CPLX07: Norm — строит sqrt(Re²+Im²) как дерево Math.Sqrt")]
     [TestCategory("Regression")]
     public void Regression_171() => RicisRegressionTestCatalog.Tests[170].Body();
 
-    [TestMethod("API02: ExactEvaluator отклоняет неподдерживаемый узел и неизвестный параметр")]
+    [TestMethod("API01: ExactEvaluator вычисляет рациональное expression")]
     [TestCategory("Regression")]
     public void Regression_172() => RicisRegressionTestCatalog.Tests[171].Body();
 
-    [TestMethod("API03: CircleSectors нормализует радианную четверть и форматирует сектора")]
+    [TestMethod("API02: ExactEvaluator отклоняет неподдерживаемый узел и неизвестный параметр")]
     [TestCategory("Regression")]
     public void Regression_173() => RicisRegressionTestCatalog.Tests[172].Body();
 
-    [TestMethod("API04: CircleSectors отклоняет NaN, infinity и неверное число секторов")]
+    [TestMethod("API03: CircleSectors нормализует радианную четверть и форматирует сектора")]
     [TestCategory("Regression")]
     public void Regression_174() => RicisRegressionTestCatalog.Tests[173].Body();
 
-    [TestMethod("API05: PolarConverter возвращает exact sin/cos и оставляет неизвестный сектор")]
+    [TestMethod("API04: CircleSectors отклоняет NaN, infinity и неверное число секторов")]
     [TestCategory("Regression")]
     public void Regression_175() => RicisRegressionTestCatalog.Tests[174].Body();
 
-    [TestMethod("API06: PolarConverter сворачивает sin и pole tan через public API")]
+    [TestMethod("API05: PolarConverter возвращает exact sin/cos и оставляет неизвестный сектор")]
     [TestCategory("Regression")]
     public void Regression_176() => RicisRegressionTestCatalog.Tests[175].Body();
 
-    [TestMethod("API07: NumericConstants возвращает typed identities и predicates")]
+    [TestMethod("API06: PolarConverter сворачивает sin и pole tan через public API")]
     [TestCategory("Regression")]
     public void Regression_177() => RicisRegressionTestCatalog.Tests[176].Body();
 
-    [TestMethod("API08: NumericConstants отклоняет незарегистрированный тип")]
+    [TestMethod("API07: NumericConstants возвращает typed identities и predicates")]
     [TestCategory("Regression")]
     public void Regression_178() => RicisRegressionTestCatalog.Tests[177].Body();
 
-    [TestMethod("API09: RicisType сохраняет equality/hash contract и compatibility")]
+    [TestMethod("API08: NumericConstants отклоняет незарегистрированный тип")]
     [TestCategory("Regression")]
     public void Regression_179() => RicisRegressionTestCatalog.Tests[178].Body();
 
-    [TestMethod("API10: RicisType строит canonical operations and tuple")]
+    [TestMethod("API09: RicisType сохраняет equality/hash contract и compatibility")]
     [TestCategory("Regression")]
     public void Regression_180() => RicisRegressionTestCatalog.Tests[179].Body();
 
-    [TestMethod("API11: GetHashCode не меняет expression tree и HashSet semantics")]
+    [TestMethod("API10: RicisType строит canonical operations and tuple")]
     [TestCategory("Regression")]
     public void Regression_181() => RicisRegressionTestCatalog.Tests[180].Body();
 
-    [TestMethod("API12: RicisType constructor, properties and constants are stable")]
+    [TestMethod("API11: GetHashCode не меняет expression tree и HashSet semantics")]
     [TestCategory("Regression")]
     public void Regression_182() => RicisRegressionTestCatalog.Tests[181].Body();
 
-    [TestMethod("API13: RicisType equality handles null and unrelated objects")]
+    [TestMethod("API12: RicisType constructor, properties and constants are stable")]
     [TestCategory("Regression")]
     public void Regression_183() => RicisRegressionTestCatalog.Tests[182].Body();
 
-    [TestMethod("API14: RicisType compatibility matrix is complete")]
+    [TestMethod("API13: RicisType equality handles null and unrelated objects")]
     [TestCategory("Regression")]
     public void Regression_184() => RicisRegressionTestCatalog.Tests[183].Body();
 
-    [TestMethod("API15: RicisType Operate covers scalar, identity and composite branches")]
+    [TestMethod("API14: RicisType compatibility matrix is complete")]
     [TestCategory("Regression")]
     public void Regression_185() => RicisRegressionTestCatalog.Tests[184].Body();
 
-    [TestMethod("API16: RicisType tuple and string representations are canonical")]
+    [TestMethod("API15: RicisType Operate covers scalar, identity and composite branches")]
     [TestCategory("Regression")]
     public void Regression_186() => RicisRegressionTestCatalog.Tests[185].Body();
 
-    [TestMethod("API19: Expression extensions evaluate finite scalar contracts")]
+    [TestMethod("API16: RicisType tuple and string representations are canonical")]
     [TestCategory("Regression")]
     public void Regression_187() => RicisRegressionTestCatalog.Tests[186].Body();
 
-    [TestMethod("API20: Expression extensions expose ordering and parameter discovery")]
+    [TestMethod("API19: Expression extensions evaluate finite scalar contracts")]
     [TestCategory("Regression")]
     public void Regression_188() => RicisRegressionTestCatalog.Tests[187].Body();
 
-    [TestMethod("API21: Expression extensions classify transcendental shape and BigInteger conversion")]
+    [TestMethod("API20: Expression extensions expose ordering and parameter discovery")]
     [TestCategory("Regression")]
     public void Regression_189() => RicisRegressionTestCatalog.Tests[188].Body();
 
-    [TestMethod("API26: PolarConverter.ToPolarSector renders public singularity view")]
+    [TestMethod("API21: Expression extensions classify transcendental shape and BigInteger conversion")]
     [TestCategory("Regression")]
     public void Regression_190() => RicisRegressionTestCatalog.Tests[189].Body();
 
-    [TestMethod("API27: Polynomial FindRootsInRange returns bounded approximate roots")]
+    [TestMethod("API26: PolarConverter.ToPolarSector renders public singularity view")]
     [TestCategory("Regression")]
     public void Regression_191() => RicisRegressionTestCatalog.Tests[190].Body();
 
-    [TestMethod("API28: ExponentialZeroSolver public adapter returns exact and unsupported outcomes")]
+    [TestMethod("API27: Polynomial FindRootsInRange returns bounded approximate roots")]
     [TestCategory("Regression")]
     public void Regression_192() => RicisRegressionTestCatalog.Tests[191].Body();
 
-    [TestMethod("API29: LogSolver public adapter returns exact and unsupported outcomes")]
+    [TestMethod("API28: ExponentialZeroSolver public adapter returns exact and unsupported outcomes")]
     [TestCategory("Regression")]
     public void Regression_193() => RicisRegressionTestCatalog.Tests[192].Body();
 
-    [TestMethod("API30: AlgebraicSimplifier facade preserves safe arithmetic reduction")]
+    [TestMethod("API29: LogSolver public adapter returns exact and unsupported outcomes")]
     [TestCategory("Regression")]
     public void Regression_194() => RicisRegressionTestCatalog.Tests[193].Body();
 
-    [TestMethod("API31: RicisTransformPhase facade preserves ordinary expression")]
+    [TestMethod("API30: AlgebraicSimplifier facade preserves safe arithmetic reduction")]
     [TestCategory("Regression")]
     public void Regression_195() => RicisRegressionTestCatalog.Tests[194].Body();
 
-    [TestMethod("API32: LogicalSimplifier exposes safe public Boolean reduction")]
+    [TestMethod("API31: RicisTransformPhase facade preserves ordinary expression")]
     [TestCategory("Regression")]
     public void Regression_196() => RicisRegressionTestCatalog.Tests[195].Body();
 
-    [TestMethod("INT01: CompoundInterest — decimal вычисляет S·(1+r/100)^n точно")]
+    [TestMethod("API32: LogicalSimplifier exposes safe public Boolean reduction")]
     [TestCategory("Regression")]
     public void Regression_197() => RicisRegressionTestCatalog.Tests[196].Body();
 
-    [TestMethod("INT02: CompoundInterest — связывает отложенные S и r")]
+    [TestMethod("INT01: CompoundInterest — decimal вычисляет S·(1+r/100)^n точно")]
     [TestCategory("Regression")]
     public void Regression_198() => RicisRegressionTestCatalog.Tests[197].Body();
 
-    [TestMethod("INT03: CompoundInterest — n=0 возвращает нормализованный S")]
+    [TestMethod("INT02: CompoundInterest — связывает отложенные S и r")]
     [TestCategory("Regression")]
     public void Regression_199() => RicisRegressionTestCatalog.Tests[198].Body();
 
-    [TestMethod("INT04: CompoundInterest — BigInteger сохраняет native-точность")]
+    [TestMethod("INT03: CompoundInterest — n=0 возвращает нормализованный S")]
     [TestCategory("Regression")]
     public void Regression_200() => RicisRegressionTestCatalog.Tests[199].Body();
 
-    [TestMethod("INT05: CompoundInterest — double-период сохраняет Math.Pow как дерево")]
+    [TestMethod("INT04: CompoundInterest — BigInteger сохраняет native-точность")]
     [TestCategory("Regression")]
     public void Regression_201() => RicisRegressionTestCatalog.Tests[200].Body();
 
-    [TestMethod("INT06: CompoundInterest — отрицательное число периодов отклоняется")]
+    [TestMethod("INT05: CompoundInterest — double-период сохраняет Math.Pow как дерево")]
     [TestCategory("Regression")]
     public void Regression_202() => RicisRegressionTestCatalog.Tests[201].Body();
 
-    [TestMethod("INT07: CompoundInterest — L1 нормализует rate до построения")]
+    [TestMethod("INT06: CompoundInterest — отрицательное число периодов отклоняется")]
     [TestCategory("Regression")]
     public void Regression_203() => RicisRegressionTestCatalog.Tests[202].Body();
 
-    [TestMethod("AN01: Sin/Cos/Tan — строят явные Math-узлы")]
+    [TestMethod("INT07: CompoundInterest — L1 нормализует rate до построения")]
     [TestCategory("Regression")]
     public void Regression_204() => RicisRegressionTestCatalog.Tests[203].Body();
 
-    [TestMethod("AN02: Exp/Log/Log10/Sqrt — сохраняют аналитические значения")]
+    [TestMethod("AN01: Sin/Cos/Tan — строят явные Math-узлы")]
     [TestCategory("Regression")]
     public void Regression_205() => RicisRegressionTestCatalog.Tests[204].Body();
 
-    [TestMethod("AN03: Sinh/Cosh/Tanh — строят гиперболические узлы")]
+    [TestMethod("AN02: Exp/Log/Log10/Sqrt — сохраняют аналитические значения")]
     [TestCategory("Regression")]
     public void Regression_206() => RicisRegressionTestCatalog.Tests[205].Body();
 
-    [TestMethod("AN04: Pow — постоянный показатель совместим с DxDt")]
+    [TestMethod("AN03: Sinh/Cosh/Tanh — строят гиперболические узлы")]
     [TestCategory("Regression")]
     public void Regression_207() => RicisRegressionTestCatalog.Tests[206].Body();
 
-    [TestMethod("AN05: Pow — отложенный показатель связывается с параметром")]
+    [TestMethod("AN04: Pow — постоянный показатель совместим с DxDt")]
     [TestCategory("Regression")]
     public void Regression_208() => RicisRegressionTestCatalog.Tests[207].Body();
 
-    [TestMethod("AN06: Аналитический сахар — L1 нормализует вход до Math-узла")]
+    [TestMethod("AN05: Pow — отложенный показатель связывается с параметром")]
     [TestCategory("Regression")]
     public void Regression_209() => RicisRegressionTestCatalog.Tests[208].Body();
 
-    [TestMethod("CHK01: Непрерывный сахар совпадает с классическими piecewise-функциями")]
+    [TestMethod("AN06: Аналитический сахар — L1 нормализует вход до Math-узла")]
     [TestCategory("Regression")]
     public void Regression_210() => RicisRegressionTestCatalog.Tests[209].Body();
 
-    [TestMethod("CHK02: Комплексные expression-компоненты совпадают с System.Numerics.Complex")]
+    [TestMethod("CHK01: Непрерывный сахар совпадает с классическими piecewise-функциями")]
     [TestCategory("Regression")]
     public void Regression_211() => RicisRegressionTestCatalog.Tests[210].Body();
 
-    [TestMethod("CHK03: CompoundInterest совпадает с прямой формулой Math.Pow")]
+    [TestMethod("CHK02: Комплексные expression-компоненты совпадают с System.Numerics.Complex")]
     [TestCategory("Regression")]
     public void Regression_212() => RicisRegressionTestCatalog.Tests[211].Body();
 
-    [TestMethod("CHK04: Аналитический сахар совпадает с Math.* на контрольных точках")]
+    [TestMethod("CHK03: CompoundInterest совпадает с прямой формулой Math.Pow")]
     [TestCategory("Regression")]
     public void Regression_213() => RicisRegressionTestCatalog.Tests[212].Body();
 
-    [TestMethod("CHK05: Производная аналитического Pow совпадает с классической формулой")]
+    [TestMethod("CHK04: Аналитический сахар совпадает с Math.* на контрольных точках")]
     [TestCategory("Regression")]
     public void Regression_214() => RicisRegressionTestCatalog.Tests[213].Body();
 
-    [TestMethod("QA01: O(1) — int F/0 сохраняет исходный scalar-тип")]
+    [TestMethod("CHK05: Производная аналитического Pow совпадает с классической формулой")]
     [TestCategory("Regression")]
     public void Regression_215() => RicisRegressionTestCatalog.Tests[214].Body();
 
-    [TestMethod("QA02: O(1) — BigInteger F·0 сохраняет исходный scalar-тип")]
+    [TestMethod("QA01: O(1) — int F/0 сохраняет исходный scalar-тип")]
     [TestCategory("Regression")]
     public void Regression_216() => RicisRegressionTestCatalog.Tests[215].Body();
 
-    [TestMethod("QA03: L1 — Half x/x даёт Half.One в direct pipeline")]
+    [TestMethod("QA02: O(1) — BigInteger F·0 сохраняет исходный scalar-тип")]
     [TestCategory("Regression")]
     public void Regression_217() => RicisRegressionTestCatalog.Tests[216].Body();
 
-    [TestMethod("QA04: ZERO — 0_F + 0_G даёт 0_{F+G}")]
+    [TestMethod("QA03: L1 — Half x/x даёт Half.One в direct pipeline")]
     [TestCategory("Regression")]
     public void Regression_218() => RicisRegressionTestCatalog.Tests[217].Body();
 
-    [TestMethod("QA05: ZERO — 0_F · 0_G даёт 0_{F·G}")]
+    [TestMethod("QA04: ZERO — 0_F + 0_G даёт 0_{F+G}")]
     [TestCategory("Regression")]
     public void Regression_219() => RicisRegressionTestCatalog.Tests[218].Body();
 
-    [TestMethod("QA06: L1 — keyed-полюса с разными отображениями ключ→индекс не равны")]
+    [TestMethod("QA05: ZERO — 0_F · 0_G даёт 0_{F·G}")]
     [TestCategory("Regression")]
     public void Regression_220() => RicisRegressionTestCatalog.Tests[219].Body();
 
-    [TestMethod("QA07: API — roots полюса неизменяемы после построения")]
+    [TestMethod("QA06: L1 — keyed-полюса с разными отображениями ключ→индекс не равны")]
     [TestCategory("Regression")]
     public void Regression_221() => RicisRegressionTestCatalog.Tests[220].Body();
 
-    [TestMethod("QA08: CompoundInterest — int 5% явно отклоняется без truncation")]
+    [TestMethod("QA07: API — roots полюса неизменяемы после построения")]
     [TestCategory("Regression")]
     public void Regression_222() => RicisRegressionTestCatalog.Tests[221].Body();
 
-    [TestMethod("QA09: CompoundInterest — BigInteger 100% сохраняет точную форму")]
+    [TestMethod("QA08: CompoundInterest — int 5% явно отклоняется без truncation")]
     [TestCategory("Regression")]
     public void Regression_223() => RicisRegressionTestCatalog.Tests[222].Body();
 
-    [TestMethod("QA10: Abs — Int32.MinValue сообщает overflow вместо отрицательного |x|")]
+    [TestMethod("QA09: CompoundInterest — BigInteger 100% сохраняет точную форму")]
     [TestCategory("Regression")]
     public void Regression_224() => RicisRegressionTestCatalog.Tests[223].Body();
 
-    [TestMethod("QA11: API — RicisEngine явно отклоняет конечный член")]
+    [TestMethod("QA10: Abs — Int32.MinValue сообщает overflow вместо отрицательного |x|")]
     [TestCategory("Regression")]
     public void Regression_225() => RicisRegressionTestCatalog.Tests[224].Body();
 
-    [TestMethod("QA12: ID-03 — разные параметры с одинаковым именем не образуют L1")]
+    [TestMethod("QA11: API — RicisEngine явно отклоняет конечный член")]
     [TestCategory("Regression")]
     public void Regression_226() => RicisRegressionTestCatalog.Tests[225].Body();
 
-    [TestMethod("QA13: ID-03 — альфа-эквивалентные лямбды остаются одной функцией")]
+    [TestMethod("QA12: ID-03 — разные параметры с одинаковым именем не образуют L1")]
     [TestCategory("Regression")]
     public void Regression_227() => RicisRegressionTestCatalog.Tests[226].Body();
 
-    [TestMethod("RSH01: private simplifier cleanup сохраняет typed lambda reduction")]
+    [TestMethod("QA13: ID-03 — альфа-эквивалентные лямбды остаются одной функцией")]
     [TestCategory("Regression")]
     public void Regression_228() => RicisRegressionTestCatalog.Tests[227].Body();
 
-    [TestMethod("RSH02: positive rational Pow exponent сохраняет root lambda")]
+    [TestMethod("RSH01: private simplifier cleanup сохраняет typed lambda reduction")]
     [TestCategory("Regression")]
     public void Regression_229() => RicisRegressionTestCatalog.Tests[228].Body();
 
-    [TestMethod("RSH03: method-call traversal сохраняет method и редуцирует argument")]
+    [TestMethod("RSH02: positive rational Pow exponent сохраняет root lambda")]
     [TestCategory("Regression")]
     public void Regression_230() => RicisRegressionTestCatalog.Tests[229].Body();
 
-    [TestMethod("RSH04: RicisEngine публикует immutable accepted-infinity snapshot")]
+    [TestMethod("RSH03: method-call traversal сохраняет method и редуцирует argument")]
     [TestCategory("Regression")]
     public void Regression_231() => RicisRegressionTestCatalog.Tests[230].Body();
 
-    [TestMethod("RSH05: multivariate common-right subtraction сохраняет exact difference")]
+    [TestMethod("RSH04: RicisEngine публикует immutable accepted-infinity snapshot")]
     [TestCategory("Regression")]
     public void Regression_232() => RicisRegressionTestCatalog.Tests[231].Body();
 
-    [TestMethod("RC01: ID — тождество F/F выполняется в Phase 0")]
+    [TestMethod("RSH05: multivariate common-right subtraction сохраняет exact difference")]
     [TestCategory("Regression")]
     public void Regression_233() => RicisRegressionTestCatalog.Tests[232].Body();
 
-    [TestMethod("RC02: ID — константное 0/0 даёт 1 до A1")]
+    [TestMethod("RC01: ID — тождество F/F выполняется в Phase 0")]
     [TestCategory("Regression")]
     public void Regression_234() => RicisRegressionTestCatalog.Tests[233].Body();
 
-    [TestMethod("RC03: SP2 — (F·G)/F даёт G")]
+    [TestMethod("RC02: ID — константное 0/0 даёт 1 до A1")]
     [TestCategory("Regression")]
     public void Regression_235() => RicisRegressionTestCatalog.Tests[234].Body();
 
-    [TestMethod("RC04: SP2 — (F/A)/(G/A) даёт F/G до мостов")]
+    [TestMethod("RC03: SP2 — (F·G)/F даёт G")]
     [TestCategory("Regression")]
     public void Regression_236() => RicisRegressionTestCatalog.Tests[235].Body();
 
-    [TestMethod("RC05: SP2 — целое 8/4 сворачивается в 2")]
+    [TestMethod("RC04: SP2 — (F/A)/(G/A) даёт F/G до мостов")]
     [TestCategory("Regression")]
     public void Regression_237() => RicisRegressionTestCatalog.Tests[236].Body();
 
-    [TestMethod("RC06: SP2 — дробь 1/2 остаётся деревом Divide")]
+    [TestMethod("RC05: SP2 — целое 8/4 сворачивается в 2")]
     [TestCategory("Regression")]
     public void Regression_238() => RicisRegressionTestCatalog.Tests[237].Body();
 
-    [TestMethod("RC07: A4 — остаточная форма 0_F/0_G сохраняется как F/G")]
+    [TestMethod("RC06: SP2 — дробь 1/2 остаётся деревом Divide")]
     [TestCategory("Regression")]
     public void Regression_239() => RicisRegressionTestCatalog.Tests[238].Body();
 
-    [TestMethod("RC08: A5 — разные ∞_F/∞_G дают F/G")]
+    [TestMethod("RC07: A4 — остаточная форма 0_F/0_G сохраняется как F/G")]
     [TestCategory("Regression")]
     public void Regression_240() => RicisRegressionTestCatalog.Tests[239].Body();
 
-    [TestMethod("RC09: A5 — одинаковые ∞_F/∞_F дают 1")]
+    [TestMethod("RC08: A5 — разные ∞_F/∞_G дают F/G")]
     [TestCategory("Regression")]
     public void Regression_241() => RicisRegressionTestCatalog.Tests[240].Body();
 
-    [TestMethod("RC10: A6 — 0_F·∞_G даёт F·G")]
+    [TestMethod("RC09: A5 — одинаковые ∞_F/∞_F дают 1")]
     [TestCategory("Regression")]
     public void Regression_242() => RicisRegressionTestCatalog.Tests[241].Body();
 
-    [TestMethod("RC11: A7 — ∞_F+∞_G даёт ∞_{F+G}")]
+    [TestMethod("RC10: A6 — 0_F·∞_G даёт F·G")]
     [TestCategory("Regression")]
     public void Regression_243() => RicisRegressionTestCatalog.Tests[242].Body();
 
-    [TestMethod("RC12: A7 — ∞_F−∞_G даёт ∞_{F−G}")]
+    [TestMethod("RC11: A7 — ∞_F+∞_G даёт ∞_{F+G}")]
     [TestCategory("Regression")]
     public void Regression_244() => RicisRegressionTestCatalog.Tests[243].Body();
 
-    [TestMethod("RC13: A7 — ∞_F·∞_G даёт ∞_{F·G}")]
+    [TestMethod("RC12: A7 — ∞_F−∞_G даёт ∞_{F−G}")]
     [TestCategory("Regression")]
     public void Regression_245() => RicisRegressionTestCatalog.Tests[244].Body();
 
-    [TestMethod("RC14: scalar — C·∞_F даёт ∞_{C·F}")]
+    [TestMethod("RC13: A7 — ∞_F·∞_G даёт ∞_{F·G}")]
     [TestCategory("Regression")]
     public void Regression_246() => RicisRegressionTestCatalog.Tests[245].Body();
 
-    [TestMethod("RC15: scalar — ∞_F·C даёт ∞_{F·C}")]
+    [TestMethod("RC14: scalar — C·∞_F даёт ∞_{C·F}")]
     [TestCategory("Regression")]
     public void Regression_247() => RicisRegressionTestCatalog.Tests[246].Body();
 
-    [TestMethod("RC16: scalar — ∞_F/C даёт ∞_{F/C}")]
+    [TestMethod("RC15: scalar — ∞_F·C даёт ∞_{F·C}")]
     [TestCategory("Regression")]
     public void Regression_248() => RicisRegressionTestCatalog.Tests[247].Body();
 
-    [TestMethod("RC17: A1 — F/0 даёт ∞_F")]
+    [TestMethod("RC16: scalar — ∞_F/C даёт ∞_{F/C}")]
     [TestCategory("Regression")]
     public void Regression_249() => RicisRegressionTestCatalog.Tests[248].Body();
 
-    [TestMethod("RC18: LIM — F·0 даёт 0_F")]
+    [TestMethod("RC17: A1 — F/0 даёт ∞_F")]
     [TestCategory("Regression")]
     public void Regression_250() => RicisRegressionTestCatalog.Tests[249].Body();
 
-    [TestMethod("RC19: LIM — F/0 даёт ∞_F")]
+    [TestMethod("RC18: LIM — F·0 даёт 0_F")]
     [TestCategory("Regression")]
     public void Regression_251() => RicisRegressionTestCatalog.Tests[250].Body();
 
-    [TestMethod("RC20: POL — sin(π/2) даёт 1")]
+    [TestMethod("RC19: LIM — F/0 даёт ∞_F")]
     [TestCategory("Regression")]
     public void Regression_252() => RicisRegressionTestCatalog.Tests[251].Body();
 
-    [TestMethod("RC21: POL — tan(π/2) даёт ∞₁")]
+    [TestMethod("RC20: POL — sin(π/2) даёт 1")]
     [TestCategory("Regression")]
     public void Regression_253() => RicisRegressionTestCatalog.Tests[252].Body();
 
-    [TestMethod("RC22: ROOT — разные наборы корней не объединяются")]
+    [TestMethod("RC21: POL — tan(π/2) даёт ∞₁")]
     [TestCategory("Regression")]
     public void Regression_254() => RicisRegressionTestCatalog.Tests[253].Body();
 
-    [TestMethod("RC23: SP2 — (x²−25)/(x−5) даёт x+5")]
+    [TestMethod("RC22: ROOT — разные наборы корней не объединяются")]
     [TestCategory("Regression")]
     public void Regression_255() => RicisRegressionTestCatalog.Tests[254].Body();
 
-    [TestMethod("RC24: A1 — 1/(x²−4) хранит оба ключа")]
+    [TestMethod("RC23: SP2 — (x²−25)/(x−5) даёт x+5")]
     [TestCategory("Regression")]
     public void Regression_256() => RicisRegressionTestCatalog.Tests[255].Body();
 
-    [TestMethod("RC25: A1 — 1/(1−x)^(2/3) хранит x=1")]
+    [TestMethod("RC24: A1 — 1/(x²−4) хранит оба ключа")]
     [TestCategory("Regression")]
     public void Regression_257() => RicisRegressionTestCatalog.Tests[256].Body();
 
-    [TestMethod("RC26: SP2/A1 — 1/(1−2/x) даёт ∞₂ при x=2")]
+    [TestMethod("RC25: A1 — 1/(1−x)^(2/3) хранит x=1")]
     [TestCategory("Regression")]
     public void Regression_258() => RicisRegressionTestCatalog.Tests[257].Body();
 
-    [TestMethod("RC27: A1 — 1/(1−tan x) не получает полюса tan")]
+    [TestMethod("RC26: SP2/A1 — 1/(1−2/x) даёт ∞₂ при x=2")]
     [TestCategory("Regression")]
     public void Regression_259() => RicisRegressionTestCatalog.Tests[258].Body();
 
-    [TestMethod("RC28: SP4 — близкие корни не сливаются")]
+    [TestMethod("RC27: A1 — 1/(1−tan x) не получает полюса tan")]
     [TestCategory("Regression")]
     public void Regression_260() => RicisRegressionTestCatalog.Tests[259].Body();
 
-    [TestMethod("RC29: A1 — x²/(a·x²+a·b+c) даёт ∞₁ для обоих ключей")]
+    [TestMethod("RC28: SP4 — близкие корни не сливаются")]
     [TestCategory("Regression")]
     public void Regression_261() => RicisRegressionTestCatalog.Tests[260].Body();
 
-    [TestMethod("RC30: ID — параметризованная форма x²/x² даёт 1")]
+    [TestMethod("RC29: A1 — x²/(a·x²+a·b+c) даёт ∞₁ для обоих ключей")]
     [TestCategory("Regression")]
     public void Regression_262() => RicisRegressionTestCatalog.Tests[261].Body();
 
-    [TestMethod("RC31: SP2 — x²/(2x²) оставляет точное 1/2")]
+    [TestMethod("RC30: ID — параметризованная форма x²/x² даёт 1")]
     [TestCategory("Regression")]
     public void Regression_263() => RicisRegressionTestCatalog.Tests[262].Body();
 
-    [TestMethod("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах")]
+    [TestMethod("RC31: SP2 — x²/(2x²) оставляет точное 1/2")]
     [TestCategory("Regression")]
     public void Regression_264() => RicisRegressionTestCatalog.Tests[263].Body();
 
-    [TestMethod("RC33: META — захваченный about добавляет SEO-профиль автора")]
+    [TestMethod("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах")]
     [TestCategory("Regression")]
     public void Regression_265() => RicisRegressionTestCatalog.Tests[264].Body();
 
-    [TestMethod("RC34: META — параметр about добавляет SEO-профиль автора")]
+    [TestMethod("RC33: META — захваченный about добавляет SEO-профиль автора")]
     [TestCategory("Regression")]
     public void Regression_266() => RicisRegressionTestCatalog.Tests[265].Body();
 
-    [TestMethod("RC35: META — профиль about сохраняет все подтверждённые источники")]
+    [TestMethod("RC34: META — параметр about добавляет SEO-профиль автора")]
     [TestCategory("Regression")]
     public void Regression_267() => RicisRegressionTestCatalog.Tests[266].Body();
 
-    [TestMethod("RC36: ID — sign(x)/sign(x) даёт 1")]
+    [TestMethod("RC35: META — профиль about сохраняет все подтверждённые источники")]
     [TestCategory("Regression")]
     public void Regression_268() => RicisRegressionTestCatalog.Tests[267].Body();
 
-    [TestMethod("RC37: ID — clamp(x)/clamp(x) даёт 1")]
+    [TestMethod("RC36: ID — sign(x)/sign(x) даёт 1")]
     [TestCategory("Regression")]
     public void Regression_269() => RicisRegressionTestCatalog.Tests[268].Body();
 
-    [TestMethod("RC38: SP2 — abs(x) сокращается как общий множитель")]
+    [TestMethod("RC37: ID — clamp(x)/clamp(x) даёт 1")]
     [TestCategory("Regression")]
     public void Regression_270() => RicisRegressionTestCatalog.Tests[269].Body();
 
-    [TestMethod("RC39: ID — x%2/(x%2) даёт 1")]
+    [TestMethod("RC38: SP2 — abs(x) сокращается как общий множитель")]
     [TestCategory("Regression")]
     public void Regression_271() => RicisRegressionTestCatalog.Tests[270].Body();
 
-    [TestMethod("RC40: ID — условная отсечка F/F даёт 1")]
+    [TestMethod("RC39: ID — x%2/(x%2) даёт 1")]
     [TestCategory("Regression")]
     public void Regression_272() => RicisRegressionTestCatalog.Tests[271].Body();
 
-    [TestMethod("RC41: SP2 — F^n/F^(n−1) даёт F структурно")]
+    [TestMethod("RC40: ID — условная отсечка F/F даёт 1")]
     [TestCategory("Regression")]
     public void Regression_273() => RicisRegressionTestCatalog.Tests[272].Body();
 
-    [TestMethod("RC42: SP2 — a^N/a^(N−X) даёт a^X структурно")]
+    [TestMethod("RC41: SP2 — F^n/F^(n−1) даёт F структурно")]
     [TestCategory("Regression")]
     public void Regression_274() => RicisRegressionTestCatalog.Tests[273].Body();
 
-    [TestMethod("RC43: ID — аналитические F/F сокращаются для Log/Sqrt/Exp/Trig")]
+    [TestMethod("RC42: SP2 — a^N/a^(N−X) даёт a^X структурно")]
     [TestCategory("Regression")]
     public void Regression_275() => RicisRegressionTestCatalog.Tests[274].Body();
 
-    [TestMethod("RC44: ALG — F−0 даёт F")]
+    [TestMethod("RC43: ID — аналитические F/F сокращаются для Log/Sqrt/Exp/Trig")]
     [TestCategory("Regression")]
     public void Regression_276() => RicisRegressionTestCatalog.Tests[275].Body();
 
-    [TestMethod("RC45: ALG — 0−F даёт −F")]
+    [TestMethod("RC44: ALG — F−0 даёт F")]
     [TestCategory("Regression")]
     public void Regression_277() => RicisRegressionTestCatalog.Tests[276].Body();
 
-    [TestMethod("RC46: ALG — F−F даёт обычный ноль")]
+    [TestMethod("RC45: ALG — 0−F даёт −F")]
     [TestCategory("Regression")]
     public void Regression_278() => RicisRegressionTestCatalog.Tests[277].Body();
 
-    [TestMethod("RC47: ALG — −(−F) даёт F")]
+    [TestMethod("RC46: ALG — F−F даёт обычный ноль")]
     [TestCategory("Regression")]
     public void Regression_279() => RicisRegressionTestCatalog.Tests[278].Body();
 
-    [TestMethod("RC48: CONTROL — a^N/a^(N−X) проходит полный pipeline")]
+    [TestMethod("RC47: ALG — −(−F) даёт F")]
     [TestCategory("Regression")]
     public void Regression_280() => RicisRegressionTestCatalog.Tests[279].Body();
 
-    [TestMethod("RC49: CONTROL — новые ALG rules не меняют 0_F payload")]
+    [TestMethod("RC48: CONTROL — a^N/a^(N−X) проходит полный pipeline")]
     [TestCategory("Regression")]
     public void Regression_281() => RicisRegressionTestCatalog.Tests[280].Body();
 
-    [TestMethod("CS01: public simplifier строит typed zero для double F·0")]
+    [TestMethod("RC49: CONTROL — новые ALG rules не меняют 0_F payload")]
     [TestCategory("Regression")]
     public void Regression_282() => RicisRegressionTestCatalog.Tests[281].Body();
 
-    [TestMethod("CS02: BigInteger x·x сохраняется без неподдерживаемого Power")]
+    [TestMethod("CS01: public simplifier строит typed zero для double F·0")]
     [TestCategory("Regression")]
     public void Regression_283() => RicisRegressionTestCatalog.Tests[282].Body();
 
-    [TestMethod("CS03: F/KeyedInfinity даёт 0_F с полными ключами")]
+    [TestMethod("CS02: BigInteger x·x сохраняется без неподдерживаемого Power")]
     [TestCategory("Regression")]
     public void Regression_284() => RicisRegressionTestCatalog.Tests[283].Body();
 
-    [TestMethod("CS04: proof отклоняет non-finite pressure constants")]
+    [TestMethod("CS03: F/KeyedInfinity даёт 0_F с полными ключами")]
     [TestCategory("Regression")]
     public void Regression_285() => RicisRegressionTestCatalog.Tests[284].Body();
 
-    [TestMethod("CS05: -0_F распознаётся как indexed zero")]
+    [TestMethod("CS04: proof отклоняет non-finite pressure constants")]
     [TestCategory("Regression")]
     public void Regression_286() => RicisRegressionTestCatalog.Tests[285].Body();
 
-    [TestMethod("CS06: traversal PoleInfinity не вызывает Reduce")]
+    [TestMethod("CS05: -0_F распознаётся как indexed zero")]
     [TestCategory("Regression")]
     public void Regression_287() => RicisRegressionTestCatalog.Tests[286].Body();
 
-    [TestMethod("CS07: traversal ZeroInfinity сохраняет deferred numerator")]
+    [TestMethod("CS06: traversal PoleInfinity не вызывает Reduce")]
     [TestCategory("Regression")]
     public void Regression_288() => RicisRegressionTestCatalog.Tests[287].Body();
 
-    [TestMethod("CS08: comparer различает полные root multisets")]
+    [TestMethod("CS07: traversal ZeroInfinity сохраняет deferred numerator")]
     [TestCategory("Regression")]
     public void Regression_289() => RicisRegressionTestCatalog.Tests[288].Body();
 
-    [TestMethod("CS09: Compose сохраняет indexed zero")]
+    [TestMethod("CS08: comparer различает полные root multisets")]
     [TestCategory("Regression")]
     public void Regression_290() => RicisRegressionTestCatalog.Tests[289].Body();
 
-    [TestMethod("SAFE01: pipeline не исполняет caller MethodCall при поиске корней")]
+    [TestMethod("CS09: Compose сохраняет indexed zero")]
     [TestCategory("Regression")]
     public void Regression_291() => RicisRegressionTestCatalog.Tests[290].Body();
 
-    [TestMethod("SAFE02: дробный индексированный zero сохраняет тип Double")]
+    [TestMethod("SAFE01: pipeline не исполняет caller MethodCall при поиске корней")]
     [TestCategory("Regression")]
     public void Regression_292() => RicisRegressionTestCatalog.Tests[291].Body();
 
-    [TestMethod("SAFE03: LazyInfinity не исполняет небезопасный payload при Reduce")]
+    [TestMethod("SAFE02: дробный индексированный zero сохраняет тип Double")]
     [TestCategory("Regression")]
     public void Regression_293() => RicisRegressionTestCatalog.Tests[292].Body();
 
-    [TestMethod("LOG01: true && x и x && true редуцируются в x")]
+    [TestMethod("SAFE03: LazyInfinity не исполняет небезопасный payload при Reduce")]
     [TestCategory("Regression")]
     public void Regression_294() => RicisRegressionTestCatalog.Tests[293].Body();
 
-    [TestMethod("LOG02: false || x и x || false редуцируются в x")]
+    [TestMethod("LOG01: true && x и x && true редуцируются в x")]
     [TestCategory("Regression")]
     public void Regression_295() => RicisRegressionTestCatalog.Tests[294].Body();
 
-    [TestMethod("LOG03: двойное отрицание bool редуцируется")]
+    [TestMethod("LOG02: false || x и x || false редуцируются в x")]
     [TestCategory("Regression")]
     public void Regression_296() => RicisRegressionTestCatalog.Tests[295].Body();
 
-    [TestMethod("LOG04: константное отрицание редуцируется")]
+    [TestMethod("LOG03: двойное отрицание bool редуцируется")]
     [TestCategory("Regression")]
     public void Regression_297() => RicisRegressionTestCatalog.Tests[296].Body();
 
-    [TestMethod("LOG05: constant conditional выбирает ветвь")]
+    [TestMethod("LOG04: константное отрицание редуцируется")]
     [TestCategory("Regression")]
     public void Regression_298() => RicisRegressionTestCatalog.Tests[297].Body();
 
-    [TestMethod("LOG06: одинаковые conditional branches сохраняют вычисление test")]
+    [TestMethod("LOG05: constant conditional выбирает ветвь")]
     [TestCategory("Regression")]
     public void Regression_299() => RicisRegressionTestCatalog.Tests[298].Body();
 
-    [TestMethod("LOG07: опасные short-circuit rewrites запрещены")]
+    [TestMethod("LOG06: одинаковые conditional branches сохраняют вычисление test")]
     [TestCategory("Regression")]
     public void Regression_300() => RicisRegressionTestCatalog.Tests[299].Body();
 
-    [TestMethod("LOG08: logical stage виден в phase trace")]
+    [TestMethod("LOG07: опасные short-circuit rewrites запрещены")]
     [TestCategory("Regression")]
     public void Regression_301() => RicisRegressionTestCatalog.Tests[300].Body();
 
-    [TestMethod("LOG09: Quine-McCluskey минимизирует a·b + a·¬b до a")]
+    [TestMethod("LOG08: logical stage виден в phase trace")]
     [TestCategory("Regression")]
     public void Regression_302() => RicisRegressionTestCatalog.Tests[301].Body();
 
-    [TestMethod("VECTOR01: вектор хранит N упорядоченных координат")]
+    [TestMethod("LOG09: Quine-McCluskey минимизирует a·b + a·¬b до a")]
     [TestCategory("Regression")]
     public void Regression_303() => RicisRegressionTestCatalog.Tests[302].Body();
 
-    [TestMethod("VECTOR02: координаты защищены от изменения входного массива")]
+    [TestMethod("VECTOR01: вектор хранит N упорядоченных координат")]
     [TestCategory("Regression")]
     public void Regression_304() => RicisRegressionTestCatalog.Tests[303].Body();
 
-    [TestMethod("VECTOR03: сложение и вычитание выполняются покомпонентно")]
+    [TestMethod("VECTOR02: координаты защищены от изменения входного массива")]
     [TestCategory("Regression")]
     public void Regression_305() => RicisRegressionTestCatalog.Tests[304].Body();
 
-    [TestMethod("VECTOR04: масштабирование и dot product используют INumber<T>")]
+    [TestMethod("VECTOR03: сложение и вычитание выполняются покомпонентно")]
     [TestCategory("Regression")]
     public void Regression_306() => RicisRegressionTestCatalog.Tests[305].Body();
 
-    [TestMethod("VECTOR05: Zero создаёт типизированный нулевой вектор")]
+    [TestMethod("VECTOR04: масштабирование и dot product используют INumber<T>")]
     [TestCategory("Regression")]
     public void Regression_307() => RicisRegressionTestCatalog.Tests[306].Body();
 
-    [TestMethod("VECTOR06: разные размерности отклоняются явно")]
+    [TestMethod("VECTOR05: Zero создаёт типизированный нулевой вектор")]
     [TestCategory("Regression")]
     public void Regression_308() => RicisRegressionTestCatalog.Tests[307].Body();
 
-    [TestMethod("VECTOR07: пустой вектор отклоняется")]
+    [TestMethod("VECTOR06: разные размерности отклоняются явно")]
     [TestCategory("Regression")]
     public void Regression_309() => RicisRegressionTestCatalog.Tests[308].Body();
 
-    [TestMethod("VECTOR08: generic BigInteger поддерживает векторные операции")]
+    [TestMethod("VECTOR07: пустой вектор отклоняется")]
     [TestCategory("Regression")]
     public void Regression_310() => RicisRegressionTestCatalog.Tests[309].Body();
 
-    [TestMethod("VEX01: символьный вектор сохраняет N lambda-координат")]
+    [TestMethod("VECTOR08: generic BigInteger поддерживает векторные операции")]
     [TestCategory("Regression")]
     public void Regression_311() => RicisRegressionTestCatalog.Tests[310].Body();
 
-    [TestMethod("VEX02: символьное сложение выполняется покомпонентно")]
+    [TestMethod("VEX01: символьный вектор сохраняет N lambda-координат")]
     [TestCategory("Regression")]
     public void Regression_312() => RicisRegressionTestCatalog.Tests[311].Body();
 
-    [TestMethod("VEX03: Zero expression vector сохраняет структурный ноль")]
+    [TestMethod("VEX02: символьное сложение выполняется покомпонентно")]
     [TestCategory("Regression")]
     public void Regression_313() => RicisRegressionTestCatalog.Tests[312].Body();
 
-    [TestMethod("VEX04: треугольные F и G строятся как векторные отображения")]
+    [TestMethod("VEX03: Zero expression vector сохраняет структурный ноль")]
     [TestCategory("Regression")]
     public void Regression_314() => RicisRegressionTestCatalog.Tests[313].Body();
 
-    [TestMethod("VEX05: композиция векторных отображений сохраняет размерность")]
+    [TestMethod("VEX04: треугольные F и G строятся как векторные отображения")]
     [TestCategory("Regression")]
     public void Regression_315() => RicisRegressionTestCatalog.Tests[314].Body();
 
-    [TestMethod("VEX06: несовместимые сигнатуры отклоняются")]
+    [TestMethod("VEX05: композиция векторных отображений сохраняет размерность")]
     [TestCategory("Regression")]
     public void Regression_316() => RicisRegressionTestCatalog.Tests[315].Body();
 
-    [TestMethod("ES01: ExpressionSystem сохраняет все lambda-выражения")]
+    [TestMethod("VEX06: несовместимые сигнатуры отклоняются")]
     [TestCategory("Regression")]
     public void Regression_317() => RicisRegressionTestCatalog.Tests[316].Body();
 
-    [TestMethod("ES02: ExpressionSystem сохраняет общую сигнатуру")]
+    [TestMethod("ES01: ExpressionSystem сохраняет все lambda-выражения")]
     [TestCategory("Regression")]
     public void Regression_318() => RicisRegressionTestCatalog.Tests[317].Body();
 
-    [TestMethod("ES03: ExpressionSystem использует существующий vector overload")]
+    [TestMethod("ES02: ExpressionSystem сохраняет общую сигнатуру")]
     [TestCategory("Regression")]
     public void Regression_319() => RicisRegressionTestCatalog.Tests[318].Body();
 
-    [TestMethod("ES04: ExpressionSystem отклоняет несовместимые сигнатуры")]
+    [TestMethod("ES03: ExpressionSystem использует существующий vector overload")]
     [TestCategory("Regression")]
     public void Regression_320() => RicisRegressionTestCatalog.Tests[319].Body();
 
-    [TestMethod("ES05: ExpressionSystem не схлопывается в скаляр")]
+    [TestMethod("ES04: ExpressionSystem отклоняет несовместимые сигнатуры")]
     [TestCategory("Regression")]
     public void Regression_321() => RicisRegressionTestCatalog.Tests[320].Body();
 
-    [TestMethod("API17: ExpressionSystem exposes structural-zero and vector interoperability APIs")]
+    [TestMethod("ES05: ExpressionSystem не схлопывается в скаляр")]
     [TestCategory("Regression")]
     public void Regression_322() => RicisRegressionTestCatalog.Tests[321].Body();
 
-    [TestMethod("MEX01: матрица хранит общую сигнатуру элементов")]
+    [TestMethod("API17: ExpressionSystem exposes structural-zero and vector interoperability APIs")]
     [TestCategory("Regression")]
     public void Regression_323() => RicisRegressionTestCatalog.Tests[322].Body();
 
-    [TestMethod("MEX02: determinant 2x2 строится как RICIS expression")]
+    [TestMethod("MEX01: матрица хранит общую сигнатуру элементов")]
     [TestCategory("Regression")]
     public void Regression_324() => RicisRegressionTestCatalog.Tests[323].Body();
 
-    [TestMethod("MEX03: нулевая матрица распознаётся структурно")]
+    [TestMethod("MEX02: determinant 2x2 строится как RICIS expression")]
     [TestCategory("Regression")]
     public void Regression_325() => RicisRegressionTestCatalog.Tests[324].Body();
 
-    [TestMethod("MEX04: determinant отклоняет матрицу не 2x2")]
+    [TestMethod("MEX03: нулевая матрица распознаётся структурно")]
     [TestCategory("Regression")]
     public void Regression_326() => RicisRegressionTestCatalog.Tests[325].Body();
 
-    [TestMethod("MEX05: determinant 3x3 нормализует треугольную матрицу в 1")]
+    [TestMethod("MEX04: determinant отклоняет матрицу не 2x2")]
     [TestCategory("Regression")]
     public void Regression_327() => RicisRegressionTestCatalog.Tests[326].Body();
 
-    [TestMethod("API18: matrix exposes immutable row view")]
+    [TestMethod("MEX05: determinant 3x3 нормализует треугольную матрицу в 1")]
     [TestCategory("Regression")]
     public void Regression_328() => RicisRegressionTestCatalog.Tests[327].Body();
 
-    [TestMethod("JSG01: сингулярный determinant сохраняется как индексированный zero")]
+    [TestMethod("API18: matrix exposes immutable row view")]
     [TestCategory("Regression")]
     public void Regression_329() => RicisRegressionTestCatalog.Tests[328].Body();
 
-    [TestMethod("JSG02: A6 возвращает determinant·inverse payload без NaN")]
+    [TestMethod("JSG01: сингулярный determinant сохраняется как индексированный zero")]
     [TestCategory("Regression")]
     public void Regression_330() => RicisRegressionTestCatalog.Tests[329].Body();
 
-    [TestMethod("JSG03: несколько inverse payload entries обрабатываются покомпонентно")]
+    [TestMethod("JSG02: A6 возвращает determinant·inverse payload без NaN")]
     [TestCategory("Regression")]
     public void Regression_331() => RicisRegressionTestCatalog.Tests[330].Body();
 
-    [TestMethod("JSG04: пустой inverse payload отклоняется")]
+    [TestMethod("JSG03: несколько inverse payload entries обрабатываются покомпонентно")]
     [TestCategory("Regression")]
     public void Regression_332() => RicisRegressionTestCatalog.Tests[331].Body();
 
-    [TestMethod("JPR01: Jacobian proof принимает независимые lambda-посылки и lambda verification")]
+    [TestMethod("JSG04: пустой inverse payload отклоняется")]
     [TestCategory("Regression")]
     public void Regression_333() => RicisRegressionTestCatalog.Tests[332].Body();
 
-    [TestMethod("JPR02: Jacobian proof публикует полный typed node-to-root trace")]
+    [TestMethod("JPR01: Jacobian proof принимает независимые lambda-посылки и lambda verification")]
     [TestCategory("Regression")]
     public void Regression_334() => RicisRegressionTestCatalog.Tests[333].Body();
 
-    [TestMethod("JPR03: Jacobian proof экспортирует standalone LaTeX и compilable structured Lean")]
+    [TestMethod("JPR02: Jacobian proof публикует полный typed node-to-root trace")]
     [TestCategory("Regression")]
     public void Regression_335() => RicisRegressionTestCatalog.Tests[334].Body();
 
-    [TestMethod("JPR04: Jacobian proof сохраняет A6 payload без классического inverse")]
+    [TestMethod("JPR03: Jacobian proof экспортирует standalone LaTeX и compilable structured Lean")]
     [TestCategory("Regression")]
     public void Regression_336() => RicisRegressionTestCatalog.Tests[335].Body();
 
-    [TestMethod("RIP01: F/0 преобразуется внутренним O(1)-мостом в indexed infinity")]
+    [TestMethod("JPR04: Jacobian proof сохраняет A6 payload без классического inverse")]
     [TestCategory("Regression")]
     public void Regression_337() => RicisRegressionTestCatalog.Tests[336].Body();
 
-    [TestMethod("RIP02: F·0 преобразуется внутренним O(1)-мостом в indexed zero")]
+    [TestMethod("RIP01: F/0 преобразуется внутренним O(1)-мостом в indexed infinity")]
     [TestCategory("Regression")]
     public void Regression_338() => RicisRegressionTestCatalog.Tests[337].Body();
 
-    [TestMethod("RIP03: A6 возвращает payload expression без классического 0·∞")]
+    [TestMethod("RIP02: F·0 преобразуется внутренним O(1)-мостом в indexed zero")]
     [TestCategory("Regression")]
     public void Regression_339() => RicisRegressionTestCatalog.Tests[338].Body();
 
-    [TestMethod("RIP04: сингулярный payload сохраняет certified keys")]
+    [TestMethod("RIP03: A6 возвращает payload expression без классического 0·∞")]
     [TestCategory("Regression")]
     public void Regression_340() => RicisRegressionTestCatalog.Tests[339].Body();
 
-    [TestMethod("VVIS01: Visitor доказывает G∘F=Id₃")]
+    [TestMethod("RIP04: сингулярный payload сохраняет certified keys")]
     [TestCategory("Regression")]
     public void Regression_341() => RicisRegressionTestCatalog.Tests[340].Body();
 
-    [TestMethod("VVIS02: Visitor доказывает F∘G=Id₃")]
+    [TestMethod("VVIS01: Visitor доказывает G∘F=Id₃")]
     [TestCategory("Regression")]
     public void Regression_342() => RicisRegressionTestCatalog.Tests[341].Body();
 
-    [TestMethod("VVIS03: Visitor отклоняет ложное векторное тождество")]
+    [TestMethod("VVIS02: Visitor доказывает F∘G=Id₃")]
     [TestCategory("Regression")]
     public void Regression_343() => RicisRegressionTestCatalog.Tests[342].Body();
 
-    [TestMethod("VVIS04: Visitor оставляет residual как vector expression")]
+    [TestMethod("VVIS03: Visitor отклоняет ложное векторное тождество")]
     [TestCategory("Regression")]
     public void Regression_344() => RicisRegressionTestCatalog.Tests[343].Body();
 
-    [TestMethod("SP3: TypeConsistency сохраняет indexed-zero payload и тот же узел")]
+    [TestMethod("VVIS04: Visitor оставляет residual как vector expression")]
     [TestCategory("Regression")]
     public void Regression_345() => RicisRegressionTestCatalog.Tests[344].Body();
 
-    [TestMethod("SP3: TypeConsistency сохраняет indexed-infinity payload и ключ")]
+    [TestMethod("SP3: TypeConsistency сохраняет indexed-zero payload и тот же узел")]
     [TestCategory("Regression")]
     public void Regression_346() => RicisRegressionTestCatalog.Tests[345].Body();
 
-    [TestMethod("SP3: TypeConsistency отклоняет несертифицированный бесконечный ключ")]
+    [TestMethod("SP3: TypeConsistency сохраняет indexed-infinity payload и ключ")]
     [TestCategory("Regression")]
     public void Regression_347() => RicisRegressionTestCatalog.Tests[346].Body();
 
-    [TestMethod("TLOG01: typed journal сохраняет общий порядок и реальные stage types")]
+    [TestMethod("SP3: TypeConsistency отклоняет несертифицированный бесконечный ключ")]
     [TestCategory("Regression")]
     public void Regression_348() => RicisRegressionTestCatalog.Tests[347].Body();
 
-    [TestMethod("TLOG02: proof pipeline публикует visitor trace без исполнения условий")]
+    [TestMethod("TLOG01: typed journal сохраняет общий порядок и реальные stage types")]
     [TestCategory("Regression")]
     public void Regression_349() => RicisRegressionTestCatalog.Tests[348].Body();
 
-    [TestMethod("TLOG03: JSON LaTeX Lean reports рендерят один canonical snapshot")]
+    [TestMethod("TLOG02: proof pipeline публикует visitor trace без исполнения условий")]
     [TestCategory("Regression")]
     public void Regression_350() => RicisRegressionTestCatalog.Tests[349].Body();
 
-    [TestMethod("TLOG04: renderer отклоняет неупорядоченный journal и неизвестный format")]
+    [TestMethod("TLOG03: JSON LaTeX Lean reports рендерят один canonical snapshot")]
     [TestCategory("Regression")]
     public void Regression_351() => RicisRegressionTestCatalog.Tests[350].Body();
 
-    [TestMethod("API22: SimplifyWithLog publishes typed public pipeline audit")]
+    [TestMethod("TLOG04: renderer отклоняет неупорядоченный journal и неизвестный format")]
     [TestCategory("Regression")]
     public void Regression_352() => RicisRegressionTestCatalog.Tests[351].Body();
 
-    [TestMethod("CHECKED01: ProveChecked принимает реальные conditions/constraints и проверяет expected")]
+    [TestMethod("API22: SimplifyWithLog publishes typed public pipeline audit")]
     [TestCategory("Regression")]
     public void Regression_353() => RicisRegressionTestCatalog.Tests[352].Body();
 
-    [TestMethod("CHECKED02: ProveChecked отклоняет структурно неверный expected")]
+    [TestMethod("CHECKED01: ProveChecked принимает реальные conditions/constraints и проверяет expected")]
     [TestCategory("Regression")]
     public void Regression_354() => RicisRegressionTestCatalog.Tests[353].Body();
 
-    [TestMethod("CHECKED03: ProveChecked корректно rebinding-ит параметр expected")]
+    [TestMethod("CHECKED02: ProveChecked отклоняет структурно неверный expected")]
     [TestCategory("Regression")]
     public void Regression_355() => RicisRegressionTestCatalog.Tests[354].Body();
 
-    [TestMethod("CHECKED04: ProveChecked не исполняет реальные lambda conditions")]
+    [TestMethod("CHECKED03: ProveChecked корректно rebinding-ит параметр expected")]
     [TestCategory("Regression")]
     public void Regression_356() => RicisRegressionTestCatalog.Tests[355].Body();
 
-    [TestMethod("CHECKED05: ProveDocumentChecked публикует verification expression")]
+    [TestMethod("CHECKED04: ProveChecked не исполняет реальные lambda conditions")]
     [TestCategory("Regression")]
     public void Regression_357() => RicisRegressionTestCatalog.Tests[356].Body();
 
-    [TestMethod("PDF01: Log template — выводит trace и возвращает то же производное дерево")]
+    [TestMethod("CHECKED05: ProveDocumentChecked публикует verification expression")]
     [TestCategory("Regression")]
     public void Regression_358() => RicisRegressionTestCatalog.Tests[357].Body();
 
-    [TestMethod("PDF02: Academic template — применяет Func<string,string> без изменения вывода")]
+    [TestMethod("PDF01: Log template — выводит trace и возвращает то же производное дерево")]
     [TestCategory("Regression")]
     public void Regression_359() => RicisRegressionTestCatalog.Tests[358].Body();
 
-    [TestMethod("PDF03: Generic Lean format — controlled rejection для unsupported shape")]
+    [TestMethod("PDF02: Academic template — применяет Func<string,string> без изменения вывода")]
     [TestCategory("Regression")]
     public void Regression_360() => RicisRegressionTestCatalog.Tests[359].Body();
 
-    [TestMethod("PDF04: Json template — сохраняет полный node-to-root маршрут")]
+    [TestMethod("PDF03: Generic Lean format — controlled rejection для unsupported shape")]
     [TestCategory("Regression")]
     public void Regression_361() => RicisRegressionTestCatalog.Tests[360].Body();
 
-    [TestMethod("PDF05: LaTeX template — сохраняет полный node-to-root маршрут")]
+    [TestMethod("PDF04: Json template — сохраняет полный node-to-root маршрут")]
     [TestCategory("Regression")]
     public void Regression_362() => RicisRegressionTestCatalog.Tests[361].Body();
 
-    [TestMethod("LFT01: StructuredData и RequestedRows создают LeanDoc")]
+    [TestMethod("PDF05: LaTeX template — сохраняет полный node-to-root маршрут")]
     [TestCategory("Regression")]
     public void Regression_363() => RicisRegressionTestCatalog.Tests[362].Body();
 
-    [TestMethod("LFT02: RequestedRows раскрывает theorem dependencies")]
+    [TestMethod("LFT01: StructuredData и RequestedRows создают LeanDoc")]
     [TestCategory("Regression")]
     public void Regression_364() => RicisRegressionTestCatalog.Tests[363].Body();
 
-    [TestMethod("LFT03: StructuredData блокирует небезопасные Lean identifiers")]
+    [TestMethod("LFT02: RequestedRows раскрывает theorem dependencies")]
     [TestCategory("Regression")]
     public void Regression_365() => RicisRegressionTestCatalog.Tests[364].Body();
 
-    [TestMethod("PDF06: Format API — отклоняет неизвестный enum и null callback")]
+    [TestMethod("LFT03: StructuredData блокирует небезопасные Lean identifiers")]
     [TestCategory("Regression")]
     public void Regression_366() => RicisRegressionTestCatalog.Tests[365].Body();
 
-    [TestMethod("PDF07: Binary overload — использует общий Log renderer")]
+    [TestMethod("PDF06: Format API — отклоняет неизвестный enum и null callback")]
     [TestCategory("Regression")]
     public void Regression_367() => RicisRegressionTestCatalog.Tests[366].Body();
 
-    [TestMethod("PDF08: Injected ILog сохраняет полный typed node-to-root документ")]
+    [TestMethod("PDF07: Binary overload — использует общий Log renderer")]
     [TestCategory("Regression")]
     public void Regression_368() => RicisRegressionTestCatalog.Tests[367].Body();
 
-    [TestMethod("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут")]
+    [TestMethod("PDF08: Injected ILog сохраняет полный typed node-to-root документ")]
     [TestCategory("Regression")]
     public void Regression_369() => RicisRegressionTestCatalog.Tests[368].Body();
 
-    [TestMethod("SQA01: сложная multi-key singularity сохраняет RICIS A6 payload")]
+    [TestMethod("PDF09: Checked multi-format API строит один verified proof и сохраняет маршрут")]
     [TestCategory("Regression")]
     public void Regression_370() => RicisRegressionTestCatalog.Tests[369].Body();
 
-    [TestMethod("SQA02: классическая оценка singularity не определена, RICIS result структурен")]
+    [TestMethod("SQA01: сложная multi-key singularity сохраняет RICIS A6 payload")]
     [TestCategory("Regression")]
     public void Regression_371() => RicisRegressionTestCatalog.Tests[370].Body();
 
-    [TestMethod("SQA03: сложная singularity генерирует structured A6 LeanDoc")]
+    [TestMethod("SQA02: классическая оценка singularity не определена, RICIS result структурен")]
     [TestCategory("Regression")]
     public void Regression_372() => RicisRegressionTestCatalog.Tests[371].Body();
+
+    [TestMethod("SQA03: сложная singularity генерирует structured A6 LeanDoc")]
+    [TestCategory("Regression")]
+    public void Regression_373() => RicisRegressionTestCatalog.Tests[372].Body();
 }
