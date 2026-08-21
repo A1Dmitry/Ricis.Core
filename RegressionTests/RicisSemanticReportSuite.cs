@@ -284,6 +284,7 @@ internal static class RicisSemanticReportSuite
     private static void ExternalLatexTemplateIsPublished()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "latex.en-US.template");
+        var russianPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "latex.ru-RU.template");
         var exemplarPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.exemplar.json");
         var projectRoot = FindProjectRoot();
         var sourcePath = Path.Combine(projectRoot, "Knowledge", "LaTexExamples", "NavierStokes-Ricis.structural-exemplar.tex");
@@ -291,6 +292,8 @@ internal static class RicisSemanticReportSuite
         Require(File.Exists(path) &&
                 File.ReadAllText(path).Contains("{{#each Sections}}", StringComparison.Ordinal) &&
                 File.ReadAllText(path).Contains("{{TechnicalAppendix}}", StringComparison.Ordinal) &&
+                File.Exists(russianPath) &&
+                File.ReadAllText(russianPath).Contains("{{AppendixSections}}", StringComparison.Ordinal) &&
                 File.Exists(exemplarPath) &&
                 File.Exists(sourcePath) &&
                 File.Exists(checksumPath),
@@ -308,7 +311,7 @@ internal static class RicisSemanticReportSuite
             "Author report",
             "Public author attribution only.",
             authorAttribution: attribution);
-        var document = renderer.Render(model, source.Get("latex", "en-US"));
+        var document = renderer.Render(model, source.Get("latex", "ru-RU"));
         Require(attribution.Mode == RicisLatexAuthorAttributionMode.TrustedRicisAuthor &&
                 attribution.IsIncluded &&
                 attribution.DisplayName == "Дмитрий Алейников" &&
@@ -344,7 +347,7 @@ internal static class RicisSemanticReportSuite
             authorAttribution: attribution);
         var document = new RicisSemanticLatexTemplateRenderer().Render(
             model,
-            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "en-US"));
+            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "ru-RU"));
         Require(callbackCount == 1 &&
                 attribution.Mode == RicisLatexAuthorAttributionMode.CallbackProvidedPaidUser &&
                 attribution.IsIncluded &&
@@ -366,7 +369,7 @@ internal static class RicisSemanticReportSuite
             authorAttribution: attribution);
         var document = new RicisSemanticLatexTemplateRenderer().Render(
             model,
-            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "en-US"));
+            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "ru-RU"));
         Require(attribution.Mode == RicisLatexAuthorAttributionMode.CallbackRequired &&
                 !attribution.IsIncluded &&
                 !document.Contains("Автор и SEO-метаданные", StringComparison.Ordinal) &&

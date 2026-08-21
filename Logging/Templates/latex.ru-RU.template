@@ -10,12 +10,12 @@
 \usepackage{longtable}
 \geometry{a4paper, margin=1in}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newtheorem{axiom}{Axiom}
-\newtheorem{definition}{Definition}
-\newtheorem{corollary}{Corollary}
-\newtheorem{remark}{Remark}
+\newtheorem{theorem}{Теорема}
+\newtheorem{lemma}{Лемма}
+\newtheorem{axiom}{Аксиома}
+\newtheorem{definition}{Определение}
+\newtheorem{corollary}{Следствие}
+\newtheorem{remark}{Замечание}
 
 \title{ {{Title}} \\ \large {{Subtitle}} }
 \author{ {{AuthorDisplayName}} }
@@ -31,24 +31,24 @@
 \vspace{1cm}
 {{/if}}
 
-\section*{Evidence boundary}
-\addcontentsline{toc}{section}{Evidence boundary}
+\section*{Граница доказательств}
+\addcontentsline{toc}{section}{Граница доказательств}
 {{EvidenceBoundary}}
 
 {{#if AuthorIncluded}}
-\section*{Author and SEO metadata}
-\addcontentsline{toc}{section}{Author and SEO metadata}
-\textbf{Name:} {{AuthorDisplayName}}\\
-\textbf{Alternate name:} {{AuthorAlternateName}}\\
+\section*{Автор и SEO-метаданные}
+\addcontentsline{toc}{section}{Автор и SEO-метаданные}
+\textbf{Имя:} {{AuthorDisplayName}}\\
+\textbf{Альтернативное имя:} {{AuthorAlternateName}}\\
 \textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
-\textbf{Description:} {{AuthorDescription}}\\
-\textbf{Keywords:} {{AuthorKeywords}}
+\textbf{Описание:} {{AuthorDescription}}\\
+\textbf{Ключевые слова:} {{AuthorKeywords}}
 {{AuthorWorks}}
 {{/if}}
 
 {{#each Sections}}
 {{this.Opening}}
-\textit{Semantic status:} {{this.Status}}\\
+\textit{Семантический статус:} {{this.Status}}\\
 {{this.Body}}
 {{this.Equation}}
 {{this.Claims}}

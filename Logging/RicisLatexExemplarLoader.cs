@@ -25,7 +25,11 @@ public sealed class RicisLatexExemplarLoader
             subtitle: ReadOptionalString(root, "subtitle"),
             abstracts: ReadAbstracts(ReadOptionalArray(root, "abstracts")),
             conclusion: ReadOptionalString(root, "conclusion"),
+            conclusionHeading: ReadOptionalString(root, "conclusionHeading"),
+            conclusionSteps: ReadStrings(ReadOptionalArray(root, "conclusionSteps")),
             epilogue: ReadOptionalString(root, "epilogue"),
+            epilogueHeading: ReadOptionalString(root, "epilogueHeading"),
+            epilogueSteps: ReadStrings(ReadOptionalArray(root, "epilogueSteps")),
             includeTableOfContents: ReadOptionalBoolean(root, "includeTableOfContents"));
     }
 
@@ -76,6 +80,22 @@ public sealed class RicisLatexExemplarLoader
                 ReadRequiredString(abstractBlock, "language"),
                 ReadRequiredString(abstractBlock, "label"),
                 ReadRequiredString(abstractBlock, "body")));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<string> ReadStrings(JsonElement values)
+    {
+        var result = new List<string>();
+        foreach (var value in values.EnumerateArray())
+        {
+            if (value.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))
+            {
+                throw new InvalidOperationException("Semantic LaTeX string list requires non-empty string items.");
+            }
+
+            result.Add(value.GetString()!);
         }
 
         return result;

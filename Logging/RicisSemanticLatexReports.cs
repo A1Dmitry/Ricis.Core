@@ -16,6 +16,8 @@ public enum RicisLatexSectionKind
     Derivation,
     /// <summary>Claim whose verification status is stated explicitly.</summary>
     Claim,
+    /// <summary>Lemma rendered as a typed supporting statement.</summary>
+    Lemma,
     /// <summary>Type or consistency validation table.</summary>
     Validation,
     /// <summary>Reference or terminology appendix.</summary>
@@ -150,7 +152,11 @@ public sealed record RicisLatexReportViewModel
         string subtitle = "",
         IReadOnlyList<RicisLatexAbstractViewModel> abstracts = null,
         string conclusion = "",
+        string conclusionHeading = "",
+        IReadOnlyList<string> conclusionSteps = null,
         string epilogue = "",
+        string epilogueHeading = "",
+        IReadOnlyList<string> epilogueSteps = null,
         bool includeTableOfContents = false)
     {
         DocumentId = Require(documentId, nameof(documentId));
@@ -164,7 +170,11 @@ public sealed record RicisLatexReportViewModel
         Subtitle = subtitle ?? string.Empty;
         Abstracts = Array.AsReadOnly((abstracts ?? Array.Empty<RicisLatexAbstractViewModel>()).ToArray());
         Conclusion = conclusion ?? string.Empty;
+        ConclusionHeading = conclusionHeading ?? string.Empty;
+        ConclusionSteps = Array.AsReadOnly((conclusionSteps ?? Array.Empty<string>()).ToArray());
         Epilogue = epilogue ?? string.Empty;
+        EpilogueHeading = epilogueHeading ?? string.Empty;
+        EpilogueSteps = Array.AsReadOnly((epilogueSteps ?? Array.Empty<string>()).ToArray());
         IncludeTableOfContents = includeTableOfContents;
     }
 
@@ -201,8 +211,20 @@ public sealed record RicisLatexReportViewModel
     /// <summary>Optional conclusion rendered before the epilogue.</summary>
     public string Conclusion { get; }
 
+    /// <summary>Optional source-specific conclusion heading.</summary>
+    public string ConclusionHeading { get; }
+
+    /// <summary>Optional ordered conclusion items.</summary>
+    public IReadOnlyList<string> ConclusionSteps { get; }
+
     /// <summary>Optional unnumbered epilogue rendered after the conclusion.</summary>
     public string Epilogue { get; }
+
+    /// <summary>Optional source-specific epilogue heading.</summary>
+    public string EpilogueHeading { get; }
+
+    /// <summary>Optional ordered epilogue items.</summary>
+    public IReadOnlyList<string> EpilogueSteps { get; }
 
     /// <summary>Whether the external template renders a table of contents.</summary>
     public bool IncludeTableOfContents { get; }
@@ -306,7 +328,8 @@ public sealed class RicisSemanticLatexTemplateRenderer
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentNullException.ThrowIfNull(template);
-        var sections = BuildSectionRows(model.Sections);
+        var sections = BuildSectionRows(model.Sections.Where(section => section.Presentation != RicisLatexSectionPresentation.Appendix).ToArray());
+        var appendixSections = BuildSectionRows(model.Sections.Where(section => section.Presentation == RicisLatexSectionPresentation.Appendix).ToArray());
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["DocumentId"] = Escape(model.DocumentId),
@@ -317,9 +340,14 @@ public sealed class RicisSemanticLatexTemplateRenderer
             ["TableOfContentsIncluded"] = model.IncludeTableOfContents ? "true" : "false",
             ["EvidenceBoundary"] = EscapeParagraphs(model.EvidenceBoundary),
             ["ConclusionIncluded"] = string.IsNullOrWhiteSpace(model.Conclusion) ? "false" : "true",
+            ["ConclusionHeading"] = Escape(string.IsNullOrWhiteSpace(model.ConclusionHeading) ? "Заключение" : model.ConclusionHeading),
             ["Conclusion"] = EscapeParagraphs(model.Conclusion),
+            ["ConclusionSteps"] = RenderTextList(model.ConclusionSteps),
             ["EpilogueIncluded"] = string.IsNullOrWhiteSpace(model.Epilogue) ? "false" : "true",
+            ["EpilogueHeading"] = Escape(string.IsNullOrWhiteSpace(model.EpilogueHeading) ? "Эпилог" : model.EpilogueHeading),
             ["Epilogue"] = EscapeParagraphs(model.Epilogue),
+            ["EpilogueSteps"] = RenderTextList(model.EpilogueSteps),
+            ["AppendixSections"] = RenderSectionRows(appendixSections),
             ["AuthorIncluded"] = model.AuthorAttribution?.IsIncluded == true ? "true" : "false",
             ["AuthorMode"] = Escape(model.AuthorAttribution?.Mode.ToString() ?? string.Empty),
             ["AuthorDisplayName"] = Escape(model.AuthorAttribution?.DisplayName ?? string.Empty),
@@ -332,6 +360,10 @@ public sealed class RicisSemanticLatexTemplateRenderer
         };
         return _renderer.RenderText(template, values, sections, "Sections");
     }
+
+    private static string RenderSectionRows(IReadOnlyList<IReadOnlyDictionary<string, string>> rows) =>
+        string.Join(Environment.NewLine, rows.Select(row =>
+            $"{row["Opening"]}{Environment.NewLine}\\textit{{{row["Status"]}}}\\\\{Environment.NewLine}{row["Body"]}{Environment.NewLine}{row["Equation"]}{Environment.NewLine}{row["Claims"]}{Environment.NewLine}{row["ProofSteps"]}{Environment.NewLine}{row["ValidationRows"]}"));
 
     private static IReadOnlyList<IReadOnlyDictionary<string, string>> BuildSectionRows(IReadOnlyList<RicisLatexSectionViewModel> roots)
     {
@@ -395,6 +427,11 @@ public sealed class RicisSemanticLatexTemplateRenderer
 
     private static string RenderSectionOpening(RicisLatexSectionViewModel section, int depth, bool isFirstAppendix)
     {
+        if (section.Kind == RicisLatexSectionKind.Lemma)
+        {
+            return string.Empty;
+        }
+
         var command = GetSectionCommand(depth);
         var heading = Escape(section.Heading);
         return section.Presentation switch
@@ -414,6 +451,7 @@ public sealed class RicisSemanticLatexTemplateRenderer
         {
             RicisLatexSectionKind.Definition => $"\\begin{{definition}}{body}\\end{{definition}}",
             RicisLatexSectionKind.AxiomGroup => $"\\begin{{axiom}}{body}\\end{{axiom}}",
+            RicisLatexSectionKind.Lemma => $"\\begin{{lemma}}[{Escape(section.Heading)}]{body}\\end{{lemma}}",
             _ => body,
         };
     }
@@ -439,7 +477,23 @@ public sealed class RicisSemanticLatexTemplateRenderer
 
     private static string RenderAbstracts(IReadOnlyList<RicisLatexAbstractViewModel> abstracts) =>
         string.Join(Environment.NewLine, abstracts.Select(abstractBlock =>
-            $"\\begin{{center}}\\textbf{{{Escape(abstractBlock.Label)}}}\\end{{center}}{Environment.NewLine}{EscapeParagraphs(abstractBlock.Body)}{Environment.NewLine}"));
+            $"\\begin{{otherlanguage}}{{{GetLatexLanguage(abstractBlock.Language)}}}{Environment.NewLine}" +
+            $"\\renewcommand{{\\abstractname}}{{{Escape(abstractBlock.Label)}}}{Environment.NewLine}" +
+            $"\\begin{{abstract}}{Environment.NewLine}{EscapeParagraphs(abstractBlock.Body)}{Environment.NewLine}\\end{{abstract}}{Environment.NewLine}\\end{{otherlanguage}}"));
+
+    private static string GetLatexLanguage(string language) => language switch
+    {
+        "ru-RU" => "russian",
+        "en-US" => "english",
+        _ => throw new InvalidOperationException($"Unsupported semantic LaTeX abstract language '{language}'."),
+    };
+
+    private static string RenderTextList(IReadOnlyList<string> values) =>
+        values.Count == 0
+            ? string.Empty
+            : "\\begin{enumerate}" + Environment.NewLine +
+              string.Join(Environment.NewLine, values.Select(value => $"\\item {EscapeParagraphs(value)}")) +
+              Environment.NewLine + "\\end{enumerate}";
 
     private static string RenderValidationRows(IReadOnlyList<RicisLatexValidationRowViewModel> rows) =>
         rows.Count == 0
