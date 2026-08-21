@@ -299,6 +299,7 @@ public sealed class RicisEmbeddedReportTemplateSource : IRicisReportTemplateSour
 public sealed class RicisSafeReportTemplateRenderer
 {
     private static readonly Regex EachBlock = new("\\{\\{#each (?<name>[A-Za-z0-9_.]+)\\}\\}(?<body>.*?)\\{\\{/each\\}\\}", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex IfBlock = new("\\{\\{#if (?<name>[A-Za-z0-9_.]+)\\}\\}(?<body>.*?)\\{\\{/if\\}\\}", RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex Scalar = new("\\{\\{(?<name>[A-Za-z0-9_.]+)\\}\\}", RegexOptions.Compiled);
 
     /// <summary>Renders a restricted template using scalar values and the allowlisted Rows collection.</summary>
@@ -307,7 +308,14 @@ public sealed class RicisSafeReportTemplateRenderer
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(values);
         ArgumentNullException.ThrowIfNull(rows);
-        var rendered = EachBlock.Replace(template, match =>
+        var conditionallyRendered = IfBlock.Replace(template, match =>
+        {
+            var key = match.Groups["name"].Value;
+            return values.TryGetValue(key, out var value) && string.Equals(value, "true", StringComparison.Ordinal)
+                ? match.Groups["body"].Value
+                : string.Empty;
+        });
+        var rendered = EachBlock.Replace(conditionallyRendered, match =>
         {
             if (!string.Equals(match.Groups["name"].Value, collectionName, StringComparison.Ordinal))
             {

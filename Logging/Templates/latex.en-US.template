@@ -17,6 +17,16 @@
 \section*{Evidence boundary}
 {{EvidenceBoundary}}
 
+{{#if AuthorIncluded}}
+\section*{Author and SEO metadata}
+\textbf{Name:} {{AuthorDisplayName}}\\
+\textbf{Alternate name:} {{AuthorAlternateName}}\\
+\textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
+\textbf{Description:} {{AuthorDescription}}\\
+\textbf{Keywords:} {{AuthorKeywords}}
+{{AuthorWorks}}
+{{/if}}
+
 {{#each Sections}}
 {{this.Command}}*{ {{this.Heading}} }
 \textit{Status:} {{this.Status}}\\

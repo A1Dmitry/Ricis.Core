@@ -22,6 +22,9 @@ internal static class RicisSemanticReportSuite
         ("LATEX02: Navier–Stokes exemplar строит recursive model с честной claim boundary", NavierStokesExemplarIsRecursiveAndDeferred),
         ("LATEX03: external LaTeX template экранирует model и включает Trace только по explicit option", LatexTemplateEscapesAndGatesTechnicalAppendix),
         ("LATEX04: external semantic LaTeX template поставляется как asset", ExternalLatexTemplateIsPublished),
+        ("AUTH01: trusted author selector добавляет public SEO profile без email", TrustedAuthorSeoProjectionDoesNotExposeEmail),
+        ("AUTH02: paid-user author data приходит только из callback текущего document request", PaidUserAuthorProjectionIsCallbackOnly),
+        ("AUTH03: paid-user callback absence и model surface не раскрывают requester identity", MissingCallbackAndModelsDoNotExposeIdentity),
     ];
 
     private static void ClassifierUsesSenderAndMetadata()
@@ -288,6 +291,84 @@ internal static class RicisSemanticReportSuite
                 File.Exists(sourcePath) &&
                 File.Exists(checksumPath),
             "Semantic LaTeX template, recursive exemplar и immutable source knowledge должны быть доступны проекту.");
+    }
+
+    private static void TrustedAuthorSeoProjectionDoesNotExposeEmail()
+    {
+        var attribution = new RicisLatexAuthorAttributionResolver().Resolve("DIMA.ALEY@gmail.com", isPaidUser: false);
+        var renderer = new RicisSemanticLatexTemplateRenderer();
+        var source = new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates"));
+        var model = new RicisSemanticLatexReportModelFactory().Build(
+            Array.Empty<RicisLogEntry>(),
+            "author-001",
+            "Author report",
+            "Public author attribution only.",
+            authorAttribution: attribution);
+        var document = renderer.Render(model, source.Get("latex", "en-US"));
+        Require(attribution.Mode == RicisLatexAuthorAttributionMode.TrustedRicisAuthor &&
+                attribution.IsIncluded &&
+                attribution.DisplayName == "Дмитрий Алейников" &&
+                attribution.Orcid.Contains("orcid.org", StringComparison.Ordinal) &&
+                document.Contains("Author and SEO metadata", StringComparison.Ordinal) &&
+                document.Contains("Дмитрий Алейников", StringComparison.Ordinal) &&
+                !document.Contains("dima.aley@gmail.com", StringComparison.OrdinalIgnoreCase),
+            "Trusted author selector должен использовать public AuthorSeoProfile, но никогда не выводить selector email.");
+    }
+
+    private static void PaidUserAuthorProjectionIsCallbackOnly()
+    {
+        var callbackCount = 0;
+        var attribution = new RicisLatexAuthorAttributionResolver().Resolve(
+            "paid-user-private@example.com",
+            isPaidUser: true,
+            paidUserAuthorCallback: () =>
+            {
+                callbackCount++;
+                return new RicisLatexPaidUserAuthorInput(
+                    "Public Paid Author",
+                    "P. Author",
+                    "https://orcid.org/0000-0000-0000-0000",
+                    "Public document description.",
+                    ["formal proof"],
+                    [new RicisLatexAuthorWorkViewModel("Public work", "https://example.com/work", "2026-08-21")]);
+            });
+        var model = new RicisSemanticLatexReportModelFactory().Build(
+            Array.Empty<RicisLogEntry>(),
+            "author-002",
+            "Paid author report",
+            "Public author attribution only.",
+            authorAttribution: attribution);
+        var document = new RicisSemanticLatexTemplateRenderer().Render(
+            model,
+            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "en-US"));
+        Require(callbackCount == 1 &&
+                attribution.Mode == RicisLatexAuthorAttributionMode.CallbackProvidedPaidUser &&
+                attribution.IsIncluded &&
+                document.Contains("Public Paid Author", StringComparison.Ordinal) &&
+                document.Contains("https://example.com/work", StringComparison.Ordinal) &&
+                !document.Contains("paid-user-private@example.com", StringComparison.OrdinalIgnoreCase),
+            "Paid-user author attribution должна быть получена ровно одним callback и не раскрывать requester identity.");
+    }
+
+    private static void MissingCallbackAndModelsDoNotExposeIdentity()
+    {
+        const string privateRequester = "private@example.com";
+        var attribution = new RicisLatexAuthorAttributionResolver().Resolve(privateRequester, isPaidUser: true);
+        var model = new RicisSemanticLatexReportModelFactory().Build(
+            Array.Empty<RicisLogEntry>(),
+            "author-003",
+            "Callback required report",
+            "Public author attribution only.",
+            authorAttribution: attribution);
+        var document = new RicisSemanticLatexTemplateRenderer().Render(
+            model,
+            new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "en-US"));
+        Require(attribution.Mode == RicisLatexAuthorAttributionMode.CallbackRequired &&
+                !attribution.IsIncluded &&
+                !document.Contains("Author and SEO metadata", StringComparison.Ordinal) &&
+                !document.Contains(privateRequester, StringComparison.OrdinalIgnoreCase) &&
+                !document.Contains("CallbackRequired", StringComparison.Ordinal),
+            "CallbackRequired должен не включать author block и не раскрывать requester identity или paid-user state в документе.");
     }
 
     private static void NullLoggerPreservesComputation()

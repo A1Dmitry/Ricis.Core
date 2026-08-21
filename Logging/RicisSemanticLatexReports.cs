@@ -126,7 +126,8 @@ public sealed record RicisLatexReportViewModel
         string evidenceBoundary,
         bool includeTechnicalAppendix,
         IReadOnlyList<RicisLatexSectionViewModel> sections,
-        IReadOnlyList<string> technicalAppendixRows = null)
+        IReadOnlyList<string> technicalAppendixRows = null,
+        RicisLatexAuthorAttributionViewModel authorAttribution = null)
     {
         DocumentId = Require(documentId, nameof(documentId));
         Title = Require(title, nameof(title));
@@ -135,6 +136,7 @@ public sealed record RicisLatexReportViewModel
         IncludeTechnicalAppendix = includeTechnicalAppendix;
         Sections = Array.AsReadOnly((sections ?? Array.Empty<RicisLatexSectionViewModel>()).ToArray());
         TechnicalAppendixRows = Array.AsReadOnly((technicalAppendixRows ?? Array.Empty<string>()).ToArray());
+        AuthorAttribution = authorAttribution;
     }
 
     /// <summary>Stable report identifier.</summary>
@@ -158,6 +160,9 @@ public sealed record RicisLatexReportViewModel
     /// <summary>Technical trace rows supplied only for an explicit appendix.</summary>
     public IReadOnlyList<string> TechnicalAppendixRows { get; }
 
+    /// <summary>Optional public author attribution; requester identity is deliberately absent.</summary>
+    public RicisLatexAuthorAttributionViewModel AuthorAttribution { get; }
+
     private static string Require(string value, string parameterName) =>
         !string.IsNullOrWhiteSpace(value) ? value : throw new ArgumentException("A semantic LaTeX field is required.", parameterName);
 }
@@ -180,7 +185,8 @@ public sealed class RicisSemanticLatexReportModelFactory
         string documentId,
         string title,
         string evidenceBoundary,
-        bool includeTechnicalAppendix = false)
+        bool includeTechnicalAppendix = false,
+        RicisLatexAuthorAttributionViewModel authorAttribution = null)
     {
         ArgumentNullException.ThrowIfNull(entries);
         var classified = _classifier.Classify(entries);
@@ -231,7 +237,8 @@ public sealed class RicisSemanticLatexReportModelFactory
             evidenceBoundary,
             includeTechnicalAppendix,
             sections,
-            appendixRows);
+            appendixRows,
+            authorAttribution);
     }
 
     private static string GetAttribute(RicisSemanticEvent item, string key) =>
@@ -273,6 +280,14 @@ public sealed class RicisSemanticLatexTemplateRenderer
             ["Title"] = Escape(model.Title),
             ["StatusKey"] = Escape(model.StatusKey),
             ["EvidenceBoundary"] = EscapeParagraphs(model.EvidenceBoundary),
+            ["AuthorIncluded"] = model.AuthorAttribution?.IsIncluded == true ? "true" : "false",
+            ["AuthorMode"] = Escape(model.AuthorAttribution?.Mode.ToString() ?? string.Empty),
+            ["AuthorDisplayName"] = Escape(model.AuthorAttribution?.DisplayName ?? string.Empty),
+            ["AuthorAlternateName"] = Escape(model.AuthorAttribution?.AlternateName ?? string.Empty),
+            ["AuthorOrcid"] = Escape(model.AuthorAttribution?.Orcid ?? string.Empty),
+            ["AuthorDescription"] = EscapeParagraphs(model.AuthorAttribution?.Description ?? string.Empty),
+            ["AuthorKeywords"] = Escape(string.Join(", ", model.AuthorAttribution?.Keywords ?? Array.Empty<string>())),
+            ["AuthorWorks"] = RenderAuthorWorks(model.AuthorAttribution?.Works ?? Array.Empty<RicisLatexAuthorWorkViewModel>()),
             ["TechnicalAppendix"] = model.IncludeTechnicalAppendix ? RenderTechnicalAppendix(model.TechnicalAppendixRows) : string.Empty,
         };
         return _renderer.RenderText(template, values, sections, "Sections");
@@ -326,6 +341,14 @@ public sealed class RicisSemanticLatexTemplateRenderer
               string.Join(Environment.NewLine, rows.Select(row =>
                   $"{Escape(row.Case)} & {Escape(row.Condition)} & {Escape(row.Resolution)} & {Escape(row.EvidenceStatus)} \\\\ \\hline")) +
               Environment.NewLine + "\\end{tabular}";
+
+    private static string RenderAuthorWorks(IReadOnlyList<RicisLatexAuthorWorkViewModel> works) =>
+        works.Count == 0
+            ? string.Empty
+            : "\\begin{itemize}" +
+              string.Join(string.Empty, works.Select(work =>
+                  $"\\item {Escape(work.Name)} ({Escape(work.DatePublished)}): \\texttt{{{Escape(work.Url)}}}")) +
+              "\\end{itemize}";
 
     private static string RenderTechnicalAppendix(IReadOnlyList<string> rows) =>
         rows.Count == 0
