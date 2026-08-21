@@ -18,6 +18,10 @@ internal static class RicisSemanticReportSuite
         ("JSON02: JSON не раскрывает raw Trace и сохраняет exception cause", JsonDoesNotLeakTrace),
         ("JSON03: JSON сохраняет порядок и unknown-event isolation", JsonPreservesOrderAndUnknownIsolation),
         ("JSON04: внешний schema asset соответствует versioned contract", ExternalJsonSchemaIsPublished),
+        ("LATEX01: semantic LaTeX model исключает Trace по умолчанию", LatexModelExcludesTraceByDefault),
+        ("LATEX02: Navier–Stokes exemplar строит recursive model с честной claim boundary", NavierStokesExemplarIsRecursiveAndDeferred),
+        ("LATEX03: external LaTeX template экранирует model и включает Trace только по explicit option", LatexTemplateEscapesAndGatesTechnicalAppendix),
+        ("LATEX04: external semantic LaTeX template поставляется как asset", ExternalLatexTemplateIsPublished),
     ];
 
     private static void ClassifierUsesSenderAndMetadata()
@@ -207,6 +211,85 @@ internal static class RicisSemanticReportSuite
             "Внешний schema asset должен фиксировать тот же versioned JSON contract, что и serializer.");
     }
 
+    private static void LatexModelExcludesTraceByDefault()
+    {
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        log.Info("RICIS_PROOF_COMPLETE", "Public proof completed.", new Dictionary<string, string>
+        {
+            ["phaseName"] = "Root",
+            ["ruleFamily"] = "SP2",
+        });
+        log.For<AlgebraicReductionVisitor>().Trace("RICIS_PHASE_TRACE", "Private trace.", "x/x", "1");
+        var model = new RicisSemanticLatexReportModelFactory().Build(
+            log.Snapshot(),
+            "latex-proof-01",
+            "Semantic proof",
+            "Semantic artifact; not a kernel proof.");
+        Require(!model.IncludeTechnicalAppendix &&
+                model.TechnicalAppendixRows.Count == 0 &&
+                model.Sections.Single(section => section.SectionId == "public-derivation").ProofSteps.Count == 1 &&
+                model.Sections.All(section => !section.Body.Contains("Private", StringComparison.Ordinal)),
+            "Semantic LaTeX model должен исключать raw Trace при default policy.");
+    }
+
+    private static void NavierStokesExemplarIsRecursiveAndDeferred()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.exemplar.json");
+        var model = new RicisLatexExemplarLoader().Load(path);
+        var claim = model.Sections
+            .Single(section => section.SectionId == "ns-global-smoothness-claim")
+            .Claims
+            .Single();
+        Require(model.Sections.Count == 4 &&
+                model.Sections.Single(section => section.SectionId == "ns-foundation").Children.Count == 2 &&
+                model.Sections.Single(section => section.SectionId == "ns-global-smoothness-claim").Children.Count == 2 &&
+                claim.EvidenceStatus == "Deferred" &&
+                claim.EvidenceBoundary.Contains("no-typed-external-domain-bridge", StringComparison.Ordinal) &&
+                model.EvidenceBoundary.Contains("structural exemplar", StringComparison.OrdinalIgnoreCase),
+            "External Navier–Stokes exemplar должен быть recursive и не должен falsely promote external claim to KernelChecked.");
+    }
+
+    private static void LatexTemplateEscapesAndGatesTechnicalAppendix()
+    {
+        var log = new RicisProofLog<RicisProofOrchestrationStage>();
+        log.Info("RICIS_PROOF_COMPLETE", "Public report 50% & ready.", new Dictionary<string, string>
+        {
+            ["phaseName"] = "Root",
+            ["ruleFamily"] = "SP2",
+        });
+        log.For<AlgebraicReductionVisitor>().Trace("RICIS_PHASE_TRACE", "Private trace.", "x/x", "1");
+        var factory = new RicisSemanticLatexReportModelFactory();
+        var source = new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates"));
+        var renderer = new RicisSemanticLatexTemplateRenderer();
+        var defaultDocument = renderer.Render(factory.Build(
+            log.Snapshot(), "latex-proof-02", "Proof 50% & status", "Public only."), source.Get("latex", "en-US"));
+        var appendixDocument = renderer.Render(factory.Build(
+            log.Snapshot(), "latex-proof-02", "Proof 50% & status", "Public only.", includeTechnicalAppendix: true), source.Get("latex", "en-US"));
+        Require(defaultDocument.Contains("Proof 50\\% \\& status", StringComparison.Ordinal) &&
+                !defaultDocument.Contains("Private trace", StringComparison.Ordinal) &&
+                !defaultDocument.Contains("x/x", StringComparison.Ordinal) &&
+                appendixDocument.Contains("Technical appendix", StringComparison.Ordinal) &&
+                appendixDocument.Contains("Private trace", StringComparison.Ordinal) &&
+                appendixDocument.Contains("x/x", StringComparison.Ordinal),
+            "LaTeX renderer должен экранировать model data и раскрывать Trace только при explicit appendix option.");
+    }
+
+    private static void ExternalLatexTemplateIsPublished()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "latex.en-US.template");
+        var exemplarPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.exemplar.json");
+        var projectRoot = FindProjectRoot();
+        var sourcePath = Path.Combine(projectRoot, "Knowledge", "LaTexExamples", "NavierStokes-Ricis.structural-exemplar.tex");
+        var checksumPath = Path.Combine(projectRoot, "Knowledge", "LaTexExamples", "NavierStokes-Ricis.structural-exemplar.sha256");
+        Require(File.Exists(path) &&
+                File.ReadAllText(path).Contains("{{#each Sections}}", StringComparison.Ordinal) &&
+                File.ReadAllText(path).Contains("{{TechnicalAppendix}}", StringComparison.Ordinal) &&
+                File.Exists(exemplarPath) &&
+                File.Exists(sourcePath) &&
+                File.Exists(checksumPath),
+            "Semantic LaTeX template, recursive exemplar и immutable source knowledge должны быть доступны проекту.");
+    }
+
     private static void NullLoggerPreservesComputation()
     {
         var x = System.Linq.Expressions.Expression.Parameter(typeof(double), "x");
@@ -214,6 +297,17 @@ internal static class RicisSemanticReportSuite
         var withNull = Ricis.Core.Phases.RicisPhasePipeline.Simplify<RicisProofOrchestrationStage>(source, null);
         var legacy = Ricis.Core.Phases.RicisPhasePipeline.Simplify(source);
         Require(withNull.AreEqual(legacy), "Null logger должен полностью отключать reporting side effects и сохранять computation result.");
+    }
+
+    private static string FindProjectRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Ricis.Core.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName ?? throw new InvalidOperationException("Не найден корень Ricis.Core проекта.");
     }
 
     private static void Require(bool condition, string message)

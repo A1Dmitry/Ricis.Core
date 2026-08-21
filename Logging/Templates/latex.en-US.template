@@ -1,0 +1,31 @@
+\documentclass[11pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{textcomp}
+\usepackage[margin=25mm]{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\title{ {{Title}} }
+\date{}
+\begin{document}
+\maketitle
+
+\noindent\textbf{Document ID:} {{DocumentId}}\\
+\textbf{Status:} {{StatusKey}}
+
+\section*{Evidence boundary}
+{{EvidenceBoundary}}
+
+{{#each Sections}}
+{{this.Command}}*{ {{this.Heading}} }
+\textit{Status:} {{this.Status}}\\
+{{this.Body}}
+{{this.Equation}}
+{{this.Claims}}
+{{this.ProofSteps}}
+{{this.ValidationRows}}
+{{/each}}
+
+{{TechnicalAppendix}}
+\end{document}

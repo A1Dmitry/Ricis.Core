@@ -24,6 +24,7 @@
     </EmbeddedResource>
     <Content Include="Logging/Templates/*.template" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
     <Content Include="Logging/Templates/*.schema.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
+    <Content Include="Logging/Templates/*.exemplar.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="RegressionTests/**/*.cs" />

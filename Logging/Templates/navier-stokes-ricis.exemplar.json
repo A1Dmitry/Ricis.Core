@@ -1,0 +1,130 @@
+{
+  "documentId": "navier-stokes-ricis-structural-exemplar/v1",
+  "title": "RICIS Navier-Stokes proof — recursive structural exemplar",
+  "statusKey": "structural-exemplar-not-kernel-proof",
+  "evidenceBoundary": "The supplied Navier-Stokes source is a structural exemplar. Its external claim is Deferred until a typed theorem, hypotheses and semantic bridge are kernel-checked.",
+  "sections": [
+    {
+      "sectionId": "ns-foundation",
+      "kind": "Definition",
+      "heading": "foundations-and-protocols",
+      "body": "l0-l1-monoliths-and-safety-protocols",
+      "evidenceStatus": "declared",
+      "children": [
+        {
+          "sectionId": "ns-sp",
+          "kind": "AxiomGroup",
+          "heading": "sp1-sp4",
+          "body": "safety-protocols",
+          "evidenceStatus": "declared"
+        },
+        {
+          "sectionId": "ns-a",
+          "kind": "AxiomGroup",
+          "heading": "a1-a7-a10",
+          "body": "indexed-singularity-rules",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-global-smoothness-claim",
+      "kind": "Claim",
+      "heading": "global-smoothness-claim",
+      "body": "external-domain-claim-requires-typed-semantic-bridge",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "global-smoothness-of-3d-navier-stokes",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "no-typed-external-domain-bridge-or-kernel-theorem-is-attached"
+        }
+      ],
+      "children": [
+        {
+          "sectionId": "ns-local-enstrophy",
+          "kind": "Derivation",
+          "heading": "direct-indexing-and-local-enstrophy",
+          "body": "shared-index-reduction",
+          "equation": "0_S times infinity_S = S",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 1,
+              "ruleId": "SP4",
+              "phase": "direct-indexing",
+              "statement": "volume-and-enstrophy-receive-a-shared-structural-index",
+              "status": "declared"
+            },
+            {
+              "number": 2,
+              "ruleId": "A6",
+              "phase": "local-enstrophy",
+              "statement": "matching-indexed-zero-and-infinity-reduce-to-the-index",
+              "status": "declared"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-vorticity-dynamics",
+          "kind": "Derivation",
+          "heading": "vorticity-dynamics",
+          "body": "typed-scale-decomposition",
+          "equation": "partial_t omega = finite-ricis-expression",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 3,
+              "ruleId": "SP4",
+              "phase": "scale-indexing",
+              "statement": "derive-indexed-vorticity-terms-without-limit-notation",
+              "status": "declared"
+            },
+            {
+              "number": 4,
+              "ruleId": "A6",
+              "phase": "typed-reduction",
+              "statement": "reduce-matching-indexed-scale-terms",
+              "status": "declared"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-type-verification",
+      "kind": "Validation",
+      "heading": "type-consistency-verification",
+      "body": "homogeneous-compatible-and-incompatible-cases",
+      "evidenceStatus": "structured-explanation",
+      "validationRows": [
+        {
+          "case": "homogeneous",
+          "condition": "T(F)=T(G)",
+          "resolution": "direct-indexed-operation",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "compatible",
+          "condition": "T(F) is compatible with T(G)",
+          "resolution": "typed-lifting",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "incompatible",
+          "condition": "T(F) is incompatible with T(G)",
+          "resolution": "composite-monolith-required",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-glossary",
+      "kind": "Appendix",
+      "heading": "ricis-glossary",
+      "body": "indexed-infinity-indexed-zero-monolith-sp4-a6-and-recursive-expansion",
+      "evidenceStatus": "reference"
+    }
+  ]
+}
