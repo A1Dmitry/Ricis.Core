@@ -95,6 +95,19 @@ def main() -> int:
 
     if arguments.compile:
         lean_root = ROOT / "FormalVerification" / "Lean"
+        build_result = subprocess.run(
+            ["lake", "build", "RicisIdentity.TypeIdentity"],
+            cwd=lean_root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build_result.returncode != 0:
+            sys.stderr.write(build_result.stdout)
+            sys.stderr.write(build_result.stderr)
+            fail("Lean project module build failed for RicisIdentity.TypeIdentity")
+        print("LEAN_MODULE_BUILD_PASS: RicisIdentity.TypeIdentity")
+
         for artifact in artifacts:
             source = (ROOT / artifact["source"]).resolve()
             result = subprocess.run(
