@@ -138,6 +138,23 @@
         "mandatoryForModelStudy": true,
         "role": "mandatory-project-knowledge-source"
       }
+    },
+    {
+      "id": "RICIS-III-ACADEMIC-AUTHOR-EXPANSION",
+      "status": "KernelChecked",
+      "source": "FormalVerification/Lean/Artifacts/academic/RicisIII_AcademicAuthorExpansion.lean",
+      "description": "Academic author-facing card expansion through provenance references to the central RICIS III node, with the formal theorem target derived from the imported ID-01–ID-06 stack.",
+      "origin": "Metadata/AuthorSeoProfile.cs + FormalVerification/Lean/Artifacts/manifest.json + Proofs/RicisLeanTemplate.cs",
+      "testIds": ["ACL01", "ACL02", "ACL03"],
+      "theoremNames": ["author_card_reaches_ricis_iii", "academic_target_from_proof_stack", "presentation_starts_with_author_and_ends_at_central"],
+      "leanToolchain": "Lean 4.33.0 + Mathlib",
+      "generatedBy": "RICIS academic Lean card generator / kernel check",
+      "generatedFrom": "Metadata/AuthorSeoProfile.cs + FormalVerification/Lean/Artifacts/manifest.json",
+      "forbiddenMarkers": ["sorry", "sorryAx", "admit", "axiom "],
+      "knowledgeSource": {
+        "mandatoryForModelStudy": true,
+        "role": "mandatory-project-knowledge-source"
+      }
     }
   ]
 }

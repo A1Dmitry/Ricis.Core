@@ -84,6 +84,7 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisTypeConsistencySuite.Tests);
         tests.AddRange(RicisTypedProofLogSuite.Tests);
         tests.AddRange(RicisSemanticReportSuite.Tests);
+        tests.AddRange(RicisAcademicLeanCardSuite.Tests);
         tests.AddRange(RicisGenericScalarPolicySuite.Tests);
         tests.AddRange(RicisCheckedProofSuite.Tests);
         tests.AddRange(RicisProofDocumentFormatSuite.Tests);
