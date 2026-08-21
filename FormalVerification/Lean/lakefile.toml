@@ -1,6 +1,6 @@
 name = "ricis_identity_audit"
 version = "0.1.0"
-defaultTargets = ["RicisIdentity"]
+defaultTargets = ["RicisIdentity.TypeIdentity"]
 
 [[require]]
 name = "mathlib"

@@ -1,0 +1,291 @@
+{
+  "documentId": "navier-stokes-ricis-academic-structure/en-US/v1",
+  "title": "Global Smoothness of the 3D Navier-Stokes Equations",
+  "subtitle": "A Proof Document in the RICIS Paradigm (Limit-Free Version)",
+  "statusKey": "structural-exemplar-not-kernel-proof",
+  "includeTableOfContents": true,
+  "evidenceBoundary": "This document is an English semantic projection of the supplied Navier-Stokes structural source. The global-smoothness statement remains a Deferred external-domain claim; it is not KernelChecked without a typed theorem, explicit hypotheses, and a Lean semantic bridge.",
+  "abstracts": [
+    {
+      "language": "en-US",
+      "label": "Abstract",
+      "body": "This document provides a recursive proof-report structure for the Navier-Stokes source in the RICIS paradigm. Singular expressions are represented as indexed structural objects, and SP4 and A6 are recorded as declared normative transformations. The external global-smoothness claim is not promoted by this report to kernel-verified status."
+    }
+  ],
+  "sections": [
+    {
+      "sectionId": "ns-introduction",
+      "kind": "Narrative",
+      "presentation": "Unnumbered",
+      "heading": "Introduction: the epistemological barrier of classical analysis and the need for a change of paradigm",
+      "body": "The source contrasts limits with direct indexing of singular expressions and introduces a geometric interpretation of monoliths of different orders. In this semantic report, that material is methodological context rather than an independent proof of an external theorem.",
+      "evidenceStatus": "narrative-context"
+    },
+    {
+      "sectionId": "ns-limit-preamble",
+      "kind": "Narrative",
+      "heading": "Preamble: the prohibition of limits",
+      "body": "For this RICIS scenario, limit notation is not used. Instead, the document describes direct indexing of an expression at a selected point followed by normative simplification through SP2, SP4, and the declared axioms.",
+      "equation": "classical limit at x=a -> direct indexed evaluation at x=a",
+      "evidenceStatus": "declared-method"
+    },
+    {
+      "sectionId": "ns-foundation",
+      "kind": "Definition",
+      "heading": "An absolute foundation without limits",
+      "body": "The foundation fixes the absence of limits and the intended sequence: algebraic reduction, expression indexing, and RICIS normative rules.",
+      "evidenceStatus": "declared-foundation",
+      "children": [
+        {
+          "sectionId": "ns-l0-continuity",
+          "kind": "Definition",
+          "heading": "L0_Absolute_continuity (Without limits)",
+          "body": "Continuity is understood as the absence of a break in identity while moving between recursion levels; this rule is a declared meta-axiom.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-l1-identity",
+          "kind": "Definition",
+          "heading": "L1_Identity",
+          "body": "The identity X = X preserves the type T(X); operations cannot transmute types without an explicitly defined morphism.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-direct-computation",
+          "kind": "Narrative",
+          "heading": "Direct computation instead of a limit",
+          "body": "If a value is classically defined, it is retained. If a singular form occurs, SP4, SP2, and then the RICIS axioms are applied; the point is taken directly.",
+          "evidenceStatus": "declared-method"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-monolith-geometry",
+      "kind": "Definition",
+      "heading": "Geometric interlude I: a line, plane, and volume are not sets of points",
+      "body": "A point, line, plane, and volume are represented as heterogeneous primary monoliths T0, T1, T2, and T3. The integral is treated as an operation inside a volumetric monolith rather than as an external theory of measure proved here.",
+      "evidenceStatus": "declared-geometry"
+    },
+    {
+      "sectionId": "ns-safety-protocols",
+      "kind": "AxiomGroup",
+      "heading": "Safety protocols",
+      "body": "SP1 limits the locality of a transformation. SP2 requires identical terms to be reduced before RICIS axioms are used. SP3 preserves an index relation where reduction is impossible. SP4 indexes the original expression rather than a numeric residue at a point.",
+      "evidenceStatus": "declared-protocol"
+    },
+    {
+      "sectionId": "ns-ricis-axioms",
+      "kind": "AxiomGroup",
+      "heading": "RICIS axioms (limit-free vector form)",
+      "body": "A1 through A7 and A10 state declared rules for indexed infinity, typed zero, the forms 0/0 and infinity/infinity, and the compatible product 0_F times infinity_F. These rules are normative assumptions of the RICIS scenario.",
+      "equation": "0_F times infinity_F = F only when the structural indices match",
+      "evidenceStatus": "declared-axioms"
+    },
+    {
+      "sectionId": "ns-direct-indexing",
+      "kind": "Derivation",
+      "heading": "A limit-free Navier-Stokes derivation",
+      "body": "This section gathers the local RICIS derivations used by the source to describe a potential singularity. Every derivation remains declared until a separate typed semantic bridge is supplied.",
+      "evidenceStatus": "declared-ricis-derivation",
+      "children": [
+        {
+          "sectionId": "ns-local-indexing",
+          "kind": "Derivation",
+          "heading": "Direct indexing of a potential blow-up",
+          "body": "In the source, local volume and enstrophy receive a common structural index from the strain tensor. The compatible indexed product is then reduced under A6. This step records required inputs and a rule; it does not establish external analytic regularity.",
+          "equation": "E_local = 0_S times infinity_S = S",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 1,
+              "ruleId": "SP4",
+              "phase": "direct-indexing",
+              "statement": "volume and enstrophy receive a common structural index from the declared strain expression",
+              "status": "declared"
+            },
+            {
+              "number": 2,
+              "ruleId": "A6",
+              "phase": "local-enstrophy",
+              "statement": "compatible indexed zero and infinity reduce to their common index",
+              "status": "declared"
+            }
+          ],
+          "children": [
+            {
+              "sectionId": "ns-local-enstrophy-calculation",
+              "kind": "Derivation",
+              "heading": "Direct computation of local enstrophy",
+              "body": "Local enstrophy E_local is written through compatible indexed volume and enstrophy. This RICIS representation remains a declared transformation rather than a kernel-verified PDE estimate.",
+              "equation": "E_local = integral over 0_S of infinity_S = S",
+              "evidenceStatus": "declared-ricis-transformation"
+            },
+            {
+              "sectionId": "ns-finiteness-lemma",
+              "kind": "Lemma",
+              "heading": "Finiteness",
+              "body": "The structural tensor S remains a separate subject-matter obligation. The source relates it to initial energy, positive viscosity, and circulation, but the semantic report does not declare those relations kernel-verified.",
+              "evidenceStatus": "open-subject-matter-obligation"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-vorticity-dynamics",
+          "kind": "Derivation",
+          "heading": "Resolution of the critical term (omega dot nabla) omega",
+          "body": "The source describes the scale eta as a structural parameter and writes convective and viscous terms through indexed forms. This report preserves the construction as a typed decomposition rather than a proved PDE estimate.",
+          "equation": "partial_t omega = indexed convection plus indexed viscosity",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 3,
+              "ruleId": "SP4",
+              "phase": "scale-indexing",
+              "statement": "derivatives receive structural-scale indices without limit notation",
+              "status": "declared"
+            },
+            {
+              "number": 4,
+              "ruleId": "A6",
+              "phase": "typed-reduction",
+              "statement": "compatible indexed scale terms reduce only under explicit compatibility assumptions",
+              "status": "declared"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-monolith-projection",
+          "kind": "Narrative",
+          "heading": "Geometric interlude II: why this works without limits",
+          "body": "The source interprets the projection of a volumetric monolith to a point as a typed zero that preserves a structural index. This fragment remains a geometric explanation of the model.",
+          "evidenceStatus": "narrative-explanation"
+        },
+        {
+          "sectionId": "ns-fractal-law",
+          "kind": "Definition",
+          "heading": "Hierarchical unfolding (Fractal Law) without limits",
+          "body": "The recursive operator R unfolds an object, its type, its indexed infinity, and its typed zero at succeeding levels. In the source it is applied to a projection, a streamline, a vortex surface, and the full field.",
+          "equation": "R(Q) = {Q, T(Q), infinity_Q, 0_Q, R(infinity_Q), R(0_Q)}",
+          "evidenceStatus": "declared-recursion"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-theorem-proof",
+      "kind": "Claim",
+      "heading": "Theorem and proof (without limits)",
+      "body": "The external subject-matter theorem is included to preserve the form of the supplied source. Its status remains Deferred until a typed proposition, hypotheses, local lemmas, and semantic edge bridges are supplied.",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "For smooth finite-energy initial data and positive viscosity, the 3D Navier-Stokes solution is globally smooth.",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "The supplied source and the RICIS route model do not contain a kernel-checked typed theorem, hypotheses, or a bridge to the external PDE statement."
+        }
+      ],
+      "proofSteps": [
+        {
+          "number": 1,
+          "ruleId": "NS-01",
+          "phase": "contradiction-setup",
+          "statement": "the document assumes a point of potential loss of smoothness as the starting proof obligation",
+          "status": "declared"
+        },
+        {
+          "number": 2,
+          "ruleId": "NS-02",
+          "phase": "direct-indexing",
+          "statement": "local volume and enstrophy are indexed through the declared structural quantity",
+          "status": "declared"
+        },
+        {
+          "number": 3,
+          "ruleId": "NS-03",
+          "phase": "local-enstrophy",
+          "statement": "A6 is applied only to matching indices in the stated local composition",
+          "status": "declared"
+        },
+        {
+          "number": 4,
+          "ruleId": "NS-04",
+          "phase": "finiteness-obligation",
+          "statement": "finiteness of the structural tensor remains a separate subject-matter obligation",
+          "status": "open-obligation"
+        },
+        {
+          "number": 5,
+          "ruleId": "NS-05",
+          "phase": "vorticity-dynamics",
+          "statement": "the typed decomposition of critical terms is recorded as a RICIS derivation",
+          "status": "declared"
+        },
+        {
+          "number": 6,
+          "ruleId": "NS-06",
+          "phase": "global-bridge",
+          "statement": "the passage from a local RICIS representation to global classical smoothness requires a semantic bridge",
+          "status": "open-obligation"
+        },
+        {
+          "number": 7,
+          "ruleId": "NS-07",
+          "phase": "external-theorem-status",
+          "statement": "the final external claim cannot be promoted to KernelChecked by this document",
+          "status": "Deferred"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-type-verification",
+      "kind": "Validation",
+      "heading": "Verification through type consistency (without limits)",
+      "body": "The table preserves the source form of a check for homogeneous, compatible, and incompatible indices. It is a structural explanation rather than an independent external theorem.",
+      "evidenceStatus": "structured-explanation",
+      "validationRows": [
+        {
+          "case": "Homogeneous",
+          "condition": "T(F) = T(G)",
+          "resolution": "direct indexed operation",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Compatible",
+          "condition": "T(F) is compatible with T(G)",
+          "resolution": "typed lifting or bridge",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Incompatible",
+          "condition": "T(F) is incompatible with T(G)",
+          "resolution": "a composite monolith or separate obligation is required",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-glossary",
+      "kind": "Appendix",
+      "presentation": "Appendix",
+      "heading": "Appendix: RICIS glossary",
+      "body": "Indexed infinity retains the way in which it is reached. Typed zero retains the structural reason for becoming zero. An n-order monolith is a primary structural unit. SP4 indexes an expression, and A6 describes compatible collapse of indexed zero and infinity.",
+      "evidenceStatus": "reference"
+    }
+  ],
+  "epilogueHeading": "Epilogue: what is established in the limit-free scenario",
+  "epilogue": "The structural form of the source epilogue is retained as a RICIS-scenario conclusion. It does not promote the external global-smoothness statement to KernelChecked status.",
+  "epilogueSteps": [
+    "Methodologically, RICIS replaces limits with direct expression indexing at a point through SP4.",
+    "Geometrically, volume is treated as a T3 monolith, while projection to a point carries a structural index.",
+    "Analytically, compatible indexed zero and infinity reduce under A6 only within the stated RICIS rule.",
+    "Physically, viscosity and other domain assumptions remain separate typed obligations rather than a consequence of layout.",
+    "Mathematically, external global smoothness remains Deferred until a kernel-checked theorem and semantic bridge exist."
+  ],
+  "conclusionHeading": "Final conclusion",
+  "conclusion": "The 3D Navier-Stokes equations are represented here through a RICIS decomposition. This template preserves the form of the source conclusion but does not replace a separate subject-matter formalization.",
+  "conclusionSteps": [
+    "In RICIS there are no limits, only direct indexing.",
+    "A volume is not a set of points but a monolith.",
+    "The product of indexed zero and infinity with a common index is a declared finite RICIS rule under A6."
+  ]
+}

@@ -1,3 +1,4 @@
+% RICIS-LOCALE: ru-RU
 \documentclass[12pt]{article}
 \usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -31,8 +32,8 @@
 \vspace{1cm}
 {{/if}}
 
-\section*{Граница доказательств}
-\addcontentsline{toc}{section}{Граница доказательств}
+\section*{ {{EvidenceBoundaryLabel}} }
+\addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
 {{EvidenceBoundary}}
 
 {{#if AuthorIncluded}}
@@ -48,7 +49,7 @@
 
 {{#each Sections}}
 {{this.Opening}}
-\textit{Семантический статус:} {{this.Status}}\\
+\textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
 {{this.Body}}
 {{this.Equation}}
 {{this.Claims}}

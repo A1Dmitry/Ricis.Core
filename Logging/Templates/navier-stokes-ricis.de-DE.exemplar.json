@@ -1,0 +1,291 @@
+{
+  "documentId": "navier-stokes-ricis-academic-structure/en-US/v1",
+  "title": "Globale Glattheit der 3D-Navier–Stokes-Gleichungen",
+  "subtitle": "Ein Beweisdokument im RICIS-Paradigma (grenzwertfreie Version)",
+  "statusKey": "structural-exemplar-not-kernel-proof",
+  "includeTableOfContents": true,
+  "evidenceBoundary": "Dieses Dokument ist eine englische semantische Projektion der bereitgestellten Navier–Stokes-Strukturquelle. Die Aussage zur globalen Glattheit bleibt eine Deferred-Behauptung aus einem externen Fachbereich; sie ist nicht KernelChecked ohne einen typisierten Satz, explizite Hypothesen und eine Lean-semantische Brücke.",
+  "abstracts": [
+    {
+      "language": "de-DE",
+      "label": "Zusammenfassung",
+      "body": "Dieses Dokument bietet eine rekursive Beweis- und Berichtsstruktur für die Navier–Stokes-Quelle im RICIS-Paradigma. Singuläre Ausdrücke werden als indizierte strukturelle Objekte dargestellt, und SP4 sowie A6 werden als deklarierte normative Transformationen festgehalten. Die externe Behauptung der globalen Glattheit wird in diesem Bericht nicht in den kernel-verifizierten Status befördert."
+    }
+  ],
+  "sections": [
+    {
+      "sectionId": "ns-introduction",
+      "kind": "Narrative",
+      "presentation": "Unnumbered",
+      "heading": "Einleitung: die erkenntnistheoretische Barriere der klassischen Analysis und die Notwendigkeit eines Paradigmenwechsels",
+      "body": "Die Quelle kontrastiert Grenzwerte mit der direkten Indizierung singulärer Ausdrücke und führt eine geometrische Interpretation von Monolithen verschiedener Ordnungen ein. In diesem semantischen Bericht ist dieses Material methodologischer Kontext und kein eigenständiger Beweis eines externen Satzes.",
+      "evidenceStatus": "narrative-context"
+    },
+    {
+      "sectionId": "ns-limit-preamble",
+      "kind": "Narrative",
+      "heading": "Präambel: das Verbot von Grenzwerten",
+      "body": "Für dieses RICIS-Szenario wird die Grenzwertnotation nicht verwendet. Stattdessen beschreibt das Dokument die direkte Indizierung eines Ausdrucks an einem gewählten Punkt, gefolgt von normativer Vereinfachung mittels SP2, SP4 und den deklarierten Axiomen.",
+      "equation": "klassischer Grenzwert bei x=a -> direkte indizierte Auswertung bei x=a",
+      "evidenceStatus": "declared-method"
+    },
+    {
+      "sectionId": "ns-foundation",
+      "kind": "Definition",
+      "heading": "Eine absolute Grundlage ohne Grenzwerte",
+      "body": "Die Grundlage fixiert das Fehlen von Grenzwerten und die beabsichtigte Reihenfolge: algebraische Reduktion, Indizierung von Ausdrücken und normative RICIS-Regeln.",
+      "evidenceStatus": "declared-foundation",
+      "children": [
+        {
+          "sectionId": "ns-l0-continuity",
+          "kind": "Definition",
+          "heading": "L0_Absolute_continuity (ohne Grenzwerte)",
+          "body": "Stetigkeit wird als das Ausbleiben eines Bruchs der Identität beim Übergang zwischen Rekursionsebenen verstanden; diese Regel ist ein deklariertes Meta-Axiom.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-l1-identity",
+          "kind": "Definition",
+          "heading": "L1_Identity",
+          "body": "Die Identität X = X bewahrt den Typ T(X); Operationen können Typen ohne einen explizit definierten Morphismus nicht transmutieren.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-direct-computation",
+          "kind": "Narrative",
+          "heading": "Direkte Berechnung statt eines Grenzwerts",
+          "body": "Ist ein Wert klassisch definiert, wird er beibehalten. Tritt eine singuläre Form auf, werden SP4, SP2 und anschließend die RICIS-Axiome angewandt; der Punkt wird direkt ausgewertet.",
+          "evidenceStatus": "declared-method"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-monolith-geometry",
+      "kind": "Definition",
+      "heading": "Geometrisches Intermezzo I: Linie, Ebene und Volumen sind keine Punktmengen",
+      "body": "Punkt, Linie, Ebene und Volumen werden als heterogene primäre Monolithe T0, T1, T2 und T3 dargestellt. Das Integral wird als eine Operation innerhalb eines volumetrischen Monolithen behandelt, nicht als eine hier bewiesene externe Maßtheorie.",
+      "evidenceStatus": "declared-geometry"
+    },
+    {
+      "sectionId": "ns-safety-protocols",
+      "kind": "AxiomGroup",
+      "heading": "Sicherheitsprotokolle",
+      "body": "SP1 begrenzt die Lokalität einer Transformation. SP2 verlangt, dass identische Terme reduziert werden, bevor RICIS-Axiome verwendet werden. SP3 bewahrt eine Indexrelation, wo eine Reduktion nicht möglich ist. SP4 indiziert den ursprünglichen Ausdruck statt eines numerischen Restes an einem Punkt.",
+      "evidenceStatus": "declared-protocol"
+    },
+    {
+      "sectionId": "ns-ricis-axioms",
+      "kind": "AxiomGroup",
+      "heading": "RICIS-Axiome (grenzwertfreie Vektorform)",
+      "body": "A1 bis A7 sowie A10 formulieren deklarierte Regeln für indizierte Unendlichkeit, typisierten Nullwert, die Formen 0/0 und infinity/infinity sowie das kompatible Produkt 0_F mal infinity_F. Diese Regeln sind normative Annahmen des RICIS-Szenarios.",
+      "equation": "0_F mal infinity_F = F nur wenn die Strukturindizes übereinstimmen",
+      "evidenceStatus": "declared-axioms"
+    },
+    {
+      "sectionId": "ns-direct-indexing",
+      "kind": "Derivation",
+      "heading": "Eine grenzwertfreie Navier–Stokes-Herleitung",
+      "body": "Dieser Abschnitt sammelt die lokalen RICIS-Herleitungen, die die Quelle zur Beschreibung einer möglichen Singularität verwendet. Jede Herleitung bleibt deklariert, bis eine separate typisierte semantische Brücke bereitgestellt wird.",
+      "evidenceStatus": "declared-ricis-derivation",
+      "children": [
+        {
+          "sectionId": "ns-local-indexing",
+          "kind": "Derivation",
+          "heading": "Direkte Indizierung eines potenziellen Blow-ups",
+          "body": "In der Quelle erhalten lokales Volumen und Enstrophie einen gemeinsamen Strukturindex aus dem Verzerrungstensor. Das kompatible indizierte Produkt wird anschließend unter A6 reduziert. Dieser Schritt protokolliert erforderliche Eingaben und eine Regel; er stellt keine externe analytische Regularität her.",
+          "equation": "E_local = 0_S mal infinity_S = S",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 1,
+              "ruleId": "SP4",
+              "phase": "direct-indexing",
+              "statement": "Volumen und Enstrophie erhalten einen gemeinsamen Strukturindex aus dem deklarierten Verzerrungsausdruck",
+              "status": "declared"
+            },
+            {
+              "number": 2,
+              "ruleId": "A6",
+              "phase": "local-enstrophy",
+              "statement": "kompatibel indizierter Nullwert und Unendlichkeit reduzieren auf ihren gemeinsamen Index",
+              "status": "declared"
+            }
+          ],
+          "children": [
+            {
+              "sectionId": "ns-local-enstrophy-calculation",
+              "kind": "Derivation",
+              "heading": "Direkte Berechnung der lokalen Enstrophie",
+              "body": "Die lokale Enstrophie E_local wird über kompatibel indiziertes Volumen und Enstrophie ausgedrückt. Diese RICIS-Darstellung bleibt eine deklarierte Transformation und keine kernel-verifizierte PDE-Abschätzung.",
+              "equation": "E_local = Integral über 0_S von infinity_S = S",
+              "evidenceStatus": "declared-ricis-transformation"
+            },
+            {
+              "sectionId": "ns-finiteness-lemma",
+              "kind": "Lemma",
+              "heading": "Endlichkeit",
+              "body": "Der Strukturtensor S bleibt eine separate fachliche Verpflichtung. Die Quelle stellt Bezüge zur Anfangsenergie, positiver Viskosität und Zirkulation her, doch der semantische Bericht deklariert diese Beziehungen nicht als kernel-verifiziert.",
+              "evidenceStatus": "open-subject-matter-obligation"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-vorticity-dynamics",
+          "kind": "Derivation",
+          "heading": "Auflösung des kritischen Terms (omega Punkt nabla) omega",
+          "body": "Die Quelle beschreibt die Skala eta als strukturellen Parameter und schreibt konvektive und viskose Terme mittels indizierter Formen. Dieser Bericht bewahrt die Konstruktion als typisierte Zerlegung statt als bewiesene PDE-Abschätzung.",
+          "equation": "partial_t omega = indizierte Konvektion plus indizierte Viskosität",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 3,
+              "ruleId": "SP4",
+              "phase": "scale-indexing",
+              "statement": "Ableitungen erhalten Struktur-Skalen-Indizes ohne Grenzwertnotation",
+              "status": "declared"
+            },
+            {
+              "number": 4,
+              "ruleId": "A6",
+              "phase": "typed-reduction",
+              "statement": "Kompatibel indizierte Skalentermen reduzieren nur unter expliziten Kompatibilitätsannahmen",
+              "status": "declared"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-monolith-projection",
+          "kind": "Narrative",
+          "heading": "Geometrisches Intermezzo II: warum dies ohne Grenzwerte funktioniert",
+          "body": "Die Quelle interpretiert die Projektion eines volumetrischen Monolithen auf einen Punkt als typisierten Nullwert, der einen Strukturindex bewahrt. Dieses Fragment bleibt eine geometrische Erläuterung des Modells.",
+          "evidenceStatus": "narrative-explanation"
+        },
+        {
+          "sectionId": "ns-fractal-law",
+          "kind": "Definition",
+          "heading": "Hierarchisches Aufklappen (Fraktalgesetz) ohne Grenzwerte",
+          "body": "Der rekursive Operator R entfaltet ein Objekt, seinen Typ, seine indizierte Unendlichkeit und seinen typisierten Nullwert auf aufeinanderfolgenden Ebenen. In der Quelle wird er auf eine Projektion, eine Stromlinie, eine Wirbelfläche und das vollständige Feld angewandt.",
+          "equation": "R(Q) = {Q, T(Q), infinity_Q, 0_Q, R(infinity_Q), R(0_Q)}",
+          "evidenceStatus": "declared-recursion"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-theorem-proof",
+      "kind": "Claim",
+      "heading": "Satz und Beweis (ohne Grenzwerte)",
+      "body": "Der externe fachliche Satz ist enthalten, um die Form der gelieferten Quelle zu bewahren. Sein Status bleibt Deferred, bis eine typisierte Aussage, Hypothesen, lokale Lemmata und semantische Randbrücken bereitgestellt sind.",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "Für glatte Anfangsdaten mit endlicher Energie und positiver Viskosität ist die 3D-Navier–Stokes-Lösung global glatt.",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "Die gelieferte Quelle und das RICIS-Routenmodell enthalten weder einen kernel-geprüften typisierten Satz noch Hypothesen oder eine Brücke zur externen PDE-Aussage."
+        }
+      ],
+      "proofSteps": [
+        {
+          "number": 1,
+          "ruleId": "NS-01",
+          "phase": "contradiction-setup",
+          "statement": "das Dokument nimmt einen Punkt eines potenziellen Glattheitsverlusts als Ausgangsbeweisverpflichtung an",
+          "status": "declared"
+        },
+        {
+          "number": 2,
+          "ruleId": "NS-02",
+          "phase": "direct-indexing",
+          "statement": "lokales Volumen und Enstrophie werden über die deklarierte strukturelle Größe indiziert",
+          "status": "declared"
+        },
+        {
+          "number": 3,
+          "ruleId": "NS-03",
+          "phase": "local-enstrophy",
+          "statement": "A6 wird nur auf übereinstimmende Indizes in der angegebenen lokalen Zusammensetzung angewandt",
+          "status": "declared"
+        },
+        {
+          "number": 4,
+          "ruleId": "NS-04",
+          "phase": "finiteness-obligation",
+          "statement": "die Endlichkeit des Strukturtensors bleibt eine separate fachliche Verpflichtung",
+          "status": "open-obligation"
+        },
+        {
+          "number": 5,
+          "ruleId": "NS-05",
+          "phase": "vorticity-dynamics",
+          "statement": "die typisierte Zerlegung kritischer Terme wird als RICIS-Herleitung protokolliert",
+          "status": "declared"
+        },
+        {
+          "number": 6,
+          "ruleId": "NS-06",
+          "phase": "global-bridge",
+          "statement": "der Übergang von einer lokalen RICIS-Darstellung zu globaler klassischer Glattheit erfordert eine semantische Brücke",
+          "status": "open-obligation"
+        },
+        {
+          "number": 7,
+          "ruleId": "NS-07",
+          "phase": "external-theorem-status",
+          "statement": "die abschließende externe Behauptung kann durch dieses Dokument nicht zu KernelChecked befördert werden",
+          "status": "Deferred"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-type-verification",
+      "kind": "Validation",
+      "heading": "Verifikation durch Typkonsistenz (ohne Grenzwerte)",
+      "body": "Die Tabelle bewahrt die Quellform einer Prüfung auf homogene, kompatible und inkompatible Indizes. Sie ist eine strukturelle Erläuterung und kein eigenständiger externer Satz.",
+      "evidenceStatus": "structured-explanation",
+      "validationRows": [
+        {
+          "case": "Homogen",
+          "condition": "T(F) = T(G)",
+          "resolution": "direkt indizierte Operation",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Kompatibel",
+          "condition": "T(F) ist kompatibel mit T(G)",
+          "resolution": "typisierte Hebung oder Brücke",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Inkompatibel",
+          "condition": "T(F) ist inkompatibel mit T(G)",
+          "resolution": "ein zusammengesetzter Monolith oder eine separate Verpflichtung ist erforderlich",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-glossary",
+      "kind": "Appendix",
+      "presentation": "Appendix",
+      "heading": "Anhang: RICIS-Glossar",
+      "body": "Indizierte Unendlichkeit bewahrt die Art und Weise, wie sie erreicht wird. Der typisierte Nullwert bewahrt den strukturellen Grund für das Nullwerden. Ein Monolith n-ter Ordnung ist eine primäre Struktureinheit. SP4 indiziert einen Ausdruck, und A6 beschreibt den kompatiblen Kollaps von indiziertem Nullwert und Unendlichkeit.",
+      "evidenceStatus": "reference"
+    }
+  ],
+  "epilogueHeading": "Epilog: Was im grenzwertfreien Szenario festgestellt ist",
+  "epilogue": "Die strukturelle Form des Quellenepilogs wird als Schlussfolgerung des RICIS-Szenarios beibehalten. Sie befördert die externe Aussage zur globalen Glattheit nicht in den KernelChecked-Status.",
+  "epilogueSteps": [
+    "Methodisch ersetzt RICIS Grenzwerte durch direkte Ausdrucksindizierung an einem Punkt mittels SP4.",
+    "Geometrisch wird Volumen als T3-Monolith behandelt, während die Projektion auf einen Punkt einen Strukturindex trägt.",
+    "Analytisch reduzieren sich kompatibel indizierter Nullwert und Unendlichkeit unter A6 nur innerhalb der angegebenen RICIS-Regel.",
+    "Physikalisch bleiben Viskosität und andere Domänenannahmen separate typisierte Verpflichtungen und nicht eine Folge des Layouts.",
+    "Mathematisch bleibt die externe globale Glattheit Deferred, bis ein kernel-geprüfter Satz und eine semantische Brücke existieren."
+  ],
+  "conclusionHeading": "Abschließende Schlussfolgerung",
+  "conclusion": "Die 3D-Navier–Stokes-Gleichungen werden hier durch eine RICIS-Zerlegung dargestellt. Diese Vorlage bewahrt die Form der Quellen-Schlussfolgerung, ersetzt jedoch keine separate fachliche Formalisierung.",
+  "conclusionSteps": [
+    "In RICIS gibt es keine Grenzwerte, nur direkte Indizierung.",
+    "Ein Volumen ist keine Punktmenge, sondern ein Monolith.",
+    "Das Produkt aus indiziertem Nullwert und Unendlichkeit mit gemeinsamem Index ist unter A6 eine deklarierte endliche RICIS-Regel."
+  ]
+}

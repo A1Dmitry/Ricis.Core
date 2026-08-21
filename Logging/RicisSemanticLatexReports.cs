@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Logging;
 
@@ -328,23 +329,26 @@ public sealed class RicisSemanticLatexTemplateRenderer
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentNullException.ThrowIfNull(template);
-        var sections = BuildSectionRows(model.Sections.Where(section => section.Presentation != RicisLatexSectionPresentation.Appendix).ToArray());
-        var appendixSections = BuildSectionRows(model.Sections.Where(section => section.Presentation == RicisLatexSectionPresentation.Appendix).ToArray());
+        var resources = new RicisSemanticReportResources(RicisSemanticReportResources.GetTemplateLocale(template));
+        var sections = BuildSectionRows(model.Sections.Where(section => section.Presentation != RicisLatexSectionPresentation.Appendix).ToArray(), resources);
+        var appendixSections = BuildSectionRows(model.Sections.Where(section => section.Presentation == RicisLatexSectionPresentation.Appendix).ToArray(), resources);
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["DocumentId"] = Escape(model.DocumentId),
             ["Title"] = Escape(model.Title),
             ["StatusKey"] = Escape(model.StatusKey),
+            ["EvidenceBoundaryLabel"] = Escape(resources.EvidenceBoundaryLabel),
+            ["SemanticStatusLabel"] = Escape(resources.SemanticStatusLabel),
             ["Subtitle"] = Escape(model.Subtitle),
-            ["Abstracts"] = RenderAbstracts(model.Abstracts),
+            ["Abstracts"] = RenderAbstracts(model.Abstracts, resources),
             ["TableOfContentsIncluded"] = model.IncludeTableOfContents ? "true" : "false",
             ["EvidenceBoundary"] = EscapeParagraphs(model.EvidenceBoundary),
             ["ConclusionIncluded"] = string.IsNullOrWhiteSpace(model.Conclusion) ? "false" : "true",
-            ["ConclusionHeading"] = Escape(string.IsNullOrWhiteSpace(model.ConclusionHeading) ? "Заключение" : model.ConclusionHeading),
+            ["ConclusionHeading"] = Escape(string.IsNullOrWhiteSpace(model.ConclusionHeading) ? resources.ConclusionHeading : model.ConclusionHeading),
             ["Conclusion"] = EscapeParagraphs(model.Conclusion),
             ["ConclusionSteps"] = RenderTextList(model.ConclusionSteps),
             ["EpilogueIncluded"] = string.IsNullOrWhiteSpace(model.Epilogue) ? "false" : "true",
-            ["EpilogueHeading"] = Escape(string.IsNullOrWhiteSpace(model.EpilogueHeading) ? "Эпилог" : model.EpilogueHeading),
+            ["EpilogueHeading"] = Escape(string.IsNullOrWhiteSpace(model.EpilogueHeading) ? resources.EpilogueHeading : model.EpilogueHeading),
             ["Epilogue"] = EscapeParagraphs(model.Epilogue),
             ["EpilogueSteps"] = RenderTextList(model.EpilogueSteps),
             ["AppendixSections"] = RenderSectionRows(appendixSections),
@@ -356,7 +360,7 @@ public sealed class RicisSemanticLatexTemplateRenderer
             ["AuthorDescription"] = EscapeParagraphs(model.AuthorAttribution?.Description ?? string.Empty),
             ["AuthorKeywords"] = Escape(string.Join(", ", model.AuthorAttribution?.Keywords ?? Array.Empty<string>())),
             ["AuthorWorks"] = RenderAuthorWorks(model.AuthorAttribution?.Works ?? Array.Empty<RicisLatexAuthorWorkViewModel>()),
-            ["TechnicalAppendix"] = model.IncludeTechnicalAppendix ? RenderTechnicalAppendix(model.TechnicalAppendixRows) : string.Empty,
+            ["TechnicalAppendix"] = model.IncludeTechnicalAppendix ? RenderTechnicalAppendix(model.TechnicalAppendixRows, resources) : string.Empty,
         };
         return _renderer.RenderText(template, values, sections, "Sections");
     }
@@ -365,7 +369,7 @@ public sealed class RicisSemanticLatexTemplateRenderer
         string.Join(Environment.NewLine, rows.Select(row =>
             $"{row["Opening"]}{Environment.NewLine}\\textit{{{row["Status"]}}}\\\\{Environment.NewLine}{row["Body"]}{Environment.NewLine}{row["Equation"]}{Environment.NewLine}{row["Claims"]}{Environment.NewLine}{row["ProofSteps"]}{Environment.NewLine}{row["ValidationRows"]}"));
 
-    private static IReadOnlyList<IReadOnlyDictionary<string, string>> BuildSectionRows(IReadOnlyList<RicisLatexSectionViewModel> roots)
+    private static IReadOnlyList<IReadOnlyDictionary<string, string>> BuildSectionRows(IReadOnlyList<RicisLatexSectionViewModel> roots, RicisSemanticReportResources resources)
     {
         var flattened = Flatten(roots);
         var rows = new List<IReadOnlyDictionary<string, string>>();
@@ -380,9 +384,9 @@ public sealed class RicisSemanticLatexTemplateRenderer
                 ["Body"] = RenderSectionBody(section.Section),
                 ["Equation"] = RenderEquation(section.Section.Equation),
                 ["Status"] = Escape(section.Section.EvidenceStatus),
-                ["Claims"] = RenderClaims(section.Section.Claims),
+                ["Claims"] = RenderClaims(section.Section.Claims, resources),
                 ["ProofSteps"] = RenderProofSteps(section.Section.ProofSteps, section.Section.Kind == RicisLatexSectionKind.Claim),
-                ["ValidationRows"] = RenderValidationRows(section.Section.ValidationRows),
+                ["ValidationRows"] = RenderValidationRows(section.Section.ValidationRows, resources),
             });
         }
 
@@ -461,9 +465,9 @@ public sealed class RicisSemanticLatexTemplateRenderer
             ? string.Empty
             : $"\\[{Environment.NewLine}\\texttt{{{Escape(equation)}}}{Environment.NewLine}\\]";
 
-    private static string RenderClaims(IReadOnlyList<RicisLatexClaimViewModel> claims) =>
+    private static string RenderClaims(IReadOnlyList<RicisLatexClaimViewModel> claims, RicisSemanticReportResources resources) =>
         string.Join(Environment.NewLine, claims.Select(claim =>
-            $"\\begin{{theorem}}[{Escape(claim.ClaimId)} --- {Escape(claim.EvidenceStatus)}]{EscapeParagraphs(claim.Statement)}\\end{{theorem}}{Environment.NewLine}\\noindent\\textit{{Граница доказательств:}} {EscapeParagraphs(claim.EvidenceBoundary)}"));
+            $"\\begin{{theorem}}[{Escape(claim.ClaimId)} --- {Escape(claim.EvidenceStatus)}]{EscapeParagraphs(claim.Statement)}\\end{{theorem}}{Environment.NewLine}\\noindent\\textit{{{Escape(resources.ClaimEvidenceBoundaryLabel)}}} {EscapeParagraphs(claim.EvidenceBoundary)}"));
 
     private static string RenderProofSteps(IReadOnlyList<RicisLatexProofStepViewModel> steps, bool useProofEnvironment) =>
         steps.Count == 0
@@ -475,17 +479,21 @@ public sealed class RicisSemanticLatexTemplateRenderer
               Environment.NewLine + "\\end{enumerate}" +
               (useProofEnvironment ? "\\end{proof}" : string.Empty);
 
-    private static string RenderAbstracts(IReadOnlyList<RicisLatexAbstractViewModel> abstracts) =>
+    private static string RenderAbstracts(IReadOnlyList<RicisLatexAbstractViewModel> abstracts, RicisSemanticReportResources resources) =>
         string.Join(Environment.NewLine, abstracts.Select(abstractBlock =>
-            $"\\begin{{otherlanguage}}{{{GetLatexLanguage(abstractBlock.Language)}}}{Environment.NewLine}" +
+            $"\\begin{{otherlanguage}}{{{GetLatexLanguage(abstractBlock.Language, resources)}}}{Environment.NewLine}" +
             $"\\renewcommand{{\\abstractname}}{{{Escape(abstractBlock.Label)}}}{Environment.NewLine}" +
             $"\\begin{{abstract}}{Environment.NewLine}{EscapeParagraphs(abstractBlock.Body)}{Environment.NewLine}\\end{{abstract}}{Environment.NewLine}\\end{{otherlanguage}}"));
 
-    private static string GetLatexLanguage(string language) => language switch
+    private static string GetLatexLanguage(string language, RicisSemanticReportResources resources) => language switch
     {
         "ru-RU" => "russian",
         "en-US" => "english",
-        _ => throw new InvalidOperationException($"Unsupported semantic LaTeX abstract language '{language}'."),
+        "fr-CA" => "english",
+        "de-DE" => "english",
+        "hi-IN" => "hindi",
+        "ms-MY" => "english",
+        _ => throw new InvalidOperationException(resources.UnsupportedAbstractLanguage(language)),
     };
 
     private static string RenderTextList(IReadOnlyList<string> values) =>
@@ -495,11 +503,11 @@ public sealed class RicisSemanticLatexTemplateRenderer
               string.Join(Environment.NewLine, values.Select(value => $"\\item {EscapeParagraphs(value)}")) +
               Environment.NewLine + "\\end{enumerate}";
 
-    private static string RenderValidationRows(IReadOnlyList<RicisLatexValidationRowViewModel> rows) =>
+    private static string RenderValidationRows(IReadOnlyList<RicisLatexValidationRowViewModel> rows, RicisSemanticReportResources resources) =>
         rows.Count == 0
             ? string.Empty
             : "\\begin{tabular}{|p{0.20\\linewidth}|p{0.24\\linewidth}|p{0.30\\linewidth}|p{0.16\\linewidth}|}\\hline" + Environment.NewLine +
-              "Case & Condition & Resolution & Status \\\\ \\hline" + Environment.NewLine +
+              $"{Escape(resources.ValidationHeaderCase)} & {Escape(resources.ValidationHeaderCondition)} & {Escape(resources.ValidationHeaderResolution)} & {Escape(resources.ValidationHeaderStatus)} \\\\ \\hline" + Environment.NewLine +
               string.Join(Environment.NewLine, rows.Select(row =>
                   $"{Escape(row.Case)} & {Escape(row.Condition)} & {Escape(row.Resolution)} & {Escape(row.EvidenceStatus)} \\\\ \\hline")) +
               Environment.NewLine + "\\end{tabular}";
@@ -512,10 +520,10 @@ public sealed class RicisSemanticLatexTemplateRenderer
                   $"\\item {Escape(work.Name)} ({Escape(work.DatePublished)}): \\texttt{{{Escape(work.Url)}}}")) +
               "\\end{itemize}";
 
-    private static string RenderTechnicalAppendix(IReadOnlyList<string> rows) =>
+    private static string RenderTechnicalAppendix(IReadOnlyList<string> rows, RicisSemanticReportResources resources) =>
         rows.Count == 0
             ? string.Empty
-            : "\\appendix\\section*{Technical appendix}\\begin{itemize}" +
+            : $"\\appendix\\section*{{{Escape(resources.TechnicalAppendixHeading)}}}\\begin{{itemize}}" +
               string.Join(string.Empty, rows.Select(row => $"\\item \\texttt{{{Escape(row)}}}")) +
               "\\end{itemize}";
 

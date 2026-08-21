@@ -1,0 +1,40 @@
+{
+  "schema": "ricis-country-locale-coverage/v1",
+  "source": "User-confirmed RICIS readership map, 2026-08-21",
+  "privacy": "Country is a transient caller-provided presentation preference. This manifest defines locale selection only and must not persist requester identity, country analytics, payment state, or document history.",
+  "countries": [
+    {
+      "iso3166Alpha2": "US",
+      "countryName": "United States",
+      "defaultLocale": "en-US",
+      "supportedLocales": ["en-US"]
+    },
+    {
+      "iso3166Alpha2": "CA",
+      "countryName": "Canada",
+      "defaultLocale": "en-US",
+      "supportedLocales": ["en-US", "fr-CA"]
+    },
+    {
+      "iso3166Alpha2": "DE",
+      "countryName": "Germany",
+      "defaultLocale": "de-DE",
+      "supportedLocales": ["de-DE", "en-US"]
+    },
+    {
+      "iso3166Alpha2": "IN",
+      "countryName": "India",
+      "defaultLocale": "hi-IN",
+      "supportedLocales": ["hi-IN", "en-US"]
+    },
+    {
+      "iso3166Alpha2": "MY",
+      "countryName": "Malaysia",
+      "defaultLocale": "ms-MY",
+      "supportedLocales": ["ms-MY", "en-US"]
+    }
+  ],
+  "uniqueTemplateLocales": ["en-US", "fr-CA", "de-DE", "hi-IN", "ms-MY"],
+  "fallbackOrder": ["requested supported locale", "country default locale", "en-US"],
+  "selectionRule": "A caller may explicitly select any supported locale for its country. If no selection is provided, use the country default. If no country/locale is provided or a requested locale is unsupported, use en-US. Locale selection is request-scoped and is never persisted by Ricis.Core."
+}

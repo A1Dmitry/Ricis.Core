@@ -1,0 +1,291 @@
+{
+  "documentId": "navier-stokes-ricis-academic-structure/en-US/v1",
+  "title": "Kekelancaran Global bagi Persamaan Navier–Stokes 3D",
+  "subtitle": "Sebuah Dokumen Bukti dalam Paradigma RICIS (Versi Bebas Had)",
+  "statusKey": "structural-exemplar-not-kernel-proof",
+  "includeTableOfContents": true,
+  "evidenceBoundary": "Dokumen ini ialah unjuran semantik berbahasa Inggeris bagi sumber berstruktur Navier–Stokes yang dibekalkan. Pernyataan kekelancaran global kekal sebagai tuntutan domain luaran berstatus Deferred; ia bukan KernelChecked tanpa satu teorem ditaip, hipotesis yang nyata, dan jambatan semantik Lean.",
+  "abstracts": [
+    {
+      "language": "ms-MY",
+      "label": "Abstrak",
+      "body": "Dokumen ini menyediakan struktur laporan-bukti rekursif bagi sumber Navier–Stokes dalam paradigma RICIS. Ungkapan singular diwakili sebagai objek berstruktur berindeks, dan SP4 serta A6 direkodkan sebagai transformasi normatif yang diisytiharkan. Tuntutan kekelancaran global luaran tidak dinaik taraf oleh laporan ini kepada status yang disahkan kernel."
+    }
+  ],
+  "sections": [
+    {
+      "sectionId": "ns-introduction",
+      "kind": "Narrative",
+      "presentation": "Unnumbered",
+      "heading": "Pengenalan: halangan epistemologi analisis klasik dan keperluan perubahan paradigma",
+      "body": "Sumber membandingkan had dengan pengindeksan langsung ungkapan singular dan memperkenalkan tafsiran geometri bagi monolit pelbagai tertib. Dalam laporan semantik ini, bahan tersebut ialah konteks metodologi dan bukannya bukti bebas bagi suatu teorem luaran.",
+      "evidenceStatus": "narrative-context"
+    },
+    {
+      "sectionId": "ns-limit-preamble",
+      "kind": "Narrative",
+      "heading": "Prakata: larangan terhadap had",
+      "body": "Untuk senario RICIS ini, notasi had tidak digunakan. Sebaliknya, dokumen menerangkan pengindeksan langsung sesuatu ungkapan pada titik terpilih diikuti penyederhanaan normatif melalui SP2, SP4, dan aksiom yang diisytiharkan.",
+      "equation": "had klasik pada x=a -> penilaian terindeks secara langsung pada x=a",
+      "evidenceStatus": "declared-method"
+    },
+    {
+      "sectionId": "ns-foundation",
+      "kind": "Definition",
+      "heading": "Satu asas mutlak tanpa had",
+      "body": "Asas menetapkan ketiadaan had dan turutan yang dimaksudkan: pengurangan algebra, pengindeksan ungkapan, dan peraturan normatif RICIS.",
+      "evidenceStatus": "declared-foundation",
+      "children": [
+        {
+          "sectionId": "ns-l0-continuity",
+          "kind": "Definition",
+          "heading": "L0_Kesinambungan_mutlak (Tanpa had)",
+          "body": "Kesinambungan difahami sebagai ketiadaan pemecahan identiti ketika bergerak antara aras rekursi; peraturan ini ialah meta-aksiom yang diisytiharkan.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-l1-identity",
+          "kind": "Definition",
+          "heading": "L1_Identiti",
+          "body": "Identiti X = X mengekalkan jenis T(X); operasi tidak boleh menukarkan jenis tanpa morfisme yang ditakrifkan secara jelas.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-direct-computation",
+          "kind": "Narrative",
+          "heading": "Pengiraan langsung menggantikan had",
+          "body": "Jika suatu nilai ditakrifkan secara klasik, ia dikekalkan. Jika bentuk singular berlaku, SP4, SP2, dan kemudian aksiom RICIS digunakan; titik diambil secara langsung.",
+          "evidenceStatus": "declared-method"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-monolith-geometry",
+      "kind": "Definition",
+      "heading": "Selingan geometri I: garis, satah, dan isipadu bukan set titik",
+      "body": "Titik, garis, satah, dan isipadu diwakili sebagai monolit primer heterogen T0, T1, T2, dan T3. Kamiran ditangani sebagai suatu operasi di dalam monolit berisipadu dan bukannya sebagai teori ukuran luaran yang dibuktikan di sini.",
+      "evidenceStatus": "declared-geometry"
+    },
+    {
+      "sectionId": "ns-safety-protocols",
+      "kind": "AxiomGroup",
+      "heading": "Protokol keselamatan",
+      "body": "SP1 mengehadkan lokaliti sesuatu transformasi. SP2 mengkehendaki terma yang sama dikurangkan sebelum aksiom RICIS digunakan. SP3 mengekalkan hubungan indeks apabila pengurangan mustahil. SP4 mengindeks ungkapan asal dan bukannya baki berangka pada sesuatu titik.",
+      "evidenceStatus": "declared-protocol"
+    },
+    {
+      "sectionId": "ns-ricis-axioms",
+      "kind": "AxiomGroup",
+      "heading": "Aksiom RICIS (bentuk vektor tanpa had)",
+      "body": "A1 hingga A7 dan A10 menyatakan peraturan yang diisytiharkan untuk infiniti berindeks, sifar ditaip, bentuk 0/0 dan infinity/infinity, serta hasil darab serasi 0_F kali infinity_F. Peraturan ini ialah andaian normatif bagi senario RICIS.",
+      "equation": "0_F kali infinity_F = F hanya apabila indeks struktur sepadan",
+      "evidenceStatus": "declared-axioms"
+    },
+    {
+      "sectionId": "ns-direct-indexing",
+      "kind": "Derivation",
+      "heading": "Terbitan Navier–Stokes tanpa had",
+      "body": "Bahagian ini mengumpulkan terbitan RICIS setempat yang digunakan oleh sumber untuk menghuraikan kemungkinan singulariti. Setiap terbitan kekal diisytiharkan sehingga satu jambatan semantik ditaip yang berasingan dibekalkan.",
+      "evidenceStatus": "declared-ricis-derivation",
+      "children": [
+        {
+          "sectionId": "ns-local-indexing",
+          "kind": "Derivation",
+          "heading": "Pengindeksan langsung bagi kemungkinan letupan",
+          "body": "Dalam sumber, isipadu setempat dan enstropi menerima indeks struktur yang sama daripada tenser tegangan. Hasil darab berindeks serasi kemudiannya dikurangkan di bawah A6. Langkah ini merekodkan input yang diperlukan dan satu peraturan; ia tidak mewujudkan keregelaran analitik luaran.",
+          "equation": "E_local = 0_S kali infinity_S = S",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 1,
+              "ruleId": "SP4",
+              "phase": "direct-indexing",
+              "statement": "isipadu dan enstropi menerima indeks struktur yang sama daripada ungkapan tegangan yang diisytiharkan",
+              "status": "declared"
+            },
+            {
+              "number": 2,
+              "ruleId": "A6",
+              "phase": "local-enstrophy",
+              "statement": "sifar dan infiniti berindeks yang serasi dikurangkan kepada indeks bersama mereka",
+              "status": "declared"
+            }
+          ],
+          "children": [
+            {
+              "sectionId": "ns-local-enstrophy-calculation",
+              "kind": "Derivation",
+              "heading": "Pengiraan langsung enstropi setempat",
+              "body": "Enstropi setempat E_local ditulis melalui isipadu dan enstropi yang berindeks serasi. Perwakilan RICIS ini kekal sebagai transformasi yang diisytiharkan dan bukannya anggaran PDE yang disahkan kernel.",
+              "equation": "E_local = kamiran ke atas 0_S bagi infinity_S = S",
+              "evidenceStatus": "declared-ricis-transformation"
+            },
+            {
+              "sectionId": "ns-finiteness-lemma",
+              "kind": "Lemma",
+              "heading": "Kefinitan",
+              "body": "Tenser struktur S kekal sebagai kewajipan perkara subjek yang berasingan. Sumber mengaitkannya dengan tenaga awal, kelikatan positif, dan peredaran, tetapi laporan semantik tidak mengisytiharkan hubungan tersebut sebagai disahkan kernel.",
+              "evidenceStatus": "open-subject-matter-obligation"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-vorticity-dynamics",
+          "kind": "Derivation",
+          "heading": "Penyelesaian terma kritikal (omega dot nabla) omega",
+          "body": "Sumber menghuraikan skala eta sebagai parameter struktur dan menulis terma perolakan dan kelikatan melalui bentuk berindeks. Laporan ini mengekalkan binaan tersebut sebagai penguraian ditaip dan bukannya anggaran PDE yang terbukti.",
+          "equation": "partial_t omega = perolakan terindeks tambah kelikatan terindeks",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 3,
+              "ruleId": "SP4",
+              "phase": "scale-indexing",
+              "statement": "terbitan menerima indeks skala-struktur tanpa notasi had",
+              "status": "declared"
+            },
+            {
+              "number": 4,
+              "ruleId": "A6",
+              "phase": "typed-reduction",
+              "statement": "terma skala berindeks yang serasi dikurangkan hanya di bawah andaian keserasian yang jelas",
+              "status": "declared"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-monolith-projection",
+          "kind": "Narrative",
+          "heading": "Selingan geometri II: mengapa ini berfungsi tanpa had",
+          "body": "Sumber mentafsir unjuran monolit berisipadu ke suatu titik sebagai sifar ditaip yang mengekalkan indeks struktur. Fragmen ini kekal sebagai penjelasan geometri model.",
+          "evidenceStatus": "narrative-explanation"
+        },
+        {
+          "sectionId": "ns-fractal-law",
+          "kind": "Definition",
+          "heading": "Pengembangan berhierarki (Hukum Fraktal) tanpa had",
+          "body": "Operator rekursif R mengembangkan suatu objek, jenisnya, infinitinya yang berindeks, dan sifarnya yang ditaip pada aras berturutan. Dalam sumber ia digunakan pada suatu unjuran, garis arus, permukaan pusaran, dan medan penuh.",
+          "equation": "R(Q) = {Q, T(Q), infinity_Q, 0_Q, R(infinity_Q), R(0_Q)}",
+          "evidenceStatus": "declared-recursion"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-theorem-proof",
+      "kind": "Claim",
+      "heading": "Teorem dan bukti (tanpa had)",
+      "body": "Teorem perkara subjek luaran disertakan untuk mengekalkan bentuk sumber yang dibekalkan. Statusnya kekal Deferred sehingga satu proposisi ditaip, hipotesis, lema setempat, dan jambatan tepi semantik dibekalkan.",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "Bagi data awal licin bertenaga terhingga dan kelikatan positif, penyelesaian Navier–Stokes 3D adalah licin secara global.",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "Sumber yang dibekalkan dan model laluan RICIS tidak mengandungi teorem ditaip yang disemak kernel, hipotesis, atau jambatan kepada pernyataan PDE luaran."
+        }
+      ],
+      "proofSteps": [
+        {
+          "number": 1,
+          "ruleId": "NS-01",
+          "phase": "contradiction-setup",
+          "statement": "dokumen mengandaikan satu titik kemungkinan kehilangan kelancaran sebagai kewajipan bukti permulaan",
+          "status": "declared"
+        },
+        {
+          "number": 2,
+          "ruleId": "NS-02",
+          "phase": "direct-indexing",
+          "statement": "isipadu setempat dan enstropi diindeks melalui kuantiti struktur yang diisytiharkan",
+          "status": "declared"
+        },
+        {
+          "number": 3,
+          "ruleId": "NS-03",
+          "phase": "local-enstrophy",
+          "statement": "A6 digunakan hanya pada indeks yang sepadan dalam komposisi setempat yang dinyatakan",
+          "status": "declared"
+        },
+        {
+          "number": 4,
+          "ruleId": "NS-04",
+          "phase": "finiteness-obligation",
+          "statement": "kefinitan tenser struktur kekal sebagai kewajipan perkara subjek yang berasingan",
+          "status": "open-obligation"
+        },
+        {
+          "number": 5,
+          "ruleId": "NS-05",
+          "phase": "vorticity-dynamics",
+          "statement": "penguraian ditaip terma kritikal direkodkan sebagai terbitan RICIS",
+          "status": "declared"
+        },
+        {
+          "number": 6,
+          "ruleId": "NS-06",
+          "phase": "global-bridge",
+          "statement": "peralihan daripada perwakilan RICIS setempat kepada kelancaran klasik global memerlukan jambatan semantik",
+          "status": "open-obligation"
+        },
+        {
+          "number": 7,
+          "ruleId": "NS-07",
+          "phase": "external-theorem-status",
+          "statement": "tuntutan luaran akhir tidak boleh dinaik taraf kepada KernelChecked oleh dokumen ini",
+          "status": "Deferred"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-type-verification",
+      "kind": "Validation",
+      "heading": "Pengesahan melalui konsistensi jenis (tanpa had)",
+      "body": "Jadual mengekalkan bentuk sumber bagi semakan indeks homogen, serasi, dan tidak serasi. Ia ialah penjelasan berstruktur dan bukannya teorem luaran bebas.",
+      "evidenceStatus": "structured-explanation",
+      "validationRows": [
+        {
+          "case": "Homogen",
+          "condition": "T(F) = T(G)",
+          "resolution": "operasi berindeks secara langsung",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Serasi",
+          "condition": "T(F) serasi dengan T(G)",
+          "resolution": "pengangkatan ditaip atau jambatan",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Tidak serasi",
+          "condition": "T(F) tidak serasi dengan T(G)",
+          "resolution": "diperlukan monolit komposit atau kewajipan berasingan",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-glossary",
+      "kind": "Appendix",
+      "presentation": "Appendix",
+      "heading": "Lampiran: glosari RICIS",
+      "body": "Infiniti berindeks mengekalkan cara ia dicapai. Sifar ditaip mengekalkan sebab struktur menjadi sifar. Monolit tertib-n ialah unit struktur primer. SP4 mengindeks suatu ungkapan, dan A6 menghuraikan runtuhan serasi antara sifar dan infiniti berindeks.",
+      "evidenceStatus": "reference"
+    }
+  ],
+  "epilogueHeading": "Epilog: perkara yang ditetapkan dalam senario tanpa had",
+  "epilogue": "Bentuk struktur epilog sumber dikekalkan sebagai kesimpulan senario RICIS. Ia tidak menaik taraf pernyataan kekelancaran global luaran kepada status KernelChecked.",
+  "epilogueSteps": [
+    "Secara metodologi, RICIS menggantikan had dengan pengindeksan ungkapan secara langsung pada sesuatu titik melalui SP4.",
+    "Secara geometri, isipadu dilayan sebagai monolit T3, manakala unjuran ke titik membawa suatu indeks struktur.",
+    "Secara analitik, sifar dan infiniti berindeks yang serasi dikurangkan di bawah A6 hanya dalam peraturan RICIS yang dinyatakan.",
+    "Secara fizikal, kelikatan dan andaian domain lain kekal sebagai kewajipan ditaip yang berasingan dan bukannya akibat susun atur.",
+    "Secara matematik, kekelancaran global luaran kekal Deferred sehingga wujud teorem yang disemak kernel dan jambatan semantik."
+  ],
+  "conclusionHeading": "Kesimpulan akhir",
+  "conclusion": "Persamaan Navier–Stokes 3D diwakili di sini melalui penguraian RICIS. Templat ini mengekalkan bentuk kesimpulan sumber tetapi tidak menggantikan pemformalan perkara subjek yang berasingan.",
+  "conclusionSteps": [
+    "Dalam RICIS tiada had, hanya pengindeksan langsung.",
+    "Satu isipadu bukan set titik tetapi monolit.",
+    "Hasil darab sifar dan infiniti berindeks dengan indeks bersama ialah peraturan RICIS terhingga yang diisytiharkan di bawah A6."
+  ]
+}

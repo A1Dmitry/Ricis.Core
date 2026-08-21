@@ -1,25 +1,27 @@
-% RICIS-LOCALE: en-US
+% RICIS-LOCALE: ms-MY
 \documentclass[12pt]{article}
-\usepackage[T2A]{fontenc}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[english,russian]{babel}
+\usepackage[english]{babel}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{amsfonts}
-\usepackage{textcomp}
 \usepackage{geometry}
 \usepackage{array}
 \usepackage{longtable}
+\DeclareUnicodeCharacter{03B7}{\ensuremath{\eta}}
+\DeclareUnicodeCharacter{03C9}{\ensuremath{\omega}}
+\DeclareUnicodeCharacter{2202}{\ensuremath{\partial}}
+\DeclareUnicodeCharacter{03BD}{\ensuremath{\nu}}
 \geometry{a4paper, margin=1in}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newtheorem{axiom}{Axiom}
-\newtheorem{definition}{Definition}
-\newtheorem{corollary}{Corollary}
-\newtheorem{remark}{Remark}
-\selectlanguage{english}
-\renewcommand{\contentsname}{Contents}
-\renewcommand{\proofname}{Proof}
+\newtheorem{theorem}{Teorem}
+\newtheorem{lemma}{Lema}
+\newtheorem{axiom}{Aksiom}
+\newtheorem{definition}{Takrif}
+\newtheorem{corollary}{Akibat}
+\newtheorem{remark}{Catatan}
+\renewcommand{\contentsname}{Kandungan}
+\renewcommand{\proofname}{Bukti}
 
 \title{ {{Title}} \\ \large {{Subtitle}} }
 \author{ {{AuthorDisplayName}} }
@@ -27,29 +29,24 @@
 
 \begin{document}
 \maketitle
-
 {{Abstracts}}
-
 {{#if TableOfContentsIncluded}}
 \tableofcontents
 \vspace{1cm}
 {{/if}}
-
 \section*{ {{EvidenceBoundaryLabel}} }
 \addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
 {{EvidenceBoundary}}
-
 {{#if AuthorIncluded}}
-\section*{Author and SEO metadata}
-\addcontentsline{toc}{section}{Author and SEO metadata}
-\textbf{Name:} {{AuthorDisplayName}}\\
-\textbf{Alternate name:} {{AuthorAlternateName}}\\
+\section*{Pengarang dan metadata SEO}
+\addcontentsline{toc}{section}{Pengarang dan metadata SEO}
+\textbf{Nama:} {{AuthorDisplayName}}\\
+\textbf{Nama alternatif:} {{AuthorAlternateName}}\\
 \textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
-\textbf{Description:} {{AuthorDescription}}\\
-\textbf{Keywords:} {{AuthorKeywords}}
+\textbf{Penerangan:} {{AuthorDescription}}\\
+\textbf{Kata kunci:} {{AuthorKeywords}}
 {{AuthorWorks}}
 {{/if}}
-
 {{#each Sections}}
 {{this.Opening}}
 \textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
@@ -59,21 +56,18 @@
 {{this.ProofSteps}}
 {{this.ValidationRows}}
 {{/each}}
-
 {{#if EpilogueIncluded}}
 \section*{ {{EpilogueHeading}} }
 \addcontentsline{toc}{section}{ {{EpilogueHeading}} }
 {{Epilogue}}
 {{EpilogueSteps}}
 {{/if}}
-
 {{#if ConclusionIncluded}}
 \section*{ {{ConclusionHeading}} }
 \addcontentsline{toc}{section}{ {{ConclusionHeading}} }
 {{Conclusion}}
 {{ConclusionSteps}}
 {{/if}}
-
 {{AppendixSections}}
 {{TechnicalAppendix}}
 \end{document}

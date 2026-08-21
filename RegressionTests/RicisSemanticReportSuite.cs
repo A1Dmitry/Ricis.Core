@@ -286,6 +286,9 @@ internal static class RicisSemanticReportSuite
         var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "latex.en-US.template");
         var russianPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "latex.ru-RU.template");
         var exemplarPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.exemplar.json");
+        var englishExemplarPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.en-US.exemplar.json");
+        var localeManifestPath = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "ricis-country-locale-coverage.exemplar.json");
+        var multilingualLocales = new[] { "fr-CA", "de-DE", "hi-IN", "ms-MY" };
         var projectRoot = FindProjectRoot();
         var sourcePath = Path.Combine(projectRoot, "Knowledge", "LaTexExamples", "NavierStokes-Ricis.structural-exemplar.tex");
         var checksumPath = Path.Combine(projectRoot, "Knowledge", "LaTexExamples", "NavierStokes-Ricis.structural-exemplar.sha256");
@@ -295,6 +298,11 @@ internal static class RicisSemanticReportSuite
                 File.Exists(russianPath) &&
                 File.ReadAllText(russianPath).Contains("{{AppendixSections}}", StringComparison.Ordinal) &&
                 File.Exists(exemplarPath) &&
+                File.Exists(englishExemplarPath) &&
+                File.Exists(localeManifestPath) &&
+                multilingualLocales.All(locale =>
+                    File.Exists(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", $"latex.{locale}.template")) &&
+                    File.Exists(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", $"navier-stokes-ricis.{locale}.exemplar.json"))) &&
                 File.Exists(sourcePath) &&
                 File.Exists(checksumPath),
             "Semantic LaTeX template, recursive exemplar и immutable source knowledge должны быть доступны проекту.");

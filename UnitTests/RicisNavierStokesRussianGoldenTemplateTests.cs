@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Ricis.Core.Logging;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.UnitTests;
 
@@ -57,13 +58,151 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
         var english = source.Get("latex", "en-US");
 
         Assert.AreNotEqual(russian, english, "ru-RU и en-US должны быть независимыми external templates.");
-        StringAssert.Contains(russian, "Граница доказательств");
-        StringAssert.Contains(english, "Evidence boundary");
-        foreach (var placeholder in new[] { "{{Title}}", "{{Abstracts}}", "{{#each Sections}}", "{{AppendixSections}}", "{{TechnicalAppendix}}" })
+        foreach (var placeholder in new[] { "{{Title}}", "{{Abstracts}}", "{{#each Sections}}", "{{EvidenceBoundaryLabel}}", "{{SemanticStatusLabel}}", "{{AppendixSections}}", "{{TechnicalAppendix}}" })
         {
             StringAssert.Contains(russian, placeholder);
             StringAssert.Contains(english, placeholder);
         }
+    }
+
+    [TestMethod]
+    public void EnglishTemplate_EnglishSourceProjection_ContainsNoCyrillicCharacters()
+    {
+        var root = FindProjectRoot();
+        var templateDirectory = Path.Combine(root, "Logging", "Templates");
+        var model = new RicisLatexExemplarLoader().Load(
+            Path.Combine(templateDirectory, "navier-stokes-ricis.en-US.exemplar.json"));
+        var document = new RicisSemanticLatexTemplateRenderer().Render(
+            model,
+            new RicisFileReportTemplateSource(templateDirectory).Get("latex", "en-US"));
+
+        Assert.IsFalse(Regex.IsMatch(document, "[\\p{IsCyrillic}]"),
+            "English template and English source projection must not render Cyrillic text.");
+        StringAssert.Contains(document, "Global Smoothness of the 3D Navier-Stokes Equations");
+        StringAssert.Contains(document, "Evidence boundary");
+        StringAssert.Contains(document, "Theorem and proof");
+        StringAssert.Contains(document, "Appendix: RICIS glossary");
+    }
+
+    [TestMethod]
+    public void SemanticReportResources_ResolveAllCoverageLocalesAndFallbackToEnglish()
+    {
+        var expectedLabels = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["en-US"] = "Evidence boundary",
+            ["ru-RU"] = "Граница доказательств",
+            ["fr-CA"] = "Limite de la preuve",
+            ["de-DE"] = "Beweisgrenze",
+            ["hi-IN"] = "प्रमाण-सीमा",
+            ["ms-MY"] = "Sempadan bukti",
+        };
+
+        foreach (var (locale, expected) in expectedLabels)
+        {
+            var resources = new RicisSemanticReportResources(locale);
+            Assert.AreEqual(expected, resources.EvidenceBoundaryLabel, locale);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(resources.SemanticStatusLabel), locale);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(resources.TechnicalAppendixHeading), locale);
+        }
+
+        Assert.AreEqual("Evidence boundary", new RicisSemanticReportResources("unsupported-XY").EvidenceBoundaryLabel);
+    }
+
+    [TestMethod]
+    public void LatexPdfCompiler_TwoPassDocument_CreatesPdfAndKeepsCompilerEvidenceSeparate()
+    {
+        var outputDirectory = Path.Combine(Path.GetTempPath(), "ricis-latex-pdf-unit-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            const string latex = "\\documentclass{article}\\begin{document}RICIS PDF compiler unit test.\\end{document}";
+            var result = new RicisLatexPdfCompiler().CompileLatex(
+                "pdf-unit-test",
+                latex,
+                outputDirectory,
+                new RicisLatexPdfCompileOptions(PassCount: 2, TimeoutMillisecondsPerPass: 30_000, MaxEvidenceCharacters: 512));
+
+            Assert.IsTrue(File.Exists(result.PdfPath));
+            Assert.AreEqual(2, result.Evidence.PassCount);
+            CollectionAssert.AreEqual(new[] { 0, 0 }, result.Evidence.ExitCodes.ToArray());
+            Assert.AreEqual(2, result.Evidence.BoundedPassLogs.Count);
+            Assert.IsTrue(result.Evidence.BoundedPassLogs.All(log => log.Length <= 512));
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void CountryLocaleManifest_ResolvesConfirmedCoverageAndExposesAllDeclaredTemplates()
+    {
+        var root = FindProjectRoot();
+        var templateDirectory = Path.Combine(root, "Logging", "Templates");
+        var resolver = RicisReportLocaleResolver.Load(Path.Combine(templateDirectory, "ricis-country-locale-coverage.exemplar.json"));
+
+        Assert.AreEqual("en-US", resolver.Resolve("US").Locale);
+        Assert.AreEqual("fr-CA", resolver.Resolve("CA", "fr-CA").Locale);
+        Assert.AreEqual("en-US", resolver.Resolve("CA", "unsupported-XY").Locale);
+        Assert.AreEqual("de-DE", resolver.Resolve("DE").Locale);
+        Assert.AreEqual("hi-IN", resolver.Resolve("IN").Locale);
+        Assert.AreEqual("ms-MY", resolver.Resolve("MY").Locale);
+        Assert.AreEqual("en-US", resolver.Resolve("XX", "de-DE").Locale);
+
+        var source = new RicisFileReportTemplateSource(templateDirectory);
+        foreach (var locale in new[] { "en-US", "ru-RU", "fr-CA", "de-DE", "hi-IN", "ms-MY" })
+        {
+            StringAssert.Contains(source.Get("latex", locale), "% RICIS-LOCALE: " + locale);
+        }
+    }
+
+    [TestMethod]
+    public void ConfirmedLocaleExemplars_RenderThroughCultureSpecificResources()
+    {
+        var root = FindProjectRoot();
+        var templateDirectory = Path.Combine(root, "Logging", "Templates");
+        var source = new RicisFileReportTemplateSource(templateDirectory);
+        var renderer = new RicisSemanticLatexTemplateRenderer();
+        var expectedBoundaryLabels = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["en-US"] = "Evidence boundary",
+            ["fr-CA"] = "Limite de la preuve",
+            ["de-DE"] = "Beweisgrenze",
+            ["hi-IN"] = "प्रमाण-सीमा",
+            ["ms-MY"] = "Sempadan bukti",
+        };
+
+        foreach (var (locale, boundaryLabel) in expectedBoundaryLabels)
+        {
+            var model = new RicisLatexExemplarLoader().Load(
+                Path.Combine(templateDirectory, $"navier-stokes-ricis.{locale}.exemplar.json"));
+            var document = renderer.Render(model, source.Get("latex", locale));
+            StringAssert.Contains(document, boundaryLabel, locale);
+            StringAssert.Contains(document, "Deferred", locale);
+            Assert.IsFalse(document.Contains("before=", StringComparison.Ordinal), locale);
+            Assert.IsFalse(document.Contains("after=", StringComparison.Ordinal), locale);
+        }
+    }
+
+    [TestMethod]
+    public void SemanticLatexRenderer_PublicLabelsComeFromResourcesNotHardcodedSource()
+    {
+        var root = FindProjectRoot();
+        var rendererSource = File.ReadAllText(Path.Combine(root, "Logging", "RicisSemanticLatexReports.cs"));
+        foreach (var publicLabel in new[]
+                 {
+                     "Evidence boundary", "Граница доказательств", "Case & Condition & Resolution & Status",
+                     "Случай & Условие & Разрешение & Статус", "Technical appendix",
+                 })
+        {
+            Assert.IsFalse(rendererSource.Contains(publicLabel, StringComparison.Ordinal), publicLabel);
+        }
+
+        var resourcesSource = File.ReadAllText(Path.Combine(root, "Resources", "RicisSemanticReportStrings.resx"));
+        StringAssert.Contains(resourcesSource, "EvidenceBoundaryLabel");
+        StringAssert.Contains(resourcesSource, "TechnicalAppendixHeading");
     }
 
     private static IReadOnlyList<string> ExtractAcademicHeadings(string latex)
