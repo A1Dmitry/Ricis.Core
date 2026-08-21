@@ -139,6 +139,38 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
     }
 
     [TestMethod]
+    [TestCategory("ExternalDependency")]
+    public void LatexPdfCompiler_SystemPdflatex_WhenAvailable_CreatesPdfAndKeepsCompilerEvidenceSeparate()
+    {
+        if (!IsExecutableAvailable("pdflatex"))
+        {
+            Assert.Inconclusive("SKIPPED_EXTERNAL_DEPENDENCY: pdflatex is not available on PATH; hermetic compiler contracts remain covered.");
+        }
+
+        var outputDirectory = Path.Combine(Path.GetTempPath(), "ricis-latex-system-pdf-unit-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var result = new RicisLatexPdfCompiler().CompileLatex(
+                "system-pdf-unit-test",
+                "\\documentclass{article}\\begin{document}RICIS system PDF compiler integration test.\\end{document}",
+                outputDirectory,
+                new RicisLatexPdfCompileOptions(PassCount: 2, TimeoutMillisecondsPerPass: 30_000, MaxEvidenceCharacters: 512));
+
+            Assert.IsTrue(File.Exists(result.PdfPath));
+            Assert.AreEqual(2, result.Evidence.PassCount);
+            CollectionAssert.AreEqual(new[] { 0, 0 }, result.Evidence.ExitCodes.ToArray());
+            Assert.AreEqual(2, result.Evidence.BoundedPassLogs.Count);
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void LatexPdfCompiler_UnavailableEngine_ReturnsTypedExceptionWithBoundedTechnicalEvidence()
     {
         var outputDirectory = Path.Combine(Path.GetTempPath(), "ricis-latex-unavailable-unit-" + Guid.NewGuid().ToString("N"));
@@ -316,6 +348,21 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
 
     private static int CountToken(string value, string token) =>
         Regex.Matches(value, Regex.Escape(token)).Count;
+
+    private static bool IsExecutableAvailable(string executable)
+    {
+        if (string.IsNullOrWhiteSpace(executable))
+        {
+            return false;
+        }
+
+        var extensions = OperatingSystem.IsWindows()
+            ? new[] { string.Empty, ".exe", ".cmd", ".bat" }
+            : new[] { string.Empty };
+        var pathEntries = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return pathEntries.Any(directory => extensions.Any(extension => File.Exists(Path.Combine(directory, executable + extension))));
+    }
 
     private static string FindProjectRoot()
     {
