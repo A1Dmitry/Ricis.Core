@@ -115,13 +115,15 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
         try
         {
             const string latex = "\\documentclass{article}\\begin{document}RICIS PDF compiler unit test.\\end{document}";
-            var result = new RicisLatexPdfCompiler().CompileLatex(
+            var runner = new SuccessfulLatexProcessRunner();
+            var result = new RicisLatexPdfCompiler(processRunner: runner).CompileLatex(
                 "pdf-unit-test",
                 latex,
                 outputDirectory,
                 new RicisLatexPdfCompileOptions(PassCount: 2, TimeoutMillisecondsPerPass: 30_000, MaxEvidenceCharacters: 512));
 
             Assert.IsTrue(File.Exists(result.PdfPath));
+            Assert.AreEqual(2, runner.CallCount);
             Assert.AreEqual(2, result.Evidence.PassCount);
             CollectionAssert.AreEqual(new[] { 0, 0 }, result.Evidence.ExitCodes.ToArray());
             Assert.AreEqual(2, result.Evidence.BoundedPassLogs.Count);
@@ -133,6 +135,58 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
             {
                 Directory.Delete(outputDirectory, recursive: true);
             }
+        }
+    }
+
+    [TestMethod]
+    public void LatexPdfCompiler_UnavailableEngine_ReturnsTypedExceptionWithBoundedTechnicalEvidence()
+    {
+        var outputDirectory = Path.Combine(Path.GetTempPath(), "ricis-latex-unavailable-unit-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var exception = Assert.ThrowsException<RicisLatexPdfCompilerUnavailableException>(() =>
+                new RicisLatexPdfCompiler(processRunner: new UnavailableLatexProcessRunner()).CompileLatex(
+                    "unavailable-unit-test",
+                    "\\documentclass{article}\\begin{document}x\\end{document}",
+                    outputDirectory,
+                    new RicisLatexPdfCompileOptions(PassCount: 2, MaxEvidenceCharacters: 32)));
+
+            Assert.AreEqual("pdflatex", exception.Evidence.Engine);
+            Assert.AreEqual(1, exception.Evidence.PassCount);
+            CollectionAssert.AreEqual(new[] { -127 }, exception.Evidence.ExitCodes.ToArray());
+            CollectionAssert.AreEqual(new[] { "compiler-unavailable" }, exception.Evidence.BoundedPassLogs.ToArray());
+            Assert.IsFalse(exception.Message.Contains("\\documentclass", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void SystemRicisLatexProcessRunner_MissingExecutable_ReturnsControlledLaunchFailure()
+    {
+        var outputDirectory = Path.Combine(Path.GetTempPath(), "ricis-latex-runner-unit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(outputDirectory);
+        try
+        {
+            var result = new SystemRicisLatexProcessRunner().Run(
+                "pdflatex-unit-missing-executable",
+                Path.Combine(outputDirectory, "input.tex"),
+                outputDirectory,
+                1_000);
+
+            Assert.IsTrue(result.LaunchFailed);
+            Assert.AreEqual(-127, result.ExitCode);
+            Assert.IsFalse(result.TimedOut);
+            Assert.AreEqual("compiler-unavailable", result.StandardError);
+        }
+        finally
+        {
+            Directory.Delete(outputDirectory, recursive: true);
         }
     }
 
@@ -203,6 +257,24 @@ public sealed class RicisNavierStokesRussianGoldenTemplateTests
         var resourcesSource = File.ReadAllText(Path.Combine(root, "Resources", "RicisSemanticReportStrings.resx"));
         StringAssert.Contains(resourcesSource, "EvidenceBoundaryLabel");
         StringAssert.Contains(resourcesSource, "TechnicalAppendixHeading");
+    }
+
+    private sealed class SuccessfulLatexProcessRunner : IRicisLatexProcessRunner
+    {
+        public int CallCount { get; private set; }
+
+        public RicisLatexProcessResult Run(string engine, string latexPath, string outputDirectory, int timeoutMilliseconds)
+        {
+            CallCount++;
+            File.WriteAllBytes(Path.ChangeExtension(latexPath, ".pdf"), new byte[] { 0x25, 0x50, 0x44, 0x46 });
+            return new RicisLatexProcessResult(0, TimedOut: false, LaunchFailed: false, "pass-ok", string.Empty);
+        }
+    }
+
+    private sealed class UnavailableLatexProcessRunner : IRicisLatexProcessRunner
+    {
+        public RicisLatexProcessResult Run(string engine, string latexPath, string outputDirectory, int timeoutMilliseconds) =>
+            new(-127, TimedOut: false, LaunchFailed: true, string.Empty, "compiler-unavailable");
     }
 
     private static IReadOnlyList<string> ExtractAcademicHeadings(string latex)

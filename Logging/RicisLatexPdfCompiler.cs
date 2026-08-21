@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,6 +25,83 @@ public sealed record RicisLatexPdfCompileResult(
     string LatexPath,
     RicisLatexPdfCompilationEvidence Evidence);
 
+/// <summary>Process outcome used by the compiler adapter without exposing OS exceptions to report callers.</summary>
+public sealed record RicisLatexProcessResult(
+    int ExitCode,
+    bool TimedOut,
+    bool LaunchFailed,
+    string StandardOutput,
+    string StandardError);
+
+/// <summary>Injected boundary for a local LaTeX process runner.</summary>
+public interface IRicisLatexProcessRunner
+{
+    /// <summary>Runs one bounded compiler pass and returns controlled technical process evidence.</summary>
+    RicisLatexProcessResult Run(string engine, string latexPath, string outputDirectory, int timeoutMilliseconds);
+}
+
+/// <summary>Controlled technical failure returned when the configured compiler executable is unavailable.</summary>
+public sealed class RicisLatexPdfCompilerUnavailableException : InvalidOperationException
+{
+    /// <summary>Creates a controlled unavailable-engine failure with bounded technical evidence.</summary>
+    public RicisLatexPdfCompilerUnavailableException(string engine, RicisLatexPdfCompilationEvidence evidence)
+        : base($"LaTeX compiler '{engine}' is unavailable on this host.")
+    {
+        Evidence = evidence ?? throw new ArgumentNullException(nameof(evidence));
+    }
+
+    /// <summary>Bounded technical evidence. It remains separate from an academic semantic report.</summary>
+    public RicisLatexPdfCompilationEvidence Evidence { get; }
+}
+
+/// <summary>Default process adapter that converts executable-launch failures into a typed result.</summary>
+public sealed class SystemRicisLatexProcessRunner : IRicisLatexProcessRunner
+{
+    /// <inheritdoc />
+    public RicisLatexProcessResult Run(string engine, string latexPath, string outputDirectory, int timeoutMilliseconds)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = engine,
+                WorkingDirectory = outputDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            },
+        };
+        process.StartInfo.ArgumentList.Add("-interaction=nonstopmode");
+        process.StartInfo.ArgumentList.Add("-halt-on-error");
+        process.StartInfo.ArgumentList.Add(latexPath);
+
+        try
+        {
+            process.Start();
+        }
+        catch (Win32Exception)
+        {
+            return new RicisLatexProcessResult(-127, TimedOut: false, LaunchFailed: true, string.Empty, "compiler-unavailable");
+        }
+        catch (FileNotFoundException)
+        {
+            return new RicisLatexProcessResult(-127, TimedOut: false, LaunchFailed: true, string.Empty, "compiler-unavailable");
+        }
+
+        var standardOutput = process.StandardOutput.ReadToEnd();
+        var standardError = process.StandardError.ReadToEnd();
+        var timedOut = !process.WaitForExit(timeoutMilliseconds);
+        if (timedOut)
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+        }
+
+        return new RicisLatexProcessResult(timedOut ? -1 : process.ExitCode, timedOut, LaunchFailed: false, standardOutput, standardError);
+    }
+}
+
 /// <summary>
 /// Compiles an already rendered LaTeX document to PDF. The class does not inspect a Lean artifact,
 /// persist requester data, or merge compiler diagnostics into an academic report.
@@ -37,10 +115,16 @@ public sealed class RicisLatexPdfCompiler
     };
 
     private readonly RicisSemanticLatexTemplateRenderer _renderer;
+    private readonly IRicisLatexProcessRunner _processRunner;
 
-    /// <summary>Creates a compiler with an optional semantic LaTeX renderer for model-to-PDF convenience calls.</summary>
-    public RicisLatexPdfCompiler(RicisSemanticLatexTemplateRenderer renderer = null) =>
+    /// <summary>Creates a compiler with injectable semantic-rendering and process-running boundaries.</summary>
+    public RicisLatexPdfCompiler(
+        RicisSemanticLatexTemplateRenderer renderer = null,
+        IRicisLatexProcessRunner processRunner = null)
+    {
         _renderer = renderer ?? new RicisSemanticLatexTemplateRenderer();
+        _processRunner = processRunner ?? new SystemRicisLatexProcessRunner();
+    }
 
     /// <summary>Renders a semantic report through an external template and compiles the resulting LaTeX to PDF.</summary>
     public RicisLatexPdfCompileResult CompileSemanticReport(
@@ -54,7 +138,7 @@ public sealed class RicisLatexPdfCompiler
         return CompileLatex(model.DocumentId, _renderer.Render(model, template), outputDirectory, options ?? OptionsForTemplate(template));
     }
 
-    /// <summary>Writes caller-owned LaTeX source to the supplied output directory and executes the configured two-pass compiler.</summary>
+    /// <summary>Writes caller-owned LaTeX source to the supplied output directory and executes the configured compiler passes.</summary>
     public RicisLatexPdfCompileResult CompileLatex(
         string documentId,
         string latexSource,
@@ -84,9 +168,15 @@ public sealed class RicisLatexPdfCompiler
         var evidence = new List<string>();
         for (var pass = 0; pass < effective.PassCount; pass++)
         {
-            var result = RunCompiler(effective.Engine, latexPath, outputDirectory, effective.TimeoutMillisecondsPerPass);
+            var result = _processRunner.Run(effective.Engine, latexPath, outputDirectory, effective.TimeoutMillisecondsPerPass);
             exitCodes.Add(result.ExitCode);
-            evidence.Add(Bound(result.StandardOutput + Environment.NewLine + result.StandardError, effective.MaxEvidenceCharacters));
+            evidence.Add(Bound(string.Join(Environment.NewLine, new[] { result.StandardOutput, result.StandardError }.Where(value => !string.IsNullOrWhiteSpace(value))), effective.MaxEvidenceCharacters));
+            var compilationEvidence = new RicisLatexPdfCompilationEvidence(effective.Engine, pass + 1, exitCodes.AsReadOnly(), evidence.AsReadOnly());
+            if (result.LaunchFailed)
+            {
+                throw new RicisLatexPdfCompilerUnavailableException(effective.Engine, compilationEvidence);
+            }
+
             if (result.TimedOut)
             {
                 throw new TimeoutException($"LaTeX compiler '{effective.Engine}' timed out on pass {pass + 1}.");
@@ -107,41 +197,7 @@ public sealed class RicisLatexPdfCompiler
         return new RicisLatexPdfCompileResult(
             pdfPath,
             latexPath,
-            new RicisLatexPdfCompilationEvidence(effective.Engine, effective.PassCount, exitCodes, evidence));
-    }
-
-    private static (int ExitCode, bool TimedOut, string StandardOutput, string StandardError) RunCompiler(
-        string engine,
-        string latexPath,
-        string outputDirectory,
-        int timeoutMilliseconds)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = engine,
-                WorkingDirectory = outputDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            },
-        };
-        process.StartInfo.ArgumentList.Add("-interaction=nonstopmode");
-        process.StartInfo.ArgumentList.Add("-halt-on-error");
-        process.StartInfo.ArgumentList.Add(latexPath);
-        process.Start();
-        var standardOutput = process.StandardOutput.ReadToEnd();
-        var standardError = process.StandardError.ReadToEnd();
-        var timedOut = !process.WaitForExit(timeoutMilliseconds);
-        if (timedOut)
-        {
-            process.Kill(entireProcessTree: true);
-            process.WaitForExit();
-        }
-
-        return (timedOut ? -1 : process.ExitCode, timedOut, standardOutput, standardError);
+            new RicisLatexPdfCompilationEvidence(effective.Engine, effective.PassCount, exitCodes.AsReadOnly(), evidence.AsReadOnly()));
     }
 
     private static RicisLatexPdfCompileOptions OptionsForTemplate(string template)
