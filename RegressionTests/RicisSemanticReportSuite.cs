@@ -19,7 +19,7 @@ internal static class RicisSemanticReportSuite
         ("JSON03: JSON сохраняет порядок и unknown-event isolation", JsonPreservesOrderAndUnknownIsolation),
         ("JSON04: внешний schema asset соответствует versioned contract", ExternalJsonSchemaIsPublished),
         ("LATEX01: semantic LaTeX model исключает Trace по умолчанию", LatexModelExcludesTraceByDefault),
-        ("LATEX02: Navier–Stokes exemplar строит recursive model с честной claim boundary", NavierStokesExemplarIsRecursiveAndDeferred),
+        ("LATEX02: Navier–Stokes exemplar воспроизводит academic structure и честную claim boundary", NavierStokesExemplarIsRecursiveAndDeferred),
         ("LATEX03: external LaTeX template экранирует model и включает Trace только по explicit option", LatexTemplateEscapesAndGatesTechnicalAppendix),
         ("LATEX04: external semantic LaTeX template поставляется как asset", ExternalLatexTemplateIsPublished),
         ("AUTH01: trusted author selector добавляет public SEO profile без email", TrustedAuthorSeoProjectionDoesNotExposeEmail),
@@ -240,16 +240,20 @@ internal static class RicisSemanticReportSuite
         var path = Path.Combine(AppContext.BaseDirectory, "Logging", "Templates", "navier-stokes-ricis.exemplar.json");
         var model = new RicisLatexExemplarLoader().Load(path);
         var claim = model.Sections
-            .Single(section => section.SectionId == "ns-global-smoothness-claim")
+            .Single(section => section.SectionId == "ns-theorem-proof")
             .Claims
             .Single();
-        Require(model.Sections.Count == 4 &&
-                model.Sections.Single(section => section.SectionId == "ns-foundation").Children.Count == 2 &&
-                model.Sections.Single(section => section.SectionId == "ns-global-smoothness-claim").Children.Count == 2 &&
+        Require(model.IncludeTableOfContents &&
+                model.Abstracts.Count == 2 &&
+                model.Subtitle.Contains("версия без пределов", StringComparison.OrdinalIgnoreCase) &&
+                model.Sections.Count == 10 &&
+                model.Sections.Single(section => section.SectionId == "ns-direct-indexing").Children.Count == 4 &&
+                model.Sections.Single(section => section.SectionId == "ns-theorem-proof").ProofSteps.Count == 7 &&
+                model.Sections.Single(section => section.SectionId == "ns-glossary").Presentation == RicisLatexSectionPresentation.Appendix &&
                 claim.EvidenceStatus == "Deferred" &&
-                claim.EvidenceBoundary.Contains("no-typed-external-domain-bridge", StringComparison.Ordinal) &&
-                model.EvidenceBoundary.Contains("structural exemplar", StringComparison.OrdinalIgnoreCase),
-            "External Navier–Stokes exemplar должен быть recursive и не должен falsely promote external claim to KernelChecked.");
+                claim.EvidenceBoundary.Contains("kernel-checked typed theorem", StringComparison.Ordinal) &&
+                model.EvidenceBoundary.Contains("структуру предоставленного источника", StringComparison.OrdinalIgnoreCase),
+            "External Navier–Stokes exemplar должен воспроизводить академическую композицию источника и не должен falsely promote external claim to KernelChecked.");
     }
 
     private static void LatexTemplateEscapesAndGatesTechnicalAppendix()
@@ -309,7 +313,7 @@ internal static class RicisSemanticReportSuite
                 attribution.IsIncluded &&
                 attribution.DisplayName == "Дмитрий Алейников" &&
                 attribution.Orcid.Contains("orcid.org", StringComparison.Ordinal) &&
-                document.Contains("Author and SEO metadata", StringComparison.Ordinal) &&
+                document.Contains("Автор и SEO-метаданные", StringComparison.Ordinal) &&
                 document.Contains("Дмитрий Алейников", StringComparison.Ordinal) &&
                 !document.Contains("dima.aley@gmail.com", StringComparison.OrdinalIgnoreCase),
             "Trusted author selector должен использовать public AuthorSeoProfile, но никогда не выводить selector email.");
@@ -365,7 +369,7 @@ internal static class RicisSemanticReportSuite
             new RicisFileReportTemplateSource(Path.Combine(AppContext.BaseDirectory, "Logging", "Templates")).Get("latex", "en-US"));
         Require(attribution.Mode == RicisLatexAuthorAttributionMode.CallbackRequired &&
                 !attribution.IsIncluded &&
-                !document.Contains("Author and SEO metadata", StringComparison.Ordinal) &&
+                !document.Contains("Автор и SEO-метаданные", StringComparison.Ordinal) &&
                 !document.Contains(privateRequester, StringComparison.OrdinalIgnoreCase) &&
                 !document.Contains("CallbackRequired", StringComparison.Ordinal),
             "CallbackRequired должен не включать author block и не раскрывать requester identity или paid-user state в документе.");

@@ -44,6 +44,20 @@ public sealed record RicisLatexValidationRowViewModel(
     string Resolution,
     string EvidenceStatus);
 
+/// <summary>Presentation style for one semantic section in an academic LaTeX document.</summary>
+public enum RicisLatexSectionPresentation
+{
+    /// <summary>Numbered section selected from the recursive depth.</summary>
+    Numbered,
+    /// <summary>Unnumbered front-matter or closing section that remains listed in the table of contents.</summary>
+    Unnumbered,
+    /// <summary>Appendix section after the document's epilogue.</summary>
+    Appendix,
+}
+
+/// <summary>Immutable bilingual or multilingual abstract block.</summary>
+public sealed record RicisLatexAbstractViewModel(string Language, string Label, string Body);
+
 /// <summary>
 /// Recursive MVVM section. The model carries semantic presentation data only and
 /// deliberately excludes runtime visitors, ILog instances, raw journal entries and Trace snapshots.
@@ -61,7 +75,8 @@ public sealed record RicisLatexSectionViewModel
         IReadOnlyList<RicisLatexClaimViewModel> claims = null,
         IReadOnlyList<RicisLatexProofStepViewModel> proofSteps = null,
         IReadOnlyList<RicisLatexValidationRowViewModel> validationRows = null,
-        IReadOnlyList<RicisLatexSectionViewModel> children = null)
+        IReadOnlyList<RicisLatexSectionViewModel> children = null,
+        RicisLatexSectionPresentation presentation = RicisLatexSectionPresentation.Numbered)
     {
         SectionId = Require(sectionId, nameof(sectionId));
         Kind = kind;
@@ -73,6 +88,7 @@ public sealed record RicisLatexSectionViewModel
         ProofSteps = Copy(proofSteps);
         ValidationRows = Copy(validationRows);
         Children = Copy(children);
+        Presentation = presentation;
     }
 
     /// <summary>Stable recursive section identifier.</summary>
@@ -105,6 +121,9 @@ public sealed record RicisLatexSectionViewModel
     /// <summary>Recursive child sections.</summary>
     public IReadOnlyList<RicisLatexSectionViewModel> Children { get; }
 
+    /// <summary>Academic section presentation style.</summary>
+    public RicisLatexSectionPresentation Presentation { get; }
+
     private static string Require(string value, string parameterName) =>
         !string.IsNullOrWhiteSpace(value) ? value : throw new ArgumentException("A semantic LaTeX field is required.", parameterName);
 
@@ -127,7 +146,12 @@ public sealed record RicisLatexReportViewModel
         bool includeTechnicalAppendix,
         IReadOnlyList<RicisLatexSectionViewModel> sections,
         IReadOnlyList<string> technicalAppendixRows = null,
-        RicisLatexAuthorAttributionViewModel authorAttribution = null)
+        RicisLatexAuthorAttributionViewModel authorAttribution = null,
+        string subtitle = "",
+        IReadOnlyList<RicisLatexAbstractViewModel> abstracts = null,
+        string conclusion = "",
+        string epilogue = "",
+        bool includeTableOfContents = false)
     {
         DocumentId = Require(documentId, nameof(documentId));
         Title = Require(title, nameof(title));
@@ -137,6 +161,11 @@ public sealed record RicisLatexReportViewModel
         Sections = Array.AsReadOnly((sections ?? Array.Empty<RicisLatexSectionViewModel>()).ToArray());
         TechnicalAppendixRows = Array.AsReadOnly((technicalAppendixRows ?? Array.Empty<string>()).ToArray());
         AuthorAttribution = authorAttribution;
+        Subtitle = subtitle ?? string.Empty;
+        Abstracts = Array.AsReadOnly((abstracts ?? Array.Empty<RicisLatexAbstractViewModel>()).ToArray());
+        Conclusion = conclusion ?? string.Empty;
+        Epilogue = epilogue ?? string.Empty;
+        IncludeTableOfContents = includeTableOfContents;
     }
 
     /// <summary>Stable report identifier.</summary>
@@ -162,6 +191,21 @@ public sealed record RicisLatexReportViewModel
 
     /// <summary>Optional public author attribution; requester identity is deliberately absent.</summary>
     public RicisLatexAuthorAttributionViewModel AuthorAttribution { get; }
+
+    /// <summary>Optional academic subtitle rendered below the title.</summary>
+    public string Subtitle { get; }
+
+    /// <summary>Ordered bilingual or multilingual abstract blocks.</summary>
+    public IReadOnlyList<RicisLatexAbstractViewModel> Abstracts { get; }
+
+    /// <summary>Optional conclusion rendered before the epilogue.</summary>
+    public string Conclusion { get; }
+
+    /// <summary>Optional unnumbered epilogue rendered after the conclusion.</summary>
+    public string Epilogue { get; }
+
+    /// <summary>Whether the external template renders a table of contents.</summary>
+    public bool IncludeTableOfContents { get; }
 
     private static string Require(string value, string parameterName) =>
         !string.IsNullOrWhiteSpace(value) ? value : throw new ArgumentException("A semantic LaTeX field is required.", parameterName);
@@ -262,24 +306,20 @@ public sealed class RicisSemanticLatexTemplateRenderer
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentNullException.ThrowIfNull(template);
-        var sections = Flatten(model.Sections)
-            .Select(section => (IReadOnlyDictionary<string, string>)new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["Command"] = GetSectionCommand(section.Depth),
-                ["Heading"] = Escape(section.Section.Heading),
-                ["Body"] = EscapeParagraphs(section.Section.Body),
-                ["Equation"] = Escape(section.Section.Equation),
-                ["Status"] = Escape(section.Section.EvidenceStatus),
-                ["Claims"] = RenderClaims(section.Section.Claims),
-                ["ProofSteps"] = RenderProofSteps(section.Section.ProofSteps),
-                ["ValidationRows"] = RenderValidationRows(section.Section.ValidationRows),
-            }).ToArray();
+        var sections = BuildSectionRows(model.Sections);
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["DocumentId"] = Escape(model.DocumentId),
             ["Title"] = Escape(model.Title),
             ["StatusKey"] = Escape(model.StatusKey),
+            ["Subtitle"] = Escape(model.Subtitle),
+            ["Abstracts"] = RenderAbstracts(model.Abstracts),
+            ["TableOfContentsIncluded"] = model.IncludeTableOfContents ? "true" : "false",
             ["EvidenceBoundary"] = EscapeParagraphs(model.EvidenceBoundary),
+            ["ConclusionIncluded"] = string.IsNullOrWhiteSpace(model.Conclusion) ? "false" : "true",
+            ["Conclusion"] = EscapeParagraphs(model.Conclusion),
+            ["EpilogueIncluded"] = string.IsNullOrWhiteSpace(model.Epilogue) ? "false" : "true",
+            ["Epilogue"] = EscapeParagraphs(model.Epilogue),
             ["AuthorIncluded"] = model.AuthorAttribution?.IsIncluded == true ? "true" : "false",
             ["AuthorMode"] = Escape(model.AuthorAttribution?.Mode.ToString() ?? string.Empty),
             ["AuthorDisplayName"] = Escape(model.AuthorAttribution?.DisplayName ?? string.Empty),
@@ -291,6 +331,30 @@ public sealed class RicisSemanticLatexTemplateRenderer
             ["TechnicalAppendix"] = model.IncludeTechnicalAppendix ? RenderTechnicalAppendix(model.TechnicalAppendixRows) : string.Empty,
         };
         return _renderer.RenderText(template, values, sections, "Sections");
+    }
+
+    private static IReadOnlyList<IReadOnlyDictionary<string, string>> BuildSectionRows(IReadOnlyList<RicisLatexSectionViewModel> roots)
+    {
+        var flattened = Flatten(roots);
+        var rows = new List<IReadOnlyDictionary<string, string>>();
+        var appendixStarted = false;
+        foreach (var section in flattened)
+        {
+            var isFirstAppendix = section.Section.Presentation == RicisLatexSectionPresentation.Appendix && !appendixStarted;
+            appendixStarted |= section.Section.Presentation == RicisLatexSectionPresentation.Appendix;
+            rows.Add(new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["Opening"] = RenderSectionOpening(section.Section, section.Depth, isFirstAppendix),
+                ["Body"] = RenderSectionBody(section.Section),
+                ["Equation"] = RenderEquation(section.Section.Equation),
+                ["Status"] = Escape(section.Section.EvidenceStatus),
+                ["Claims"] = RenderClaims(section.Section.Claims),
+                ["ProofSteps"] = RenderProofSteps(section.Section.ProofSteps, section.Section.Kind == RicisLatexSectionKind.Claim),
+                ["ValidationRows"] = RenderValidationRows(section.Section.ValidationRows),
+            });
+        }
+
+        return rows;
     }
 
     private static IReadOnlyList<(RicisLatexSectionViewModel Section, int Depth)> Flatten(IReadOnlyList<RicisLatexSectionViewModel> roots)
@@ -321,17 +385,61 @@ public sealed class RicisSemanticLatexTemplateRenderer
         _ => "\\paragraph",
     };
 
+    private static string GetContentsLevel(int depth) => depth switch
+    {
+        0 => "section",
+        1 => "subsection",
+        2 => "subsubsection",
+        _ => "paragraph",
+    };
+
+    private static string RenderSectionOpening(RicisLatexSectionViewModel section, int depth, bool isFirstAppendix)
+    {
+        var command = GetSectionCommand(depth);
+        var heading = Escape(section.Heading);
+        return section.Presentation switch
+        {
+            RicisLatexSectionPresentation.Unnumbered =>
+                $"{command}*{{{heading}}}{Environment.NewLine}\\addcontentsline{{toc}}{{{GetContentsLevel(depth)}}}{{{heading}}}",
+            RicisLatexSectionPresentation.Appendix =>
+                $"{(isFirstAppendix ? "\\appendix" + Environment.NewLine : string.Empty)}{command}{{{heading}}}",
+            _ => $"{command}{{{heading}}}",
+        };
+    }
+
+    private static string RenderSectionBody(RicisLatexSectionViewModel section)
+    {
+        var body = EscapeParagraphs(section.Body);
+        return section.Kind switch
+        {
+            RicisLatexSectionKind.Definition => $"\\begin{{definition}}{body}\\end{{definition}}",
+            RicisLatexSectionKind.AxiomGroup => $"\\begin{{axiom}}{body}\\end{{axiom}}",
+            _ => body,
+        };
+    }
+
+    private static string RenderEquation(string equation) =>
+        string.IsNullOrWhiteSpace(equation)
+            ? string.Empty
+            : $"\\[{Environment.NewLine}\\texttt{{{Escape(equation)}}}{Environment.NewLine}\\]";
+
     private static string RenderClaims(IReadOnlyList<RicisLatexClaimViewModel> claims) =>
         string.Join(Environment.NewLine, claims.Select(claim =>
-            $"\\paragraph{{Claim {Escape(claim.ClaimId)} ({Escape(claim.EvidenceStatus)})}} {EscapeParagraphs(claim.Statement)}\\newline\\textit{{Boundary:}} {EscapeParagraphs(claim.EvidenceBoundary)}"));
+            $"\\begin{{theorem}}[{Escape(claim.ClaimId)} --- {Escape(claim.EvidenceStatus)}]{EscapeParagraphs(claim.Statement)}\\end{{theorem}}{Environment.NewLine}\\noindent\\textit{{Граница доказательств:}} {EscapeParagraphs(claim.EvidenceBoundary)}"));
 
-    private static string RenderProofSteps(IReadOnlyList<RicisLatexProofStepViewModel> steps) =>
+    private static string RenderProofSteps(IReadOnlyList<RicisLatexProofStepViewModel> steps, bool useProofEnvironment) =>
         steps.Count == 0
             ? string.Empty
-            : "\\begin{enumerate}" + Environment.NewLine +
+            : (useProofEnvironment ? "\\begin{proof}" : string.Empty) +
+              "\\begin{enumerate}" + Environment.NewLine +
               string.Join(Environment.NewLine, steps.Select(step =>
                   $"\\item \\textbf{{{Escape(step.RuleId)}}} [{Escape(step.Status)}] {Escape(step.Phase)}: {EscapeParagraphs(step.Statement)}")) +
-              Environment.NewLine + "\\end{enumerate}";
+              Environment.NewLine + "\\end{enumerate}" +
+              (useProofEnvironment ? "\\end{proof}" : string.Empty);
+
+    private static string RenderAbstracts(IReadOnlyList<RicisLatexAbstractViewModel> abstracts) =>
+        string.Join(Environment.NewLine, abstracts.Select(abstractBlock =>
+            $"\\begin{{center}}\\textbf{{{Escape(abstractBlock.Label)}}}\\end{{center}}{Environment.NewLine}{EscapeParagraphs(abstractBlock.Body)}{Environment.NewLine}"));
 
     private static string RenderValidationRows(IReadOnlyList<RicisLatexValidationRowViewModel> rows) =>
         rows.Count == 0

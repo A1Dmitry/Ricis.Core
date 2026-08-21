@@ -94,3 +94,24 @@ The single Navier–Stokes document is sufficient for the V1 general structure b
 [3]: `RICIS_TEMPLATE_BEST_PRACTICES_RESEARCH_2026-08-21.md` — external template, localization and sandbox requirements.  
 [4]: `RICIS_LEAN_SUBJECT_MATTER_BOUNDARY_2026-08-20.md` — external-domain proof boundary.  
 [5]: `Extensions/RicisNavierStokesProofExtensions.cs` — existing NS-01 through NS-07 symbolic identity proof decomposition.
+
+## Academic source-matching frame v2
+
+The initial semantic template was intentionally minimal. Version 2 preserves the same safe ViewModel boundary while reproducing the academic composition of the supplied Navier–Stokes source more closely.
+
+| Source-form component | Semantic MVVM representation | Rendering rule |
+|---|---|---|
+| Title and subtitle | `Title`, `Subtitle` | Academic title page; author field remains empty unless a public attribution is explicitly included. |
+| Bilingual abstract | `IReadOnlyList<RicisLatexAbstractViewModel>` | Ordered centered label and escaped body before the table of contents. |
+| Contents | `IncludeTableOfContents` | Template renders `\tableofcontents`; production PDF compilation must use two passes to refresh `.toc`. |
+| Front matter | `Unnumbered` section presentation | Section is included in TOC without a numeric counter. |
+| Definitions and protocols | `Definition` and `AxiomGroup` section kinds | Rendered through `definition` and `axiom` theorem environments. |
+| Theorem and proof | `Claim` plus ordered `ProofSteps` | Rendered through `theorem` and `proof` environments. Claim status and boundary remain visible. |
+| Nested derivation | Recursive `Children` | Rendered as `section/subsection/subsubsection` according to depth. |
+| Type verification | `ValidationRows` | Rendered as a bounded academic tabular block. |
+| Glossary / appendix | `Appendix` section presentation | First appendix node emits `\appendix`; it is numbered alphabetically. |
+| Closing | `Conclusion`, `Epilogue` | Unnumbered closing sections with TOC entries. |
+
+The source composition is a **presentation and recursive-structure exemplar**. It must not be treated as a kernel proof of the external Navier–Stokes smoothness assertion. Equation strings remain escaped textual projections until a separately reviewed typed mathematics renderer is introduced; raw LaTeX from a runtime log, user request, callback, or expression tree is never inserted into the external template.
+
+The external Navier–Stokes v2 exemplar is `Logging/Templates/navier-stokes-ricis.exemplar.json`. Its visual compiler evidence is generated under `artifacts/latex-source-form-validation/` and must remain ignored build evidence rather than a source of proof status.

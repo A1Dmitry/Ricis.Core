@@ -21,7 +21,12 @@ public sealed class RicisLatexExemplarLoader
             ReadRequiredString(root, "statusKey"),
             ReadRequiredString(root, "evidenceBoundary"),
             false,
-            ReadSections(ReadRequiredArray(root, "sections")));
+            ReadSections(ReadRequiredArray(root, "sections")),
+            subtitle: ReadOptionalString(root, "subtitle"),
+            abstracts: ReadAbstracts(ReadOptionalArray(root, "abstracts")),
+            conclusion: ReadOptionalString(root, "conclusion"),
+            epilogue: ReadOptionalString(root, "epilogue"),
+            includeTableOfContents: ReadOptionalBoolean(root, "includeTableOfContents"));
     }
 
     private static IReadOnlyList<RicisLatexSectionViewModel> ReadSections(JsonElement sections)
@@ -36,6 +41,14 @@ public sealed class RicisLatexExemplarLoader
                 throw new InvalidOperationException($"Unsupported semantic LaTeX section kind '{kindText}'.");
             }
 
+            var presentationText = ReadOptionalString(section, "presentation");
+            var presentation = RicisLatexSectionPresentation.Numbered;
+            if (!string.IsNullOrWhiteSpace(presentationText) &&
+                !Enum.TryParse(presentationText, ignoreCase: false, out presentation))
+            {
+                throw new InvalidOperationException($"Unsupported semantic LaTeX section presentation '{presentationText}'.");
+            }
+
             result.Add(new RicisLatexSectionViewModel(
                 ReadRequiredString(section, "sectionId"),
                 kind,
@@ -46,7 +59,23 @@ public sealed class RicisLatexExemplarLoader
                 ReadClaims(ReadOptionalArray(section, "claims")),
                 ReadProofSteps(ReadOptionalArray(section, "proofSteps")),
                 ReadValidationRows(ReadOptionalArray(section, "validationRows")),
-                ReadSections(ReadOptionalArray(section, "children"))));
+                ReadSections(ReadOptionalArray(section, "children")),
+                presentation));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<RicisLatexAbstractViewModel> ReadAbstracts(JsonElement abstracts)
+    {
+        var result = new List<RicisLatexAbstractViewModel>();
+        foreach (var abstractBlock in abstracts.EnumerateArray())
+        {
+            RequireObject(abstractBlock, "abstract");
+            result.Add(new RicisLatexAbstractViewModel(
+                ReadRequiredString(abstractBlock, "language"),
+                ReadRequiredString(abstractBlock, "label"),
+                ReadRequiredString(abstractBlock, "body")));
         }
 
         return result;
@@ -105,6 +134,9 @@ public sealed class RicisLatexExemplarLoader
 
         return result;
     }
+
+    private static bool ReadOptionalBoolean(JsonElement owner, string propertyName) =>
+        owner.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.True;
 
     private static JsonElement ReadRequiredArray(JsonElement owner, string propertyName)
     {

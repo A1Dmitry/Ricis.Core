@@ -1,67 +1,95 @@
 {
-  "documentId": "navier-stokes-ricis-structural-exemplar/v1",
-  "title": "RICIS Navier-Stokes proof — recursive structural exemplar",
+  "documentId": "navier-stokes-ricis-academic-structure/v2",
+  "title": "Глобальная гладкость уравнений Навье--Стокса в 3D",
+  "subtitle": "Доказательный документ в парадигме RICIS (версия без пределов)",
   "statusKey": "structural-exemplar-not-kernel-proof",
-  "evidenceBoundary": "The supplied Navier-Stokes source is a structural exemplar. Its external claim is Deferred until a typed theorem, hypotheses and semantic bridge are kernel-checked.",
+  "includeTableOfContents": true,
+  "evidenceBoundary": "Документ воспроизводит академическую структуру предоставленного источника. Утверждение о глобальной гладкости остаётся Deferred external-domain claim: оно не является KernelChecked без типизированной теоремы, явных гипотез и семантического bridge в Lean.",
+  "abstracts": [
+    {
+      "language": "ru-RU",
+      "label": "Аннотация",
+      "body": "Документ задаёт рекурсивную структуру доказательного отчёта для уравнений Навье--Стокса в парадигме RICIS. Классические сингулярные выражения представлены как индексированные структурные объекты, а шаги SP4 и A6 показаны как объявленные нормативные преобразования. Внешнее утверждение о глобальной гладкости не повышается данным шаблоном до kernel-verified статуса."
+    },
+    {
+      "language": "en-US",
+      "label": "Abstract",
+      "body": "This document provides a recursive proof-report structure for the Navier--Stokes source in the RICIS paradigm. Singular expressions are represented as indexed structural objects and SP4/A6 are recorded as declared normative transformations. The external global-smoothness claim is not promoted by this template to kernel-verified status."
+    }
+  ],
   "sections": [
+    {
+      "sectionId": "ns-introduction",
+      "kind": "Narrative",
+      "presentation": "Unnumbered",
+      "heading": "Введение: эпистемологический барьер классического анализа и необходимость смены парадигмы",
+      "body": "Исходный документ противопоставляет пределы прямой индексации сингулярных выражений и использует геометрическую интерпретацию монолитов разных порядков. В semantic report эта часть фиксируется как методологический контекст, а не как самостоятельное доказательство внешней теоремы.",
+      "evidenceStatus": "narrative-context"
+    },
+    {
+      "sectionId": "ns-limit-preamble",
+      "kind": "Narrative",
+      "heading": "Преамбула: запрет пределов",
+      "body": "Для данного RICIS-сценария пределы не используются. Вместо предельного перехода документ описывает прямую индексацию выражения в выбранной точке и последующее нормативное упрощение по SP2, SP4 и объявленным аксиомам.",
+      "equation": "classical limit at x=a -> direct indexed evaluation at x=a",
+      "evidenceStatus": "declared-method"
+    },
     {
       "sectionId": "ns-foundation",
       "kind": "Definition",
-      "heading": "foundations-and-protocols",
-      "body": "l0-l1-monoliths-and-safety-protocols",
-      "evidenceStatus": "declared",
-      "children": [
-        {
-          "sectionId": "ns-sp",
-          "kind": "AxiomGroup",
-          "heading": "sp1-sp4",
-          "body": "safety-protocols",
-          "evidenceStatus": "declared"
-        },
-        {
-          "sectionId": "ns-a",
-          "kind": "AxiomGroup",
-          "heading": "a1-a7-a10",
-          "body": "indexed-singularity-rules",
-          "evidenceStatus": "declared"
-        }
-      ]
+      "heading": "Абсолютный фундамент без пределов",
+      "body": "L0 описывает непрерывность как отсутствие разрыва идентичности между уровнями рекурсии. L1 фиксирует идентичность с сохранением типа. Для сингулярных форм сначала применяется алгебраическое сокращение, затем индексация выражения и только после этого нормативные правила RICIS.",
+      "evidenceStatus": "declared-foundation"
     },
     {
-      "sectionId": "ns-global-smoothness-claim",
-      "kind": "Claim",
-      "heading": "global-smoothness-claim",
-      "body": "external-domain-claim-requires-typed-semantic-bridge",
-      "evidenceStatus": "deferred-subject-matter",
-      "claims": [
-        {
-          "claimId": "NS-CLAIM",
-          "statement": "global-smoothness-of-3d-navier-stokes",
-          "evidenceStatus": "Deferred",
-          "evidenceBoundary": "no-typed-external-domain-bridge-or-kernel-theorem-is-attached"
-        }
-      ],
+      "sectionId": "ns-monolith-geometry",
+      "kind": "Definition",
+      "heading": "Геометрическое отступление I: прямая, плоскость и объём",
+      "body": "Точка, линия, плоскость и объём представлены как разнородные первичные монолиты T0, T1, T2 и T3. Интеграл рассматривается как операция внутри объёмного монолита, а не как доказанная здесь внешняя теория меры.",
+      "evidenceStatus": "declared-geometry"
+    },
+    {
+      "sectionId": "ns-safety-protocols",
+      "kind": "AxiomGroup",
+      "heading": "Протоколы безопасности",
+      "body": "SP1 ограничивает локальность преобразования. SP2 требует сократить идентичные члены до применения RICIS-аксиом. SP3 сохраняет отношение индексов, когда сокращение невозможно. SP4 индексирует исходное выражение, а не числовой остаток в точке.",
+      "evidenceStatus": "declared-protocol"
+    },
+    {
+      "sectionId": "ns-ricis-axioms",
+      "kind": "AxiomGroup",
+      "heading": "Аксиомы RICIS: индексированные нули и бесконечности",
+      "body": "A1--A7 и A10 задают объявленные правила индексированной бесконечности, типизированного нуля, отношений 0/0 и infinity/infinity, а также совместимого произведения 0_F times infinity_F. Эти правила являются нормативными предпосылками RICIS-сценария.",
+      "equation": "0_F times infinity_F = F only when the structural indices match",
+      "evidenceStatus": "declared-axioms"
+    },
+    {
+      "sectionId": "ns-direct-indexing",
+      "kind": "Derivation",
+      "heading": "Доказательство Навье--Стокса без пределов",
+      "body": "Раздел собирает локальные RICIS-деривации, используемые источником при описании потенциальной сингулярности. Каждая деривация остаётся объявленным преобразованием до появления отдельного typed semantic bridge.",
+      "evidenceStatus": "declared-ricis-derivation",
       "children": [
         {
           "sectionId": "ns-local-enstrophy",
           "kind": "Derivation",
-          "heading": "direct-indexing-and-local-enstrophy",
-          "body": "shared-index-reduction",
-          "equation": "0_S times infinity_S = S",
+          "heading": "Прямая индексация потенциального взрыва и локальная энстрофия",
+          "body": "В источнике локальный объём и энстрофия получают общий структурный индекс тензора деформации. Совместимое индексированное произведение затем сводится по A6. Данный шаг фиксирует требуемые входы и правило, но не доказывает внешнюю аналитическую регулярность.",
+          "equation": "E_local = 0_S times infinity_S = S",
           "evidenceStatus": "declared-ricis-transformation",
           "proofSteps": [
             {
               "number": 1,
               "ruleId": "SP4",
               "phase": "direct-indexing",
-              "statement": "volume-and-enstrophy-receive-a-shared-structural-index",
+              "statement": "объём и энстрофия получают общий структурный индекс из объявленного выражения деформации",
               "status": "declared"
             },
             {
               "number": 2,
               "ruleId": "A6",
               "phase": "local-enstrophy",
-              "statement": "matching-indexed-zero-and-infinity-reduce-to-the-index",
+              "statement": "совместимые индексированные нуль и бесконечность сводятся к общему индексу",
               "status": "declared"
             }
           ]
@@ -69,52 +97,133 @@
         {
           "sectionId": "ns-vorticity-dynamics",
           "kind": "Derivation",
-          "heading": "vorticity-dynamics",
-          "body": "typed-scale-decomposition",
-          "equation": "partial_t omega = finite-ricis-expression",
+          "heading": "Разрешение критического члена и динамика завихренности",
+          "body": "Источник описывает масштаб eta как структурный параметр и записывает конвективный и вязкий члены через индексированные формы. В отчёте это сохранено как typed decomposition, а не как доказанная оценка PDE.",
+          "equation": "partial_t omega = indexed convection plus indexed viscosity",
           "evidenceStatus": "declared-ricis-transformation",
           "proofSteps": [
             {
               "number": 3,
               "ruleId": "SP4",
               "phase": "scale-indexing",
-              "statement": "derive-indexed-vorticity-terms-without-limit-notation",
+              "statement": "производные получают индексы структурного масштаба без limit notation",
               "status": "declared"
             },
             {
               "number": 4,
               "ruleId": "A6",
               "phase": "typed-reduction",
-              "statement": "reduce-matching-indexed-scale-terms",
+              "statement": "совместимые индексированные масштабные члены сводятся только при явных предпосылках совместимости",
               "status": "declared"
             }
           ]
+        },
+        {
+          "sectionId": "ns-monolith-projection",
+          "kind": "Narrative",
+          "heading": "Геометрическое отступление II: проекция монолита",
+          "body": "Проекция объёмного монолита на точку в источнике интерпретируется как типизированный ноль, сохраняющий структурный индекс. Этот фрагмент остаётся геометрическим объяснением модели.",
+          "evidenceStatus": "narrative-explanation"
+        },
+        {
+          "sectionId": "ns-fractal-law",
+          "kind": "Definition",
+          "heading": "Иерархическое развертывание: фрактальный закон",
+          "body": "Рекурсивный оператор R разворачивает объект, его тип, индексированную бесконечность и типизированный ноль на последующих уровнях. В источнике он применяется к проекции, линии тока, вихревой поверхности и полному полю.",
+          "equation": "R(Q) = {Q, T(Q), infinity_Q, 0_Q, R(infinity_Q), R(0_Q)}",
+          "evidenceStatus": "declared-recursion"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-theorem-proof",
+      "kind": "Claim",
+      "heading": "Теорема и доказательство",
+      "body": "Внешняя предметная теорема приводится для сохранения формы исходного документа. Её статус честно остаётся Deferred, пока не будут добавлены типизированная формулировка, гипотезы, локальные леммы и semantic edge bridges.",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "Для гладких начальных условий конечной энергии и положительной вязкости решение 3D Навье--Стокса является глобально гладким.",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "Предоставленный источник и RICIS route model не содержат kernel-checked typed theorem, hypotheses и bridge к внешнему PDE-утверждению."
+        }
+      ],
+      "proofSteps": [
+        {
+          "number": 1,
+          "ruleId": "NS-01",
+          "phase": "contradiction-setup",
+          "statement": "документ предполагает точку потенциальной потери гладкости как исходную proof obligation",
+          "status": "declared"
+        },
+        {
+          "number": 2,
+          "ruleId": "NS-02",
+          "phase": "direct-indexing",
+          "statement": "локальный объём и энстрофия индексируются через объявленную структурную величину",
+          "status": "declared"
+        },
+        {
+          "number": 3,
+          "ruleId": "NS-03",
+          "phase": "local-enstrophy",
+          "statement": "A6 применяется только к совпадающим индексам в указанной локальной композиции",
+          "status": "declared"
+        },
+        {
+          "number": 4,
+          "ruleId": "NS-04",
+          "phase": "finiteness-obligation",
+          "statement": "конечность структурного тензора остаётся отдельной предметной обязанностью",
+          "status": "open-obligation"
+        },
+        {
+          "number": 5,
+          "ruleId": "NS-05",
+          "phase": "vorticity-dynamics",
+          "statement": "типизированное разложение критических членов записывается как RICIS derivation",
+          "status": "declared"
+        },
+        {
+          "number": 6,
+          "ruleId": "NS-06",
+          "phase": "global-bridge",
+          "statement": "переход от локальной RICIS-репрезентации к глобальной классической гладкости требует semantic bridge",
+          "status": "open-obligation"
+        },
+        {
+          "number": 7,
+          "ruleId": "NS-07",
+          "phase": "external-theorem-status",
+          "statement": "итоговый внешний claim не может быть повышен до KernelChecked данным документом",
+          "status": "Deferred"
         }
       ]
     },
     {
       "sectionId": "ns-type-verification",
       "kind": "Validation",
-      "heading": "type-consistency-verification",
-      "body": "homogeneous-compatible-and-incompatible-cases",
+      "heading": "Верификация через типовую согласованность",
+      "body": "Таблица сохраняет форму исходной проверки однородных, совместимых и несовместимых индексов. Она является структурным объяснением, а не независимой внешней теоремой.",
       "evidenceStatus": "structured-explanation",
       "validationRows": [
         {
-          "case": "homogeneous",
-          "condition": "T(F)=T(G)",
-          "resolution": "direct-indexed-operation",
+          "case": "Однородный",
+          "condition": "T(F) = T(G)",
+          "resolution": "прямая индексированная операция",
           "evidenceStatus": "declared"
         },
         {
-          "case": "compatible",
-          "condition": "T(F) is compatible with T(G)",
-          "resolution": "typed-lifting",
+          "case": "Совместимый",
+          "condition": "T(F) совместим с T(G)",
+          "resolution": "типизированное повышение или bridge",
           "evidenceStatus": "declared"
         },
         {
-          "case": "incompatible",
-          "condition": "T(F) is incompatible with T(G)",
-          "resolution": "composite-monolith-required",
+          "case": "Несовместимый",
+          "condition": "T(F) не совместим с T(G)",
+          "resolution": "требуется составной монолит или отдельная обязанность",
           "evidenceStatus": "declared"
         }
       ]
@@ -122,9 +231,12 @@
     {
       "sectionId": "ns-glossary",
       "kind": "Appendix",
-      "heading": "ricis-glossary",
-      "body": "indexed-infinity-indexed-zero-monolith-sp4-a6-and-recursive-expansion",
+      "presentation": "Appendix",
+      "heading": "Словарь RICIS-терминов",
+      "body": "Индексированная бесконечность хранит способ достижения. Типизированный ноль хранит структурную причину обнуления. Монолит n-го порядка является первичной структурной единицей. SP4 индексирует выражение, а A6 описывает совместимое схлопывание индексированных нуля и бесконечности.",
       "evidenceStatus": "reference"
     }
-  ]
+  ],
+  "conclusion": "Документ сохраняет доказательную форму исходного текста: фундамент, протоколы, аксиомы, локальные деривации, theorem/proof block, типовую верификацию и словарь. Его вывод ограничен тем, что семантическая структура и RICIS-нормативные шаги документированы; предметное внешнее утверждение остаётся Deferred до отдельной формализации.",
+  "epilogue": "RICIS-репрезентация исключает автоматическую потерю структурной информации в объявленном сценарии. Это не заменяет отдельного kernel-checked доказательства глобальной гладкости 3D Навье--Стокса."
 }

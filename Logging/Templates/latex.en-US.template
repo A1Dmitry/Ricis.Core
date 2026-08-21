@@ -1,41 +1,76 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 \usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsfonts}
 \usepackage{textcomp}
-\usepackage[margin=25mm]{geometry}
+\usepackage{geometry}
 \usepackage{array}
 \usepackage{longtable}
+\geometry{a4paper, margin=1in}
+
+\newtheorem{theorem}{Теорема}
+\newtheorem{lemma}{Лемма}
+\newtheorem{axiom}{Аксиома}
+\newtheorem{definition}{Определение}
+\newtheorem{corollary}{Следствие}
+\newtheorem{remark}{Замечание}
+
 \title{ {{Title}} }
+\author{ {{AuthorDisplayName}} }
 \date{}
+
 \begin{document}
 \maketitle
 
-\noindent\textbf{Document ID:} {{DocumentId}}\\
-\textbf{Status:} {{StatusKey}}
+\begin{center}
+\large {{Subtitle}}
+\end{center}
 
-\section*{Evidence boundary}
+{{Abstracts}}
+
+{{#if TableOfContentsIncluded}}
+\tableofcontents
+\vspace{1cm}
+{{/if}}
+
+\section*{Граница доказательств}
+\addcontentsline{toc}{section}{Граница доказательств}
 {{EvidenceBoundary}}
 
 {{#if AuthorIncluded}}
-\section*{Author and SEO metadata}
-\textbf{Name:} {{AuthorDisplayName}}\\
-\textbf{Alternate name:} {{AuthorAlternateName}}\\
+\section*{Автор и SEO-метаданные}
+\addcontentsline{toc}{section}{Автор и SEO-метаданные}
+\textbf{Имя:} {{AuthorDisplayName}}\\
+\textbf{Альтернативное имя:} {{AuthorAlternateName}}\\
 \textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
-\textbf{Description:} {{AuthorDescription}}\\
-\textbf{Keywords:} {{AuthorKeywords}}
+\textbf{Описание:} {{AuthorDescription}}\\
+\textbf{Ключевые слова:} {{AuthorKeywords}}
 {{AuthorWorks}}
 {{/if}}
 
 {{#each Sections}}
-{{this.Command}}*{ {{this.Heading}} }
-\textit{Status:} {{this.Status}}\\
+{{this.Opening}}
+\textit{Семантический статус:} {{this.Status}}\\
 {{this.Body}}
 {{this.Equation}}
 {{this.Claims}}
 {{this.ProofSteps}}
 {{this.ValidationRows}}
 {{/each}}
+
+{{#if ConclusionIncluded}}
+\section*{Заключение}
+\addcontentsline{toc}{section}{Заключение}
+{{Conclusion}}
+{{/if}}
+
+{{#if EpilogueIncluded}}
+\section*{Эпилог}
+\addcontentsline{toc}{section}{Эпилог}
+{{Epilogue}}
+{{/if}}
 
 {{TechnicalAppendix}}
 \end{document}
