@@ -9,7 +9,6 @@
 /RegressionTests/obj/Debug/net8.0
 /Ricis.Console/bin/Debug/net8.0
 /Ricis.Console/obj
-/Ricis.Finance
 /Ricis.NavierStokes.Console/bin/Debug/net8.0
 /Ricis.NavierStokes.Console/obj/Debug/net8.0
 /Ricis.Numerics/bin/Debug/net8.0
@@ -32,3 +31,14 @@
 /Ricis.Core.sln.DotSettings.user
 *.lutconfig
 /Ricis.Console/Properties/launchSettings.json
+/Ricis.Finance/Ricis.Finance.Application/bin/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.Application/obj
+/Ricis.Finance/Ricis.Finance.Bepaid/bin/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.Bepaid/obj/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.Bepaid/obj
+/Ricis.Finance/Ricis.Finance.Domain/bin/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.Domain/obj/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.Domain/obj
+/Ricis.Finance/Ricis.Finance.RegressionTests/bin/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.RegressionTests/obj/Debug/net8.0
+/Ricis.Finance/Ricis.Finance.RegressionTests/obj
