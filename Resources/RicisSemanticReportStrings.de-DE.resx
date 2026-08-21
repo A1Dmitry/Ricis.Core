@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>Status</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Technischer Anhang</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Nicht unterstützte Sprache der Semantic-LaTeX-Zusammenfassung: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>Die Vorlagenkollektion '{0}' ist für den Berichtvertrag '{1}' nicht zulässig.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Verwenden Sie nur durch den Berichtvertrag deklarierte Kollektionen oder ergänzen Sie nach Prüfung eine zugelassene Kollektion im Renderer des entsprechenden Modells.</value></data>
 </root>

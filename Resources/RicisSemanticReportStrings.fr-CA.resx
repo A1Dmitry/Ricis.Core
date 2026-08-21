@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>Statut</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Annexe technique</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Langue de résumé semantic LaTeX non prise en charge : '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>La collection de modèle '{0}' n’est pas autorisée par le contrat du rapport '{1}'.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Utilisez seulement les collections déclarées par le contrat du rapport, ou ajoutez une collection autorisée après revue au moteur de rendu du modèle correspondant.</value></data>
 </root>

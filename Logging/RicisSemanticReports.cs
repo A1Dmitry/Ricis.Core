@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Logging;
 
@@ -295,6 +296,51 @@ public sealed class RicisEmbeddedReportTemplateSource : IRicisReportTemplateSour
     }
 }
 
+/// <summary>Controlled template-contract rejection that exposes only allowlisted identifiers and resource-key remediation.</summary>
+public sealed class RicisTemplateContractException : InvalidOperationException
+{
+    /// <summary>Creates a safe rejection for a collection not declared by the selected report contract.</summary>
+    public RicisTemplateContractException(string templateKind, string unsupportedCollection, IEnumerable<string> allowedCollections)
+        : base("Template collection contract rejected.")
+    {
+        if (string.IsNullOrWhiteSpace(templateKind)) throw new ArgumentException("A template kind is required.", nameof(templateKind));
+        if (string.IsNullOrWhiteSpace(unsupportedCollection)) throw new ArgumentException("A collection name is required.", nameof(unsupportedCollection));
+        ArgumentNullException.ThrowIfNull(allowedCollections);
+        TemplateKind = templateKind;
+        UnsupportedCollection = unsupportedCollection;
+        AllowedCollections = allowedCollections.OrderBy(value => value, StringComparer.Ordinal).ToArray();
+    }
+
+    /// <summary>Stable report-contract kind that rejected the directive.</summary>
+    public string TemplateKind { get; }
+
+    /// <summary>Directive collection identifier; report data and Trace content are never included.</summary>
+    public string UnsupportedCollection { get; }
+
+    /// <summary>Immutable names of collections explicitly allowed by the selected renderer contract.</summary>
+    public IReadOnlyList<string> AllowedCollections { get; }
+
+    /// <summary>Stable resource key for the controlled public failure message.</summary>
+    public string MessageResourceKey => "TemplateCollectionContractFailure";
+
+    /// <summary>Stable resource key for the public remediation instruction.</summary>
+    public string RemediationResourceKey => "TemplateCollectionContractRemediation";
+
+    /// <summary>Formats the localized public failure message without including report content or Trace data.</summary>
+    public string GetPublicMessage(RicisSemanticReportResources resources)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+        return resources.TemplateCollectionContractFailure(UnsupportedCollection, TemplateKind);
+    }
+
+    /// <summary>Gets the localized public remediation instruction.</summary>
+    public string GetRemediation(RicisSemanticReportResources resources)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+        return resources.TemplateCollectionContractRemediation;
+    }
+}
+
 /// <summary>Small deterministic template engine for scalar values and typed list blocks.</summary>
 public sealed class RicisSafeReportTemplateRenderer
 {
@@ -302,12 +348,29 @@ public sealed class RicisSafeReportTemplateRenderer
     private static readonly Regex IfBlock = new("\\{\\{#if (?<name>[A-Za-z0-9_.]+)\\}\\}(?<body>.*?)\\{\\{/if\\}\\}", RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex Scalar = new("\\{\\{(?<name>[A-Za-z0-9_.]+)\\}\\}", RegexOptions.Compiled);
 
-    /// <summary>Renders a restricted template using scalar values and the allowlisted Rows collection.</summary>
+    /// <summary>Renders a restricted template using one explicitly named allowlisted collection.</summary>
     public string RenderText(string template, IReadOnlyDictionary<string, string> values, IReadOnlyList<IReadOnlyDictionary<string, string>> rows, string collectionName = "Rows")
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        return RenderTemplate(
+            template,
+            values,
+            new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, string>>>(StringComparer.Ordinal)
+            {
+                [collectionName] = rows,
+            },
+            "text");
+    }
+
+    private static string RenderTemplate(
+        string template,
+        IReadOnlyDictionary<string, string> values,
+        IReadOnlyDictionary<string, IReadOnlyList<IReadOnlyDictionary<string, string>>> collections,
+        string templateKind)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(values);
-        ArgumentNullException.ThrowIfNull(rows);
+        ArgumentNullException.ThrowIfNull(collections);
         var conditionallyRendered = IfBlock.Replace(template, match =>
         {
             var key = match.Groups["name"].Value;
@@ -317,18 +380,20 @@ public sealed class RicisSafeReportTemplateRenderer
         });
         var rendered = EachBlock.Replace(conditionallyRendered, match =>
         {
-            if (!string.Equals(match.Groups["name"].Value, collectionName, StringComparison.Ordinal))
+            if (!collections.TryGetValue(match.Groups["name"].Value, out var rows))
             {
-                throw new InvalidOperationException($"Unsupported template collection '{match.Groups["name"].Value}'.");
+                throw new RicisTemplateContractException(templateKind, match.Groups["name"].Value, collections.Keys);
             }
 
             var body = match.Groups["body"].Value;
             return string.Join(string.Empty, rows.Select(row => Scalar.Replace(body, scalar =>
             {
                 var key = scalar.Groups["name"].Value;
-                return key.StartsWith("this.", StringComparison.Ordinal) && row.TryGetValue(key[5..], out var value)
-                    ? value
-                    : scalar.Value;
+                return key == "this" && row.TryGetValue("this", out var scalarValue)
+                    ? scalarValue
+                    : key.StartsWith("this.", StringComparison.Ordinal) && row.TryGetValue(key[5..], out var propertyValue)
+                        ? propertyValue
+                        : scalar.Value;
             })));
         });
         return Scalar.Replace(rendered, match =>
@@ -383,8 +448,14 @@ public sealed class RicisSafeReportTemplateRenderer
             ["Status"] = model.Status,
             ["Conclusion"] = model.Conclusion,
         };
-        var limitationText = string.Join(string.Empty, limitations.Select(value => $"- {value["this"]}\n"));
-        var templateWithoutLimitations = template.Replace("{{#each Limitations}}- {{this}}\n{{/each}}", limitationText, StringComparison.Ordinal);
-        return RenderText(templateWithoutLimitations, values, steps, "Steps");
+        return RenderTemplate(
+            template,
+            values,
+            new Dictionary<string, IReadOnlyList<IReadOnlyDictionary<string, string>>>(StringComparer.Ordinal)
+            {
+                ["Steps"] = steps,
+                ["Limitations"] = limitations,
+            },
+            "academic");
     }
 }

@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>Статус</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Техническое приложение</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Неподдерживаемый язык аннотации semantic LaTeX: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>Коллекция шаблона '{0}' не разрешена контрактом отчёта '{1}'.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Используйте только коллекции, объявленные контрактом отчёта, либо добавьте проверенную разрешённую коллекцию в renderer соответствующей модели.</value></data>
 </root>

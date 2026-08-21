@@ -62,6 +62,13 @@ public sealed class RicisSemanticReportResources
     public string UnsupportedAbstractLanguage(string language) =>
         string.Format(Culture, GetRequired("UnsupportedAbstractLanguage"), language);
 
+    /// <summary>Formats a public template-contract message without including report content or trace data.</summary>
+    public string TemplateCollectionContractFailure(string collectionName, string templateKind) =>
+        string.Format(Culture, GetRequired("TemplateCollectionContractFailure"), collectionName, templateKind);
+
+    /// <summary>Gets the public remediation instruction for an unsupported template collection.</summary>
+    public string TemplateCollectionContractRemediation => GetRequired("TemplateCollectionContractRemediation");
+
     /// <summary>Extracts a declared locale from a template marker or falls back to English.</summary>
     public static string GetTemplateLocale(string template)
     {

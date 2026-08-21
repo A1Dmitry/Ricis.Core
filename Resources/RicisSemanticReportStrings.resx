@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>Status</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Technical appendix</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Unsupported semantic LaTeX abstract language '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>Template collection '{0}' is not permitted for the '{1}' report contract.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Use only collections declared by the report contract, or add a reviewed allowlisted collection to the corresponding model renderer.</value></data>
 </root>

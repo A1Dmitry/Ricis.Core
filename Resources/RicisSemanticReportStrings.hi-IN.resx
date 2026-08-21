@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>स्थिति</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>तकनीकी परिशिष्ट</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>असमर्थित semantic LaTeX सार-भाषा: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>टेम्पलेट संग्रह '{0}' '{1}' रिपोर्ट अनुबंध के लिए अनुमत नहीं है।</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>केवल रिपोर्ट अनुबंध में घोषित संग्रहों का उपयोग करें, या संबंधित मॉडल renderer में समीक्षा के बाद अनुमत संग्रह जोड़ें।</value></data>
 </root>

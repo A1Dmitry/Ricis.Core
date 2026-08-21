@@ -11,6 +11,8 @@ internal static class RicisSemanticReportSuite
         ("SEM01: classifier учитывает sender, severity и event metadata", ClassifierUsesSenderAndMetadata),
         ("SEM02: Text model сохраняет Trace, Academic model его исключает", TextAndAcademicHaveDifferentVisibility),
         ("SEM03: external templates строят Text и Academic artifacts", ExternalTemplatesRenderIndependentModels),
+        ("SEM03A: Academic template allowlists Steps и Limitations", AcademicTemplateRendersAllowlistedCollections),
+        ("SEM03B: unknown collection возвращает typed resource-key remediation", UnknownTemplateCollectionReturnsSafeRemediation),
         ("SEM04: exception сохраняет техническую причину только в Text model", ExceptionHasControlledVisibility),
         ("SEM05: null logger не меняет semantic computation", NullLoggerPreservesComputation),
         ("SEM06: unknown sender/event не проникает в Academic proof", UnknownEventsDoNotBecomeProof),
@@ -96,6 +98,57 @@ internal static class RicisSemanticReportSuite
                 !academic.Contains("x/x", StringComparison.Ordinal) &&
                 academic.Contains("Proof steps", StringComparison.Ordinal),
             "Внешние templates должны строить независимые Text/Academic artifacts и исключать Trace leakage.");
+    }
+
+    private static void AcademicTemplateRendersAllowlistedCollections()
+    {
+        var model = new RicisAcademicReportModel(
+            "Academic title",
+            "Requires evidence",
+            [new RicisAcademicStep(1, "Phase 1", "SP2", "Public semantic step.", "Static check passed")],
+            ["External premise remains outside the local report."],
+            "No Lean resolution is claimed.");
+        var rendered = new RicisSafeReportTemplateRenderer().RenderAcademicModel(
+            model,
+            "{{#each Steps}}{{this.Rule}}|{{/each}}{{#each Limitations}}{{this}}|{{/each}}");
+
+        Require(rendered == "SP2|External premise remains outside the local report.|",
+            "Academic renderer должен разрешать только typed Steps и Limitations collections без literal template substitution.");
+    }
+
+    private static void UnknownTemplateCollectionReturnsSafeRemediation()
+    {
+        var renderer = new RicisSafeReportTemplateRenderer();
+        RicisTemplateContractException exception;
+        try
+        {
+            renderer.RenderText(
+                "{{#each Unreviewed}}{{this.PrivateTrace}}{{/each}}",
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                Array.Empty<IReadOnlyDictionary<string, string>>());
+            throw new InvalidOperationException("Unknown template collection must be rejected.");
+        }
+        catch (RicisTemplateContractException caught)
+        {
+            exception = caught;
+        }
+
+        var direct = new RicisTemplateContractException("academic", "Unreviewed", ["Steps", "Limitations"]);
+        var resources = new Ricis.Core.Resources.RicisSemanticReportResources("en-US");
+        var message = exception.GetPublicMessage(resources);
+        var remediation = exception.GetRemediation(resources);
+        Require(exception.TemplateKind == "text" &&
+                exception.UnsupportedCollection == "Unreviewed" &&
+                exception.AllowedCollections.SequenceEqual(["Rows"]) &&
+                exception.MessageResourceKey == "TemplateCollectionContractFailure" &&
+                exception.RemediationResourceKey == "TemplateCollectionContractRemediation" &&
+                message.Contains("Unreviewed", StringComparison.Ordinal) &&
+                message.Contains("text", StringComparison.Ordinal) &&
+                !message.Contains("PrivateTrace", StringComparison.Ordinal) &&
+                !remediation.Contains("PrivateTrace", StringComparison.Ordinal) &&
+                direct.AllowedCollections.SequenceEqual(["Limitations", "Steps"]) &&
+                direct.GetPublicMessage(resources).Contains("academic", StringComparison.Ordinal),
+            "Unknown collection должен возвращать typed resource-key remediation без report/Trace payload и с закрытым allowlist contract.");
     }
 
     private static void ExceptionHasControlledVisibility()

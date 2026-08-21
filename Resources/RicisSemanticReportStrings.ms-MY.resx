@@ -15,4 +15,6 @@
   <data name="ValidationHeaderStatus" xml:space="preserve"><value>Status</value></data>
   <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Lampiran teknikal</value></data>
   <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Bahasa abstrak semantic LaTeX tidak disokong: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>Koleksi templat '{0}' tidak dibenarkan bagi kontrak laporan '{1}'.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Gunakan hanya koleksi yang diisytiharkan oleh kontrak laporan, atau tambahkan koleksi yang dibenarkan selepas semakan pada renderer model yang berkenaan.</value></data>
 </root>
