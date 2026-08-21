@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Ricis.Core.csproj" />
+    <ProjectReference Include="../Ricis.WebApi/Ricis.WebApi.csproj" />
   </ItemGroup>
 </Project>

@@ -58,6 +58,7 @@ public static class RicisRegressionTestCatalog
         tests.AddRange(RicisSumSuite.Tests);
         tests.AddRange(RicisProofOperationsSuite.Tests);
         tests.AddRange(RicisAcademicProofSuite.Tests);
+        tests.AddRange(ProofTransportSuite.Tests);
         tests.AddRange(RiemannHypothesisProofSuite.Tests);
         tests.AddRange(RicisNavierStokesProofSuite.Tests);
         tests.AddRange(RicisContinuousSugarSuite.Tests);

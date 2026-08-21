@@ -5,6 +5,8 @@ using Ricis.ConsoleApp;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
+using Ricis.Core.Proofs;
+using Ricis.WebApi.Proofs;
 
 const int MaxRequestBodyBytes = 64 * 1024;
 const int MaxExpressionLength = 4096;
@@ -43,6 +45,14 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+builder.Services.AddSingleton<IProofClock, SystemProofClock>();
+builder.Services.AddSingleton<IProofRunIdFactory, GuidProofRunIdFactory>();
+builder.Services.AddSingleton<IProofRunSnapshotStore, InMemoryProofRunSnapshotStore>();
+builder.Services.AddSingleton<IProofRunDeriver>(serviceProvider =>
+    new ExpressionEquivalenceProofRunDeriver(
+        ProofEndpointComposition.CreateExpressionEquivalenceProfile(
+            serviceProvider.GetRequiredService<IConfiguration>())));
+builder.Services.AddSingleton<ProofRunApplicationService>();
 
 var app = builder.Build();
 app.UseCors(WebAssemblyCorsPolicy);
@@ -111,6 +121,8 @@ app.MapPost("/api/expressions/system", (ExpressionRequest request) =>
         ("two curves", "x => (x + 1); x => (x - 1)"),
         ("coordinate system", "x => (x ^ 2); x => (2 * x)"),
         ("singular system", "x => (x / 0); x => (1 / x)")));
+
+app.MapProofEndpoints();
 
 app.Run();
 

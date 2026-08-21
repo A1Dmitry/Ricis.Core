@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Ricis.Core.csproj" />
+    <ProjectReference Include="../Ricis.WebApi/Ricis.WebApi.csproj" />
     <Compile Include="../RegressionTests/**/*.cs"
              Exclude="../RegressionTests/Program.cs;../RegressionTests/bin/**;../RegressionTests/obj/**"
              Link="RegressionTests/%(RecursiveDir)%(Filename)%(Extension)" />
