@@ -29,7 +29,9 @@ public sealed class UniversityComplexRationalReduceTests
         var source = Expression.Lambda<Func<double, double>>(
             Expression.Divide(
                 Expression.Multiply(
-                    Expression.Multiply(twoXMinusThree, xPlusTwo),
+                    Expression.Multiply(
+                        Expression.Multiply(twoXMinusThree, xPlusTwo),
+                        xPlusOne),
                     xPlusOne),
                 Expression.Multiply(
                     Expression.Multiply(
@@ -38,15 +40,28 @@ public sealed class UniversityComplexRationalReduceTests
                     xPlusTwo)),
             x);
 
+        // Expectation 1 — classical algebra: after cancelling common factors,
+        // the rational function is (2x−3)(x+1)/((x−1)(x−2)).
+        var classicalExpected = Expression.Lambda<Func<double, double>>(
+            Expression.Divide(
+                Expression.Multiply(twoXMinusThree, xPlusOne),
+                Expression.Multiply(xMinusOne, xMinusTwo)),
+            x);
+        var sourceValue = source.Compile()(3d);
+        var classicalValue = classicalExpected.Compile()(3d);
+        Assert.AreEqual(classicalValue, sourceValue, 1e-12,
+            "Classical expectation must match the original expression at a valid point.");
+
         var reduced = RicisPhasePipeline.Simplify(source);
 
-        // RICIS preserves the two excluded denominator keys instead of silently
-        // erasing them after cancellation: ∞_{−1} at x=1 and ∞_{1} at x=2.
+        // Expectation 2 — RICIS: preserve the two excluded denominator keys
+        // instead of silently erasing them after cancellation: ∞_{−2} at x=1
+        // and ∞_{3} at x=2.
         var keyed = reduced.Body as KeyedInfinityExpression;
         Assert.IsNotNull(keyed, $"Expected keyed RICIS poles, got: {reduced}");
         Assert.AreEqual(2, keyed!.Branches.Count);
         CollectionAssert.AreEquivalent(
-            new[] { -1d, 1d },
+            new[] { -2d, 3d },
             keyed.Branches.Select(branch => (double)((ConstantExpression)branch.Numerator).Value!).ToArray());
         CollectionAssert.AreEquivalent(
             new[] { 1d, 2d },
