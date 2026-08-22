@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Ricis.Core.Expressions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Execution;
 
@@ -26,7 +27,7 @@ public static class StrictExpressionExecutor
     {
         if (denominator == 0.0)
         {
-            throw new DivideByZeroException("Reference expression contains a zero denominator.");
+            throw new DivideByZeroException(RicisRuntimeResources.StrictZeroDenominator);
         }
 
         return denominator;
@@ -47,7 +48,7 @@ public static class StrictExpressionExecutor
             }
 
             throw new InvalidOperationException(
-                $"Нельзя строго скомпилировать нерешённый RICIS-узел {node.GetType().Name}. Сначала примените нормативный pipeline.");
+                RicisRuntimeResources.UnresolvedRicisNode(node.GetType().Name));
         }
 
         protected override Expression VisitBinary(BinaryExpression node)

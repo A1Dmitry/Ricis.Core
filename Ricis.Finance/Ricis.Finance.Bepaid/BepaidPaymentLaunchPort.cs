@@ -287,11 +287,11 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
         try
         {
             using var document = JsonDocument.Parse(json);
-            return document.RootElement.TryGetProperty("message", out var message) ? message.GetString() ?? "Неизвестная ошибка." : "Неизвестная ошибка.";
+            return document.RootElement.TryGetProperty("message", out var message) ? message.GetString() ?? BepaidRuntimeResources.UnknownProviderError : BepaidRuntimeResources.UnknownProviderError;
         }
         catch (JsonException)
         {
-            return "Неизвестная ошибка.";
+            return BepaidRuntimeResources.UnknownProviderError;
         }
     }
 

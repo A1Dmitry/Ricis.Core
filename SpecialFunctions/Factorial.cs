@@ -1,4 +1,5 @@
 using System.Numerics;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.SpecialFunctions;
 
@@ -19,7 +20,7 @@ public static class Factorial
         if (value < BigInteger.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(value),
-                "Факториал определён только для неотрицательных целых чисел.");
+                RicisRuntimeResources.FactorialNegative);
         }
 
         var result = BigInteger.One;
