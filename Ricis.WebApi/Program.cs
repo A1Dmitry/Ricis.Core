@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Ricis.ConsoleApp;
+using Ricis.Core.CachedSolutions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
@@ -53,7 +54,8 @@ builder.Services.AddSingleton<IProofRunDeriver>(serviceProvider =>
         ProofEndpointComposition.CreateExpressionEquivalenceProfile(
             serviceProvider.GetRequiredService<IConfiguration>())));
 builder.Services.AddSingleton<ProofRunApplicationService>();
-
+// Startup seed: confirmed CachedSolutions are available to the 3D map from the first request.
+builder.Services.AddSingleton(_ => DefaultCachedSolutions.CreateIndex());
 var app = builder.Build();
 app.UseCors(WebAssemblyCorsPolicy);
 
@@ -77,6 +79,14 @@ app.MapGet("/health", () => Results.Ok(new
     .WithTags("Diagnostics")
     .WithOpenApi();
 
+app.MapGet("/api/cached-solutions/map-bubbles", (CachedSolutionIndex index) =>
+    Results.Ok(new CachedSolutionMapResponse(
+        "RICIS III confirmed cached solutions",
+        index.ConfirmedBubbles)))
+    .WithName("GetConfirmedCachedSolutionBubbles")
+    .WithTags("Cached solutions", "3D map")
+    .Produces<CachedSolutionMapResponse>(StatusCodes.Status200OK)
+    .WithOpenApi();
 app.MapPost("/api/expressions/simplify", (ExpressionRequest request) =>
     ProcessSingleExpression(request, "simplify"))
     .WithName("SimplifyExpression")
@@ -264,6 +274,11 @@ static bool TryValidateExpression(ExpressionRequest? request, out string? error)
 /// </summary>
 /// <param name="Expression">Restricted expression text accepted by <c>LambdaTextParser</c>.</param>
 public sealed record ExpressionRequest(string Expression);
+
+/// <summary>Startup-seeded confirmed solution bubbles for the RICIS III 3D map.</summary>
+public sealed record CachedSolutionMapResponse(
+    string Map,
+    IReadOnlyList<CachedSolutionBubble> Bubbles);
 
 /// <summary>
 /// Result returned after parsing and applying a RICIS operation.
