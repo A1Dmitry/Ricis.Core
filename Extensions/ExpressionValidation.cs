@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -12,7 +13,7 @@ internal static class ExpressionValidation
         ArgumentException.ThrowIfNullOrEmpty(operation);
         if (expression.Parameters.Count != 1)
         {
-            throw new ArgumentException($"{operation} требует лямбду ровно с одним параметром.");
+            throw new ArgumentException(RicisLegacyTextResources.Format("report.legacy.a107681b1ec6", ("operation", operation)));
         }
     }
 }
