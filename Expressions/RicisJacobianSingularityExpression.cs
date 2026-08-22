@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Phases;
 using Ricis.Core.Extensions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -34,17 +35,17 @@ public sealed class RicisJacobianSingularityExpression<T>
         ArgumentNullException.ThrowIfNull(determinant);
         ArgumentNullException.ThrowIfNull(inversePayload);
         if (determinant.ReturnType != typeof(T))
-            throw new ArgumentException("Determinant должен возвращать тип T.", nameof(determinant));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.1e391942acf8"), nameof(determinant));
 
         var copied = inversePayload.ToArray();
         if (copied.Length == 0)
-            throw new ArgumentException("Формальный inverse payload обязан иметь хотя бы одну компоненту.", nameof(inversePayload));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.f6f1fd5f08b6"), nameof(inversePayload));
         if (copied.Any(entry => entry.ReturnType != typeof(T) || entry.Parameters.Count != determinant.Parameters.Count))
-            throw new ArgumentException("Все inverse payload элементы должны иметь тип T и сигнатуру determinant.", nameof(inversePayload));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.8410a274e121"), nameof(inversePayload));
         for (var i = 0; i < determinant.Parameters.Count; i++)
         {
             if (copied.Any(entry => entry.Parameters[i].Type != determinant.Parameters[i].Type))
-                throw new ArgumentException("Все payload элементы должны иметь одинаковые типы параметров.", nameof(inversePayload));
+                throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.df196dd67cd0"), nameof(inversePayload));
         }
 
         Determinant = determinant;
@@ -89,7 +90,7 @@ public sealed class RicisJacobianSingularityExpression<T>
             var indexedZero = new ZeroInfinityExpression(determinantBody, Roots.ToList());
             var indexedInfinity = InfinityExpression.CreateLazy(payloadBody, Roots.ToList());
             var bridged = RicisPhasePipeline.Simplify(Expression.Multiply(indexedZero, indexedInfinity))
-                ?? throw new InvalidOperationException("A6 geometric bridge не построил payload.");
+                ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.e44b38ec6055"));
             result.Add(Expression.Lambda(bridged, parameters));
         }
 
@@ -109,7 +110,7 @@ public sealed class RicisJacobianSingularityExpression<T>
 
     private static Expression Rebind(LambdaExpression source, IReadOnlyList<ParameterExpression> target) =>
         new ParameterRebindVisitor(source.Parameters, target).Visit(source.Body)
-        ?? throw new InvalidOperationException("Не удалось переназначить Jacobian singularity expression.");
+        ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.65763e4c3003"));
 
     private static ParameterExpression[] CreateParameters(IReadOnlyList<ParameterExpression> source) =>
         source.Select(parameter => Expression.Parameter(parameter.Type, parameter.Name ?? "x")).ToArray();
