@@ -1,3 +1,5 @@
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Proofs;
 
 /// <summary>
@@ -107,7 +109,7 @@ public sealed class RicisLeanStructuredData
             !(char.IsLetter(value[0]) || value[0] == '_') ||
             value.Any(character => !(char.IsLetterOrDigit(character) || character == '_' || character == '\'')))
         {
-            throw new ArgumentException("Значение должно быть безопасным Lean identifier.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.cc2a4af5f1c7"), parameterName);
         }
 
         return value;
@@ -143,7 +145,7 @@ public sealed class RicisLeanRequestedRows
         var requested = rows.ToHashSet();
         if (requested.Any(row => !Enum.IsDefined(row)))
         {
-            throw new ArgumentException("Набор содержит неизвестную Lean proof row.", nameof(rows));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.f666fc8ba3fb"), nameof(rows));
         }
 
         if (requested.Contains(RicisLeanProofRow.Id06ReflectedExactHalf))
@@ -198,7 +200,7 @@ public sealed class RicisLeanDoc
     public RicisLeanDoc(string source, RicisLeanRequestedRows rows)
     {
         Source = string.IsNullOrWhiteSpace(source)
-            ? throw new ArgumentException("Lean source не может быть пустым.", nameof(source))
+            ? throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.eebd92100b92"), nameof(source))
             : source;
         Rows = rows ?? throw new ArgumentNullException(nameof(rows));
     }
