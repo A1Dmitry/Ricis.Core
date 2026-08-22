@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Ricis.WebAssembly.Models;
+using Ricis.Core.Resources;
 
 namespace Ricis.WebAssembly.Services;
 
@@ -45,12 +46,12 @@ public sealed class RicisApiClient
     {
         if (string.IsNullOrWhiteSpace(expression))
         {
-            throw new RicisApiException("Введите lambda-выражение или систему выражений.");
+            throw new RicisApiException(RicisLegacyTextResources.Get("runtime.legacy.4a8f65d19e0b"));
         }
 
         if (expression.Length > MaxExpressionLength)
         {
-            throw new RicisApiException($"Выражение превышает лимит {MaxExpressionLength} символов.");
+            throw new RicisApiException(RicisLegacyTextResources.Format("runtime.legacy.b49f0276d249", ("MaxExpressionLength", MaxExpressionLength)));
         }
 
         var route = operation switch
@@ -75,7 +76,7 @@ public sealed class RicisApiClient
         if (operation == RicisOperation.System)
         {
             var system = await response.Content.ReadFromJsonAsync<RicisExpressionSystemResponse>(JsonOptions, cancellationToken)
-                ?? throw new RicisApiException("Web API вернул пустой ответ для системы выражений.");
+                ?? throw new RicisApiException(RicisLegacyTextResources.Get("runtime.legacy.10e02187ffaa"));
 
             return new RicisWorkspaceResult(
                 operation,
@@ -86,7 +87,7 @@ public sealed class RicisApiClient
         }
 
         var single = await response.Content.ReadFromJsonAsync<RicisExpressionResponse>(JsonOptions, cancellationToken)
-            ?? throw new RicisApiException("Web API вернул пустой ответ для выражения.");
+            ?? throw new RicisApiException(RicisLegacyTextResources.Get("runtime.legacy.5d435ca6cf22"));
 
         return new RicisWorkspaceResult(
             operation,
@@ -104,7 +105,7 @@ public sealed class RicisApiClient
             if (!string.IsNullOrWhiteSpace(error?.Error))
             {
                 return error.Position is int position
-                    ? $"{error.Error} Позиция: {position}."
+                    ? RicisLegacyTextResources.Format("runtime.legacy.6ae6ce8d4f89", ("error.Error", error.Error), ("position", position))
                     : error.Error;
             }
         }
