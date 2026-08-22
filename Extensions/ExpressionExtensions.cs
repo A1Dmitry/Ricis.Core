@@ -1,5 +1,6 @@
 ﻿using Ricis.Core.Expressions;
 using Ricis.Core.Simplifiers;
+using Ricis.Core.Resources;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -34,7 +35,7 @@ public static class ExpressionExtensions
         if (expr.Type != typeof(T) || param.Type != typeof(T))
         {
             throw new ArgumentException(
-                $"Выражение и параметр должны иметь один тип {typeof(T).FullName}.");
+                RicisLegacyTextResources.Format("report.legacy.986f2fab61ab", ("typeof(T).FullName", typeof(T).FullName)));
         }
 
         return Expression.Lambda<Func<T, T>>(expr, param);
