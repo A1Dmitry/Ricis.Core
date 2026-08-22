@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -26,23 +28,23 @@ public static class RicisIntegralExtensions
         ArgumentNullException.ThrowIfNull(other);
         if (function.Parameters.Count != 1 || other.Parameters.Count != 1)
         {
-            throw new ArgumentException("Sum требует две лямбды ровно с одним параметром.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.6b478c3c5d23"));
         }
 
         NumericConstants.Register<T>();
         var left = RicisPhasePipeline.Simplify(function) as Expression<Func<T, T>>
-            ?? throw new InvalidOperationException("RICIS-конвейер не сохранил лямбду первого слагаемого.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.f428e8a726f3"));
         var right = RicisPhasePipeline.Simplify(other) as Expression<Func<T, T>>
-            ?? throw new InvalidOperationException("RICIS-конвейер не сохранил лямбду второго слагаемого.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.d7e8951c331d"));
         var reboundRight = new ParameterRebindVisitor(right.Parameters[0], left.Parameters[0]).Visit(right.Body)
-            ?? throw new InvalidOperationException("Не удалось связать параметр второго слагаемого.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.e33617d4ce58"));
 
         var raw = Expression.Lambda<Func<T, T>>(
             Expression.Add(left.Body, reboundRight),
             left.Parameters[0]);
         var transformed = RicisPhasePipeline.Simplify(raw);
         return transformed as Expression<Func<T, T>>
-            ?? throw new InvalidOperationException("RICIS-конвейер не сохранил лямбду суммы.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.96664848bdcd"));
     }
 
     /// <summary>
@@ -74,12 +76,12 @@ public static class RicisIntegralExtensions
 
         if (function.Parameters.Count != 1 || width.Parameters.Count != 1)
         {
-            throw new ArgumentException("Integral требует две лямбды ровно с одним параметром.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.64a8d95a4a2d"));
         }
 
         var commonParameter = function.Parameters[0];
         var reboundWidth = new ParameterRebindVisitor(width.Parameters[0], commonParameter).Visit(width.Body)
-            ?? throw new InvalidOperationException("Не удалось связать параметр ширины диапазона.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.3e658e1d7e8e"));
 
         return BuildIntegral(function, reboundWidth);
     }
@@ -91,13 +93,13 @@ public static class RicisIntegralExtensions
     {
         if (function.Parameters.Count != 1)
         {
-            throw new ArgumentException("Integral требует лямбду F ровно с одним параметром.", nameof(function));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.135159f302e4"), nameof(function));
         }
 
         if (width.Type != typeof(T))
         {
             throw new ArgumentException(
-                $"Ширина диапазона должна иметь тип {typeof(T).FullName}.", nameof(width));
+                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.defac919f5a8"), typeof(T).FullName), nameof(width));
         }
 
         NumericConstants.Register<T>();
@@ -106,8 +108,9 @@ public static class RicisIntegralExtensions
         // This preserves the established L1 -> SP2 priority contract.
         var normalized = RicisPhasePipeline.Simplify(function) as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                "при нормализации F для Integral.");
+                string.Concat(
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee"), typeof(T).Name),
+                    RicisLegacyTextResources.Get("report.legacy.31e8a935d63d")));
 
         // A6 geometry, written directly as its normative derived tree:
         //   0_F * infinity_L -> F * L.
@@ -120,8 +123,9 @@ public static class RicisIntegralExtensions
 
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                "для геометрического Integral.");
+                string.Concat(
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee"), typeof(T).Name),
+                    RicisLegacyTextResources.Get("report.legacy.a5cccbc72b15")));
     }
 
     private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
