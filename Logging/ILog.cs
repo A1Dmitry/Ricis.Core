@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Logging;
 
 /// <summary>
@@ -42,12 +44,12 @@ public sealed class RicisLogEntry
     {
         if (sequence < 1)
         {
-            throw new ArgumentOutOfRangeException(nameof(sequence), sequence, "Последовательность событий должна быть положительной.");
+            throw new ArgumentOutOfRangeException(nameof(sequence), sequence, RicisLegacyTextResources.Get("report.legacy.d3a1f03c37fb"));
         }
 
         if (!Enum.IsDefined(severity))
         {
-            throw new ArgumentOutOfRangeException(nameof(severity), severity, "Неизвестная severity журнала.");
+            throw new ArgumentOutOfRangeException(nameof(severity), severity, RicisLegacyTextResources.Get("report.legacy.4522e124d389"));
         }
 
         Sequence = sequence;
@@ -116,7 +118,7 @@ public sealed class RicisLogEntry
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("Текстовый элемент proof-лога не может быть пустым.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.530ab4301b38"), parameterName);
         }
 
         return value;
