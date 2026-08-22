@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -27,7 +29,7 @@ public static class RicisProofExtensions
                 normalizedOuter.Parameters[0],
                 normalizedInner.Body)
             .Visit(normalizedOuter.Body)
-            ?? throw new InvalidOperationException("Не удалось подставить тело внутренней функции в Compose.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.94e178ae8592"));
 
         return Normalize(Expression.Lambda<Func<T, T>>(body, normalizedInner.Parameters[0]), "Compose");
     }
@@ -121,8 +123,9 @@ public static class RicisProofExtensions
         var transformed = RicisPhasePipeline.Simplify(expression);
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                $"для операции {operation}.");
+                string.Concat(
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee"), typeof(T).Name),
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.faeacf87abee"), operation)));
     }
 
 
@@ -132,7 +135,7 @@ public static class RicisProofExtensions
         string operation)
         where T : INumber<T> =>
         new ParameterSubstitutionVisitor(expression.Parameters[0], target).Visit(expression.Body)
-        ?? throw new InvalidOperationException($"Не удалось связать параметр правого операнда {operation}.");
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.55ffc59d4281"), operation));
 
     private sealed class ParameterSubstitutionVisitor : ParameterRebindingVisitorBase
     {
