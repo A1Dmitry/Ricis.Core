@@ -169,7 +169,7 @@ public static class RicisAcademicProofExtensions
         RicisCheckedProofResult<T> result)
         where T : INumber<T>
     {
-        proof.AppendLine("## Проверочное выражение");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.dbbc5e77313d"));
         proof.AppendLine($"- Derived: `{result.Derived}`");
         proof.AppendLine($"- Expected: `{result.Expected}`");
         proof.AppendLine($"- Verification: `{result.Verification}`");
@@ -272,7 +272,7 @@ public static class RicisAcademicProofExtensions
         var requestedFormats = formats.Distinct().ToArray();
         if (requestedFormats.Length == 0)
         {
-            throw new ArgumentException("Нужен хотя бы один формат proof-document export.", nameof(formats));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.3d8cd36cf181"), nameof(formats));
         }
 
         foreach (var format in requestedFormats)
@@ -288,7 +288,7 @@ public static class RicisAcademicProofExtensions
             derivationResult.Constraints);
         log.Info(
             "RICIS_PROOF_VERIFICATION",
-            "Structural verification lambda сформирована без исполнения условий или тезиса.",
+            RicisLegacyTextResources.Get("report.legacy.ccfa1fe2b221"),
             new Dictionary<string, string>
             {
                 ["verification"] = result.Verification.ToString(),
