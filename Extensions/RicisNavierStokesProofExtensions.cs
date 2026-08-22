@@ -105,8 +105,8 @@ public static class RicisNavierStokesProofExtensions
     private static void AppendStep(StringBuilder proof, string ruleId, string title, string basis, string after)
     {
         proof.AppendLine($"### {ruleId}: {title}");
-        proof.AppendLine($"**Нормативное основание:** {basis}");
-        proof.AppendLine($"**После:** `{after}`.");
+        proof.AppendLine(RicisLegacyTextResources.Format("report.legacy.e8a7f81caef8", ("basis", basis)));
+        proof.AppendLine(RicisLegacyTextResources.Format("report.legacy.013d765ca193", ("after", after)));
     }
 
     private static string FormatField(RicisVectorField3 field) =>
