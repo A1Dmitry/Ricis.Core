@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -37,7 +38,7 @@ public sealed class RicisVectorExpressionVisitor<T>
     {
         ArgumentNullException.ThrowIfNull(vector);
         if (vector.ParameterCount != vector.Dimension)
-            throw new ArgumentException("Identity-вектор требует одинаковую размерность и число параметров.", nameof(vector));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.8f4fadc3ac1b"), nameof(vector));
 
         var parameters = CreateParameters(vector[0].Parameters);
         return new RicisVectorExpression<T>(parameters.Select(parameter =>
@@ -79,14 +80,14 @@ public sealed class RicisVectorExpressionVisitor<T>
             if (reduced.AreEqual(phased))
             {
                 return reduced as LambdaExpression
-                    ?? throw new InvalidOperationException("RICIS visitor должен сохранить тип координатной lambda.");
+                    ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.b0fb0238ea83"));
             }
 
             current = reduced;
         }
 
         return RicisPhasePipeline.Simplify(current) as LambdaExpression
-            ?? throw new InvalidOperationException("RICIS visitor не сохранил координатную lambda после итераций.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.f494b5f0fa4e"));
     }
 
     private static ParameterExpression[] CreateParameters(IReadOnlyList<ParameterExpression> source) =>
@@ -97,11 +98,11 @@ public sealed class RicisVectorExpressionVisitor<T>
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
         if (left.Dimension != right.Dimension || left.ParameterCount != right.ParameterCount)
-            throw new ArgumentException("Размерности векторных identity должны совпадать.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.a1fc52a0ce73"));
         for (var i = 0; i < left.ParameterCount; i++)
         {
             if (left[0].Parameters[i].Type != right[0].Parameters[i].Type)
-                throw new ArgumentException("Типы параметров векторных identity должны совпадать.");
+                throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.c48b0b41e034"));
         }
     }
 }
