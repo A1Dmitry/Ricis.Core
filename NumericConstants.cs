@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Ricis.Core.Resources;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -119,7 +120,7 @@ public static class NumericConstants
         return Registered.TryGetValue(type, out var info)
             ? info
             : throw new NotSupportedException(
-                $"Тип {type.FullName} не зарегистрирован как INumber<{type.Name}>. " +
-                "Вызовите NumericConstants.Register<T>() или используйте generic API конечного исполнения.");
+                RicisLegacyTextResources.Format("runtime.legacy.a1fda29896f1", ("type.FullName", type.FullName), ("type.Name", type.Name)) +
+                RicisLegacyTextResources.Get("runtime.legacy.1de16102d47f"));
     }
 }
