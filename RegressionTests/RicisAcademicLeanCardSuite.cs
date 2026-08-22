@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Ricis.Core.Metadata;
 using Ricis.Core.Proofs;
 
@@ -27,26 +28,45 @@ public static class RicisAcademicLeanCardSuite
 
     private static void CardGraphIsAuthorOriented()
     {
-        var path = Path.Combine(ProjectRoot(), "FormalVerification", "Lean", "Artifacts", "academic", "RicisIII_AcademicAuthorExpansion.lean");
-        var source = File.ReadAllText(path);
+        var projectRoot = ProjectRoot();
+        var path = Path.Combine(projectRoot, "FormalVerification", "Lean", "Artifacts", "academic", "RicisIII_AcademicAuthorExpansion.lean");
+        TraceArtifact("ACL02", projectRoot, path);
+        var exists = File.Exists(path);
+        Console.WriteLine($"[ACL-TRACE] ACL02 fileExists={exists}");
+        var source = exists ? File.ReadAllText(path) : string.Empty;
         var authorIndex = source.IndexOf("AUTHOR-SEO", StringComparison.Ordinal);
         var centralIndex = source.IndexOf("RICIS-III\n", StringComparison.Ordinal);
-        Require(authorIndex >= 0 && centralIndex > authorIndex &&
-                source.Contains("AUTHOR-SEO → RICIS-III-PUBLICATION", StringComparison.Ordinal) &&
-                source.Contains("RICIS-CONCRETE-ROOT-TO-LEAF → RICIS-III", StringComparison.Ordinal),
+        var authorPublicationLink = source.Contains("AUTHOR-SEO → RICIS-III-PUBLICATION", StringComparison.Ordinal);
+        var rootCentralLink = source.Contains("RICIS-CONCRETE-ROOT-TO-LEAF → RICIS-III", StringComparison.Ordinal);
+        Console.WriteLine($"[ACL-TRACE] ACL02 authorIndex={authorIndex} centralIndex={centralIndex} authorPublicationLink={authorPublicationLink} rootCentralLink={rootCentralLink}");
+        Require(exists && authorIndex >= 0 && centralIndex > authorIndex && authorPublicationLink && rootCentralLink,
             "Academic card должен разворачиваться от автора по provenance links до central RICIS III node.");
     }
 
     private static void LeanArtifactUsesCheckedStack()
     {
-        var path = Path.Combine(ProjectRoot(), "FormalVerification", "Lean", "Artifacts", "academic", "RicisIII_AcademicAuthorExpansion.lean");
-        var source = File.ReadAllText(path);
-        Require(source.Contains("RicisIdentity.id06_exact_half", StringComparison.Ordinal) &&
-                source.Contains("author_card_reaches_ricis_iii", StringComparison.Ordinal) &&
-                source.Contains("academic_target_from_proof_stack", StringComparison.Ordinal) &&
-                !source.Contains("sorry", StringComparison.OrdinalIgnoreCase) &&
-                !source.Contains("admit", StringComparison.OrdinalIgnoreCase),
+        var projectRoot = ProjectRoot();
+        var path = Path.Combine(projectRoot, "FormalVerification", "Lean", "Artifacts", "academic", "RicisIII_AcademicAuthorExpansion.lean");
+        TraceArtifact("ACL03", projectRoot, path);
+        var exists = File.Exists(path);
+        var source = exists ? File.ReadAllText(path) : string.Empty;
+        var id06 = source.Contains("RicisIdentity.id06_exact_half", StringComparison.Ordinal);
+        var graphTheorem = source.Contains("author_card_reaches_ricis_iii", StringComparison.Ordinal);
+        var targetTheorem = source.Contains("academic_target_from_proof_stack", StringComparison.Ordinal);
+        var hasSorry = source.Contains("sorry", StringComparison.OrdinalIgnoreCase);
+        var hasAdmit = source.Contains("admit", StringComparison.OrdinalIgnoreCase);
+        Console.WriteLine($"[ACL-TRACE] ACL03 fileExists={exists} id06={id06} graphTheorem={graphTheorem} targetTheorem={targetTheorem} hasSorry={hasSorry} hasAdmit={hasAdmit}");
+        Require(exists && id06 && graphTheorem && targetTheorem && !hasSorry && !hasAdmit,
             "Academic Lean artifact должен использовать checked ID-01–ID-06 stack без sorry/admit.");
+    }
+
+    private static void TraceArtifact(string scenario, string projectRoot, string path)
+    {
+        var exists = File.Exists(path);
+        var bytes = exists ? File.ReadAllBytes(path) : Array.Empty<byte>();
+        var hash = Convert.ToHexString(SHA256.HashData(bytes));
+        Console.WriteLine($"[ACL-TRACE] scenario={scenario} projectRoot={projectRoot}");
+        Console.WriteLine($"[ACL-TRACE] path={path} exists={exists} bytes={bytes.Length} sha256={hash}");
     }
 
     private static string ProjectRoot()
