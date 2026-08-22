@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 /// <summary>
 /// Collects independently simplified indexed-infinity terms for consumers that
@@ -32,7 +33,7 @@ public class RicisEngine
             infinity is ZeroInfinityExpression)
         {
             throw new ArgumentException(
-                "RicisEngine.Add принимает только лямбду, производное RICIS которой является индексированной бесконечностью ∞_F.",
+                RicisLegacyTextResources.Get("runtime.legacy.18cb55e845c4"),
                 nameof(expr));
         }
 
