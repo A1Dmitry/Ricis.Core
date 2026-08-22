@@ -1164,10 +1164,10 @@ public static class RicisAcademicProofExtensions
         }
 
         proof.AppendLine();
-        proof.AppendLine("## Ограничения области");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.c2d567cd98f3"));
         AppendBinaryHypotheses(proof, constraints);
         proof.AppendLine();
-        proof.AppendLine("## Тезис");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.86bbede19942"));
         proof.Append("Доказуемое следствие: `").Append(claim).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine("## Символическое исключение");
@@ -1197,7 +1197,7 @@ public static class RicisAcademicProofExtensions
         proof.Append("До: `").Append(substituted).AppendLine("`.");
         proof.Append("После: `").Append(yResult).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("## Заключение");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.bbf4ba2e6ad8"));
         proof.Append("Следовательно, система выводит ").Append(xName).Append('=').Append(solutionXExpression)
             .Append(" и ").Append(yName).Append('=').Append(solutionYExpression)
             .Append("; требуемая координата ").Append(coordinate == 0 ? xName : yName)
@@ -1266,14 +1266,14 @@ public static class RicisAcademicProofExtensions
         {
             if (hypothesis is null)
             {
-                throw new ArgumentException("Список гипотез не может содержать null.", parameterName);
+                throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.8547868348ec"), parameterName);
             }
 
             if (hypothesis.Parameters.Count != 1 || hypothesis.Parameters[0].Type != typeof(T) ||
                 hypothesis.ReturnType != typeof(bool))
             {
                 throw new ArgumentException(
-                    $"Каждая гипотеза {parameterName} должна быть лямбдой Func<{typeof(T).Name}, Boolean> с одним параметром.",
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.590e8b782833"), parameterName, typeof(T).Name),
                     parameterName);
             }
         }
@@ -1285,7 +1285,7 @@ public static class RicisAcademicProofExtensions
         if (claim.Parameters.Count != 1 || claim.Parameters[0].Type != typeof(T) || claim.ReturnType != typeof(T))
         {
             throw new ArgumentException(
-                $"Тезис должен быть лямбдой Func<{typeof(T).Name}, {typeof(T).Name}> с одним параметром.",
+                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.6bbbd1303a70"), typeof(T).Name),
                 nameof(claim));
         }
     }
@@ -1304,38 +1304,38 @@ public static class RicisAcademicProofExtensions
             proof.AppendLine();
         }
 
-        proof.AppendLine("# Формальный вывод RICIS III");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.58180e513657"));
         proof.AppendLine();
-        proof.AppendLine("## Предпосылки");
-        AppendHypotheses(proof, "Условие", conditions);
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.3f105799f77e"));
+        AppendHypotheses(proof, RicisLegacyTextResources.Get("report.legacy.1d10d9c55d5c"), conditions);
         proof.AppendLine();
-        proof.AppendLine("## Ограничения области");
-        AppendHypotheses(proof, "Ограничение", constraints);
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.c2d567cd98f3"));
+        AppendHypotheses(proof, RicisLegacyTextResources.Get("report.legacy.69108a6a41e1"), constraints);
         proof.AppendLine();
-        proof.AppendLine("## Тезис");
-        proof.Append("Доказуемое отложенное выражение: `").Append(claim).AppendLine("`.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.86bbede19942"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.cfd73644651c")).Append(claim).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("## Нормативный вывод");
-        proof.AppendLine("Ни одна предпосылка не исполнялась численно. Ниже записан полный порядок нормативных фаз, включая пропущенные и структурно неизменённые попытки. Для каждой попытки фиксируются все маршруты от посещённого узла к корню expression tree.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.18a125f8065c"));
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.013809e31b03"));
         proof.AppendLine();
 
         if (trace.Count == 0)
         {
-            proof.AppendLine("Pipeline не предоставил phase trace; node-to-root маршрут для этой proof-ветви отсутствует.");
+            proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.a9ee3d52d88b"));
             proof.AppendLine();
         }
 
         for (var index = 0; index < trace.Count; index++)
         {
             var step = trace[index];
-            proof.Append("### Шаг ").Append(index + 1).Append(": ").AppendLine(step.PhaseName);
-            proof.Append("**Нормативное основание:** ").AppendLine(step.RuleFamily + ".");
-            AppendNodeToRootRoutes(proof, "До фазы", step.BeforeNodeToRoot);
-            AppendNodeToRootRoutes(proof, "После фазы", step.AfterNodeToRoot);
+            proof.Append(RicisLegacyTextResources.Get("report.legacy.d2635f2fd366")).Append(index + 1).Append(": ").AppendLine(step.PhaseName);
+            proof.Append(RicisLegacyTextResources.Get("report.legacy.33192345bb99")).AppendLine(step.RuleFamily + ".");
+            AppendNodeToRootRoutes(proof, RicisLegacyTextResources.Get("report.legacy.49a973eea1d4"), step.BeforeNodeToRoot);
+            AppendNodeToRootRoutes(proof, RicisLegacyTextResources.Get("report.legacy.3cb90a6bb85f"), step.AfterNodeToRoot);
 
             if (step.WasSkipped)
             {
-                proof.AppendLine("**Статус:** фаза пропущена по документированному precondition; expression tree не изменялось.");
+                proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.141f5490f383"));
                 proof.AppendLine();
                 continue;
             }
@@ -1343,39 +1343,39 @@ public static class RicisAcademicProofExtensions
             var intermediateSteps = BuildIntermediateSteps(step);
             if (intermediateSteps.Count == 0)
             {
-                proof.Append("До: `").Append(step.Before).AppendLine("`.");
-                proof.Append("После: `").Append(step.After).AppendLine("`.");
+                proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(step.Before).AppendLine("`.");
+                proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(step.After).AppendLine("`.");
                 if (!step.Changed)
                 {
-                    proof.AppendLine("**Статус:** фаза выполнена, но структурно не изменила expression tree.");
+                    proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.3debb20fe486"));
                 }
             }
             else
             {
-                proof.AppendLine("**Промежуточное выведение:**");
+                proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.693b883781ad"));
                 for (var detailIndex = 0; detailIndex < intermediateSteps.Count; detailIndex++)
                 {
                     var detail = intermediateSteps[detailIndex];
-                    proof.Append("#### Шаг ")
+                    proof.Append(RicisLegacyTextResources.Get("report.legacy.8a44c047d185"))
                         .Append(index + 1)
                         .Append('.')
                         .Append(detailIndex + 1)
                         .Append(": ")
                         .AppendLine(detail.Title);
-                    proof.Append("**Основание:** ").AppendLine(detail.Rule + ".");
-                    proof.Append("До: `").Append(FormatAsLambda(step.Before, detail.Before)).AppendLine("`.");
-                    proof.Append("После: `").Append(FormatAsLambda(step.Before, detail.After)).AppendLine("`.");
+                    proof.Append(RicisLegacyTextResources.Get("report.legacy.5101234f6e4d")).AppendLine(detail.Rule + ".");
+                    proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(FormatAsLambda(step.Before, detail.Before)).AppendLine("`.");
+                    proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(FormatAsLambda(step.Before, detail.After)).AppendLine("`.");
                 }
             }
 
             proof.AppendLine();
         }
 
-        proof.AppendLine("## Заключение");
-        proof.Append("Следовательно, в рамках перечисленных формальных условий и ограничений производное RICIS-выражение имеет вид: `")
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.bbf4ba2e6ad8"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.2f4a3d1b6922"))
             .Append(derived)
             .AppendLine("`.");
-        proof.AppendLine("Протокол фиксирует символическое выведение и не утверждает истинность внешних предпосылок вне переданных expression tree.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.d341d259b277"));
     }
 
     private static void AppendTypedProofLog(
@@ -1383,10 +1383,10 @@ public static class RicisAcademicProofExtensions
         IReadOnlyList<RicisLogEntry> entries)
     {
         proof.AppendLine();
-        proof.AppendLine("## Типизированный лог visitor и handler этапов");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.15a9b901b551"));
         if (entries.Count == 0)
         {
-            proof.AppendLine("Инъецированный лог не зафиксировал событий.");
+            proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.006f60e6911d"));
             return;
         }
 
