@@ -20,7 +20,7 @@
   <data name="report.legacy.0878e35a8b03" xml:space="preserve"><value>## Символическое исключение</value></data>
   <data name="report.legacy.09800ce17554" xml:space="preserve"><value>{sigmaName} и {mirrorSigmaName} — координаты формальной отражённой пары.</value></data>
   <data name="report.legacy.09c48dc28a14" xml:space="preserve"><value>После: `&quot;).Append(FormatAsLambda(step.Before, detail.After)).AppendLine(&quot;`.</value></data>
-  <data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{typeof(T).Name}&gt; не может точно представить процентную дробь r/100 для данной отложенной ставки. </value></data>
+  <data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{0}&gt; не может точно представить процентную дробь r/100 для данной отложенной ставки. </value></data>
   <data name="report.legacy.0d2d51e692b7" xml:space="preserve"><value>NS-03&quot;, &quot;стационарность&quot;, &quot;Компонентная ∂t-операция над полем скорости.</value></data>
   <data name="report.legacy.0f11e9888280" xml:space="preserve"><value>Разложение разности квадратов</value></data>
   <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;double,double&gt;&gt; для операции {operation}.</value></data>

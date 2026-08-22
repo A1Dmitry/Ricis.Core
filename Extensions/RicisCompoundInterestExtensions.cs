@@ -121,10 +121,12 @@ public static class RicisCompoundInterestExtensions
             return;
         }
 
-        throw new NotSupportedException(
-            string.Concat(
-                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.0b27d7d1d58b"), typeof(T).Name),
-                RicisLegacyTextResources.Get("report.legacy.a9ebe4eec70c")));
+        throw new NotSupportedException(string.Concat(
+            string.Format(
+                CultureInfo.CurrentUICulture,
+                RicisLegacyTextResources.Get("report.legacy.0b27d7d1d58b"),
+                typeof(T).Name),
+            RicisLegacyTextResources.Get("report.legacy.a9ebe4eec70c")));
     }
 
     private static bool TryGetStaticRate<T>(Expression expression, out T rate)

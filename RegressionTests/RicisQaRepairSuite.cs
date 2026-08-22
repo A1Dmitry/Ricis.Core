@@ -149,8 +149,12 @@ internal static class RicisQaRepairSuite
             _ = principal.CompoundInterest(rate, 2);
             throw new InvalidOperationException("Ожидалось явное отклонение int-ставки 5%.");
         }
-        catch (NotSupportedException)
+        catch (NotSupportedException exception)
         {
+            Require(exception.Message.Contains("CompoundInterest<Int32>", StringComparison.Ordinal),
+                "Отклонение int-ставки должно возвращать диагностическое сообщение с именем scalar-domain, а не FormatException.");
+            Require(exception.Message.Contains("r/100", StringComparison.Ordinal),
+                "Отклонение int-ставки должно объяснять причину непредставимой процентной дроби.");
         }
     }
 

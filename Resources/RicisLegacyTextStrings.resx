@@ -20,7 +20,7 @@
   <data name="report.legacy.0878e35a8b03" xml:space="preserve"><value>[Pending localization: report.legacy.0878e35a8b03]</value></data>
   <data name="report.legacy.09800ce17554" xml:space="preserve"><value>[Pending localization: report.legacy.09800ce17554]</value></data>
   <data name="report.legacy.09c48dc28a14" xml:space="preserve"><value>[Pending localization: report.legacy.09c48dc28a14]</value></data>
-  <data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>[Pending localization: report.legacy.0b27d7d1d58b]</value></data>
+  <data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{0}&gt; cannot exactly represent the percentage fraction r/100 for the supplied deferred rate. </value></data>
   <data name="report.legacy.0d2d51e692b7" xml:space="preserve"><value>[Pending localization: report.legacy.0d2d51e692b7]</value></data>
   <data name="report.legacy.0f11e9888280" xml:space="preserve"><value>[Pending localization: report.legacy.0f11e9888280]</value></data>
   <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>[Pending localization: report.legacy.1010fa798c83]</value></data>
