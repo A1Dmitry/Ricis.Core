@@ -625,7 +625,7 @@
   <data name="runtime.legacy.ffa894015659" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffa894015659]</value></data>
   <data name="runtime.legacy.ffcd489e92b9" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffcd489e92b9]</value></data>
   <data name="runtime.legacy.ffff260af1e2" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffff260af1e2]</value></data>
-<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>[Pending localization: report.legacy.0b27d7d1d58b]</value></data>
+<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{0}&gt; cannot exactly represent the percentage fraction r/100 for this deferred rate. </value></data>
   <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>[Pending localization: report.legacy.1010fa798c83]</value></data>
   <data name="report.legacy.135159f302e4" xml:space="preserve"><value>[Pending localization: report.legacy.135159f302e4]</value></data>
   <data name="report.legacy.31e8a935d63d" xml:space="preserve"><value>[Pending localization: report.legacy.31e8a935d63d]</value></data>
@@ -642,7 +642,7 @@
   <data name="report.legacy.96664848bdcd" xml:space="preserve"><value>[Pending localization: report.legacy.96664848bdcd]</value></data>
   <data name="report.legacy.9c23e1f43fb1" xml:space="preserve"><value>[Pending localization: report.legacy.9c23e1f43fb1]</value></data>
   <data name="report.legacy.a5cccbc72b15" xml:space="preserve"><value>[Pending localization: report.legacy.a5cccbc72b15]</value></data>
-  <data name="report.legacy.a9ebe4eec70c" xml:space="preserve"><value>[Pending localization: report.legacy.a9ebe4eec70c]</value></data>
+  <data name="report.legacy.a9ebe4eec70c" xml:space="preserve"><value>Use decimal, double, Half, a custom rational scalar, or an integer rate that is a multiple of 100%. </value></data>
   <data name="report.legacy.c11425633c16" xml:space="preserve"><value>[Pending localization: report.legacy.c11425633c16]</value></data>
   <data name="report.legacy.d7e8951c331d" xml:space="preserve"><value>[Pending localization: report.legacy.d7e8951c331d]</value></data>
   <data name="report.legacy.defac919f5a8" xml:space="preserve"><value>[Pending localization: report.legacy.defac919f5a8]</value></data>
