@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core.Expressions;
+using Ricis.Core.Resources;
 using Ricis.Core.Extensions;
 
 namespace Ricis.NavierStokes.ConsoleApp;
@@ -17,7 +18,7 @@ internal static class Program
 
         if (args.Length > 0 && !args.Contains("--stationary-vortex", StringComparer.Ordinal))
         {
-            Console.Error.WriteLine("Неизвестный аргумент. Используйте --help.");
+            Console.Error.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.ac92022f5033"));
             return 2;
         }
 
@@ -33,12 +34,12 @@ internal static class Program
         {
             var result = velocity.ProveNavierStokesIdentity(pressure, 1.0, proof);
             Console.WriteLine(proof.ToString());
-            Console.WriteLine($"Сертификат RICIS: несжимаемость и остаток = 0 → {result.IsCertified}.");
+            Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.f57195db7e4a", ("result.IsCertified", result.IsCertified)));
             return result.IsCertified ? 0 : 1;
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"Proof-сценарий не сертифицирован: {exception.Message}");
+            Console.Error.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.88a55d591990", ("exception.Message", exception.Message)));
             return 1;
         }
     }
@@ -46,7 +47,7 @@ internal static class Program
     private static void PrintHelp()
     {
         Console.WriteLine("Ricis.NavierStokes.Console");
-        Console.WriteLine("  --stationary-vortex   вывести proof-документ для u=(-y,x,0), p=(x²+y²)/2, ν=1 (аргумент по умолчанию)");
-        Console.WriteLine("  --help, -h            вывести эту справку");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.3cbc5ad69169"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.fbcb0fd793ec"));
     }
 }
