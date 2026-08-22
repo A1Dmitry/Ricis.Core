@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -28,7 +30,7 @@ public static class RicisCompoundInterestExtensions
     {
         if (periods < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(periods), "Число периодов должно быть неотрицательным.");
+            throw new ArgumentOutOfRangeException(nameof(periods), RicisLegacyTextResources.Get("report.legacy.3b7e9e7e7d02"));
         }
 
         var (normalizedPrincipal, normalizedRate) = NormalizePair(principal, ratePercent, nameof(CompoundInterest));
@@ -65,7 +67,7 @@ public static class RicisCompoundInterestExtensions
         ArgumentNullException.ThrowIfNull(principal);
         if (principal.Parameters.Count != 1)
         {
-            throw new ArgumentException("CompoundInterest требует лямбду S ровно с одним параметром.", nameof(principal));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.402d1dd9526d"), nameof(principal));
         }
 
         var constantRate = Expression.Lambda<Func<T, T>>(
@@ -120,8 +122,9 @@ public static class RicisCompoundInterestExtensions
         }
 
         throw new NotSupportedException(
-            $"CompoundInterest<{typeof(T).Name}> не может точно представить процентную дробь r/100 для данной отложенной ставки. " +
-            "Используйте decimal, double, Half, custom rational scalar либо целочисленную ставку, кратную 100%. ");
+            string.Concat(
+                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.0b27d7d1d58b"), typeof(T).Name),
+                RicisLegacyTextResources.Get("report.legacy.a9ebe4eec70c")));
     }
 
     private static bool TryGetStaticRate<T>(Expression expression, out T rate)
@@ -213,8 +216,9 @@ public static class RicisCompoundInterestExtensions
         var transformed = RicisPhasePipeline.Simplify(expression);
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                $"для операции {operation}.");
+                string.Concat(
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee"), typeof(T).Name),
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.faeacf87abee"), operation)));
     }
 
 
@@ -224,7 +228,7 @@ public static class RicisCompoundInterestExtensions
         string operation)
         where T : INumber<T> =>
         new ParameterRebindVisitor(expression.Parameters[0], target).Visit(expression.Body)
-        ?? throw new InvalidOperationException($"Не удалось связать параметр для {operation}.");
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.8730416099cf"), operation));
 
     private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
     {
