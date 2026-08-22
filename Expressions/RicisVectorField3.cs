@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Expressions;
 
 /// <summary>
@@ -43,7 +45,7 @@ public sealed class RicisVectorField3
         if (component.Parameters.Count != 4 || component.Parameters.Any(parameter => parameter.Type != typeof(double)))
         {
             throw new ArgumentException(
-                "Компонента векторного поля должна иметь сигнатуру (double x, double y, double z, double t) => double.",
+                RicisLegacyTextResources.Get("runtime.legacy.dd9185952a72"),
                 parameterName);
         }
 
