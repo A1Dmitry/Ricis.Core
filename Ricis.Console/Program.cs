@@ -421,11 +421,11 @@ internal static class Program
         var derived = conditions.Prove(constraints, claim, protocol);
 
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.90bdfaf1ceae"));
-        Console.WriteLine($"Исходный тезис: {claim}");
-        Console.WriteLine($"Производное выражение: {derived}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.57db9c132b08", ("claim", claim)));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.7ea1c5777b28", ("derived", derived)));
         Console.WriteLine();
         Console.WriteLine(protocol.ToString());
-        Console.WriteLine($"Проверка производного дерева при x=2: {derived.Compile()(2.0):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.0a75ca9a268a", ("derived.Compile()(2.0):G17", derived.Compile()(2.0).ToString("G17"))));
         return 0;
     }
 
@@ -450,7 +450,7 @@ internal static class Program
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.c2f0f60dd597"));
         Console.WriteLine();
         Console.WriteLine(protocol.ToString());
-        Console.WriteLine($"Проверка производного выражения: (x,y)=(3,2) → {derived.Compile()(3.0, 2.0)}; (2,3) → {derived.Compile()(2.0, 3.0)}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.5aa2c5a88ad4", ("derived.Compile()(3.0, 2.0)", derived.Compile()(3.0, 2.0)), ("derived.Compile()(2.0, 3.0)", derived.Compile()(2.0, 3.0))));
         return 0;
     }
 
@@ -481,8 +481,8 @@ internal static class Program
         Console.WriteLine(result.Document);
         var derived = proofCase.DerivedClaim
             ?? throw new InvalidOperationException("RH proof case did not produce a derived claim.");
-        Console.WriteLine($"Статус: {result.Status}; производное выражение: {result.DerivedExpression}");
-        Console.WriteLine($"Проверка производного выражения: (0.5,0.5) → {derived.Compile()(0.5, 0.5)}; (0.4,0.6) → {derived.Compile()(0.4, 0.6)}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.d5f00fe4f100", ("result.Status", result.Status), ("result.DerivedExpression", result.DerivedExpression)));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.6a9edee2f4dd", ("derived.Compile()(0.5, 0.5)", derived.Compile()(0.5, 0.5)), ("derived.Compile()(0.4, 0.6)", derived.Compile()(0.4, 0.6))));
         return 0;
     }
 
