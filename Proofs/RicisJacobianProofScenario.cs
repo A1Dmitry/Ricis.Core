@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Logging;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Proofs;
 
@@ -23,7 +24,7 @@ public sealed class RicisJacobianProofScenario
         A6Payload = a6Payload?.ToArray() ?? throw new ArgumentNullException(nameof(a6Payload));
         StructuredLeanDocument = structuredLeanDocument ?? throw new ArgumentNullException(nameof(structuredLeanDocument));
         CombinedLeanSource = string.IsNullOrWhiteSpace(combinedLeanSource)
-            ? throw new ArgumentException("Combined Lean source не может быть пустым.", nameof(combinedLeanSource))
+            ? throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.85a87b56d34c"), nameof(combinedLeanSource))
             : combinedLeanSource;
     }
 
@@ -74,32 +75,32 @@ public sealed class RicisJacobianProofScenario
             Expression.Divide(determinant, determinant), determinant);
         var expected = Expression.Lambda<Func<double, double>>(one, determinant);
         var profile = new RicisProofDocumentProfile(
-            title: "JAC-001: сингулярный rank-one Jacobian",
+            title: RicisLegacyTextResources.Get("report.legacy.75cb2e2ae9d9"),
             scope: RicisProofScope.ConditionalTheorem,
-            @abstract: "Каноническая RICIS-проверка structural determinant identity и A6 payload bridge для J=((1,1),(1,1)).",
-            theorem: "При переданных формальных посылках det(J)=0 scalar claim detJ/detJ структурно выводится в 1; inverse payload остаётся отложенным A6-объектом.",
+            @abstract: RicisLegacyTextResources.Get("report.legacy.7208ad8e7abe"),
+            theorem: RicisLegacyTextResources.Get("report.legacy.966550ca912d"),
             definitions:
             [
                 "J = ((1,1),(1,1)); det(J)=1·1−1·1=0.",
-                "detJ — scalar-координата determinant, используемая только как expression tree.",
-                "0_det(J) и ∞_Inv(J) — индексированные структурные объекты, не классический inverse.",
+                RicisLegacyTextResources.Get("report.legacy.12733adfcc77"),
+                RicisLegacyTextResources.Get("report.legacy.40f30d2d7877"),
             ],
             axioms:
             [
-                "L1/SP2: одинаковые отложенные выражения F/F структурно сокращаются до 1.",
-                "A6: 0_F·∞_G возвращает structural payload F·G.",
+                RicisLegacyTextResources.Get("report.legacy.8e841d9821db"),
+                RicisLegacyTextResources.Get("report.legacy.03bf7e21fd75"),
             ],
             normativeSteps:
             [
-                new RicisProofAxiomStep("JAC-01", "Сертификация determinant", "Rank-one Jacobian передаёт structural zero determinant без вычисления inverse."),
-                new RicisProofAxiomStep("JAC-02", "Проверка scalar claim", "L1/SP2 строит verification lambda для detJ/detJ и 1."),
-                new RicisProofAxiomStep("JAC-03", "A6 payload bridge", "Каждая inverse payload entry остаётся отложенной и связывается с indexed determinant."),
+                new RicisProofAxiomStep("JAC-01", RicisLegacyTextResources.Get("report.legacy.d6b2a5b4e48c"), RicisLegacyTextResources.Get("report.legacy.29e255a787b7")),
+                new RicisProofAxiomStep("JAC-02", RicisLegacyTextResources.Get("report.legacy.8036bf91ceb4"), RicisLegacyTextResources.Get("report.legacy.3f090499f018")),
+                new RicisProofAxiomStep("JAC-03", "A6 payload bridge", RicisLegacyTextResources.Get("report.legacy.ed4304c1f606")),
             ],
             limitations:
             [
-                "Формальные lambda-посылки не исполняются и не считаются установленными фактами.",
-                "Generic Lean audit trace не является theorem; kernel-checked часть ограничена structured A6 template.",
-                "Сценарий не вычисляет классический inverse сингулярной матрицы.",
+                RicisLegacyTextResources.Get("report.legacy.893398e244f0"),
+                RicisLegacyTextResources.Get("report.legacy.8273eb7f8704"),
+                RicisLegacyTextResources.Get("report.legacy.9ba256eaab71"),
             ]);
         var log = new RicisProofLog<RicisProofOrchestrationStage>();
         var scalarProof = conditions.ProveDocumentsCheckedWithLog(
