@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -625,4 +625,32 @@
   <data name="runtime.legacy.ffa894015659" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffa894015659]</value></data>
   <data name="runtime.legacy.ffcd489e92b9" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffcd489e92b9]</value></data>
   <data name="runtime.legacy.ffff260af1e2" xml:space="preserve"><value>[Pending localization: runtime.legacy.ffff260af1e2]</value></data>
-</root>
+<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>[Pending localization: report.legacy.0b27d7d1d58b]</value></data>
+  <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>[Pending localization: report.legacy.1010fa798c83]</value></data>
+  <data name="report.legacy.135159f302e4" xml:space="preserve"><value>[Pending localization: report.legacy.135159f302e4]</value></data>
+  <data name="report.legacy.31e8a935d63d" xml:space="preserve"><value>[Pending localization: report.legacy.31e8a935d63d]</value></data>
+  <data name="report.legacy.3b7e9e7e7d02" xml:space="preserve"><value>[Pending localization: report.legacy.3b7e9e7e7d02]</value></data>
+  <data name="report.legacy.3e658e1d7e8e" xml:space="preserve"><value>[Pending localization: report.legacy.3e658e1d7e8e]</value></data>
+  <data name="report.legacy.402d1dd9526d" xml:space="preserve"><value>[Pending localization: report.legacy.402d1dd9526d]</value></data>
+  <data name="report.legacy.55ffc59d4281" xml:space="preserve"><value>[Pending localization: report.legacy.55ffc59d4281]</value></data>
+  <data name="report.legacy.64a8d95a4a2d" xml:space="preserve"><value>[Pending localization: report.legacy.64a8d95a4a2d]</value></data>
+  <data name="report.legacy.69e26648b784" xml:space="preserve"><value>[Pending localization: report.legacy.69e26648b784]</value></data>
+  <data name="report.legacy.6b478c3c5d23" xml:space="preserve"><value>[Pending localization: report.legacy.6b478c3c5d23]</value></data>
+  <data name="report.legacy.8730416099cf" xml:space="preserve"><value>[Pending localization: report.legacy.8730416099cf]</value></data>
+  <data name="report.legacy.88d28a2f88f2" xml:space="preserve"><value>[Pending localization: report.legacy.88d28a2f88f2]</value></data>
+  <data name="report.legacy.94e178ae8592" xml:space="preserve"><value>[Pending localization: report.legacy.94e178ae8592]</value></data>
+  <data name="report.legacy.96664848bdcd" xml:space="preserve"><value>[Pending localization: report.legacy.96664848bdcd]</value></data>
+  <data name="report.legacy.9c23e1f43fb1" xml:space="preserve"><value>[Pending localization: report.legacy.9c23e1f43fb1]</value></data>
+  <data name="report.legacy.a5cccbc72b15" xml:space="preserve"><value>[Pending localization: report.legacy.a5cccbc72b15]</value></data>
+  <data name="report.legacy.a9ebe4eec70c" xml:space="preserve"><value>[Pending localization: report.legacy.a9ebe4eec70c]</value></data>
+  <data name="report.legacy.c11425633c16" xml:space="preserve"><value>[Pending localization: report.legacy.c11425633c16]</value></data>
+  <data name="report.legacy.d7e8951c331d" xml:space="preserve"><value>[Pending localization: report.legacy.d7e8951c331d]</value></data>
+  <data name="report.legacy.defac919f5a8" xml:space="preserve"><value>[Pending localization: report.legacy.defac919f5a8]</value></data>
+  <data name="report.legacy.e33617d4ce58" xml:space="preserve"><value>[Pending localization: report.legacy.e33617d4ce58]</value></data>
+  <data name="report.legacy.e66a27f6139b" xml:space="preserve"><value>[Pending localization: report.legacy.e66a27f6139b]</value></data>
+  <data name="report.legacy.eeeda28e90f1" xml:space="preserve"><value>[Pending localization: report.legacy.eeeda28e90f1]</value></data>
+  <data name="report.legacy.efbf88fbbff0" xml:space="preserve"><value>[Pending localization: report.legacy.efbf88fbbff0]</value></data>
+  <data name="report.legacy.f07b8da3f950" xml:space="preserve"><value>[Pending localization: report.legacy.f07b8da3f950]</value></data>
+  <data name="report.legacy.f428e8a726f3" xml:space="preserve"><value>[Pending localization: report.legacy.f428e8a726f3]</value></data>
+  <data name="report.legacy.f9e0c9c086a0" xml:space="preserve"><value>[Pending localization: report.legacy.f9e0c9c086a0]</value></data>
+  </root>

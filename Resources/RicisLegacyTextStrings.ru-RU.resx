@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -225,7 +225,7 @@
   <data name="runtime.legacy.10f4a7f2827c" xml:space="preserve"><value>Код платёжного rail обязателен и не может быть fallback-значением.</value></data>
   <data name="runtime.legacy.1117f66fa728" xml:space="preserve"><value>Нормативная фаза завершена.</value></data>
   <data name="runtime.legacy.11753584bf90" xml:space="preserve"><value>Пустая строка не является выражением.</value></data>
-  <data name="runtime.legacy.11ccd114dc95" xml:space="preserve"><value>Ожидается &#x27;{Display(expected)}&#x27;, получено &#x27;{_current.Text}&#x27;.</value></data>
+  <data name="runtime.legacy.11ccd114dc95" xml:space="preserve"><value>Ожидается '{Display(expected)}', получено '{_current.Text}'.</value></data>
   <data name="runtime.legacy.124fe58dd0a0" xml:space="preserve"><value>Лимиты и Лопиталь не используются; сравниваются исполненные производные.</value></data>
   <data name="runtime.legacy.1320e02e6928" xml:space="preserve"><value>Устранимая кубическая форма</value></data>
   <data name="runtime.legacy.1375e23b3123" xml:space="preserve"><value>Знаменатель (x−2)(x+2) обращается в ноль в двух корнях. Классическая запись скрывает структуру полюсов, а RICIS сохраняет оба ключа.</value></data>
@@ -240,13 +240,13 @@
   <data name="runtime.legacy.1d89bb7c27e3" xml:space="preserve"><value>  В CLI --structural-demo показывает L1/SP2 для sign, clamp, abs и остатка.</value></data>
   <data name="runtime.legacy.1de16102d47f" xml:space="preserve"><value>Вызовите NumericConstants.Register&lt;T&gt;() или используйте generic API конечного исполнения.</value></data>
   <data name="runtime.legacy.1e0c43d14454" xml:space="preserve"><value>Проверка lambda-тезиса: {scenario.ScalarProof.Proof.IsVerified}</value></data>
-  <data name="runtime.legacy.1e150064f8ac" xml:space="preserve"><value>Неизвестный идентификатор &#x27;{token.Text}&#x27;. Допустимы {_parameter.Name}, pi и e.</value></data>
+  <data name="runtime.legacy.1e150064f8ac" xml:space="preserve"><value>Неизвестный идентификатор '{token.Text}'. Допустимы {_parameter.Name}, pi и e.</value></data>
   <data name="runtime.legacy.1e391942acf8" xml:space="preserve"><value>Determinant должен возвращать тип T.</value></data>
   <data name="runtime.legacy.1e8a05a3b057" xml:space="preserve"><value>N должен быть положительным целым числом больше единицы.</value></data>
   <data name="runtime.legacy.1f4a267baf74" xml:space="preserve"><value>  Важно: степень записывайте как x^2 или pow(x, 2); parser не использует оператор **.</value></data>
   <data name="runtime.legacy.200c08edbae5" xml:space="preserve"><value>Order reference уже принадлежит invoice {duplicateOrder.Id}.</value></data>
   <data name="runtime.legacy.227cfe2cac84" xml:space="preserve"><value>Нормативная фаза RICIS</value></data>
-  <data name="runtime.legacy.2314782a83a9" xml:space="preserve"><value>Неожиданный символ &#x27;{_current.Text}&#x27;.</value></data>
+  <data name="runtime.legacy.2314782a83a9" xml:space="preserve"><value>Неожиданный символ '{_current.Text}'.</value></data>
   <data name="runtime.legacy.2326d77f7a0b" xml:space="preserve"><value>RICIS не сохранил многопеременную lambda-форму.</value></data>
   <data name="runtime.legacy.2406f3633c90" xml:space="preserve"><value>при нормализации {context}.</value></data>
   <data name="runtime.legacy.24ce28f11df0" xml:space="preserve"><value>Не удалось переназначить параметры RICIS-координаты.</value></data>
@@ -285,7 +285,7 @@
   <data name="runtime.legacy.39bc002d3bd8" xml:space="preserve"><value>  Каждый результат — явный Math.* expression-узел над нормализованной лямбдой; исходные делегаты не вызываются при построении.</value></data>
   <data name="runtime.legacy.3a05c51e1dec" xml:space="preserve"><value>Ожидаются число, параметр, функция или открывающая скобка.</value></data>
   <data name="runtime.legacy.3a0d58179b82" xml:space="preserve"><value>Квадратичный знаменатель и два полюса</value></data>
-  <data name="runtime.legacy.3ab9c5806c9b" xml:space="preserve"><value>Невозможно разобрать число &#x27;{token.Text}&#x27;.</value></data>
+  <data name="runtime.legacy.3ab9c5806c9b" xml:space="preserve"><value>Невозможно разобрать число '{token.Text}'.</value></data>
   <data name="runtime.legacy.3b38be3562a9" xml:space="preserve"><value>r(x), в процентах:    {rate}</value></data>
   <data name="runtime.legacy.3cbc5ad69169" xml:space="preserve"><value>  --stationary-vortex   вывести proof-документ для u=(-y,x,0), p=(x²+y²)/2, ν=1 (аргумент по умолчанию)</value></data>
   <data name="runtime.legacy.3cfd01539a6c" xml:space="preserve"><value>GetCapabilities обязан normalise country и не выводить default route для неизвестной страны.</value></data>
@@ -465,7 +465,7 @@
   <data name="runtime.legacy.9e25cdd21553" xml:space="preserve"><value>  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.</value></data>
   <data name="runtime.legacy.9f1d1a2559a1" xml:space="preserve"><value>Product при x=3:   {product.Compile()(3.0):G17}</value></data>
   <data name="runtime.legacy.9f31880f42a1" xml:space="preserve"><value>Difference при x=0:{difference.Compile()(0.0):G17}</value></data>
-  <data name="runtime.legacy.a0de865f6d3f" xml:space="preserve"><value>Недопустимый символ &#x27;{current}&#x27;.</value></data>
+  <data name="runtime.legacy.a0de865f6d3f" xml:space="preserve"><value>Недопустимый символ '{current}'.</value></data>
   <data name="runtime.legacy.a10eb07bf6f3" xml:space="preserve"><value>Повторное provider event проигнорировано; сохранённый settlement использует ранее применённую policy. Current policy: {policyVersion}.</value></data>
   <data name="runtime.legacy.a13818517bc9" xml:space="preserve"><value>Независимый исследователь и автор публикаций о RICIS-III, формальной математике, структурном разрешении сингулярностей и вычислительных приложениях.</value></data>
   <data name="runtime.legacy.a1fc52a0ce73" xml:space="preserve"><value>Размерности векторных identity должны совпадать.</value></data>
@@ -569,7 +569,7 @@
   <data name="runtime.legacy.df5f0224bb30" xml:space="preserve"><value>FIN04: Payout резервирует только доступный остаток и отправляется один раз</value></data>
   <data name="runtime.legacy.df78568415c9" xml:space="preserve"><value>Идентификатор/idempotency key обязателен.</value></data>
   <data name="runtime.legacy.e024e4c45317" xml:space="preserve"><value>Символьный RICIS-вектор обязан иметь координаты.</value></data>
-  <data name="runtime.legacy.e10a8da85bae" xml:space="preserve"><value>Система выражений содержит пустой элемент между разделителями &#x27;;&#x27;.</value></data>
+  <data name="runtime.legacy.e10a8da85bae" xml:space="preserve"><value>Система выражений содержит пустой элемент между разделителями ';'.</value></data>
   <data name="runtime.legacy.e17e26ee0562" xml:space="preserve"><value>  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.</value></data>
   <data name="runtime.legacy.e1ce9f54e140" xml:space="preserve"><value>Ожидалось исключение {typeof(TException).Name}.</value></data>
   <data name="runtime.legacy.e2ce36c95d9a" xml:space="preserve"><value>Повторный webhook с тем же provider event id не должен создавать второй settlement.</value></data>
@@ -602,7 +602,7 @@
   <data name="runtime.legacy.f4cfae010a8d" xml:space="preserve"><value>Ожидалось {check.Expected:G17}, получено {value:G17}.</value></data>
   <data name="runtime.legacy.f542732f1557" xml:space="preserve"><value>  В CLI --riemann-proof-demo выводит конечное следствие из Riemann-связанной системы симметрий, не доказывая саму гипотезу.</value></data>
   <data name="runtime.legacy.f57195db7e4a" xml:space="preserve"><value>Сертификат RICIS: несжимаемость и остаток = 0 → {result.IsCertified}.</value></data>
-  <data name="runtime.legacy.f588be7b4ee3" xml:space="preserve"><value>Функция &#x27;{function.Text}&#x27; не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod, Pow, Min, Max, PositivePart, NegativePart, Distance, Sum, Integral, Derivative, CompoundInterest или Interest.</value></data>
+  <data name="runtime.legacy.f588be7b4ee3" xml:space="preserve"><value>Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod, Pow, Min, Max, PositivePart, NegativePart, Distance, Sum, Integral, Derivative, CompoundInterest или Interest.</value></data>
   <data name="runtime.legacy.f5fff13b2e26" xml:space="preserve"><value>RICIS: проверка RSA-PSS — π = 3.141592653589793</value></data>
   <data name="runtime.legacy.f62a21f84e24" xml:space="preserve"><value>Экспоненциальная форма</value></data>
   <data name="runtime.legacy.f642639ba781" xml:space="preserve"><value>Модель Big Bang</value></data>
@@ -625,4 +625,32 @@
   <data name="runtime.legacy.ffa894015659" xml:space="preserve"><value>Неопределённая log-форма</value></data>
   <data name="runtime.legacy.ffcd489e92b9" xml:space="preserve"><value>  [x =&gt;] выражение</value></data>
   <data name="runtime.legacy.ffff260af1e2" xml:space="preserve"><value>  Формула строится символически и не является финансовым прогнозом или рекомендацией.</value></data>
-</root>
+<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{typeof(T).Name}&gt; не может точно представить процентную дробь r/100 для данной отложенной ставки. </value></data>
+  <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;double,double&gt;&gt; для операции {operation}.</value></data>
+  <data name="report.legacy.135159f302e4" xml:space="preserve"><value>Integral требует лямбду F ровно с одним параметром.</value></data>
+  <data name="report.legacy.31e8a935d63d" xml:space="preserve"><value>при нормализации F для Integral.</value></data>
+  <data name="report.legacy.3b7e9e7e7d02" xml:space="preserve"><value>Число периодов должно быть неотрицательным.</value></data>
+  <data name="report.legacy.3e658e1d7e8e" xml:space="preserve"><value>Не удалось связать параметр ширины диапазона.</value></data>
+  <data name="report.legacy.402d1dd9526d" xml:space="preserve"><value>CompoundInterest требует лямбду S ровно с одним параметром.</value></data>
+  <data name="report.legacy.55ffc59d4281" xml:space="preserve"><value>Не удалось связать параметр правого операнда {operation}.</value></data>
+  <data name="report.legacy.64a8d95a4a2d" xml:space="preserve"><value>Integral требует две лямбды ровно с одним параметром.</value></data>
+  <data name="report.legacy.69e26648b784" xml:space="preserve"><value>Масштаб векторного поля обязан быть конечным double.</value></data>
+  <data name="report.legacy.6b478c3c5d23" xml:space="preserve"><value>Sum требует две лямбды ровно с одним параметром.</value></data>
+  <data name="report.legacy.8730416099cf" xml:space="preserve"><value>Не удалось связать параметр для {operation}.</value></data>
+  <data name="report.legacy.88d28a2f88f2" xml:space="preserve"><value>RICIS-конвейер должен сохранить expected lambda.</value></data>
+  <data name="report.legacy.94e178ae8592" xml:space="preserve"><value>Не удалось подставить тело внутренней функции в Compose.</value></data>
+  <data name="report.legacy.96664848bdcd" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду суммы.</value></data>
+  <data name="report.legacy.9c23e1f43fb1" xml:space="preserve"><value>Запущено symbolic proof-выведение для unary expression tree.</value></data>
+  <data name="report.legacy.a5cccbc72b15" xml:space="preserve"><value>для геометрического Integral.</value></data>
+  <data name="report.legacy.a9ebe4eec70c" xml:space="preserve"><value>Используйте decimal, double, Half, custom rational scalar либо целочисленную ставку, кратную 100%. </value></data>
+  <data name="report.legacy.c11425633c16" xml:space="preserve"><value>Не удалось связать expected expression с claim parameter.</value></data>
+  <data name="report.legacy.d7e8951c331d" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду второго слагаемого.</value></data>
+  <data name="report.legacy.defac919f5a8" xml:space="preserve"><value>Ширина диапазона должна иметь тип {typeof(T).FullName}.</value></data>
+  <data name="report.legacy.e33617d4ce58" xml:space="preserve"><value>Не удалось связать параметр второго слагаемого.</value></data>
+  <data name="report.legacy.e66a27f6139b" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{typeof(T).Name}, {typeof(T).Name}&gt;&gt; при доказательстве.</value></data>
+  <data name="report.legacy.eeeda28e90f1" xml:space="preserve"><value>RICIS-конвейер должен сохранить тип четырёхпеременного scalar-поля.</value></data>
+  <data name="report.legacy.efbf88fbbff0" xml:space="preserve"><value>Unary symbolic proof-выведение завершено.</value></data>
+  <data name="report.legacy.f07b8da3f950" xml:space="preserve"><value>Неизвестная координата поля.</value></data>
+  <data name="report.legacy.f428e8a726f3" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду первого слагаемого.</value></data>
+  <data name="report.legacy.f9e0c9c086a0" xml:space="preserve"><value>Не удалось связать параметр показателя для {operation}.</value></data>
+  </root>
