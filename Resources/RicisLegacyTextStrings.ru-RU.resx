@@ -6,9 +6,9 @@
   <data name="report.legacy.00762812957b" xml:space="preserve"><value>Нормативный шаг не может быть null.</value></data>
   <data name="report.legacy.007af9a345c6" xml:space="preserve"><value>Сокращение соседних факториалов</value></data>
   <data name="report.legacy.00b58be4fca6" xml:space="preserve"><value>Type — сохранённый компонент идентичности Id(X)={Value(X), Type(X)}.</value></data>
-  <data name="report.legacy.00c017819672" xml:space="preserve"><value>- Скорость: `{FormatField(velocity)}`.</value></data>
+  <data name="report.legacy.00c017819672" xml:space="preserve"><value>- Скорость: `{0}`.</value></data>
   <data name="report.legacy.013809e31b03" xml:space="preserve"><value>Ни одна предпосылка не исполнялась численно. Ниже записан полный порядок нормативных фаз, включая пропущенные и структурно неизменённые попытки. Для каждой попытки фиксируются все маршруты от посещённого узла к корню expression tree.</value></data>
-  <data name="report.legacy.013d765ca193" xml:space="preserve"><value>**После:** `{after}`.</value></data>
+  <data name="report.legacy.013d765ca193" xml:space="preserve"><value>**После:** `{1}`.</value></data>
   <data name="report.legacy.019ca3b2ab39" xml:space="preserve"><value>DxDt требует лямбду ровно с одним параметром времени.</value></data>
   <data name="report.legacy.01fa35f47fb7" xml:space="preserve"><value>## Аннотация</value></data>
   <data name="report.legacy.02f7e69ab400" xml:space="preserve"><value>Символическое исключение дало обе координаты решения.</value></data>
@@ -63,19 +63,19 @@
   <data name="report.legacy.49d4ecb68e39" xml:space="preserve"><value>**Конечное символическое выведение.** Документ сертифицирует только преобразование явно переданных expression tree.</value></data>
   <data name="report.legacy.4a0292ce58db" xml:space="preserve"><value>## Воспроизводимый результат</value></data>
   <data name="report.legacy.4c39a532d29a" xml:space="preserve"><value>R({sigmaName})=1−{sigmaName}; следовательно {sigmaName}+{mirrorSigmaName}=1.</value></data>
-  <data name="report.legacy.4d16cdcb2eda" xml:space="preserve"><value>- Вязкость: `ν={viscosity:G17}`.</value></data>
-  <data name="report.legacy.4fdef7e7a9f9" xml:space="preserve"><value>NS-07 не выполнен: остаток Навье—Стокса не сократился до нулевого поля, получено {FormatField(residual)}.</value></data>
+  <data name="report.legacy.4d16cdcb2eda" xml:space="preserve"><value>- Вязкость: `ν={0:G17}`.</value></data>
+  <data name="report.legacy.4fdef7e7a9f9" xml:space="preserve"><value>NS-07 не выполнен: остаток Навье—Стокса не сократился до нулевого поля, получено {0}.</value></data>
   <data name="report.legacy.5101234f6e4d" xml:space="preserve"><value>**Основание:** </value></data>
   <data name="report.legacy.5122ef87a353" xml:space="preserve"><value>∂t u+(u·∇)u+∇p−νΔu нормализуется RICIS до нулевого поля.</value></data>
   <data name="report.legacy.512a9ec3ee1b" xml:space="preserve"><value>Рациональный вывод не может иметь нулевой знаменатель.</value></data>
-  <data name="report.legacy.52267a6b9ae8" xml:space="preserve"><value>- Давление: `{pressure}`.</value></data>
+  <data name="report.legacy.52267a6b9ae8" xml:space="preserve"><value>- Давление: `{0}`.</value></data>
   <data name="report.legacy.5262659204cc" xml:space="preserve"><value>### Шаг 1: Линейная комбинация уравнений системы</value></data>
   <data name="report.legacy.52ef51fa44c4" xml:space="preserve"><value>. Ограничение: `</value></data>
   <data name="report.legacy.530ab4301b38" xml:space="preserve"><value>Текстовый элемент proof-лога не может быть пустым.</value></data>
   <data name="report.legacy.561639ada97d" xml:space="preserve"><value>Из ID-02 и ID-03 следует {sigmaName}−{mirrorSigmaName}=0 при {sigmaName}+{mirrorSigmaName}=1.</value></data>
   <data name="report.legacy.58180e513657" xml:space="preserve"><value># Формальный вывод RICIS III</value></data>
   <data name="report.legacy.58ccb6d5ca04" xml:space="preserve"><value>Тезис цепочки ID-01–ID-06 обязан иметь две double-координаты.</value></data>
-  <data name="report.legacy.590e8b782833" xml:space="preserve"><value>Каждая гипотеза {parameterName} должна быть лямбдой Func&lt;{typeof(T).Name}, Boolean&gt; с одним параметром.</value></data>
+  <data name="report.legacy.590e8b782833" xml:space="preserve"><value>Каждая гипотеза {parameterName} должна быть лямбдой Func&lt;{0}, Boolean&gt; с одним параметром.</value></data>
   <data name="report.legacy.5b1abc61d696" xml:space="preserve"><value>Symbolic решение системы завершено и protocol сформирован.</value></data>
   <data name="report.legacy.5cb5e7c5b85f" xml:space="preserve"><value>градиент давления</value></data>
   <data name="report.legacy.5e5e93b99528" xml:space="preserve"><value>Линейная система вырождена: её determinant равен нулю.</value></data>
@@ -86,7 +86,7 @@
   <data name="report.legacy.6814b74407cd" xml:space="preserve"><value>Линейная комбинация ID-04 даёт 2·{sigmaName}=1.</value></data>
   <data name="report.legacy.69108a6a41e1" xml:space="preserve"><value>Ограничение</value></data>
   <data name="report.legacy.693b883781ad" xml:space="preserve"><value>**Промежуточное выведение:**</value></data>
-  <data name="report.legacy.6bbbd1303a70" xml:space="preserve"><value>Тезис должен быть лямбдой Func&lt;{typeof(T).Name}, {typeof(T).Name}&gt; с одним параметром.</value></data>
+  <data name="report.legacy.6bbbd1303a70" xml:space="preserve"><value>Тезис должен быть лямбдой Func&lt;{0}, {0}&gt; с одним параметром.</value></data>
   <data name="report.legacy.6e9ce814d451" xml:space="preserve"><value>Из 2·{sigmaName}=1 следует {sigmaName}=Divide(1,2).</value></data>
   <data name="report.legacy.6f23c5b99ce5" xml:space="preserve"><value>### Шаг 3: Подстановка найденной координаты в первое уравнение</value></data>
   <data name="report.legacy.70415d124b43" xml:space="preserve"><value>Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.</value></data>
@@ -115,7 +115,7 @@
   <data name="report.legacy.8a44c047d185" xml:space="preserve"><value>#### Шаг </value></data>
   <data name="report.legacy.8a4b0b3f915c" xml:space="preserve"><value>стационарность</value></data>
   <data name="report.legacy.8a5545be6873" xml:space="preserve"><value> первого; переменная исключается по детерминанту.</value></data>
-  <data name="report.legacy.8c78f17a7aee" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{typeof(T).Name}, {typeof(T).Name}&gt;&gt; </value></data>
+  <data name="report.legacy.8c78f17a7aee" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{0}, {0}&gt;&gt; </value></data>
   <data name="report.legacy.8cbb9d46f586" xml:space="preserve"><value>Внешняя истинность предпосылок, универсальные кванторы и утверждения вне входных expression tree данным документом не доказываются.</value></data>
   <data name="report.legacy.8d18c1bd4a2c" xml:space="preserve"><value>Для формата {format} не был сформирован proof-document export.</value></data>
   <data name="report.legacy.8e841d9821db" xml:space="preserve"><value>L1/SP2: одинаковые отложенные выражения F/F структурно сокращаются до 1.</value></data>
@@ -124,11 +124,11 @@
   <data name="report.legacy.901faa2aff0e" xml:space="preserve"><value>Вязкость должна быть конечной и неотрицательной.</value></data>
   <data name="report.legacy.928af9b8a874" xml:space="preserve"><value>Constraint нормализована; одинаковый множитель в числителе и знаменателе сокращён структурным pipeline.</value></data>
   <data name="report.legacy.966550ca912d" xml:space="preserve"><value>При переданных формальных посылках det(J)=0 scalar claim detJ/detJ структурно выводится в 1; inverse payload остаётся отложенным A6-объектом.</value></data>
-  <data name="report.legacy.986f2fab61ab" xml:space="preserve"><value>Выражение и параметр должны иметь один тип {typeof(T).FullName}.</value></data>
+  <data name="report.legacy.986f2fab61ab" xml:space="preserve"><value>Выражение и параметр должны иметь один тип {0}.</value></data>
   <data name="report.legacy.9b3da1634db4" xml:space="preserve"><value>Должен быть передан хотя бы один proof-document export.</value></data>
   <data name="report.legacy.9ba256eaab71" xml:space="preserve"><value>Сценарий не вычисляет классический inverse сингулярной матрицы.</value></data>
   <data name="report.legacy.a072af8d538f" xml:space="preserve"><value>Каждое уравнение или ограничение должно быть лямбдой Func&lt;Double, Double, Boolean&gt; с двумя параметрами.</value></data>
-  <data name="report.legacy.a107681b1ec6" xml:space="preserve"><value>{operation} требует лямбду ровно с одним параметром.</value></data>
+  <data name="report.legacy.a107681b1ec6" xml:space="preserve"><value>{0} требует лямбду ровно с одним параметром.</value></data>
   <data name="report.legacy.a2fd90a5210d" xml:space="preserve"><value>Очищение вложенного знаменателя</value></data>
   <data name="report.legacy.a954441f9fc0" xml:space="preserve"><value>Proof-log entries должны иметь строго возрастающую sequence.</value></data>
   <data name="report.legacy.a9ee3d52d88b" xml:space="preserve"><value>Pipeline не предоставил phase trace; node-to-root маршрут для этой proof-ветви отсутствует.</value></data>
@@ -138,7 +138,7 @@
   <data name="report.legacy.b2a6b08fb716" xml:space="preserve"><value># Формальный вывод RICIS III: система линейных уравнений</value></data>
   <data name="report.legacy.b41bd539e40e" xml:space="preserve"><value>**Node-to-root маршрут (</value></data>
   <data name="report.legacy.b43d92d7a142" xml:space="preserve"><value>По ID-01–ID-06 для пары {sigmaName}, {mirrorSigmaName} доказывается `{claim}`.</value></data>
-  <data name="report.legacy.b4b9b4bafab5" xml:space="preserve"><value>Не удалось связать параметр отложенной функции для {operation}.</value></data>
+  <data name="report.legacy.b4b9b4bafab5" xml:space="preserve"><value>Не удалось связать параметр отложенной функции для {0}.</value></data>
   <data name="report.legacy.bbd38a15a2f4" xml:space="preserve"><value>; требуемая координата </value></data>
   <data name="report.legacy.bbf4ba2e6ad8" xml:space="preserve"><value>## Заключение</value></data>
   <data name="report.legacy.bdd154f2ccd2" xml:space="preserve"><value>## Доказательный статус</value></data>
@@ -164,7 +164,7 @@
   <data name="report.legacy.d524beb3aacc" xml:space="preserve"><value>До: `</value></data>
   <data name="report.legacy.d5b2d675b4c1" xml:space="preserve"><value>самоидентификация</value></data>
   <data name="report.legacy.d6b2a5b4e48c" xml:space="preserve"><value>Сертификация determinant</value></data>
-  <data name="report.legacy.d70c2bf4cc20" xml:space="preserve"><value>{_parameterName} содержит non-finite double constant {value}; </value></data>
+  <data name="report.legacy.d70c2bf4cc20" xml:space="preserve"><value>{0} содержит non-finite double constant {1}; </value></data>
   <data name="report.legacy.da1252a7d1c3" xml:space="preserve"><value>Тезис системы должен иметь форму x=c или y=c, где c — конечная double-константа либо константная дробь.</value></data>
   <data name="report.legacy.db11d2861e7d" xml:space="preserve"><value>нулевой остаток</value></data>
   <data name="report.legacy.db4daaeabee8" xml:space="preserve"><value>**Нормативное следствие:** </value></data>
@@ -173,8 +173,8 @@
   <data name="report.legacy.dfd6e531edbe" xml:space="preserve"><value>Тезис требует {claim}, но система символически выводит {(coordinate == 0 ? </value></data>
   <data name="report.legacy.e258776142b4" xml:space="preserve"><value>Сокращение общего множителя</value></data>
   <data name="report.legacy.e444ee8cd714" xml:space="preserve"><value>Компонент нормативного шага не может быть пустым.</value></data>
-  <data name="report.legacy.e535b04270b1" xml:space="preserve"><value>NS-02 не выполнен: ∇·u не сократился до нуля, получено {divergence}.</value></data>
-  <data name="report.legacy.e8a7f81caef8" xml:space="preserve"><value>**Нормативное основание:** {basis}</value></data>
+  <data name="report.legacy.e535b04270b1" xml:space="preserve"><value>NS-02 не выполнен: ∇·u не сократился до нуля, получено {0}.</value></data>
+  <data name="report.legacy.e8a7f81caef8" xml:space="preserve"><value>**Нормативное основание:** {0}</value></data>
   <data name="report.legacy.e9882dd8a639" xml:space="preserve"><value>**Основание:** точное решение линейного равенства по оставшейся координате.</value></data>
   <data name="report.legacy.eaaa5e41614c" xml:space="preserve"><value>Неизвестный доказательный статус документа.</value></data>
   <data name="report.legacy.eba8a1ddaeaf" xml:space="preserve"><value>Компонентный лапласиан Δu.</value></data>
@@ -190,7 +190,7 @@
   <data name="report.legacy.f798f6c28fc5" xml:space="preserve"><value>Дополнительные аксиомы не заданы.</value></data>
   <data name="report.legacy.fa7c7a698fdd" xml:space="preserve"><value>Структурное поле ∇p.</value></data>
   <data name="report.legacy.fa95ff4a3c6c" xml:space="preserve"><value>линейная пара идентичности</value></data>
-  <data name="report.legacy.faeacf87abee" xml:space="preserve"><value>для операции {operation}.</value></data>
+  <data name="report.legacy.faeacf87abee" xml:space="preserve"><value>для операции {0}.</value></data>
   <data name="report.legacy.fcc467b3afa5" xml:space="preserve"><value>### Шаг 2: Выделение первой координаты</value></data>
   <data name="report.legacy.fdd564f5d5e4" xml:space="preserve"><value>конвективный перенос</value></data>
   <data name="runtime.legacy.0015d6e3591f" xml:space="preserve"><value>{Fraction} полного круга</value></data>
@@ -434,7 +434,7 @@
   <data name="runtime.legacy.8bc9759cbfa9" xml:space="preserve"><value>eq2: собирается полоса 0 &lt;= x &lt;= 5.</value></data>
   <data name="runtime.legacy.8c383d7703cb" xml:space="preserve"><value>UV полюс</value></data>
   <data name="runtime.legacy.8c72c99e6a4c" xml:space="preserve"><value>bePaid вернул пустой или неподдерживаемый JSON ответ.</value></data>
-  <data name="runtime.legacy.8c78f17a7aee" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{typeof(T).Name}, {typeof(T).Name}&gt;&gt; </value></data>
+  <data name="runtime.legacy.8c78f17a7aee" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{0}, {0}&gt;&gt; </value></data>
   <data name="runtime.legacy.8edfed9716e9" xml:space="preserve"><value>Множитель должен быть целым числом больше единицы.</value></data>
   <data name="runtime.legacy.8f40ed00de3d" xml:space="preserve"><value>Положительная часть</value></data>
   <data name="runtime.legacy.8f4fadc3ac1b" xml:space="preserve"><value>Identity-вектор требует одинаковую размерность и число параметров.</value></data>
@@ -625,18 +625,18 @@
   <data name="runtime.legacy.ffa894015659" xml:space="preserve"><value>Неопределённая log-форма</value></data>
   <data name="runtime.legacy.ffcd489e92b9" xml:space="preserve"><value>  [x =&gt;] выражение</value></data>
   <data name="runtime.legacy.ffff260af1e2" xml:space="preserve"><value>  Формула строится символически и не является финансовым прогнозом или рекомендацией.</value></data>
-<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{typeof(T).Name}&gt; не может точно представить процентную дробь r/100 для данной отложенной ставки. </value></data>
-  <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;double,double&gt;&gt; для операции {operation}.</value></data>
+<data name="report.legacy.0b27d7d1d58b" xml:space="preserve"><value>CompoundInterest&lt;{0}&gt; не может точно представить процентную дробь r/100 для данной отложенной ставки. </value></data>
+  <data name="report.legacy.1010fa798c83" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;double,double&gt;&gt; для операции {0}.</value></data>
   <data name="report.legacy.135159f302e4" xml:space="preserve"><value>Integral требует лямбду F ровно с одним параметром.</value></data>
   <data name="report.legacy.31e8a935d63d" xml:space="preserve"><value>при нормализации F для Integral.</value></data>
   <data name="report.legacy.3b7e9e7e7d02" xml:space="preserve"><value>Число периодов должно быть неотрицательным.</value></data>
   <data name="report.legacy.3e658e1d7e8e" xml:space="preserve"><value>Не удалось связать параметр ширины диапазона.</value></data>
   <data name="report.legacy.402d1dd9526d" xml:space="preserve"><value>CompoundInterest требует лямбду S ровно с одним параметром.</value></data>
-  <data name="report.legacy.55ffc59d4281" xml:space="preserve"><value>Не удалось связать параметр правого операнда {operation}.</value></data>
+  <data name="report.legacy.55ffc59d4281" xml:space="preserve"><value>Не удалось связать параметр правого операнда {0}.</value></data>
   <data name="report.legacy.64a8d95a4a2d" xml:space="preserve"><value>Integral требует две лямбды ровно с одним параметром.</value></data>
   <data name="report.legacy.69e26648b784" xml:space="preserve"><value>Масштаб векторного поля обязан быть конечным double.</value></data>
   <data name="report.legacy.6b478c3c5d23" xml:space="preserve"><value>Sum требует две лямбды ровно с одним параметром.</value></data>
-  <data name="report.legacy.8730416099cf" xml:space="preserve"><value>Не удалось связать параметр для {operation}.</value></data>
+  <data name="report.legacy.8730416099cf" xml:space="preserve"><value>Не удалось связать параметр для {0}.</value></data>
   <data name="report.legacy.88d28a2f88f2" xml:space="preserve"><value>RICIS-конвейер должен сохранить expected lambda.</value></data>
   <data name="report.legacy.94e178ae8592" xml:space="preserve"><value>Не удалось подставить тело внутренней функции в Compose.</value></data>
   <data name="report.legacy.96664848bdcd" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду суммы.</value></data>
@@ -645,12 +645,12 @@
   <data name="report.legacy.a9ebe4eec70c" xml:space="preserve"><value>Используйте decimal, double, Half, custom rational scalar либо целочисленную ставку, кратную 100%. </value></data>
   <data name="report.legacy.c11425633c16" xml:space="preserve"><value>Не удалось связать expected expression с claim parameter.</value></data>
   <data name="report.legacy.d7e8951c331d" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду второго слагаемого.</value></data>
-  <data name="report.legacy.defac919f5a8" xml:space="preserve"><value>Ширина диапазона должна иметь тип {typeof(T).FullName}.</value></data>
+  <data name="report.legacy.defac919f5a8" xml:space="preserve"><value>Ширина диапазона должна иметь тип {0}.</value></data>
   <data name="report.legacy.e33617d4ce58" xml:space="preserve"><value>Не удалось связать параметр второго слагаемого.</value></data>
-  <data name="report.legacy.e66a27f6139b" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{typeof(T).Name}, {typeof(T).Name}&gt;&gt; при доказательстве.</value></data>
+  <data name="report.legacy.e66a27f6139b" xml:space="preserve"><value>RICIS-конвейер должен сохранить Expression&lt;Func&lt;{0}, {0}&gt;&gt; при доказательстве.</value></data>
   <data name="report.legacy.eeeda28e90f1" xml:space="preserve"><value>RICIS-конвейер должен сохранить тип четырёхпеременного scalar-поля.</value></data>
   <data name="report.legacy.efbf88fbbff0" xml:space="preserve"><value>Unary symbolic proof-выведение завершено.</value></data>
   <data name="report.legacy.f07b8da3f950" xml:space="preserve"><value>Неизвестная координата поля.</value></data>
   <data name="report.legacy.f428e8a726f3" xml:space="preserve"><value>RICIS-конвейер не сохранил лямбду первого слагаемого.</value></data>
-  <data name="report.legacy.f9e0c9c086a0" xml:space="preserve"><value>Не удалось связать параметр показателя для {operation}.</value></data>
+  <data name="report.legacy.f9e0c9c086a0" xml:space="preserve"><value>Не удалось связать параметр показателя для {0}.</value></data>
   </root>
