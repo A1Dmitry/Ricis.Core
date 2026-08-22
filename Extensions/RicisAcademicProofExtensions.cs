@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using System.Globalization;
 using System.Numerics;
 using System.Text;
 using Ricis.Core.Expressions;
 using Ricis.Core.Logging;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 using Ricis.Core.Proofs;
 using Ricis.Core.SpecialFunctions;
 
@@ -103,7 +105,7 @@ public static class RicisAcademicProofExtensions
 
         log?.Info(
             "RICIS_PROOF_START",
-            "Запущено symbolic proof-выведение для unary expression tree.",
+            RicisLegacyTextResources.Get("report.legacy.9c23e1f43fb1"),
             new Dictionary<string, string>
             {
                 ["scalarType"] = typeof(T).FullName ?? typeof(T).Name,
@@ -119,11 +121,11 @@ public static class RicisAcademicProofExtensions
             : RicisPhasePipeline.SimplifyWithTraceAndLog(claim, trace, log);
         var typedDerived = derived as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> при доказательстве.");
+                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.e66a27f6139b"), typeof(T).Name));
 
         log?.Info(
             "RICIS_PROOF_COMPLETE",
-            "Unary symbolic proof-выведение завершено.",
+            RicisLegacyTextResources.Get("report.legacy.efbf88fbbff0"),
             new Dictionary<string, string>
             {
                 ["derived"] = typedDerived.ToString(),
@@ -146,10 +148,10 @@ public static class RicisAcademicProofExtensions
         where T : INumber<T>
     {
         var normalizedExpected = RicisPhasePipeline.Simplify(expected) as Expression<Func<T, T>>
-            ?? throw new InvalidOperationException("RICIS-конвейер должен сохранить expected lambda.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.88d28a2f88f2"));
         var reboundExpectedBody = new ParameterSubstitutionVisitor(
             normalizedExpected.Parameters[0], derived.Parameters[0]).Visit(normalizedExpected.Body)
-            ?? throw new InvalidOperationException("Не удалось связать expected expression с claim parameter.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.c11425633c16"));
         var reboundExpected = Expression.Lambda<Func<T, T>>(reboundExpectedBody, derived.Parameters);
         var verification = Expression.Lambda<Func<T, bool>>(
             Expression.Equal(derived.Body, reboundExpected.Body), derived.Parameters);
