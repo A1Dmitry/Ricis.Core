@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Phases;
 using Ricis.Core.Extensions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -26,7 +27,7 @@ public sealed class RicisVectorExpression<T>
     {
         ArgumentNullException.ThrowIfNull(coordinates);
         var copied = coordinates.ToArray();
-        if (copied.Length == 0) throw new ArgumentException("Символьный RICIS-вектор обязан иметь координаты.", nameof(coordinates));
+        if (copied.Length == 0) throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.e024e4c45317"), nameof(coordinates));
         ValidateSignature(copied);
         _coordinates = Array.AsReadOnly(copied);
     }
@@ -77,7 +78,7 @@ public sealed class RicisVectorExpression<T>
         ValidatePair(outer, inner);
         if (outer.ParameterCount != outer.Dimension || inner.ParameterCount != inner.Dimension)
         {
-            throw new ArgumentException("Композиция векторных отображений требует N координат и N входных параметров.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.0e56770031e2"));
         }
 
         var parameters = CreateParameters(outer[0].Parameters);
@@ -90,7 +91,7 @@ public sealed class RicisVectorExpression<T>
         {
             var outerBody = RebindTo(coordinate, parameters).Body;
             var body = new CoordinateSubstitutionVisitor(parameters, innerBodies).Visit(outerBody)
-                ?? throw new InvalidOperationException("Не удалось построить композицию векторных RICIS-координат.");
+                ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.0594915ebbc3"));
             composed.Add(Normalize(body, parameters));
         }
 
@@ -103,8 +104,8 @@ public sealed class RicisVectorExpression<T>
     public static RicisVectorExpression<T> Zero(IReadOnlyList<ParameterExpression> parameters, int dimension)
     {
         ArgumentNullException.ThrowIfNull(parameters);
-        if (parameters.Count == 0) throw new ArgumentException("Нужен хотя бы один параметр.", nameof(parameters));
-        if (dimension <= 0) throw new ArgumentOutOfRangeException(nameof(dimension), dimension, "Размерность должна быть положительной.");
+        if (parameters.Count == 0) throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.24d015b2c20f"), nameof(parameters));
+        if (dimension <= 0) throw new ArgumentOutOfRangeException(nameof(dimension), dimension, RicisLegacyTextResources.Get("runtime.legacy.37596a4aee2f"));
         return new RicisVectorExpression<T>(Enumerable.Range(0, dimension)
             .Select(_ => Normalize(Expression.Constant(T.Zero), parameters)));
     }
@@ -150,14 +151,14 @@ public sealed class RicisVectorExpression<T>
     {
         var lambda = Expression.Lambda(body, parameters);
         return RicisPhasePipeline.Simplify(lambda) as LambdaExpression
-            ?? throw new InvalidOperationException("RICIS не сохранил многопеременную lambda-форму.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.2326d77f7a0b"));
     }
 
     private static LambdaExpression RebindTo(LambdaExpression source, IReadOnlyList<ParameterExpression> target)
     {
-        if (source.Parameters.Count != target.Count) throw new ArgumentException("Сигнатуры lambda выражений не совпадают.");
+        if (source.Parameters.Count != target.Count) throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.5d9ee9820d0a"));
         var body = new ParameterRebindVisitor(source.Parameters, target).Visit(source.Body)
-            ?? throw new InvalidOperationException("Не удалось переназначить параметры RICIS-координаты.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.24ce28f11df0"));
         return Expression.Lambda(body, target);
     }
 
@@ -169,27 +170,27 @@ public sealed class RicisVectorExpression<T>
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
         if (left.Dimension != right.Dimension || left.ParameterCount != right.ParameterCount)
-            throw new ArgumentException("Размерности и число параметров символьных RICIS-векторов должны совпадать.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.011669beb0ec"));
         for (var i = 0; i < left.ParameterCount; i++)
         {
             if (left[0].Parameters[i].Type != right[0].Parameters[i].Type)
-                throw new ArgumentException("Типы параметров символьных RICIS-векторов должны совпадать.");
+                throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.ec6839e349ed"));
         }
     }
 
     private static void ValidateSignature(IReadOnlyList<LambdaExpression> coordinates)
     {
         var first = coordinates[0];
-        if (first.ReturnType != typeof(T)) throw new ArgumentException("Координата возвращает тип, отличный от T.");
+        if (first.ReturnType != typeof(T)) throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.8936279f76f6"));
         for (var i = 1; i < coordinates.Count; i++)
         {
             var current = coordinates[i];
             if (current.ReturnType != typeof(T) || current.Parameters.Count != first.Parameters.Count)
-                throw new ArgumentException("Все координаты должны иметь одинаковый тип результата и сигнатуру параметров.");
+                throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.85c6ce727705"));
             for (var parameter = 0; parameter < first.Parameters.Count; parameter++)
             {
                 if (current.Parameters[parameter].Type != first.Parameters[parameter].Type)
-                    throw new ArgumentException("Все координаты должны иметь одинаковые типы параметров.");
+                    throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.51435b0ba8ad"));
             }
         }
     }
