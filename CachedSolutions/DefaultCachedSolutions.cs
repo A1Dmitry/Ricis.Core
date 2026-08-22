@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.CachedSolutions;
 
@@ -37,20 +38,20 @@ public static class DefaultCachedSolutions
         return new CachedSolutionIndex([
             new("difference-of-squares", removable, removableExpected, removableExpected,
                 "UnitTests/ComplexAlgebraicReduceTests.cs", "Removable difference-of-squares cancellation.",
-                "Разность квадратов: устранимое сокращение", "https://fizmatschool.ru/textbooks/alg-8/sokr-i-alg-drob/",
-                "Разложение x²−25=(x−5)(x+5) позволяет сократить общий множитель x−5 при сохранении ограничения x≠5.",
+                RicisLegacyTextResources.Get("runtime.legacy.d9e06a97b988"), "https://fizmatschool.ru/textbooks/alg-8/sokr-i-alg-drob/",
+                RicisLegacyTextResources.Get("runtime.legacy.3d473090edfb"),
                 "x => (x + 5)", "x => (x + 5)", "confirmed",
                 ["algebra", "factorization", "removable-singularity"], -3, 1, 0),
             new("nested-difference-of-squares", nested, nestedExpected, nestedExpected,
                 "UnitTests/OlympiadNestedReductionTests.cs", "Nested quotient with repeated factor cancellation.",
-                "Вложенная олимпиадная дробь", "https://openstax.org/books/college-algebra-2e/pages/7-4-simplify-complex-rational-expressions",
-                "Два последовательных шага: разность четвёртых степеней, обращение внутреннего делителя и сокращение повторных множителей.",
+                RicisLegacyTextResources.Get("runtime.legacy.f0045e3db6e0"), "https://openstax.org/books/college-algebra-2e/pages/7-4-simplify-complex-rational-expressions",
+                RicisLegacyTextResources.Get("runtime.legacy.b95939579d37"),
                 "x => (x + 2)", "x => (x + 2)", "confirmed",
                 ["olympiad", "nested-fraction", "difference-of-squares"], 0, 2, 1),
             new("quadratic-pole", pole, poleExpected, poleExpected,
                 "RegressionTests/KnownRicisLimitsSuite.cs", "Preserve both singular roots instead of cancelling the pole.",
-                "Квадратичный знаменатель и два полюса", "https://openstax.org/books/calculus-volume-1/pages/2-2-the-limit-of-a-function",
-                "Знаменатель (x−2)(x+2) обращается в ноль в двух корнях. Классическая запись скрывает структуру полюсов, а RICIS сохраняет оба ключа.",
+                RicisLegacyTextResources.Get("runtime.legacy.3a0d58179b82"), "https://openstax.org/books/calculus-volume-1/pages/2-2-the-limit-of-a-function",
+                RicisLegacyTextResources.Get("runtime.legacy.1375e23b3123"),
                 "x => 1 / (x² − 4)", "∞₁ at {x=-2, x=2}", "confirmed",
                 ["singularity", "pole", "quadratic"], 3, 0, -1)
         ]);
