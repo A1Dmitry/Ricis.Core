@@ -802,7 +802,7 @@ internal static class Program
                 var value = parser.Parse(check.Text).Compile()(check.Input);
                 if (Math.Abs(value - check.Expected) > 1e-12)
                 {
-                    throw new InvalidOperationException($"Ожидалось {check.Expected:G17}, получено {value:G17}.");
+                    throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.f4cfae010a8d", ("check.Expected:G17", check.Expected.ToString("G17")), ("value:G17", value.ToString("G17"))));
                 }
 
                 Console.WriteLine($"PASS: parser — {check.Text}");
@@ -816,7 +816,7 @@ internal static class Program
 
         Console.WriteLine(failures == 0
             ? RicisLegacyTextResources.Get("runtime.legacy.14737b5f2c10")
-            : $"Парсер: сбоев {failures}.");
+            : RicisLegacyTextResources.Format("runtime.legacy.5499ab2c8d72", ("failures", failures)));
         return failures == 0 ? 0 : 1;
     }
 
