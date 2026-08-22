@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Linq.Expressions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Proofs;
 
@@ -32,7 +33,7 @@ internal static class RicisProofDocumentTemplates
             RicisProofDocumentFormat.Academic => throw new ArgumentException(
                 "Academic document rendering is provided by the existing academic template.", nameof(format)),
             _ when Factories.TryGetValue(format, out var factory) => factory,
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-документа."),
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, RicisLegacyTextResources.Get("report.legacy.c35280c79f2e")),
         };
     }
 
