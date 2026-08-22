@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -21,7 +22,7 @@ public static class RicisComplexExtensions
         ArgumentNullException.ThrowIfNull(real);
         if (real.Parameters.Count != 1)
         {
-            throw new ArgumentException("AsComplex требует лямбду ровно с одним параметром.", nameof(real));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.94e178ae8592"), nameof(real));
         }
 
         NumericConstants.Register<T>();
@@ -78,6 +79,6 @@ public static class RicisComplexExtensions
         var raw = Expression.Lambda<Func<double, double>>(body, squaredNorm.Parameters[0]);
         return RicisPhasePipeline.Simplify(raw) as Expression<Func<double, double>>
             ?? throw new InvalidOperationException(
-                "RICIS-конвейер должен сохранить Expression<Func<double,double>> для комплексной Norm.");
+                RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee"));
     }
 }
