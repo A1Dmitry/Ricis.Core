@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -32,7 +33,7 @@ public static class RicisDerivativeExtensions
         ArgumentNullException.ThrowIfNull(function);
         if (function.Parameters.Count != 1)
         {
-            throw new ArgumentException("DxDt требует лямбду ровно с одним параметром времени.", nameof(function));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.019ca3b2ab39"), nameof(function));
         }
 
         NumericConstants.Register<T>();
@@ -41,8 +42,9 @@ public static class RicisDerivativeExtensions
         // symbolic differentiation: d(t/t)/dt must begin from d(1)/dt.
         var normalized = RicisPhasePipeline.Simplify(function) as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                "при нормализации исходной функции.");
+                RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee") +
+                typeof(T).Name + ", " + typeof(T).Name + ">> " +
+                RicisLegacyTextResources.Get("report.legacy.2d06e611273a"));
 
         var time = normalized.Parameters[0];
         var derivativeBody = new FormalDerivativeBuilder<T>(time).Build(normalized.Body);
@@ -51,8 +53,9 @@ public static class RicisDerivativeExtensions
 
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                "для формальной производной.");
+                RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee") +
+                typeof(T).Name + ", " + typeof(T).Name + ">> " +
+                RicisLegacyTextResources.Get("report.legacy.adfc67b0c234"));
     }
 
     private sealed class FormalDerivativeBuilder<T> where T : INumber<T>
