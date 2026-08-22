@@ -1,5 +1,7 @@
 using System.Text;
 
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Proofs;
 
 /// <summary>
@@ -25,7 +27,7 @@ public static class RicisLeanTemplate
         ArgumentNullException.ThrowIfNull(requestedRows);
         if (requestedRows.Rows.Count == 0)
         {
-            throw new ArgumentException("LeanTemplate требует хотя бы одну requested proof row.", nameof(requestedRows));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.f0b144c53419"), nameof(requestedRows));
         }
 
         var builder = new StringBuilder();
@@ -111,7 +113,7 @@ public static class RicisLeanTemplate
                 AppendA6Theorem(builder, data);
                 return;
             default:
-                throw new ArgumentOutOfRangeException(nameof(row), row, "Неизвестная Lean proof row.");
+                throw new ArgumentOutOfRangeException(nameof(row), row, RicisLegacyTextResources.Get("report.legacy.c906a002188d"));
         }
     }
 
