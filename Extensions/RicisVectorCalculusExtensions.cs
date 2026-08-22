@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -25,7 +26,7 @@ public static class RicisVectorCalculusExtensions
         ArgumentNullException.ThrowIfNull(field);
         if (!Enum.IsDefined(coordinate))
         {
-            throw new ArgumentOutOfRangeException(nameof(coordinate), coordinate, "Неизвестная координата поля.");
+            throw new ArgumentOutOfRangeException(nameof(coordinate), coordinate, RicisLegacyTextResources.Get("report.legacy.f07b8da3f950"));
         }
 
         var parameters = CreateParameters(field.Parameters);
@@ -137,7 +138,7 @@ public static class RicisVectorCalculusExtensions
         ArgumentNullException.ThrowIfNull(field);
         if (!double.IsFinite(scalar))
         {
-            throw new ArgumentOutOfRangeException(nameof(scalar), scalar, "Масштаб векторного поля обязан быть конечным double.");
+            throw new ArgumentOutOfRangeException(nameof(scalar), scalar, RicisLegacyTextResources.Get("report.legacy.69e26648b784"));
         }
 
         return new(Scale(field.U, scalar), Scale(field.V, scalar), Scale(field.W, scalar));
@@ -219,7 +220,7 @@ public static class RicisVectorCalculusExtensions
             parameters[2],
             parameters[3]);
         return RicisPhasePipeline.Simplify(lambda) as Expression<Func<double, double, double, double, double>>
-            ?? throw new InvalidOperationException("RICIS-конвейер должен сохранить тип четырёхпеременного scalar-поля.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.eeeda28e90f1"));
     }
 
     private static ParameterExpression[] CreateParameters(IReadOnlyList<ParameterExpression> source) =>
