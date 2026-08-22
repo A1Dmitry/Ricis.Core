@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Linq.Expressions;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -26,7 +27,7 @@ internal abstract class ParameterMappingVisitorBase : ExpressionVisitor
         ArgumentNullException.ThrowIfNull(replacements);
         if (source.Count != replacements.Count)
         {
-            throw new ArgumentException("Количество исходных параметров и замен должно совпадать.", nameof(replacements));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.352d0d67e907"), nameof(replacements));
         }
 
         var mapping = new Dictionary<ParameterExpression, Expression>(ReferenceEqualityComparer.Instance);
