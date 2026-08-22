@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Ricis.Core</RootNamespace>
+    <AssemblyName>Ricis.Resources</AssemblyName>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Resources/*.cs" Link="Resources/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../Resources/*.resx" Link="Resources/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

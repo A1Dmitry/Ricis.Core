@@ -18,6 +18,9 @@
     <PublishAot>true</PublishAot>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="Ricis.Resources/Ricis.Resources.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <EmbeddedResource Include="Logging/Templates/*.template">
       <LogicalName>Ricis.Core.Logging.Templates.%(Filename).template</LogicalName>
@@ -27,6 +30,10 @@
     <Content Include="Logging/Templates/*.exemplar.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Resources/**/*.cs" />
+    <Compile Remove="Ricis.Resources/**/*.cs" />
+    <None Remove="Ricis.Resources/**" />
+    <EmbeddedResource Remove="Resources/**/*.resx" />
     <Compile Remove="RegressionTests/**/*.cs" />
     <Compile Remove="UnitTests/**/*.cs" />
     <None Remove="UnitTests/**" />

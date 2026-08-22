@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 namespace Ricis.Finance.Domain;
 
 /// <summary>Lifecycle state of an invoice that owns one auditable payment order.</summary>
@@ -16,12 +17,12 @@ public sealed record InvoicePaymentRoute
     {
         if (string.IsNullOrWhiteSpace(payerCountryCode) || payerCountryCode.Trim().Length != 2 || !payerCountryCode.Trim().All(char.IsLetter))
         {
-            throw new ArgumentException("Код страны плательщика должен быть двухбуквенным ISO 3166-1 alpha-2 значением.", nameof(payerCountryCode));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.7fbc1d0c0ea3"), nameof(payerCountryCode));
         }
 
         if (string.IsNullOrWhiteSpace(railCode))
         {
-            throw new ArgumentException("Код платёжного rail обязателен и не может быть fallback-значением.", nameof(railCode));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.10f4a7f2827c"), nameof(railCode));
         }
 
         PayerCountryCode = payerCountryCode.Trim().ToUpperInvariant();
@@ -50,23 +51,23 @@ public sealed class Invoice
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Идентификатор invoice обязателен.", nameof(id));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.0e59d2cd4962"), nameof(id));
         }
 
         if (string.IsNullOrWhiteSpace(orderReference))
         {
-            throw new ArgumentException("Order reference обязателен.", nameof(orderReference));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.52e7c2966b0a"), nameof(orderReference));
         }
 
         if (orderReference.Trim().Length > 128)
         {
-            throw new ArgumentOutOfRangeException(nameof(orderReference), "Order reference слишком длинный.");
+            throw new ArgumentOutOfRangeException(nameof(orderReference), RicisLegacyTextResources.Get("runtime.legacy.c723ed041d94"));
         }
 
         ArgumentNullException.ThrowIfNull(route);
         if (expiresAtUtc <= issuedAtUtc)
         {
-            throw new ArgumentException("Invoice должен истекать позже момента выпуска.", nameof(expiresAtUtc));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.e9f1a008ebd2"), nameof(expiresAtUtc));
         }
 
         Id = id;
@@ -122,7 +123,7 @@ public sealed class Invoice
         EnsureStatus(InvoiceStatus.Issued);
         if (cancelledAtUtc.ToUniversalTime() >= ExpiresAtUtc)
         {
-            throw new InvalidOperationException("Истёкший invoice нельзя отменить как активный; сначала требуется expiration transition.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.d525f22701f4"));
         }
 
         CancelledAtUtc = cancelledAtUtc.ToUniversalTime();
@@ -135,7 +136,7 @@ public sealed class Invoice
         EnsureStatus(InvoiceStatus.Issued);
         if (expiredAtUtc.ToUniversalTime() < ExpiresAtUtc)
         {
-            throw new InvalidOperationException("Invoice нельзя перевести в Expired до наступления ExpiresAtUtc.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.4081959cecd6"));
         }
 
         Status = InvoiceStatus.Expired;
@@ -153,11 +154,11 @@ public sealed class Invoice
     {
         if (Status != expected)
         {
-            throw new InvalidOperationException($"Операция допустима только для invoice в состоянии {expected}; текущее состояние: {Status}.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.478bf12b4057", ("expected", expected), ("Status", Status)));
         }
     }
 
     private static string RequireKey(string value, string parameterName) => string.IsNullOrWhiteSpace(value)
-        ? throw new ArgumentException("Идентификатор/idempotency key обязателен.", parameterName)
+        ? throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.df78568415c9"), parameterName)
         : value.Trim();
 }

@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using System.Globalization;
 
 namespace Ricis.Finance.Domain;
@@ -13,12 +14,12 @@ public readonly record struct Money
     {
         if (amount < 0m)
         {
-            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Денежная сумма не может быть отрицательной.");
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, RicisLegacyTextResources.Get("runtime.legacy.caebefb3ad5d"));
         }
 
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3)
         {
-            throw new ArgumentException("Код валюты должен быть трёхбуквенным ISO 4217 значением.", nameof(currency));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.72b1658e50f4"), nameof(currency));
         }
 
         Amount = decimal.Round(amount, 2, MidpointRounding.ToEven);
@@ -40,7 +41,7 @@ public readonly record struct Money
         var sameCurrency = RequireSameCurrency(other);
         if (sameCurrency.Amount > Amount)
         {
-            throw new InvalidOperationException("Операция создаёт отрицательный денежный остаток.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.24d3cdd7ff21"));
         }
 
         return new Money(Amount - sameCurrency.Amount, Currency);
@@ -58,7 +59,7 @@ public readonly record struct Money
     {
         if (!StringComparer.Ordinal.Equals(Currency, other.Currency))
         {
-            throw new InvalidOperationException($"Нельзя объединять {Currency} и {other.Currency} без FX snapshot.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.917a580ee2e5", ("Currency", Currency), ("other.Currency", other.Currency)));
         }
 
         return other;

@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -15,23 +16,23 @@ public sealed record BepaidOptions
     {
         if (string.IsNullOrWhiteSpace(shopId))
         {
-            throw new ArgumentException("bePaid Shop ID обязателен.", nameof(shopId));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.0663fbcfb246"), nameof(shopId));
         }
 
         if (string.IsNullOrWhiteSpace(secretKey))
         {
-            throw new ArgumentException("bePaid Secret Key обязателен.", nameof(secretKey));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.c201c7090cd2"), nameof(secretKey));
         }
 
         if (eripServiceNumber is <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(eripServiceNumber), "Номер услуги ЕРИП должен быть положительным.");
+            throw new ArgumentOutOfRangeException(nameof(eripServiceNumber), RicisLegacyTextResources.Get("runtime.legacy.dd5c9557fed7"));
         }
 
         var effectiveApiBaseUri = apiBaseUri ?? new Uri("https://api.bepaid.by/", UriKind.Absolute);
         if (!effectiveApiBaseUri.IsAbsoluteUri || !StringComparer.OrdinalIgnoreCase.Equals(effectiveApiBaseUri.Scheme, Uri.UriSchemeHttps))
         {
-            throw new ArgumentException("Адрес bePaid API должен быть абсолютным HTTPS URI.", nameof(apiBaseUri));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.74238c5310c2"), nameof(apiBaseUri));
         }
 
         ShopId = shopId.Trim();
@@ -86,14 +87,14 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
         ArgumentNullException.ThrowIfNull(request);
         if (!SupportedCapabilities.Any(capability => capability.Supports(request.PayerCountryCode, request.Rail, request.Amount)))
         {
-            throw new NotSupportedException("Этот bePaid adapter поддерживает только подтверждённые маршруты BY/BelarusEripEpos/BYN и RU/RussiaSbp/RUB.");
+            throw new NotSupportedException(RicisLegacyTextResources.Get("runtime.legacy.5f90e21cdcc0"));
         }
 
         return request.Rail switch
         {
             PaymentRail.BelarusEripEpos => await CreateEripAsync(request, cancellationToken),
             PaymentRail.RussiaSbp => await CreateSbpAsync(request, cancellationToken),
-            _ => throw new NotSupportedException($"Неподдерживаемый payment rail {request.Rail}."),
+            _ => throw new NotSupportedException(RicisLegacyTextResources.Format("runtime.legacy.be3d55fdb969", ("request.Rail", request.Rail))),
         };
     }
 
@@ -117,11 +118,11 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
             payload,
             request.IdempotencyKey,
             cancellationToken);
-        var transaction = response.Transaction ?? throw new InvalidOperationException("bePaid не вернул transaction для созданного ЕРИП счёта.");
-        var erip = transaction.Erip ?? throw new InvalidOperationException("bePaid не вернул ERIP QR/deep-link данные для созданного счёта.");
+        var transaction = response.Transaction ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.97f8b87ab2c0"));
+        var erip = transaction.Erip ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.fbac42170427"));
         if (string.IsNullOrWhiteSpace(transaction.Uid))
         {
-            throw new InvalidOperationException("bePaid не вернул UID созданного ЕРИП счёта.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.c0dfb83723c8"));
         }
 
         var qrPayload = DecodeQrPayload(erip.QrCodeRaw);
@@ -161,13 +162,13 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
             payload,
             request.IdempotencyKey,
             cancellationToken);
-        var transaction = response.Transaction ?? throw new InvalidOperationException("bePaid не вернул transaction для созданной СБП payment session.");
+        var transaction = response.Transaction ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.6d8a04bad52b"));
         if (string.IsNullOrWhiteSpace(transaction.Uid))
         {
-            throw new InvalidOperationException("bePaid не вернул UID созданной СБП payment session.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.48cd74ec70f8"));
         }
 
-        var form = transaction.Form ?? throw new InvalidOperationException("bePaid не вернул form.action — provider-hosted URL для СБП QR и выбора банка.");
+        var form = transaction.Form ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.f6978ff56dc6"));
         var handoff = ToPaymentHandoff(form);
         return new PaymentLaunchSession(
             providerName: "bePaid",
@@ -184,14 +185,14 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
     {
         if (string.IsNullOrWhiteSpace(form.Action) || !Uri.TryCreate(form.Action, UriKind.Absolute, out var action))
         {
-            throw new InvalidOperationException("bePaid вернул некорректный form.action для customer handoff.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.15466dcced9a"));
         }
 
         var method = form.Method?.Trim().ToUpperInvariant() switch
         {
             "GET" => PaymentHandoffMethod.Get,
             "POST" => PaymentHandoffMethod.Post,
-            _ => throw new InvalidOperationException("bePaid вернул неподдерживаемый метод customer handoff формы."),
+            _ => throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.4ea57e631f83")),
         };
         var fields = (form.Fields ?? [])
             .Where(field => !string.IsNullOrWhiteSpace(field.Name) && field.Value is not null)
@@ -219,11 +220,11 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new HttpRequestException($"bePaid payment launch отклонён со статусом {(int)response.StatusCode}: {ExtractProviderError(json)}", null, response.StatusCode);
+            throw new HttpRequestException(RicisLegacyTextResources.Format("runtime.legacy.83ff0feff778", ("(int)response.StatusCode", (int)response.StatusCode), ("ExtractProviderError(json)", ExtractProviderError(json))), null, response.StatusCode);
         }
 
         return JsonSerializer.Deserialize<TResponse>(json, JsonOptions)
-            ?? throw new InvalidOperationException("bePaid вернул пустой или неподдерживаемый JSON ответ.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.8c72c99e6a4c"));
     }
 
     private static long ToMinorUnits(Money amount) => checked(decimal.ToInt64(decimal.Round(amount.Amount * 100m, 0, MidpointRounding.ToEven)));
@@ -232,7 +233,7 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
     {
         if (string.IsNullOrWhiteSpace(qrCodeRaw))
         {
-            throw new InvalidOperationException("bePaid не вернул qr_code_raw, необходимый для безопасного построения provider-issued bank deep links.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.666b84b46f0c"));
         }
 
         try
@@ -241,7 +242,7 @@ public sealed class BepaidPaymentLaunchPort : IPaymentLaunchPort
         }
         catch (FormatException error)
         {
-            throw new InvalidOperationException("bePaid вернул qr_code_raw в неподдерживаемом Base64 формате.", error);
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.ce9e849045d8"), error);
         }
     }
 

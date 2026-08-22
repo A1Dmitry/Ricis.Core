@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 namespace Ricis.Finance.Domain;
 
 /// <summary>Classifies the payer for tax-policy routing without embedding a tax rate in the payment aggregate.</summary>
@@ -22,7 +23,7 @@ public sealed class ProviderPayment
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Идентификатор платежа обязателен.", nameof(id));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.03288e992004"), nameof(id));
         }
 
         Id = id;
@@ -55,7 +56,7 @@ public sealed class ProviderPayment
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("Внешний идентификатор обязателен.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.63793260a01a"), parameterName);
         }
 
         return value.Trim();
@@ -75,12 +76,12 @@ public sealed record FxSnapshot
     {
         if (string.IsNullOrWhiteSpace(source))
         {
-            throw new ArgumentException("Источник курса обязателен.", nameof(source));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.f34afca7412f"), nameof(source));
         }
 
         if (targetPerSource <= 0m)
         {
-            throw new ArgumentOutOfRangeException(nameof(targetPerSource), targetPerSource, "Курс конвертации должен быть положительным.");
+            throw new ArgumentOutOfRangeException(nameof(targetPerSource), targetPerSource, RicisLegacyTextResources.Get("runtime.legacy.06ebf24b94d9"));
         }
 
         Source = source.Trim();
@@ -108,7 +109,7 @@ public sealed record FxSnapshot
     /// <summary>Converts an amount only when its source currency matches this snapshot.</summary>
     public Money Convert(Money source) => StringComparer.Ordinal.Equals(source.Currency, SourceCurrency)
         ? new Money(source.Amount * TargetPerSource, TargetCurrency)
-        : throw new InvalidOperationException("FX snapshot не соответствует валюте исходной суммы.");
+        : throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.5fdd1f9475be"));
 
     private static string NormalizeCurrency(string value) => new Money(0m, value).Currency;
 }

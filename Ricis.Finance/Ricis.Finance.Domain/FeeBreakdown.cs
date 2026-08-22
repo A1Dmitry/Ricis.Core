@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 namespace Ricis.Finance.Domain;
 
 /// <summary>
@@ -33,7 +34,7 @@ public sealed record FeeBreakdown
     {
         if (!StringComparer.Ordinal.Equals(gross.Currency, fee.Currency))
         {
-            throw new ArgumentException("Комиссия должна быть в валюте gross-суммы до отдельной FX-конверсии.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.ab8f347eb574"), parameterName);
         }
     }
 }

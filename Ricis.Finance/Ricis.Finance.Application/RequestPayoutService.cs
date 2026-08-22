@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using Ricis.Finance.Domain;
 
 namespace Ricis.Finance.Application;
@@ -40,11 +41,11 @@ public sealed class RequestPayoutService
         }
 
         var settlement = await _settlements.FindByIdAsync(command.SettlementId, cancellationToken).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException($"Settlement {command.SettlementId} не найден.");
+            ?? throw new KeyNotFoundException(RicisLegacyTextResources.Format("runtime.legacy.a31ffb75d90f", ("command.SettlementId", command.SettlementId)));
         var decision = _releasePolicy.Decide(settlement, command.Amount);
         if (!decision.IsAllowed)
         {
-            throw new InvalidOperationException($"Payout отклонён policy: {decision.Reason}");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.419a00abe9c3", ("decision.Reason", decision.Reason)));
         }
 
         var payout = settlement.ReservePayout(Guid.NewGuid(), command.IdempotencyKey, command.Amount, _clock.UtcNow);

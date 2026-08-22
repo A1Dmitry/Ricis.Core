@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 namespace Ricis.Finance.Domain;
 
 /// <summary>Tracks the lifecycle of a provider-side settlement independently from a bank payout.</summary>
@@ -30,7 +31,7 @@ public sealed class Settlement
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Идентификатор settlement обязателен.", nameof(id));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.e61c9c338f53"), nameof(id));
         }
 
         ArgumentNullException.ThrowIfNull(payment);
@@ -38,7 +39,7 @@ public sealed class Settlement
         ArgumentNullException.ThrowIfNull(fxSnapshot);
         if (!StringComparer.Ordinal.Equals(payment.Gross.Currency, fees.Gross.Currency) || payment.Gross.Amount != fees.Gross.Amount)
         {
-            throw new ArgumentException("FeeBreakdown обязан описывать тот же gross-факт, что и provider payment.", nameof(fees));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.fcac71ec74a3"), nameof(fees));
         }
 
         Id = id;
@@ -75,17 +76,17 @@ public sealed class Settlement
     {
         if (Status == SettlementStatus.FullyAllocated)
         {
-            throw new InvalidOperationException("Settlement уже полностью распределён.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.df1220f79005"));
         }
 
         if (!StringComparer.Ordinal.Equals(amount.Currency, AvailableToAllocate.Currency))
         {
-            throw new ArgumentException("Выплата должна быть в валюте доступного provider balance.", nameof(amount));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.71c4982a761a"), nameof(amount));
         }
 
         if (amount.Amount == 0m || amount.Amount > AvailableToAllocate.Amount)
         {
-            throw new InvalidOperationException("Сумма выплаты должна быть положительной и не превышать доступный остаток.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.7d1796d35ea3"));
         }
 
         _allocated = _allocated.Add(amount);
@@ -106,17 +107,17 @@ public sealed class PayoutRequest
     {
         if (id == Guid.Empty || settlementId == Guid.Empty)
         {
-            throw new ArgumentException("Идентификаторы payout и settlement обязательны.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.9a7899f07ab4"));
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new ArgumentException("Idempotency key обязателен.", nameof(idempotencyKey));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.89d28f4bd8c4"), nameof(idempotencyKey));
         }
 
         if (requestedAmount.Amount == 0m)
         {
-            throw new ArgumentOutOfRangeException(nameof(requestedAmount), "Payout не может иметь нулевую сумму.");
+            throw new ArgumentOutOfRangeException(nameof(requestedAmount), RicisLegacyTextResources.Get("runtime.legacy.a5bb27f674c9"));
         }
 
         Id = id;
@@ -165,7 +166,7 @@ public sealed class PayoutRequest
         EnsureStatus(PayoutStatus.Submitted);
         if (!StringComparer.Ordinal.Equals(actualBankFee.Currency, RequestedAmount.Currency) || actualBankFee.Amount > RequestedAmount.Amount)
         {
-            throw new ArgumentException("Фактическая банковская комиссия должна быть совместима с payout и не превышать его сумму.", nameof(actualBankFee));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.4b5fefbc699e"), nameof(actualBankFee));
         }
 
         ActualBankFee = actualBankFee;
@@ -180,14 +181,14 @@ public sealed class PayoutRequest
     }
 
     private static string RequireProviderPayoutId(string value) => string.IsNullOrWhiteSpace(value)
-        ? throw new ArgumentException("Provider payout id обязателен.", nameof(value))
+        ? throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.c9b4319a1bac"), nameof(value))
         : value.Trim();
 
     private void EnsureStatus(PayoutStatus expected)
     {
         if (Status != expected)
         {
-            throw new InvalidOperationException($"Операция допустима только для payout в состоянии {expected}; текущее состояние: {Status}.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.6b6a7f32c55d", ("expected", expected), ("Status", Status)));
         }
     }
 }

@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using Ricis.Finance.Domain;
 
 namespace Ricis.Finance.Application;
@@ -45,7 +46,7 @@ public sealed record PaymentRailCapability
         Rail = rail;
         if (supportedCurrencies is null || supportedCurrencies.Count == 0)
         {
-            throw new ArgumentException("Для платёжного rail должна быть объявлена хотя бы одна валюта.", nameof(supportedCurrencies));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.a7273a4875d9"), nameof(supportedCurrencies));
         }
 
         SupportedCurrencies = supportedCurrencies
@@ -74,7 +75,7 @@ public sealed record PaymentRailCapability
     {
         if (string.IsNullOrWhiteSpace(value) || value.Trim().Length != 2 || !value.Trim().All(char.IsLetter))
         {
-            throw new ArgumentException("Код страны плательщика должен быть двухбуквенным ISO 3166-1 alpha-2 значением.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.7fbc1d0c0ea3"), parameterName);
         }
 
         return value.Trim().ToUpperInvariant();
@@ -89,7 +90,7 @@ public sealed record PaymentHandoffField
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Имя поля handoff-формы обязательно.", nameof(name));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.fcc9ed08dd2a"), nameof(name));
         }
 
         Name = name.Trim();
@@ -111,7 +112,7 @@ public sealed record PaymentHandoff
     {
         if (action is null || !action.IsAbsoluteUri || !StringComparer.OrdinalIgnoreCase.Equals(action.Scheme, Uri.UriSchemeHttps))
         {
-            throw new ArgumentException("Адрес платёжного handoff должен быть абсолютным HTTPS URI.", nameof(action));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.4e056044a375"), nameof(action));
         }
 
         Action = action;
@@ -137,17 +138,17 @@ public sealed record BankApplicationOption
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
-            throw new ArgumentException("Название банковского приложения обязательно.", nameof(displayName));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.c7a2a84d884a"), nameof(displayName));
         }
 
         if (deepLinks is null || deepLinks.Count == 0)
         {
-            throw new ArgumentException("Для банковского приложения требуется хотя бы один provider-issued deep link.", nameof(deepLinks));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.286fb82111c6"), nameof(deepLinks));
         }
 
         if (deepLinks.Values.Any(link => link is null || !link.IsAbsoluteUri || !StringComparer.OrdinalIgnoreCase.Equals(link.Scheme, Uri.UriSchemeHttps)))
         {
-            throw new ArgumentException("Deep link банковского приложения должен быть абсолютным HTTPS URI.", nameof(deepLinks));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.38789cb23e52"), nameof(deepLinks));
         }
 
         DisplayName = displayName.Trim();
@@ -232,7 +233,7 @@ public sealed record CreatePaymentLaunch
     {
         if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > maximumLength)
         {
-            throw new ArgumentException($"Значение {parameterName} обязательно и не должно превышать {maximumLength} символов.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Format("runtime.legacy.e57021676712", ("parameterName", parameterName), ("maximumLength", maximumLength)), parameterName);
         }
 
         return value.Trim();
@@ -242,7 +243,7 @@ public sealed record CreatePaymentLaunch
     {
         if (value is null || !value.IsAbsoluteUri || !StringComparer.OrdinalIgnoreCase.Equals(value.Scheme, Uri.UriSchemeHttps))
         {
-            throw new ArgumentException("Адрес callback/return должен быть абсолютным HTTPS URI.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.d00af1f5a2c3"), parameterName);
         }
 
         return value;
@@ -265,12 +266,12 @@ public sealed record PaymentLaunchSession
     {
         if (string.IsNullOrWhiteSpace(providerName))
         {
-            throw new ArgumentException("Имя платёжного provider обязательно.", nameof(providerName));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.329c4c2e84ab"), nameof(providerName));
         }
 
         if (string.IsNullOrWhiteSpace(providerPaymentId))
         {
-            throw new ArgumentException("Идентификатор provider payment session обязателен.", nameof(providerPaymentId));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.75f32b399418"), nameof(providerPaymentId));
         }
 
         ProviderName = providerName.Trim();
@@ -282,7 +283,7 @@ public sealed record PaymentLaunchSession
         BankApplications = bankApplications?.ToArray() ?? [];
         if (Handoff is null && QrCodeDataUri is null && BankApplications.Count == 0)
         {
-            throw new ArgumentException("Provider launch session должна содержать handoff URI, QR-код или хотя бы одно банковское приложение.", nameof(handoff));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.ee05c93f5d65"), nameof(handoff));
         }
 
         ExpiresAtUtc = expiresAtUtc?.ToUniversalTime();
@@ -339,12 +340,12 @@ public sealed class PaymentRailRegistry
         foreach (var port in ports)
         {
             ArgumentNullException.ThrowIfNull(port);
-            foreach (var capability in port.Capabilities ?? throw new ArgumentException("Адаптер обязан объявить capabilities.", nameof(ports)))
+            foreach (var capability in port.Capabilities ?? throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.adb3ca595293"), nameof(ports)))
             {
                 var key = (capability.PayerCountryCode, capability.Rail);
                 if (!registered.TryAdd(key, port))
                 {
-                    throw new ArgumentException($"Для {capability.PayerCountryCode}/{capability.Rail} подключено более одного payment-launch adapter.", nameof(ports));
+                    throw new ArgumentException(RicisLegacyTextResources.Format("runtime.legacy.1842bfd8d58a", ("capability.PayerCountryCode", capability.PayerCountryCode), ("capability.Rail", capability.Rail)), nameof(ports));
                 }
 
                 capabilities.Add(capability);
@@ -372,7 +373,7 @@ public sealed class PaymentRailRegistry
         if (!_ports.TryGetValue((request.PayerCountryCode, request.Rail), out var port) ||
             !port.Capabilities.Any(capability => capability.Supports(request.PayerCountryCode, request.Rail, request.Amount)))
         {
-            throw new NotSupportedException($"Для {request.PayerCountryCode}/{request.Rail}/{request.Amount.Currency} не настроен подтверждённый payment-launch adapter.");
+            throw new NotSupportedException(RicisLegacyTextResources.Format("runtime.legacy.f14ca42ca77b", ("request.PayerCountryCode", request.PayerCountryCode), ("request.Rail", request.Rail), ("request.Amount.Currency", request.Amount.Currency)));
         }
 
         return port;

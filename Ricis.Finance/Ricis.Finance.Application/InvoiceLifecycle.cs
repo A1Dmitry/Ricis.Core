@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using Ricis.Finance.Domain;
 
 namespace Ricis.Finance.Application;
@@ -49,7 +50,7 @@ public sealed class IssueInvoiceService
             if (!StringComparer.Ordinal.Equals(existing.OrderReference, command.OrderReference.Trim()) ||
                 existing.Amount != command.Amount || existing.Route != command.Route)
             {
-                throw new InvalidOperationException("Повторный invoice command использует тот же idempotency key с другими данными.");
+                throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.ec0fdf50336c"));
             }
 
             return existing;
@@ -58,7 +59,7 @@ public sealed class IssueInvoiceService
         var duplicateOrder = await _invoices.FindByOrderReferenceAsync(command.OrderReference, cancellationToken);
         if (duplicateOrder is not null)
         {
-            throw new InvalidOperationException($"Order reference уже принадлежит invoice {duplicateOrder.Id}.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.200c08edbae5", ("duplicateOrder.Id", duplicateOrder.Id)));
         }
 
         var issuedAt = _clock.UtcNow.ToUniversalTime();
@@ -93,7 +94,7 @@ public sealed class CancelInvoiceService
     {
         ArgumentNullException.ThrowIfNull(command);
         var invoice = await _invoices.FindByIdAsync(command.InvoiceId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Invoice {command.InvoiceId} не найден.");
+            ?? throw new KeyNotFoundException(RicisLegacyTextResources.Format("runtime.legacy.319d105f944e", ("command.InvoiceId", command.InvoiceId)));
         invoice.Cancel(_clock.UtcNow);
         await _invoices.StoreAsync(invoice, cancellationToken);
         return invoice;
@@ -118,7 +119,7 @@ public sealed class ExpireInvoiceService
     {
         ArgumentNullException.ThrowIfNull(command);
         var invoice = await _invoices.FindByIdAsync(command.InvoiceId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Invoice {command.InvoiceId} не найден.");
+            ?? throw new KeyNotFoundException(RicisLegacyTextResources.Format("runtime.legacy.319d105f944e", ("command.InvoiceId", command.InvoiceId)));
         invoice.Expire(_clock.UtcNow);
         await _invoices.StoreAsync(invoice, cancellationToken);
         return invoice;
@@ -155,14 +156,14 @@ public sealed class CreateInvoiceLaunchService
         {
             if (duplicate.InvoiceId != command.InvoiceId)
             {
-                throw new InvalidOperationException("Launch idempotency key уже связан с другим invoice.");
+                throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.2d5e3de808c1"));
             }
 
             return duplicate;
         }
 
         var invoice = await _invoices.FindByIdAsync(command.InvoiceId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Invoice {command.InvoiceId} не найден.");
+            ?? throw new KeyNotFoundException(RicisLegacyTextResources.Format("runtime.legacy.319d105f944e", ("command.InvoiceId", command.InvoiceId)));
         if (!invoice.IsLaunchableAt(_clock.UtcNow))
         {
             if (invoice.Status == InvoiceStatus.Issued && _clock.UtcNow.ToUniversalTime() >= invoice.ExpiresAtUtc)
@@ -171,7 +172,7 @@ public sealed class CreateInvoiceLaunchService
                 await _invoices.StoreAsync(invoice, cancellationToken);
             }
 
-            throw new InvalidOperationException($"Invoice {invoice.Id} нельзя использовать для payment launch в состоянии {invoice.Status}.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.c403fd9d89b7", ("invoice.Id", invoice.Id), ("invoice.Status", invoice.Status)));
         }
 
         var request = new CreatePaymentLaunch(
@@ -196,5 +197,5 @@ public sealed class CreateInvoiceLaunchService
 
     private static PaymentRail ParseRail(string railCode) => Enum.TryParse<PaymentRail>(railCode, ignoreCase: false, out var rail)
         ? rail
-        : throw new NotSupportedException($"Invoice содержит неподдержанный payment rail: {railCode}.");
+        : throw new NotSupportedException(RicisLegacyTextResources.Format("runtime.legacy.58b386476ed6", ("railCode", railCode)));
 }

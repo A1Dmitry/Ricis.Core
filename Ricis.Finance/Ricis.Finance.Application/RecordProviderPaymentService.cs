@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 using Ricis.Finance.Domain;
 
 namespace Ricis.Finance.Application;
@@ -83,5 +84,5 @@ public sealed record RecordedProviderPayment(
         settlement,
         null,
             WasDuplicate: true,
-            TaxPolicyReason: $"Повторное provider event проигнорировано; сохранённый settlement использует ранее применённую policy. Current policy: {policyVersion}.");
+            TaxPolicyReason: RicisLegacyTextResources.Format("runtime.legacy.a10eb07bf6f3", ("policyVersion", policyVersion)));
 }

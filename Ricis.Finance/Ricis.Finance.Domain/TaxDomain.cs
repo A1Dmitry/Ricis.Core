@@ -1,3 +1,4 @@
+using Ricis.Core.Resources;
 namespace Ricis.Finance.Domain;
 
 /// <summary>Describes the review level produced by an effective-dated tax policy.</summary>
@@ -23,17 +24,17 @@ public sealed record TaxReceiptCandidate
     {
         if (id == Guid.Empty || settlementId == Guid.Empty)
         {
-            throw new ArgumentException("Идентификаторы кандидата и settlement обязательны.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.b3c34a933f2c"));
         }
 
         if (!StringComparer.Ordinal.Equals(grossInByN.Currency, "BYN"))
         {
-            throw new ArgumentException("Налоговая BYN-сумма должна иметь валюту BYN.", nameof(grossInByN));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.572efe3523f4"), nameof(grossInByN));
         }
 
         if (string.IsNullOrWhiteSpace(policyVersion))
         {
-            throw new ArgumentException("Версия применённой политики обязательна.", nameof(policyVersion));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.3412689929db"), nameof(policyVersion));
         }
 
         Id = id;
@@ -80,12 +81,12 @@ public sealed record AnnualTaxPosition
 
         if (!StringComparer.Ordinal.Equals(taxableIncomeByN.Currency, "BYN"))
         {
-            throw new ArgumentException("Годовой tax position должен быть выражен в BYN.", nameof(taxableIncomeByN));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.f2fc65c73fc7"), nameof(taxableIncomeByN));
         }
 
         if (string.IsNullOrWhiteSpace(policyVersion))
         {
-            throw new ArgumentException("Версия политики обязательна.", nameof(policyVersion));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.a87ffbb2e6e4"), nameof(policyVersion));
         }
 
         TaxYear = taxYear;
