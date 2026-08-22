@@ -1,3 +1,5 @@
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Proofs;
 
 /// <summary>
@@ -51,7 +53,7 @@ public sealed class RicisProofDocumentProfile
     {
         if (!Enum.IsDefined(scope))
         {
-            throw new ArgumentOutOfRangeException(nameof(scope), scope, "Неизвестный доказательный статус документа.");
+            throw new ArgumentOutOfRangeException(nameof(scope), scope, RicisLegacyTextResources.Get("report.legacy.eaaa5e41614c"));
         }
 
         Title = RequireText(title, nameof(title));
@@ -100,7 +102,7 @@ public sealed class RicisProofDocumentProfile
         var copied = values.ToArray();
         if (copied.Any(value => value is null))
         {
-            throw new ArgumentException("Нормативный шаг не может быть null.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.00762812957b"), parameterName);
         }
 
         return Array.AsReadOnly(copied);
@@ -121,7 +123,7 @@ public sealed class RicisProofDocumentProfile
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("Текстовый элемент proof-документа не может быть пустым.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.f409f8f7da4b"), parameterName);
         }
 
         return value;
