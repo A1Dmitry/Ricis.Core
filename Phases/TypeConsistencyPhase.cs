@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Simplifiers;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Phases;
 
@@ -42,7 +43,7 @@ public sealed class TypeConsistencyVisitor : ExpressionVisitor, IExpressionVisit
         if (singularity.Numerator.Type != singularity.Type)
         {
             throw new ArgumentException(
-                "Индексированный RICIS-узел обязан сохранять тип исходного payload.",
+                RicisLegacyTextResources.Get("runtime.legacy.96e01bfaea4a"),
                 nameof(node));
         }
 
@@ -52,7 +53,7 @@ public sealed class TypeConsistencyVisitor : ExpressionVisitor, IExpressionVisit
             if (!double.IsFinite(value))
             {
                 throw new ArgumentException(
-                    "Сертифицированный ключ RICIS должен быть конечным.",
+                    RicisLegacyTextResources.Get("runtime.legacy.e84ad285c041"),
                     nameof(node));
             }
         }
