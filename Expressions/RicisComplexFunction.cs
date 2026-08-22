@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -111,8 +112,9 @@ public sealed class RicisComplexFunction<T>
         var transformed = RicisPhasePipeline.Simplify(expression);
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                $"при нормализации {context}.");
+                RicisLegacyTextResources.Get("runtime.legacy.8c78f17a7aee") +
+                typeof(T).Name + ", " + typeof(T).Name + ">> " +
+                RicisLegacyTextResources.Format("runtime.legacy.2406f3633c90", ("context", context)));
     }
 
     private static void EnsureUnary(Expression<Func<T, T>> expression, string parameterName)
@@ -120,7 +122,7 @@ public sealed class RicisComplexFunction<T>
         if (expression.Parameters.Count != 1)
         {
             throw new ArgumentException(
-                "Комплексный компонент RICIS должен быть лямбдой ровно с одним параметром.",
+                RicisLegacyTextResources.Get("runtime.legacy.80aaddceab23"),
                 parameterName);
         }
     }
@@ -130,7 +132,7 @@ public sealed class RicisComplexFunction<T>
         ParameterExpression target,
         string context) =>
         new ParameterRebindVisitor(expression.Parameters[0], target).Visit(expression.Body)
-        ?? throw new InvalidOperationException($"Не удалось связать параметр для {context}.");
+        ?? throw new InvalidOperationException(RicisLegacyTextResources.Format("runtime.legacy.9492af51b811", ("context", context)));
 
     private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
     {
