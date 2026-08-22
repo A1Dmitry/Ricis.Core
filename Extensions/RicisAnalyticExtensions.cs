@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -134,7 +136,7 @@ public static class RicisAnalyticExtensions
         var transformed = RicisPhasePipeline.Simplify(function);
         return transformed as Expression<Func<double, double>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<double,double>> для операции {operation}.");
+                string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.1010fa798c83"), operation));
     }
 
 
@@ -143,7 +145,7 @@ public static class RicisAnalyticExtensions
         ParameterExpression target,
         string operation) =>
         new ParameterRebindVisitor(expression.Parameters[0], target).Visit(expression.Body)
-        ?? throw new InvalidOperationException($"Не удалось связать параметр показателя для {operation}.");
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("report.legacy.f9e0c9c086a0"), operation));
 
     private sealed class ParameterRebindVisitor : ParameterRebindingVisitorBase
     {
