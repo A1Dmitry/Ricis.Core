@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="FactorialNegative" xml:space="preserve"><value>Faktorial hanya ditakrifkan untuk nilai integer bukan negatif.</value></data>
+  <data name="StrictZeroDenominator" xml:space="preserve"><value>Ungkapan rujukan mengandungi penyebut sifar.</value></data>
+  <data name="UnresolvedRicisNode" xml:space="preserve"><value>Nod RICIS yang belum diselesaikan {0} tidak boleh dikompil secara ketat. Jalankan saluran normatif terlebih dahulu.</value></data>
+  <data name="UnknownProviderError" xml:space="preserve"><value>Ralat penyedia tidak diketahui.</value></data>
+</root>
