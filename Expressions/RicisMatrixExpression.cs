@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Extensions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -32,9 +33,9 @@ public sealed class RicisMatrixExpression<T>
         }).ToArray();
 
         if (copiedRows.Length == 0 || copiedRows[0].Count == 0)
-            throw new ArgumentException("RICIS-матрица обязана иметь положительное число строк и столбцов.", nameof(rows));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.524ae8e595f6"), nameof(rows));
         if (copiedRows.Any(row => row.Count != copiedRows[0].Count))
-            throw new ArgumentException("Строки RICIS-матрицы должны иметь одинаковую длину.", nameof(rows));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.08b9c8afb875"), nameof(rows));
 
         ValidateEntries(copiedRows);
         _rows = Array.AsReadOnly(copiedRows);
@@ -68,7 +69,7 @@ public sealed class RicisMatrixExpression<T>
     public LambdaExpression Determinant2x2()
     {
         if (RowCount != 2 || ColumnCount != 2)
-            throw new InvalidOperationException("Determinant2x2 требует матрицу ровно 2×2.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.811d5b7e1eec"));
 
         var parameters = CreateParameters(this[0, 0].Parameters);
         var a = Rebind(this[0, 0], parameters);
@@ -86,7 +87,7 @@ public sealed class RicisMatrixExpression<T>
     public LambdaExpression Determinant3x3()
     {
         if (RowCount != 3 || ColumnCount != 3)
-            throw new InvalidOperationException("Determinant3x3 требует матрицу ровно 3×3.");
+            throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.55ce0eacccb4"));
 
         var parameters = CreateParameters(this[0, 0].Parameters);
         var a = Rebind(this[0, 0], parameters);
@@ -140,17 +141,17 @@ public sealed class RicisMatrixExpression<T>
     private static void ValidateEntries(IReadOnlyList<IReadOnlyList<LambdaExpression>> rows)
     {
         var first = rows[0][0];
-        if (first.ReturnType != typeof(T)) throw new ArgumentException("Матрица содержит выражение с неверным типом результата.");
+        if (first.ReturnType != typeof(T)) throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.08a3b38181c0"));
         for (var row = 0; row < rows.Count; row++)
         {
             for (var column = 0; column < rows[row].Count; column++)
             {
                 var entry = rows[row][column];
                 if (entry.ReturnType != typeof(T) || entry.Parameters.Count != first.Parameters.Count)
-                    throw new ArgumentException("Все элементы матрицы должны иметь одинаковый тип результата и сигнатуру.");
+                    throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.1428fbd6913e"));
                 for (var parameter = 0; parameter < first.Parameters.Count; parameter++)
                     if (entry.Parameters[parameter].Type != first.Parameters[parameter].Type)
-                        throw new ArgumentException("Все элементы матрицы должны иметь одинаковые типы параметров.");
+                        throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.5520904e6ded"));
             }
         }
     }
@@ -160,13 +161,13 @@ public sealed class RicisMatrixExpression<T>
 
     private static Expression Rebind(LambdaExpression source, IReadOnlyList<ParameterExpression> target) =>
         new ParameterRebindVisitor(source.Parameters, target).Visit(source.Body)
-        ?? throw new InvalidOperationException("Не удалось переназначить параметры матричного элемента.");
+        ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.420c72a1cb63"));
 
     private static LambdaExpression Normalize(Expression body, IReadOnlyList<ParameterExpression> parameters)
     {
         var lambda = Expression.Lambda(body, parameters);
         return RicisPhasePipeline.Simplify(lambda) as LambdaExpression
-            ?? throw new InvalidOperationException("RICIS не сохранил матричный expression tree.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.777defd9d574"));
     }
 
     private sealed class ParameterRebindVisitor : ParameterMappingVisitorBase
