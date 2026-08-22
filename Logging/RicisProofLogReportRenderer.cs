@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Logging;
 
@@ -51,7 +52,7 @@ public static partial class RicisProofLogReportRenderer
         ArgumentNullException.ThrowIfNull(entries);
         if (!Enum.IsDefined(format))
         {
-            throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-лога.");
+            throw new ArgumentOutOfRangeException(nameof(format), format, RicisLegacyTextResources.Get("report.legacy.7ca2e73ce417"));
         }
 
         return Renderers[format].Render(ValidateOrdered(entries));
@@ -65,7 +66,7 @@ public static partial class RicisProofLogReportRenderer
             ArgumentNullException.ThrowIfNull(entry);
             if (entry.Sequence <= previous)
             {
-                throw new ArgumentException("Proof-log entries должны иметь строго возрастающую sequence.", nameof(entries));
+                throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.a954441f9fc0"), nameof(entries));
             }
 
             previous = entry.Sequence;
