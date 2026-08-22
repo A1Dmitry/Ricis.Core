@@ -533,7 +533,7 @@ internal static class Program
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.ffff260af1e2"));
         Console.WriteLine();
         Console.WriteLine($"S(x):                 {principal}");
-        Console.WriteLine($"r(x), в процентах:    {rate}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.3b38be3562a9", ("rate", rate)));
         Console.WriteLine($"P(x), n=3:            {annualThreePeriods}");
         Console.WriteLine($"P(x), n(x)=x:         {deferredPeriods}");
         Console.WriteLine();
@@ -635,7 +635,7 @@ internal static class Program
         Console.WriteLine($"F(x):       {first}");
         Console.WriteLine($"G(y):       {second}");
         Console.WriteLine($"Sum(F, G):  {sum}");
-        Console.WriteLine($"Проверка x=2: {sum.Compile()(2.0):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.4788174fcb6b", ("sum.Compile()(2.0):G17", sum.Compile()(2.0).ToString("G17"))));
         return 0;
     }
 
@@ -653,11 +653,11 @@ internal static class Program
         Console.WriteLine($"F(x):              {strip}");
         Console.WriteLine("L:                 5");
         Console.WriteLine($"Integral(F, 5):    {constantRange}");
-        Console.WriteLine($"Проверка x=2:      {constantRange.Compile()(2.0):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.9a3587f43df2", ("constantRange.Compile()(2.0):G17", constantRange.Compile()(2.0).ToString("G17"))));
         Console.WriteLine();
         Console.WriteLine($"L(x):              {deferredWidth}");
         Console.WriteLine($"Integral(F, L):    {symbolicRange}");
-        Console.WriteLine($"Проверка x=3:      {symbolicRange.Compile()(3.0):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.98dc3d2ea2d6", ("symbolicRange.Compile()(3.0):G17", symbolicRange.Compile()(3.0).ToString("G17"))));
         return 0;
     }
 
@@ -741,7 +741,7 @@ internal static class Program
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.2b385a2b6882"));
         Console.WriteLine($"  {derived}");
         Console.WriteLine();
-        Console.WriteLine($"Проверка исполнения: x=2 → {derived.Compile()(2):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.6f938a86aec2", ("derived.Compile()(2):G17", derived.Compile()(2).ToString("G17"))));
         return 0;
     }
 
@@ -749,7 +749,7 @@ internal static class Program
     {
         var parser = new LambdaTextParser();
         var failures = 0;
-        Console.WriteLine($"Пакетный прогон: {ExampleCatalog.All.Count} входных выражений.");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.46c401a138f6", ("ExampleCatalog.All.Count", ExampleCatalog.All.Count)));
         Console.WriteLine();
 
         foreach (var example in ExampleCatalog.All)
@@ -772,8 +772,8 @@ internal static class Program
 
         Console.WriteLine();
         Console.WriteLine(failures == 0
-            ? $"Пакетный прогон завершён: {ExampleCatalog.All.Count}/{ExampleCatalog.All.Count} выражений обработано."
-            : $"Пакетный прогон завершён: сбоев {failures} из {ExampleCatalog.All.Count}.");
+            ? RicisLegacyTextResources.Format("runtime.legacy.026159f7b09c", ("ExampleCatalog.All.Count", ExampleCatalog.All.Count), ("ExampleCatalog.All.Count", ExampleCatalog.All.Count))
+            : RicisLegacyTextResources.Format("runtime.legacy.ef400442d829", ("failures", failures), ("ExampleCatalog.All.Count", ExampleCatalog.All.Count)));
         return failures == 0 ? 0 : 1;
     }
 
