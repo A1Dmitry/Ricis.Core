@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Ricis.Resources/Ricis.Resources.csproj" />
     <Compile Remove="Ricis.Numerics.UnitTests/**/*.cs" />
     <None Remove="Ricis.Numerics.UnitTests/**" />
     <Compile Remove="Ricis.Numerics.Benchmarks/**/*.cs" />

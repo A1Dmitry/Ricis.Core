@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core.Resources;
 
 namespace Ricis.Numerics.Factorization;
 
@@ -51,7 +52,7 @@ public abstract class SemiprimeBase<T>
         number = smallerFactor * greaterFactor;
         if (number <= T.MultiplicativeIdentity || IsEven(number))
         {
-            throw new ArgumentException("Произведение двух допустимых нечётных простых должно быть положительным нечётным целым N.");
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.03c3b0819b46"));
         }
     }
 
@@ -100,12 +101,12 @@ public abstract class SemiprimeBase<T>
     {
         if (value <= T.MultiplicativeIdentity)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), "N должен быть положительным целым числом больше единицы.");
+            throw new ArgumentOutOfRangeException(nameof(value), RicisLegacyTextResources.Get("runtime.legacy.1e8a05a3b057"));
         }
 
         if (IsEven(value))
         {
-            throw new ArgumentException("Поддерживаются только нечётные полупростые N.", nameof(value));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.efe6e05e06bf"), nameof(value));
         }
     }
 
@@ -132,7 +133,7 @@ public abstract class SemiprimeBase<T>
         }
 
         throw new ArgumentException(
-            "N не является поддерживаемым нечётным полупростым: точная пара нечётных простых не восстановлена.",
+            RicisLegacyTextResources.Get("runtime.legacy.36e7df5b5e67"),
             nameof(value));
     }
 
@@ -143,17 +144,17 @@ public abstract class SemiprimeBase<T>
     {
         if (value <= T.MultiplicativeIdentity)
         {
-            throw new ArgumentOutOfRangeException(parameterName, "Множитель должен быть целым числом больше единицы.");
+            throw new ArgumentOutOfRangeException(parameterName, RicisLegacyTextResources.Get("runtime.legacy.8edfed9716e9"));
         }
 
         if (IsEven(value))
         {
-            throw new ArgumentException("Множитель полупростого должен быть нечётным простым числом.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.2de4f1ee6e4e"), parameterName);
         }
 
         if (!IsOddPrime(value))
         {
-            throw new ArgumentException("Множитель полупростого должен быть простым числом.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.9abb32a051a3"), parameterName);
         }
     }
 
