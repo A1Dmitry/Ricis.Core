@@ -1,3 +1,5 @@
+using System.Globalization;
+
 if (args.Length == 1 && string.Equals(args[0], "--list-tests", StringComparison.Ordinal))
 {
     foreach (var (name, _) in RicisRegressionTestCatalog.Tests)
@@ -7,6 +9,11 @@ if (args.Length == 1 && string.Equals(args[0], "--list-tests", StringComparison.
 
     return;
 }
+
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");
+CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");
 
 var failures = new List<string>();
 
