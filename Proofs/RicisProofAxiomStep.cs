@@ -1,5 +1,7 @@
 namespace Ricis.Core.Proofs;
 
+using Ricis.Core.Resources;
+
 /// <summary>
 /// Represents a named normative axiom or derived axiom step that is explicitly
 /// declared in a RICIS proof document before the expression-tree derivation.
@@ -33,7 +35,7 @@ public sealed class RicisProofAxiomStep
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("Компонент нормативного шага не может быть пустым.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.e444ee8cd714"), parameterName);
         }
 
         return value;
