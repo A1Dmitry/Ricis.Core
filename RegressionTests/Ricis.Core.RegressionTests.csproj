@@ -9,4 +9,10 @@
     <ProjectReference Include="../Ricis.Core.csproj" />
     <ProjectReference Include="../Ricis.WebApi/Ricis.WebApi.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../FormalVerification/Lean/Artifacts/academic/*.lean"
+             Link="FormalVerification/Lean/Artifacts/academic/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
