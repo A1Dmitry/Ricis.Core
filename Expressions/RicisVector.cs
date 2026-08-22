@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Numerics;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Expressions;
 
@@ -27,7 +28,7 @@ public sealed class RicisVector<T> : IReadOnlyList<T>, IEquatable<RicisVector<T>
         var copied = coordinates.ToArray();
         if (copied.Length == 0)
         {
-            throw new ArgumentException("RICIS-вектор обязан иметь хотя бы одну координату.", nameof(coordinates));
+            throw new ArgumentException(RicisLegacyTextResources.Get("runtime.legacy.8bb7e5417163"), nameof(coordinates));
         }
 
         _coordinates = Array.AsReadOnly(copied);
@@ -74,7 +75,7 @@ public sealed class RicisVector<T> : IReadOnlyList<T>, IEquatable<RicisVector<T>
     {
         if (dimension <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(dimension), dimension, "Размерность вектора обязана быть положительной.");
+            throw new ArgumentOutOfRangeException(nameof(dimension), dimension, RicisLegacyTextResources.Get("runtime.legacy.f973462e4805"));
         }
 
         return new RicisVector<T>(Enumerable.Repeat(T.Zero, dimension));
@@ -193,7 +194,7 @@ public sealed class RicisVector<T> : IReadOnlyList<T>, IEquatable<RicisVector<T>
         if (left.Dimension != right.Dimension)
         {
             throw new ArgumentException(
-                $"Размерности RICIS-векторов должны совпадать: {left.Dimension} и {right.Dimension}.");
+                RicisLegacyTextResources.Format("runtime.legacy.83720e5b59fb", ("left.Dimension", left.Dimension), ("right.Dimension", right.Dimension)));
         }
     }
 }
