@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using Ricis.Core.Resources;
+
 namespace Ricis.Core.Extensions;
 
 /// <summary>
@@ -21,8 +23,8 @@ public static class SymbolicDerivator
         if (expr.Type != typeof(double) || param.Type != typeof(double))
         {
             throw new ArgumentException(
-                "Совместимый Derive поддерживает только Expression и параметр типа double. " +
-                "Для generic-math используйте DxDt() у Expression<Func<T,T>>.");
+                RicisLegacyTextResources.Get("report.legacy.232484f420ef") +
+                RicisLegacyTextResources.Get("report.legacy.412e0c64f5fe"));
         }
 
         var function = Expression.Lambda<Func<double, double>>(expr, param);
