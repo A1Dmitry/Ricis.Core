@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Phases;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Extensions;
 
@@ -247,8 +248,9 @@ public static class RicisContinuousExtensions
         var transformed = RicisPhasePipeline.Simplify(expression);
         return transformed as Expression<Func<T, T>>
             ?? throw new InvalidOperationException(
-                $"RICIS-конвейер должен сохранить Expression<Func<{typeof(T).Name}, {typeof(T).Name}>> " +
-                $"для операции {operation}.");
+                RicisLegacyTextResources.Get("report.legacy.8c78f17a7aee") +
+                typeof(T).Name + ", " + typeof(T).Name + ">> " +
+                RicisLegacyTextResources.Format("report.legacy.faeacf87abee", ("operation", operation)));
     }
 
 
@@ -258,7 +260,7 @@ public static class RicisContinuousExtensions
         string operation)
         where T : INumber<T> =>
         new ParameterRebindVisitor(expression.Parameters[0], target).Visit(expression.Body)
-        ?? throw new InvalidOperationException($"Не удалось связать параметр отложенной функции для {operation}.");
+        ?? throw new InvalidOperationException(RicisLegacyTextResources.Format("report.legacy.b4b9b4bafab5", ("operation", operation)));
 
     private static bool IsBuiltInUnsigned(Type type) =>
         type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) ||
