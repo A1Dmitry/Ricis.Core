@@ -1,5 +1,6 @@
 using System.Numerics;
 using Ricis.Core.Logging;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core.Proofs;
 
@@ -24,12 +25,12 @@ public sealed class RicisCheckedProofArtifacts<T>
         Trace = trace?.ToArray() ?? throw new ArgumentNullException(nameof(trace));
         if (documents is null || documents.Count == 0)
         {
-            throw new ArgumentException("Должен быть передан хотя бы один proof-document export.", nameof(documents));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.9b3da1634db4"), nameof(documents));
         }
 
         if (documents.Any(entry => !Enum.IsDefined(entry.Key) || string.IsNullOrWhiteSpace(entry.Value)))
         {
-            throw new ArgumentException("Каждый proof-document export должен иметь известный формат и непустое содержимое.", nameof(documents));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.2cd684706ec6"), nameof(documents));
         }
 
         Documents = new Dictionary<RicisProofDocumentFormat, string>(documents);
@@ -48,5 +49,5 @@ public sealed class RicisCheckedProofArtifacts<T>
     public string GetDocument(RicisProofDocumentFormat format) =>
         Documents.TryGetValue(format, out var document)
             ? document
-            : throw new KeyNotFoundException($"Для формата {format} не был сформирован proof-document export.");
+            : throw new KeyNotFoundException(RicisLegacyTextResources.Format("report.legacy.8d18c1bd4a2c", ("format", format)));
 }
