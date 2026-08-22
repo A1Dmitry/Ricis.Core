@@ -1,11 +1,13 @@
 // RicisPhasePipeline.cs — strict RICIS v7.7 (no classical limits)
 
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 using Ricis.Core.Logging;
 using Ricis.Core.Metadata;
+using Ricis.Core.Resources;
 using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core.Phases;
@@ -178,7 +180,7 @@ public static class RicisPhasePipeline
         ArgumentNullException.ThrowIfNull(scalarPolicy);
         log?.Info(
             "RICIS_PIPELINE_START",
-            "Запущен нормативный RICIS phase pipeline.",
+            RicisLegacyTextResources.Get("runtime.legacy.b5012a0952c4"),
             new Dictionary<string, string>
             {
                 ["inputType"] = expr.Type.FullName ?? expr.Type.Name,
@@ -207,27 +209,27 @@ public static class RicisPhasePipeline
                 lambda.TailCall,
                 lambda.Parameters);
             trace?.Add(new RicisPhaseTraceStep(
-                "Метафаза автора",
-                "META — opt-in SEO-аннотация about",
+                RicisLegacyTextResources.Get("runtime.legacy.ec350e79b2d7"),
+                RicisLegacyTextResources.Get("runtime.legacy.33485f9eae04"),
                 before,
                 result,
                 wasSkipped: false));
             log?.For<AuthorAnnotatedExpression>().Trace(
                 "RICIS_AUTHOR_ANNOTATION",
-                "Применена opt-in SEO-аннотация автора.",
+                RicisLegacyTextResources.Get("runtime.legacy.2917bc23233d"),
                 before.ToString(),
                 result.ToString(),
                 new Dictionary<string, string>
                 {
-                    ["phaseName"] = "Метафаза автора",
-                    ["ruleFamily"] = "META — opt-in SEO-аннотация about",
+                    ["phaseName"] = RicisLegacyTextResources.Get("runtime.legacy.ec350e79b2d7"),
+                    ["ruleFamily"] = RicisLegacyTextResources.Get("runtime.legacy.33485f9eae04"),
                     ["wasSkipped"] = bool.FalseString,
                 });
         }
 
         log?.Info(
             "RICIS_PIPELINE_COMPLETE",
-            "Нормативный RICIS phase pipeline завершён.",
+            RicisLegacyTextResources.Get("runtime.legacy.3fee62ba3c42"),
             new Dictionary<string, string>
             {
                 ["outputType"] = result.Type.FullName ?? result.Type.Name,
@@ -309,11 +311,11 @@ public static class RicisPhasePipeline
                 attributes["wasSkipped"] = bool.TrueString;
                 stageLog?.Warning(
                     "RICIS_PHASE_SKIPPED",
-                    "Фаза была пропущена из-за документированного precondition.",
+                    RicisLegacyTextResources.Get("runtime.legacy.57176ff633d9"),
                     attributes);
                 stageLog?.Trace(
                     "RICIS_PHASE_TRACE",
-                    "Зафиксирована пропущенная фаза без изменения expression tree.",
+                    RicisLegacyTextResources.Get("runtime.legacy.5d068bd9d4b8"),
                     before.ToString(),
                     before.ToString(),
                     attributes);
@@ -330,20 +332,20 @@ public static class RicisPhasePipeline
                 stageLog?.Exception(
                     "RICIS_PHASE_EXCEPTION",
                     error,
-                    $"Фаза {typeof(TVisitor).Name} не смогла преобразовать выражение типа {before.Type}.",
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("runtime.legacy.5f025eed03f0"), typeof(TVisitor).Name, before.Type),
                     attributes);
                 throw new InvalidOperationException(
-                    $"Фаза RICIS {typeof(TVisitor).Name} не смогла преобразовать выражение типа {before.Type}.",
+                    string.Format(CultureInfo.CurrentUICulture, RicisLegacyTextResources.Get("runtime.legacy.b27e90881808"), typeof(TVisitor).Name, before.Type),
                     error);
             }
 
             trace?.Add(new RicisPhaseTraceStep(phaseName, ruleFamily, before, result, wasSkipped: false));
             attributes["wasSkipped"] = bool.FalseString;
             attributes["changed"] = (!before.AreEqual(result)).ToString();
-            stageLog?.Info("RICIS_PHASE_COMPLETE", "Нормативная фаза завершена.", attributes);
+            stageLog?.Info("RICIS_PHASE_COMPLETE", RicisLegacyTextResources.Get("runtime.legacy.1117f66fa728"), attributes);
             stageLog?.Trace(
                 "RICIS_PHASE_TRACE",
-                "Зафиксирована попытка нормативного преобразования.",
+                RicisLegacyTextResources.Get("runtime.legacy.4a1dc8f154fb"),
                 before.ToString(),
                 result.ToString(),
                 attributes);
@@ -369,14 +371,14 @@ public static class RicisPhasePipeline
 
     private static (string PhaseName, string RuleFamily) Describe(IExpressionVisitor visitor) => visitor switch
     {
-        IdentityReductionVisitor => ("Фаза 0 — тождество сущности", "ID-01 / L1: F/F → 1"),
-        PolarTrigVisitor => ("Фаза 0.5 — полярная тригонометрия", "POL: точные полярные тождества"),
-        AlgebraicReductionVisitor => ("Фаза 1 — структурная алгебра", "SP2: сокращение до сингулярностей"),
-        LogicalReductionVisitor => ("Фаза 1.25 — логическая редукция", "LOG: безопасная минимизация Boolean expression tree"),
-        LimitBridgeVisitor => ("Фаза 1.5 — мосты O(1)", "LIM: F·0 → 0_F, F/0 → ∞_F"),
-        RicisTransformVisitor => ("Фаза 2 — сингулярное преобразование", "A1/A4: индексирование и отношение нулей"),
-        TypeConsistencyVisitor => ("Фаза 4 — согласованность типов", "SP3: сохранение типа и ключей payload"),
-        StandardOperationsVisitor => ("Фаза 5 — стандартные операции", "Z-01/Z-02, A5/A6/A7"),
-        _ => (visitor.GetType().Name, "Нормативная фаза RICIS"),
+        IdentityReductionVisitor => (RicisLegacyTextResources.Get("runtime.legacy.2ba1ae598727"), "ID-01 / L1: F/F → 1"),
+        PolarTrigVisitor => (RicisLegacyTextResources.Get("runtime.legacy.c4b3cd72e20b"), RicisLegacyTextResources.Get("runtime.legacy.f86329c58d5c")),
+        AlgebraicReductionVisitor => (RicisLegacyTextResources.Get("runtime.legacy.2c89204e4fb5"), RicisLegacyTextResources.Get("runtime.legacy.2e4fce67051c")),
+        LogicalReductionVisitor => (RicisLegacyTextResources.Get("runtime.legacy.377505616fe6"), RicisLegacyTextResources.Get("runtime.legacy.a80dc9b99e16")),
+        LimitBridgeVisitor => (RicisLegacyTextResources.Get("runtime.legacy.acd7614cf864"), "LIM: F·0 → 0_F, F/0 → ∞_F"),
+        RicisTransformVisitor => (RicisLegacyTextResources.Get("runtime.legacy.2dee41925e3c"), RicisLegacyTextResources.Get("runtime.legacy.de0dc11786eb")),
+        TypeConsistencyVisitor => (RicisLegacyTextResources.Get("runtime.legacy.d8dc6b874a89"), RicisLegacyTextResources.Get("runtime.legacy.c39fdc38ba4a")),
+        StandardOperationsVisitor => (RicisLegacyTextResources.Get("runtime.legacy.c69cbfe28c74"), "Z-01/Z-02, A5/A6/A7"),
+        _ => (visitor.GetType().Name, RicisLegacyTextResources.Get("runtime.legacy.227cfe2cac84")),
     };
 }
