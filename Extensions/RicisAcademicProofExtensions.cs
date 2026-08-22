@@ -1416,7 +1416,7 @@ public static class RicisAcademicProofExtensions
         string label,
         IReadOnlyList<string> routes)
     {
-        proof.Append("**Node-to-root маршрут (").Append(label).AppendLine("):**");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.b41bd539e40e")).Append(label).AppendLine("):**");
         foreach (var route in routes)
         {
             proof.Append("- `").Append(route).AppendLine("`.");
@@ -1503,12 +1503,12 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Разложение разности квадратов",
+                RicisLegacyTextResources.Get("report.legacy.0f11e9888280"),
                 "SP2: A²−B² = (A−B)(A+B)",
                 before,
                 factorized),
             new IntermediateProofStep(
-                "Сокращение общего множителя",
+                RicisLegacyTextResources.Get("report.legacy.e258776142b4"),
                 "SP2: (F·G)/F = G",
                 factorized,
                 quotient),
@@ -1549,12 +1549,12 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Разложение разности кубов",
+                RicisLegacyTextResources.Get("report.legacy.85cd78952b8f"),
                 "SP2: A³−B³ = (A−B)(A²+A·B+B²)",
                 before,
                 factorized),
             new IntermediateProofStep(
-                "Сокращение общего множителя",
+                RicisLegacyTextResources.Get("report.legacy.e258776142b4"),
                 "SP2: (F·G)/F = G",
                 factorized,
                 quotient),
@@ -1591,12 +1591,12 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Разложение суммы кубов",
+                RicisLegacyTextResources.Get("report.legacy.3dd4d0a65eae"),
                 "SP2: A³+B³ = (A+B)(A²−A·B+B²)",
                 before,
                 factorized),
             new IntermediateProofStep(
-                "Сокращение общего множителя",
+                RicisLegacyTextResources.Get("report.legacy.e258776142b4"),
                 "SP2: (F·G)/F = G",
                 factorized,
                 quotient),
@@ -1621,7 +1621,7 @@ public static class RicisAcademicProofExtensions
             steps =
             [
                 new IntermediateProofStep(
-                    "Очищение вложенного знаменателя",
+                    RicisLegacyTextResources.Get("report.legacy.a2fd90a5210d"),
                     "SP2: F/(G/H) = (F·H)/G",
                     before,
                     normalized),
@@ -1634,7 +1634,7 @@ public static class RicisAcademicProofExtensions
             steps =
             [
                 new IntermediateProofStep(
-                    "Очищение вложенного знаменателя",
+                    RicisLegacyTextResources.Get("report.legacy.a2fd90a5210d"),
                     "SP2: F/(G/H) = (F·H)/G",
                     before,
                     normalized),
@@ -1648,7 +1648,7 @@ public static class RicisAcademicProofExtensions
             steps =
             [
                 new IntermediateProofStep(
-                    "Очищение вложенного знаменателя",
+                    RicisLegacyTextResources.Get("report.legacy.a2fd90a5210d"),
                     "SP2: F/(G/H) = (F·H)/G",
                     before,
                     normalized),
@@ -1712,8 +1712,8 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Ассоциативное сокращение множителей",
-                "SP2: сокращение общего мультимножества факторов",
+                RicisLegacyTextResources.Get("report.legacy.c84003b1378c"),
+                RicisLegacyTextResources.Get("report.legacy.8511d53a41e4"),
                 before,
                 reduced),
         ];
@@ -1822,7 +1822,7 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Сокращение общего множителя",
+                RicisLegacyTextResources.Get("report.legacy.e258776142b4"),
                 "SP2: (F·G)/F = G",
                 before,
                 quotient),
