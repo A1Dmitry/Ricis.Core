@@ -139,7 +139,7 @@ internal static class Program
         {
             if (args[0].StartsWith("-", StringComparison.Ordinal))
             {
-                Console.Error.WriteLine($"Неизвестный аргумент: {args[0]}. Используйте --help через интерактивный режим или --expr.");
+                Console.Error.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.734c9e7b65fb", ("args[0]", args[0])));
                 return 2;
             }
 
@@ -215,7 +215,7 @@ internal static class Program
         }
 
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"Система RICIS: {parts.Length} выражений.");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.d5a12c841702", ("parts.Length", parts.Length)));
         Console.ResetColor();
 
         var success = true;
@@ -238,7 +238,7 @@ internal static class Program
             if (transformed is not Expression<Func<double, double>> derived)
             {
                 throw new InvalidOperationException(
-                    $"Конвейер должен вернуть Expression<Func<double,double>>, получено {transformed.GetType().Name}.");
+                    RicisLegacyTextResources.Format("runtime.legacy.78fc331a4190", ("transformed.GetType().Name", transformed.GetType().Name)));
             }
 
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -258,7 +258,7 @@ internal static class Program
         catch (LambdaParseException error)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Ошибка разбора: {error.Message}");
+            Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.2a9a85787737", ("error.Message", error.Message)));
             Console.ResetColor();
             PrintPointer(input, error.Position);
             Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.9b50323547f5"));
@@ -268,7 +268,7 @@ internal static class Program
         catch (Exception error)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Ошибка RICIS: {error.Message}");
+            Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.be8f4a2adfdb", ("error.Message", error.Message)));
             Console.ResetColor();
             Console.WriteLine();
             return false;
@@ -290,7 +290,7 @@ internal static class Program
         catch (Exception error)
         {
             Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine($"Производное дерево остаётся символическим и не исполняется как double: {error.Message}");
+            Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.d7138cf01428", ("error.Message", error.Message)));
             Console.ResetColor();
         }
     }
@@ -317,7 +317,7 @@ internal static class Program
             var executeRicis = derivative.Compile();
             Console.WriteLine();
             Console.WriteLine($"F(t) = {item.Name}");
-            Console.WriteLine($"  Исходное дерево: {item.Source}");
+            Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.dd7ed16e0c57", ("item.Source", item.Source)));
             Console.WriteLine($"  RICIS dF/dt:    {derivative}");
             Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.963f5d19d876"));
 
@@ -356,10 +356,10 @@ internal static class Program
         Console.WriteLine($"Ratio(I, I):       {ratio}");
         Console.WriteLine($"Product(F, G):     {product}");
         Console.WriteLine();
-        Console.WriteLine($"Compose при x=3:   {composition.Compile()(3.0):G17}");
-        Console.WriteLine($"Product при x=3:   {product.Compile()(3.0):G17}");
-        Console.WriteLine($"Difference при x=0:{difference.Compile()(0.0):G17}");
-        Console.WriteLine($"Ratio при x=0:     {ratio.Compile()(0.0):G17}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.7caed01e6740", ("composition.Compile()(3.0):G17", composition.Compile()(3.0).ToString("G17"))));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.9f1d1a2559a1", ("product.Compile()(3.0):G17", product.Compile()(3.0).ToString("G17"))));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.9f31880f42a1", ("difference.Compile()(0.0):G17", difference.Compile()(0.0).ToString("G17"))));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.c8b406cf1078", ("ratio.Compile()(0.0):G17", ratio.Compile()(0.0).ToString("G17"))));
         return 0;
     }
 
@@ -385,8 +385,8 @@ internal static class Program
     {
         var scenario = RicisJacobianProofScenario.Create();
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.75cb2e2ae9d9"));
-        Console.WriteLine($"Проверка lambda-тезиса: {scenario.ScalarProof.Proof.IsVerified}");
-        Console.WriteLine($"Lambda-условий: {scenario.ScalarProof.Proof.Conditions.Count}; ограничений: {scenario.ScalarProof.Proof.Constraints.Count}");
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.1e0c43d14454", ("scenario.ScalarProof.Proof.IsVerified", scenario.ScalarProof.Proof.IsVerified)));
+        Console.WriteLine(RicisLegacyTextResources.Format("runtime.legacy.beb89ea9cce2", ("scenario.ScalarProof.Proof.Conditions.Count", scenario.ScalarProof.Proof.Conditions.Count), ("scenario.ScalarProof.Proof.Constraints.Count", scenario.ScalarProof.Proof.Constraints.Count)));
         Console.WriteLine($"Typed trace entries: {scenario.ScalarProof.Trace.Count}");
         Console.WriteLine($"Structural singularity: {scenario.Jacobian.IsStructuralSingular}; A6 payload entries: {scenario.A6Payload.Count}");
         Console.WriteLine();

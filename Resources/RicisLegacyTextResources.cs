@@ -18,4 +18,16 @@ public static class RicisLegacyTextResources
         ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ??
         ResourceManager.GetString(key, CultureInfo.InvariantCulture) ??
         throw new MissingManifestResourceException($"Missing legacy resource '{key}'.");
+
+    /// <summary>Formats named placeholders while keeping report templates in RESX resources.</summary>
+    public static string Format(string key, params (string Placeholder, object Value)[] values)
+    {
+        var result = Get(key);
+        foreach (var (placeholder, value) in values)
+        {
+            result = result.Replace("{" + placeholder + "}", Convert.ToString(value, CultureInfo.CurrentCulture), StringComparison.Ordinal);
+        }
+
+        return result;
+    }
 }
