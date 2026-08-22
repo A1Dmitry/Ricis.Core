@@ -17,7 +17,7 @@
   <data name="report.legacy.05fdb82f3644" xml:space="preserve"><value>Коэффициенты и determinant извлечены из expression tree без исполнения гипотез.</value></data>
   <data name="report.legacy.06f2ae300f06" xml:space="preserve"><value>Следовательно, система выводит </value></data>
   <data name="report.legacy.0878e35a8b03" xml:space="preserve"><value>## Символическое исключение</value></data>
-  <data name="report.legacy.09800ce17554" xml:space="preserve"><value>{sigmaName} и {mirrorSigmaName} — координаты формальной отражённой пары.</value></data>
+  <data name="report.legacy.09800ce17554" xml:space="preserve"><value>{0} и {1} — координаты формальной отражённой пары.</value></data>
   <data name="report.legacy.0f11e9888280" xml:space="preserve"><value>Разложение разности квадратов</value></data>
   <data name="report.legacy.12733adfcc77" xml:space="preserve"><value>detJ — scalar-координата determinant, используемая только как expression tree.</value></data>
   <data name="report.legacy.12eac73cd080" xml:space="preserve"><value>Дополнительные определения не заданы.</value></data>
@@ -50,7 +50,7 @@
   <data name="report.legacy.3debb20fe486" xml:space="preserve"><value>**Статус:** фаза выполнена, но структурно не изменила expression tree.</value></data>
   <data name="report.legacy.3f090499f018" xml:space="preserve"><value>L1/SP2 строит verification lambda для detJ/detJ и 1.</value></data>
   <data name="report.legacy.3f105799f77e" xml:space="preserve"><value>## Предпосылки</value></data>
-  <data name="report.legacy.3f6d434b0b7f" xml:space="preserve"><value>Сохранение идентичности отражённой пары даёт Type({sigmaName})=Type({mirrorSigmaName}).</value></data>
+  <data name="report.legacy.3f6d434b0b7f" xml:space="preserve"><value>Сохранение идентичности отражённой пары даёт Type({0})=Type({1}).</value></data>
   <data name="report.legacy.408dfcbf3047" xml:space="preserve"><value> второго и второго на коэффициент </value></data>
   <data name="report.legacy.40f30d2d7877" xml:space="preserve"><value>0_det(J) и ∞_Inv(J) — индексированные структурные объекты, не классический inverse.</value></data>
   <data name="report.legacy.412e0c64f5fe" xml:space="preserve"><value>Для generic-math используйте DxDt() у Expression&lt;Func&lt;T,T&gt;&gt;.</value></data>
@@ -62,7 +62,7 @@
   <data name="report.legacy.49a973eea1d4" xml:space="preserve"><value>До фазы</value></data>
   <data name="report.legacy.49d4ecb68e39" xml:space="preserve"><value>**Конечное символическое выведение.** Документ сертифицирует только преобразование явно переданных expression tree.</value></data>
   <data name="report.legacy.4a0292ce58db" xml:space="preserve"><value>## Воспроизводимый результат</value></data>
-  <data name="report.legacy.4c39a532d29a" xml:space="preserve"><value>R({sigmaName})=1−{sigmaName}; следовательно {sigmaName}+{mirrorSigmaName}=1.</value></data>
+  <data name="report.legacy.4c39a532d29a" xml:space="preserve"><value>R({0})=1−{1}; следовательно {2}+{3}=1.</value></data>
   <data name="report.legacy.4d16cdcb2eda" xml:space="preserve"><value>- Вязкость: `ν={0:G17}`.</value></data>
   <data name="report.legacy.4fdef7e7a9f9" xml:space="preserve"><value>NS-07 не выполнен: остаток Навье—Стокса не сократился до нулевого поля, получено {0}.</value></data>
   <data name="report.legacy.5101234f6e4d" xml:space="preserve"><value>**Основание:** </value></data>
@@ -72,7 +72,7 @@
   <data name="report.legacy.5262659204cc" xml:space="preserve"><value>### Шаг 1: Линейная комбинация уравнений системы</value></data>
   <data name="report.legacy.52ef51fa44c4" xml:space="preserve"><value>. Ограничение: `</value></data>
   <data name="report.legacy.530ab4301b38" xml:space="preserve"><value>Текстовый элемент proof-лога не может быть пустым.</value></data>
-  <data name="report.legacy.561639ada97d" xml:space="preserve"><value>Из ID-02 и ID-03 следует {sigmaName}−{mirrorSigmaName}=0 при {sigmaName}+{mirrorSigmaName}=1.</value></data>
+  <data name="report.legacy.561639ada97d" xml:space="preserve"><value>Из ID-02 и ID-03 следует {0}−{1}=0 при {2}+{3}=1.</value></data>
   <data name="report.legacy.58180e513657" xml:space="preserve"><value># Формальный вывод RICIS III</value></data>
   <data name="report.legacy.58ccb6d5ca04" xml:space="preserve"><value>Тезис цепочки ID-01–ID-06 обязан иметь две double-координаты.</value></data>
   <data name="report.legacy.590e8b782833" xml:space="preserve"><value>Каждая гипотеза {parameterName} должна быть лямбдой Func&lt;{0}, Boolean&gt; с одним параметром.</value></data>
@@ -83,11 +83,11 @@
   <data name="report.legacy.5f5e20d92abb" xml:space="preserve"><value>Структурное поле (u·∇)u.</value></data>
   <data name="report.legacy.64b5128c813a" xml:space="preserve"><value>Границы и непроверенные утверждения</value></data>
   <data name="report.legacy.64cc74660900" xml:space="preserve"><value>**Основание:** подстановка равных выражений в формальное равенство.</value></data>
-  <data name="report.legacy.6814b74407cd" xml:space="preserve"><value>Линейная комбинация ID-04 даёт 2·{sigmaName}=1.</value></data>
+  <data name="report.legacy.6814b74407cd" xml:space="preserve"><value>Линейная комбинация ID-04 даёт 2·{0}=1.</value></data>
   <data name="report.legacy.69108a6a41e1" xml:space="preserve"><value>Ограничение</value></data>
   <data name="report.legacy.693b883781ad" xml:space="preserve"><value>**Промежуточное выведение:**</value></data>
   <data name="report.legacy.6bbbd1303a70" xml:space="preserve"><value>Тезис должен быть лямбдой Func&lt;{0}, {0}&gt; с одним параметром.</value></data>
-  <data name="report.legacy.6e9ce814d451" xml:space="preserve"><value>Из 2·{sigmaName}=1 следует {sigmaName}=Divide(1,2).</value></data>
+  <data name="report.legacy.6e9ce814d451" xml:space="preserve"><value>Из 2·{0}=1 следует {1}=Divide(1,2).</value></data>
   <data name="report.legacy.6f23c5b99ce5" xml:space="preserve"><value>### Шаг 3: Подстановка найденной координаты в первое уравнение</value></data>
   <data name="report.legacy.70415d124b43" xml:space="preserve"><value>Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.</value></data>
   <data name="report.legacy.70ea1924c61a" xml:space="preserve"><value>несжимаемость</value></data>
@@ -137,7 +137,7 @@
   <data name="report.legacy.b00bd8d2ad67" xml:space="preserve"><value>## Система уравнений</value></data>
   <data name="report.legacy.b2a6b08fb716" xml:space="preserve"><value># Формальный вывод RICIS III: система линейных уравнений</value></data>
   <data name="report.legacy.b41bd539e40e" xml:space="preserve"><value>**Node-to-root маршрут (</value></data>
-  <data name="report.legacy.b43d92d7a142" xml:space="preserve"><value>По ID-01–ID-06 для пары {sigmaName}, {mirrorSigmaName} доказывается `{claim}`.</value></data>
+  <data name="report.legacy.b43d92d7a142" xml:space="preserve"><value>По ID-01–ID-06 для пары {0}, {1} доказывается `{2}`.</value></data>
   <data name="report.legacy.b4b9b4bafab5" xml:space="preserve"><value>Не удалось связать параметр отложенной функции для {0}.</value></data>
   <data name="report.legacy.bbd38a15a2f4" xml:space="preserve"><value>; требуемая координата </value></data>
   <data name="report.legacy.bbf4ba2e6ad8" xml:space="preserve"><value>## Заключение</value></data>
@@ -170,7 +170,7 @@
   <data name="report.legacy.db4daaeabee8" xml:space="preserve"><value>**Нормативное следствие:** </value></data>
   <data name="report.legacy.dbbc5e77313d" xml:space="preserve"><value>## Проверочное выражение</value></data>
   <data name="report.legacy.dcf6072b731b" xml:space="preserve"><value>**Основание:** умножение первого равенства на противоположный коэффициент </value></data>
-  <data name="report.legacy.dfd6e531edbe" xml:space="preserve"><value>Тезис требует {claim}, но система символически выводит {(coordinate == 0 ? </value></data>
+  <data name="report.legacy.dfd6e531edbe" xml:space="preserve"><value>Тезис требует {0}, но система символически выводит {1} = {2}.</value></data>
   <data name="report.legacy.e258776142b4" xml:space="preserve"><value>Сокращение общего множителя</value></data>
   <data name="report.legacy.e444ee8cd714" xml:space="preserve"><value>Компонент нормативного шага не может быть пустым.</value></data>
   <data name="report.legacy.e535b04270b1" xml:space="preserve"><value>NS-02 не выполнен: ∇·u не сократился до нуля, получено {0}.</value></data>
@@ -185,7 +185,7 @@
   <data name="report.legacy.f0b144c53419" xml:space="preserve"><value>LeanTemplate требует хотя бы одну requested proof row.</value></data>
   <data name="report.legacy.f212371d0307" xml:space="preserve"><value>**Основание:** точное деление обеих частей линейного равенства на ненулевой коэффициент.</value></data>
   <data name="report.legacy.f409f8f7da4b" xml:space="preserve"><value>Текстовый элемент proof-документа не может быть пустым.</value></data>
-  <data name="report.legacy.f4b04e6353d7" xml:space="preserve"><value>Равенство Type({sigmaName})=Type({mirrorSigmaName}) даёт {sigmaName}={mirrorSigmaName}.</value></data>
+  <data name="report.legacy.f4b04e6353d7" xml:space="preserve"><value>Равенство Type({0})=Type({1}) даёт {2}={3}.</value></data>
   <data name="report.legacy.f666fc8ba3fb" xml:space="preserve"><value>Набор содержит неизвестную Lean proof row.</value></data>
   <data name="report.legacy.f798f6c28fc5" xml:space="preserve"><value>Дополнительные аксиомы не заданы.</value></data>
   <data name="report.legacy.fa7c7a698fdd" xml:space="preserve"><value>Структурное поле ∇p.</value></data>

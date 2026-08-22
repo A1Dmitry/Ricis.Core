@@ -598,7 +598,7 @@ public static class RicisAcademicProofExtensions
         ValidateBinaryHypotheses(constraintList, nameof(constraints));
         if (claim.Parameters.Count != 2)
         {
-            throw new ArgumentException("Тезис цепочки ID-01–ID-06 обязан иметь две double-координаты.", nameof(claim));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.58ccb6d5ca04"), nameof(claim));
         }
 
         var sigma = claim.Parameters[0];
@@ -649,7 +649,7 @@ public static class RicisAcademicProofExtensions
         var constraintList = constraints.ToList();
         log?.Info(
             "RICIS_SYSTEM_START",
-            "Запущено symbolic решение двухпеременной системы выражений.",
+            RicisLegacyTextResources.Get("report.legacy.38c54bb83889"),
             new Dictionary<string, string>
             {
                 ["equationCount"] = equationList.Count.ToString(),
@@ -658,7 +658,7 @@ public static class RicisAcademicProofExtensions
             });
         if (equationList.Count != 2)
         {
-            throw new ArgumentException("Этот специализированный overload должен получить ровно два линейных уравнения.", nameof(equations));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.879f604879a7"), nameof(equations));
         }
 
         ValidateBinaryHypotheses(equationList, nameof(equations));
@@ -671,7 +671,7 @@ public static class RicisAcademicProofExtensions
                 : RicisPhasePipeline.Simplify(constraint);
             log?.For<BinarySystemNormalizationStage>().Trace(
                 "RICIS_SYSTEM_CONSTRAINT_NORMALIZATION",
-                "Constraint нормализована; одинаковый множитель в числителе и знаменателе сокращён структурным pipeline.",
+                RicisLegacyTextResources.Get("report.legacy.928af9b8a874"),
                 constraint.ToString(),
                 normalizedConstraint.ToString(),
                 new Dictionary<string, string>
@@ -686,7 +686,7 @@ public static class RicisAcademicProofExtensions
         var determinant = (first.X * second.Y) - (second.X * first.Y);
         log?.Info(
             "RICIS_SYSTEM_COEFFICIENTS",
-            "Коэффициенты и determinant извлечены из expression tree без исполнения гипотез.",
+            RicisLegacyTextResources.Get("report.legacy.05fdb82f3644"),
             new Dictionary<string, string>
             {
                 ["first"] = $"{first.X}x + {first.Y}y = {first.Constant}",
@@ -695,7 +695,7 @@ public static class RicisAcademicProofExtensions
             });
         if (determinant == 0.0)
         {
-            throw new ArgumentException("Линейная система вырождена: её determinant равен нулю.", nameof(equations));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.5e5e93b99528"), nameof(equations));
         }
 
         var solutionX = ((first.Constant * second.Y) - (second.Constant * first.Y)) / determinant;
@@ -703,20 +703,20 @@ public static class RicisAcademicProofExtensions
         if (!double.IsFinite(solutionX) || !double.IsFinite(solutionY))
         {
             throw new ArgumentException(
-                "Линейная система не допускает конечного double-вывода без переполнения или неопределённости.",
+                RicisLegacyTextResources.Get("report.legacy.8439c44ac10e"),
                 nameof(equations));
         }
 
         var (coordinate, claimedValue) = ReadCoordinateClaim(claim);
         if (!double.IsFinite(claimedValue))
         {
-            throw new ArgumentException("Тезис системы должен содержать конечную double-константу или константную дробь.", nameof(claim));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.2e3cf2082bef"), nameof(claim));
         }
 
         var provenValue = coordinate == 0 ? solutionX : solutionY;
         log?.Trace(
             "RICIS_SYSTEM_ELIMINATION",
-            "Символическое исключение дало обе координаты решения.",
+            RicisLegacyTextResources.Get("report.legacy.02f7e69ab400"),
             claim.ToString(),
             $"x = {solutionX:G17}; y = {solutionY:G17}",
             new Dictionary<string, string>
@@ -728,7 +728,7 @@ public static class RicisAcademicProofExtensions
         if (claimedValue != provenValue)
         {
             throw new ArgumentException(
-                $"Тезис требует {claim}, но система символически выводит {(coordinate == 0 ? "x" : "y")} = {provenValue:G17}.",
+                string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.dfd6e531edbe"), claim, coordinate == 0 ? "x" : "y", provenValue.ToString("G17", CultureInfo.InvariantCulture)),
                 nameof(claim));
         }
 
@@ -756,7 +756,7 @@ public static class RicisAcademicProofExtensions
             derived);
         log?.Info(
             "RICIS_SYSTEM_COMPLETE",
-            "Symbolic решение системы завершено и protocol сформирован.",
+            RicisLegacyTextResources.Get("report.legacy.5b1abc61d696"),
             new Dictionary<string, string>
             {
                 ["derived"] = derived.ToString(),
@@ -771,27 +771,27 @@ public static class RicisAcademicProofExtensions
         Expression<Func<double, double, bool>> claim)
     {
         return new RicisProofDocumentProfile(
-            title: "Нормативный вывод RICIS: тождество типа отражённой пары",
+            title: RicisLegacyTextResources.Get("report.legacy.ce97b9999b9e"),
             scope: RicisProofScope.FiniteDerivation,
-            @abstract: "Документирует полную нормативную цепочку ID-01–ID-06 для формальной отражённой пары и её точного рационального следствия.",
-            theorem: $"По ID-01–ID-06 для пары {sigmaName}, {mirrorSigmaName} доказывается `{claim}`.",
+            @abstract: RicisLegacyTextResources.Get("report.legacy.3cfe65ac2002"),
+            theorem: string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.b43d92d7a142"), sigmaName, mirrorSigmaName, claim),
             definitions:
             [
-                $"{sigmaName} и {mirrorSigmaName} — координаты формальной отражённой пары.",
-                "Type — сохранённый компонент идентичности Id(X)={Value(X), Type(X)}.",
+                string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.09800ce17554"), sigmaName, mirrorSigmaName),
+                RicisLegacyTextResources.Get("report.legacy.00b58be4fca6"),
             ],
             normativeSteps:
             [
-                new RicisProofAxiomStep("ID-01", "самоидентификация", $"Сохранение идентичности отражённой пары даёт Type({sigmaName})=Type({mirrorSigmaName})."),
-                new RicisProofAxiomStep("ID-02", "зеркальная симметрия", $"R({sigmaName})=1−{sigmaName}; следовательно {sigmaName}+{mirrorSigmaName}=1."),
-                new RicisProofAxiomStep("ID-03", "верность типа координате", $"Равенство Type({sigmaName})=Type({mirrorSigmaName}) даёт {sigmaName}={mirrorSigmaName}."),
-                new RicisProofAxiomStep("ID-04", "линейная пара идентичности", $"Из ID-02 и ID-03 следует {sigmaName}−{mirrorSigmaName}=0 при {sigmaName}+{mirrorSigmaName}=1."),
-                new RicisProofAxiomStep("ID-05", "структурное исключение", $"Линейная комбинация ID-04 даёт 2·{sigmaName}=1."),
-                new RicisProofAxiomStep("ID-06", "точное рациональное выделение", $"Из 2·{sigmaName}=1 следует {sigmaName}=Divide(1,2)."),
+                new RicisProofAxiomStep("ID-01", RicisLegacyTextResources.Get("report.legacy.d5b2d675b4c1"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.3f6d434b0b7f"), sigmaName, mirrorSigmaName)),
+                new RicisProofAxiomStep("ID-02", RicisLegacyTextResources.Get("report.legacy.ce8b068cbd84"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.4c39a532d29a"), sigmaName, sigmaName, sigmaName, mirrorSigmaName)),
+                new RicisProofAxiomStep("ID-03", RicisLegacyTextResources.Get("report.legacy.413aa8a8d84d"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.f4b04e6353d7"), sigmaName, mirrorSigmaName, sigmaName, mirrorSigmaName)),
+                new RicisProofAxiomStep("ID-04", RicisLegacyTextResources.Get("report.legacy.fa95ff4a3c6c"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.561639ada97d"), sigmaName, mirrorSigmaName, sigmaName, mirrorSigmaName)),
+                new RicisProofAxiomStep("ID-05", RicisLegacyTextResources.Get("report.legacy.80ba760f3ffc"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.6814b74407cd"), sigmaName)),
+                new RicisProofAxiomStep("ID-06", RicisLegacyTextResources.Get("report.legacy.1f359d889f7d"), string.Format(CultureInfo.InvariantCulture, RicisLegacyTextResources.Get("report.legacy.6e9ce814d451"), sigmaName, sigmaName)),
             ],
             limitations:
             [
-                "Документ фиксирует нормативную цепочку ID-01–ID-06 для одной формальной отражённой пары; область применения пары задаётся моделью пользователя.",
+                RicisLegacyTextResources.Get("report.legacy.abcc2d804a4f"),
             ]);
     }
 
@@ -808,38 +808,38 @@ public static class RicisAcademicProofExtensions
 
         document.Append("# ").AppendLine(profile.Title);
         document.AppendLine();
-        document.AppendLine("## Аннотация");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.01fa35f47fb7"));
         document.AppendLine(profile.Abstract);
         document.AppendLine();
-        document.AppendLine("## Доказательный статус");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.bdd154f2ccd2"));
         document.AppendLine(profile.Scope switch
         {
             RicisProofScope.FiniteDerivation =>
-                "**Конечное символическое выведение.** Документ сертифицирует только преобразование явно переданных expression tree.",
+                RicisLegacyTextResources.Get("report.legacy.49d4ecb68e39"),
             RicisProofScope.ConditionalTheorem =>
-                "**Условная теорема.** Заключение выводится только при истинности перечисленных формальных предпосылок; RICIS не объявляет их истинными.",
+                RicisLegacyTextResources.Get("report.legacy.05b5047d0042"),
             _ => throw new ArgumentOutOfRangeException(nameof(profile)),
         });
         document.AppendLine();
-        AppendDocumentSection(document, "Определения", profile.Definitions, "Дополнительные определения не заданы.");
-        AppendDocumentSection(document, "Аксиомы и внешние предпосылки", profile.Axioms, "Дополнительные аксиомы не заданы.");
+        AppendDocumentSection(document, RicisLegacyTextResources.Get("report.legacy.cf6c6be0e097"), profile.Definitions, RicisLegacyTextResources.Get("report.legacy.12eac73cd080"));
+        AppendDocumentSection(document, RicisLegacyTextResources.Get("report.legacy.31e705f71bdb"), profile.Axioms, RicisLegacyTextResources.Get("report.legacy.f798f6c28fc5"));
         AppendNormativeAxiomSteps(document, profile.NormativeSteps);
-        document.AppendLine("## Теорема или конечный тезис");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.4576c2f4a7a9"));
         document.AppendLine(profile.Theorem);
         document.AppendLine();
-        document.AppendLine("## Машинно воспроизводимое символическое выведение");
-        document.AppendLine("Следующие шаги получены из expression tree; входные условия и ограничения не компилировались и не исполнялись.");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.3dd68a120ef7"));
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.c7923dd99729"));
         document.AppendLine();
         AppendNestedMarkdown(document, derivation);
         document.AppendLine();
-        document.AppendLine("## Воспроизводимый результат");
-        document.Append("Производное expression tree: `").Append(derived).AppendLine("`.");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.4a0292ce58db"));
+        document.Append(RicisLegacyTextResources.Get("report.legacy.ee293a489b52")).Append(derived).AppendLine("`.");
         document.AppendLine();
         AppendDocumentSection(
             document,
-            "Границы и непроверенные утверждения",
+            RicisLegacyTextResources.Get("report.legacy.64b5128c813a"),
             profile.Limitations,
-            "Внешняя истинность предпосылок, универсальные кванторы и утверждения вне входных expression tree данным документом не доказываются.");
+            RicisLegacyTextResources.Get("report.legacy.8cbb9d46f586"));
     }
 
     private static void AppendFormattedProofDocument(
@@ -859,7 +859,7 @@ public static class RicisAcademicProofExtensions
 
         var rendered = documentConstructor(profile, derivation, derived);
         var transformed = documentTextTransform(rendered)
-            ?? throw new InvalidOperationException("Преобразователь proof-документа не может вернуть null.");
+            ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("report.legacy.bec8cf03e979"));
         if (document.Length > 0 && document[^1] != '\n')
         {
             document.AppendLine();
@@ -886,7 +886,7 @@ public static class RicisAcademicProofExtensions
     {
         if (!Enum.IsDefined(format))
         {
-            throw new ArgumentOutOfRangeException(nameof(format), format, "Неизвестный формат proof-документа.");
+            throw new ArgumentOutOfRangeException(nameof(format), format, RicisLegacyTextResources.Get("report.legacy.c35280c79f2e"));
         }
     }
 
@@ -894,19 +894,19 @@ public static class RicisAcademicProofExtensions
         StringBuilder document,
         IReadOnlyList<RicisProofAxiomStep> steps)
     {
-        document.AppendLine("## Нормативная цепочка RICIS");
+        document.AppendLine(RicisLegacyTextResources.Get("report.legacy.cc581791e38c"));
         if (steps.Count == 0)
         {
-            document.AppendLine("Дополнительные именованные нормативные шаги не заданы.");
+            document.AppendLine(RicisLegacyTextResources.Get("report.legacy.f00f3069f999"));
         }
         else
         {
             for (var index = 0; index < steps.Count; index++)
             {
                 var step = steps[index];
-                document.Append("### Шаг ").Append(index + 1).Append(": ")
+                document.Append(RicisLegacyTextResources.Get("report.legacy.d2635f2fd366")).Append(index + 1).Append(": ")
                     .Append(step.RuleId).Append(" — ").AppendLine(step.Title);
-                document.Append("**Нормативное следствие:** ").AppendLine(step.Statement);
+                document.Append(RicisLegacyTextResources.Get("report.legacy.db4daaeabee8")).AppendLine(step.Statement);
             }
         }
 
@@ -961,7 +961,7 @@ public static class RicisAcademicProofExtensions
                 hypothesis.ReturnType != typeof(bool))
             {
                 throw new ArgumentException(
-                    "Каждое уравнение или ограничение должно быть лямбдой Func<Double, Double, Boolean> с двумя параметрами.",
+                    RicisLegacyTextResources.Get("report.legacy.a072af8d538f"),
                     parameterName);
             }
         }
@@ -976,7 +976,7 @@ public static class RicisAcademicProofExtensions
             operation is not ExpressionType.Add and not ExpressionType.Subtract)
         {
             throw new ArgumentException(
-                "Поддерживаются линейные уравнения формы x+y=c, x-y=c, y+x=c или y-x=c, где c — double-константа.",
+                RicisLegacyTextResources.Get("report.legacy.835fe2e58280"),
                 parameterName);
         }
 
@@ -985,13 +985,13 @@ public static class RicisAcademicProofExtensions
         if (firstIndex < 0 || secondIndex < 0 || firstIndex == secondIndex)
         {
             throw new ArgumentException(
-                "Каждое линейное уравнение должно содержать обе переменные ровно по одному разу.",
+                RicisLegacyTextResources.Get("report.legacy.901595de1187"),
                 parameterName);
         }
 
         if (!double.IsFinite(constant))
         {
-            throw new ArgumentException("Правая часть каждого уравнения должна быть конечной double-константой.", parameterName);
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.d0358209b12e"), parameterName);
         }
 
         var firstCoefficient = 1.0;
@@ -1009,7 +1009,7 @@ public static class RicisAcademicProofExtensions
     {
         if (claim.Body is not BinaryExpression { NodeType: ExpressionType.Equal, Left: var left, Right: var right })
         {
-            throw new ArgumentException("Тезис системы должен иметь форму x=c или y=c.", nameof(claim));
+            throw new ArgumentException(RicisLegacyTextResources.Get("report.legacy.7ee57d1e6e7f"), nameof(claim));
         }
 
         var leftIndex = ParameterIndex(left, claim.Parameters);
@@ -1025,7 +1025,7 @@ public static class RicisAcademicProofExtensions
         }
 
         throw new ArgumentException(
-            "Тезис системы должен иметь форму x=c или y=c, где c — конечная double-константа либо константная дробь.",
+            RicisLegacyTextResources.Get("report.legacy.da1252a7d1c3"),
             nameof(claim));
     }
 
@@ -1155,12 +1155,12 @@ public static class RicisAcademicProofExtensions
         var yResult = Expression.Lambda<Func<double, double, bool>>(
             Expression.Equal(y, solutionYExpression), x, y);
 
-        proof.AppendLine("# Формальный вывод RICIS III: система линейных уравнений");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.b2a6b08fb716"));
         proof.AppendLine();
-        proof.AppendLine("## Система уравнений");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.b00bd8d2ad67"));
         for (var index = 0; index < equations.Count; index++)
         {
-            proof.Append(index + 1).Append(". Уравнение: `").Append(equations[index]).AppendLine("`.");
+            proof.Append(index + 1).Append(RicisLegacyTextResources.Get("report.legacy.27d65ac1542c")).Append(equations[index]).AppendLine("`.");
         }
 
         proof.AppendLine();
@@ -1168,40 +1168,40 @@ public static class RicisAcademicProofExtensions
         AppendBinaryHypotheses(proof, constraints);
         proof.AppendLine();
         proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.86bbede19942"));
-        proof.Append("Доказуемое следствие: `").Append(claim).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.86d27bbedc15")).Append(claim).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("## Символическое исключение");
-        proof.AppendLine("Ни уравнения, ни ограничения не исполнялись численно; коэффициенты извлечены из их expression tree.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.0878e35a8b03"));
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.70415d124b43"));
         proof.AppendLine();
-        proof.AppendLine("### Шаг 1: Линейная комбинация уравнений системы");
-        proof.Append("**Основание:** умножение первого равенства на противоположный коэффициент ")
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.5262659204cc"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.dcf6072b731b"))
             .Append(yName)
-            .Append(" второго и второго на коэффициент ")
+            .Append(RicisLegacyTextResources.Get("report.legacy.408dfcbf3047"))
             .Append(yName)
-            .AppendLine(" первого; переменная исключается по детерминанту.");
-        proof.Append("До: `").Append(equations[0]).Append("`; `").Append(equations[1]).AppendLine("`.");
-        proof.Append("После: `").Append(combined).AppendLine("`.");
+            .AppendLine(RicisLegacyTextResources.Get("report.legacy.8a5545be6873"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(equations[0]).Append("`; `").Append(equations[1]).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(combined).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("### Шаг 2: Выделение первой координаты");
-        proof.AppendLine("**Основание:** точное деление обеих частей линейного равенства на ненулевой коэффициент.");
-        proof.Append("До: `").Append(combined).AppendLine("`.");
-        proof.Append("После: `").Append(xResult).AppendLine("`.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.fcc467b3afa5"));
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.f212371d0307"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(combined).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(xResult).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("### Шаг 3: Подстановка найденной координаты в первое уравнение");
-        proof.AppendLine("**Основание:** подстановка равных выражений в формальное равенство.");
-        proof.Append("До: `").Append(equations[0]).AppendLine("`.");
-        proof.Append("После: `").Append(substituted).AppendLine("`.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.6f23c5b99ce5"));
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.64cc74660900"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(equations[0]).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(substituted).AppendLine("`.");
         proof.AppendLine();
-        proof.AppendLine("### Шаг 4: Выделение второй координаты");
-        proof.AppendLine("**Основание:** точное решение линейного равенства по оставшейся координате.");
-        proof.Append("До: `").Append(substituted).AppendLine("`.");
-        proof.Append("После: `").Append(yResult).AppendLine("`.");
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.c51ce201457c"));
+        proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.e9882dd8a639"));
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.d524beb3aacc")).Append(substituted).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.42ee707c919d")).Append(yResult).AppendLine("`.");
         proof.AppendLine();
         proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.bbf4ba2e6ad8"));
-        proof.Append("Следовательно, система выводит ").Append(xName).Append('=').Append(solutionXExpression)
-            .Append(" и ").Append(yName).Append('=').Append(solutionYExpression)
-            .Append("; требуемая координата ").Append(coordinate == 0 ? xName : yName)
-            .Append(" доказана выражением `").Append(derived).AppendLine("`.");
+        proof.Append(RicisLegacyTextResources.Get("report.legacy.06f2ae300f06")).Append(xName).Append('=').Append(solutionXExpression)
+            .Append(RicisLegacyTextResources.Get("report.legacy.7b721e1a35e3")).Append(yName).Append('=').Append(solutionYExpression)
+            .Append(RicisLegacyTextResources.Get("report.legacy.bbd38a15a2f4")).Append(coordinate == 0 ? xName : yName)
+            .Append(RicisLegacyTextResources.Get("report.legacy.836805b1ab44")).Append(derived).AppendLine("`.");
     }
 
     private static void AppendBinaryHypotheses(
@@ -1210,13 +1210,13 @@ public static class RicisAcademicProofExtensions
     {
         if (constraints.Count == 0)
         {
-            proof.AppendLine("Формальные ограничения не заданы.");
+            proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.36892d843abf"));
             return;
         }
 
         for (var index = 0; index < constraints.Count; index++)
         {
-            proof.Append(index + 1).Append(". Ограничение: `").Append(constraints[index]).AppendLine("`.");
+            proof.Append(index + 1).Append(RicisLegacyTextResources.Get("report.legacy.52ef51fa44c4")).Append(constraints[index]).AppendLine("`.");
         }
     }
 
@@ -1228,7 +1228,7 @@ public static class RicisAcademicProofExtensions
         {
             if (denominator.IsZero)
             {
-                throw new DivideByZeroException("Рациональный вывод не может иметь нулевой знаменатель.");
+                throw new DivideByZeroException(RicisLegacyTextResources.Get("report.legacy.512a9ec3ee1b"));
             }
 
             if (denominator.Sign < 0)
@@ -1773,7 +1773,7 @@ public static class RicisAcademicProofExtensions
         steps =
         [
             new IntermediateProofStep(
-                "Сокращение соседних факториалов",
+                RicisLegacyTextResources.Get("report.legacy.007af9a345c6"),
                 "SP2: n!/(n−1)! = n",
                 before,
                 value),
@@ -1930,7 +1930,7 @@ public static class RicisAcademicProofExtensions
     {
         if (hypotheses.Count == 0)
         {
-            proof.AppendLine("Формальные высказывания не заданы.");
+            proof.AppendLine(RicisLegacyTextResources.Get("report.legacy.20dc04c11e20"));
             return;
         }
 
