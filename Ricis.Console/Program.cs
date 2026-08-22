@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Text;
 using Ricis.Core;
+using Ricis.Core.Resources;
 using Ricis.Core.Extensions;
 using Ricis.Core.Metadata;
 using Ricis.Core.Rationals;
@@ -125,7 +126,7 @@ internal static class Program
         {
             if (args.Length < 2)
             {
-                Console.Error.WriteLine("После --expr требуется строка выражения.");
+                Console.Error.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.c9ff425fb2bd"));
                 return 2;
             }
 
@@ -209,7 +210,7 @@ internal static class Program
 
         if (parts.Any(string.IsNullOrWhiteSpace))
         {
-            Console.Error.WriteLine("Система выражений содержит пустой элемент между разделителями ';'.");
+            Console.Error.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.e10a8da85bae"));
             return false;
         }
 
@@ -241,12 +242,12 @@ internal static class Program
             }
 
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Исходная лямбда:");
+            Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.75af99602ada"));
             Console.ResetColor();
             Console.WriteLine($"  {source}");
 
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("Производная RICIS-лямбда:");
+            Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.cf7f24147dc2"));
             Console.ResetColor();
             Console.WriteLine($"  {derived}");
 
@@ -260,7 +261,7 @@ internal static class Program
             Console.WriteLine($"Ошибка разбора: {error.Message}");
             Console.ResetColor();
             PrintPointer(input, error.Position);
-            Console.WriteLine("Введите help для списка поддерживаемых операций.");
+            Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.9b50323547f5"));
             Console.WriteLine();
             return false;
         }
@@ -282,7 +283,7 @@ internal static class Program
             var values = new[] { -2.0, -1.0, 0.0, 1.0, 2.0 };
             var results = values.Select(value => $"{value:G} → {compiled(value):G17}");
             Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine("Значения производного дерева:");
+            Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.f36de4c64c02"));
             Console.ResetColor();
             Console.WriteLine($"  {string.Join("; ", results)}");
         }
@@ -307,8 +308,8 @@ internal static class Program
         };
 
         var allMatch = true;
-        Console.WriteLine("Сравнение формальной производной RICIS с известной классической формулой:");
-        Console.WriteLine("Лимиты и Лопиталь не используются; сравниваются исполненные производные.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.047640924d4c"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.124fe58dd0a0"));
 
         foreach (var item in cases)
         {
@@ -318,7 +319,7 @@ internal static class Program
             Console.WriteLine($"F(t) = {item.Name}");
             Console.WriteLine($"  Исходное дерево: {item.Source}");
             Console.WriteLine($"  RICIS dF/dt:    {derivative}");
-            Console.WriteLine("  t                 RICIS               классика            |Δ|");
+            Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.963f5d19d876"));
 
             foreach (var point in item.Points)
             {
@@ -346,7 +347,7 @@ internal static class Program
         var ratio = identity.Ratio(identity);
         var product = f.Product(g);
 
-        Console.WriteLine("Доказательные expression-операции RICIS:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.814013884998"));
         Console.WriteLine($"F(x):              {f}");
         Console.WriteLine($"G(y):              {g}");
         Console.WriteLine($"Compose(F, G):     {composition}");
@@ -383,7 +384,7 @@ internal static class Program
     private static int RunJacobianProofDemo()
     {
         var scenario = RicisJacobianProofScenario.Create();
-        Console.WriteLine("JAC-001: сингулярный rank-one Jacobian");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.75cb2e2ae9d9"));
         Console.WriteLine($"Проверка lambda-тезиса: {scenario.ScalarProof.Proof.IsVerified}");
         Console.WriteLine($"Lambda-условий: {scenario.ScalarProof.Proof.Conditions.Count}; ограничений: {scenario.ScalarProof.Proof.Constraints.Count}");
         Console.WriteLine($"Typed trace entries: {scenario.ScalarProof.Trace.Count}");
@@ -419,7 +420,7 @@ internal static class Program
         var protocol = new StringBuilder();
         var derived = conditions.Prove(constraints, claim, protocol);
 
-        Console.WriteLine("Академический доказательный протокол RICIS:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.90bdfaf1ceae"));
         Console.WriteLine($"Исходный тезис: {claim}");
         Console.WriteLine($"Производное выражение: {derived}");
         Console.WriteLine();
@@ -443,10 +444,10 @@ internal static class Program
         var protocol = new StringBuilder();
         var derived = equations.Prove(constraints, claim, protocol);
 
-        Console.WriteLine("Академическое доказательство RICIS для системы линейных уравнений:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.0adfe53f1bd6"));
         Console.WriteLine("  x + y = 5");
         Console.WriteLine("  x - y = 1");
-        Console.WriteLine("  Доказуемое следствие: x = 3");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.c2f0f60dd597"));
         Console.WriteLine();
         Console.WriteLine(protocol.ToString());
         Console.WriteLine($"Проверка производного выражения: (x,y)=(3,2) → {derived.Compile()(3.0, 2.0)}; (2,3) → {derived.Compile()(2.0, 3.0)}");
@@ -471,7 +472,7 @@ internal static class Program
         var proofCase = new RiemannHypothesisProofCase(constraints, claim);
         var result = proofCase.Run();
 
-        Console.WriteLine("Мониторинг специализированного RH proof case:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.fafa7294967f"));
         foreach (var entry in proofCase.Monitor)
         {
             Console.WriteLine($"[{entry.Status}] {entry.Stage}: {entry.Message}");
@@ -496,8 +497,8 @@ internal static class Program
         var cubeDerivative = cube.DxDt();
         var hyperbolic = shifted.Tanh();
 
-        Console.WriteLine("Аналитический математический сахар RICIS:");
-        Console.WriteLine("  Каждый результат — явный Math.* expression-узел над нормализованной лямбдой; исходные делегаты не вызываются при построении.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.83ca1bbabd59"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.39bc002d3bd8"));
         Console.WriteLine($"F(x):          {shifted}");
         Console.WriteLine($"Sin(F):        {sin}");
         Console.WriteLine($"Exp(F):        {exponential}");
@@ -527,9 +528,9 @@ internal static class Program
         var annualThreePeriods = principal.CompoundInterest(rate, 3);
         var deferredPeriods = principal.CompoundInterest(rate, periods);
 
-        Console.WriteLine("Символическая формула сложного процента RICIS:");
-        Console.WriteLine("  P = S · (1 + r/100)^n; S, r и при необходимости n остаются отложенными expression tree.");
-        Console.WriteLine("  Формула строится символически и не является финансовым прогнозом или рекомендацией.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.a528f2b07dcb"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.fe050f75a8da"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.ffff260af1e2"));
         Console.WriteLine();
         Console.WriteLine($"S(x):                 {principal}");
         Console.WriteLine($"r(x), в процентах:    {rate}");
@@ -561,8 +562,8 @@ internal static class Program
         var squaredNorm = first.SquaredNorm();
         var norm = first.Norm();
 
-        Console.WriteLine("Комплексные отложенные функции RICIS:");
-        Console.WriteLine("  z(x) хранится как пара expression tree Re(z), Im(z); System.Numerics.Complex и делегаты не используются при построении.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.49681bb299cc"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.7d6f0f3dd89e"));
         Console.WriteLine($"z.Re(x):             {first.Re()}");
         Console.WriteLine($"z.Im(x):             {first.Im()}");
         Console.WriteLine($"conj(z).Re(x):       {conjugate.Re()}");
@@ -599,8 +600,8 @@ internal static class Program
         var negative = f.NegativePart();
         var distance = f.Distance(g);
 
-        Console.WriteLine("Непрерывный математический сахар RICIS:");
-        Console.WriteLine("  Все результаты — чистые конечные expression tree; делегаты не вызываются при построении.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.476fb2b3767c"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.82b7fa8525bd"));
         Console.WriteLine($"F(x):              {f}");
         Console.WriteLine($"G(y):              {g}");
         Console.WriteLine($"Abs(F):            {absolute}");
@@ -630,7 +631,7 @@ internal static class Program
         Expression<Func<double, double>> second = y => y - 1.0;
         var sum = first.Sum(second);
 
-        Console.WriteLine("Структурная Sum RICIS для двух отложенных лямбд:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.74cae0371260"));
         Console.WriteLine($"F(x):       {first}");
         Console.WriteLine($"G(y):       {second}");
         Console.WriteLine($"Sum(F, G):  {sum}");
@@ -645,9 +646,9 @@ internal static class Program
         var constantRange = strip.Integral(5.0);
         var symbolicRange = strip.Integral(deferredWidth);
 
-        Console.WriteLine("Геометрический Integral RICIS через A6:");
-        Console.WriteLine("  0_F · ∞_L → F·L; F и L остаются отложенными деревьями.");
-        Console.WriteLine("  Ни предел, ни сумма Римана, ни первообразная не строятся.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.cc814e93871c"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.d1057e1d7090"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.13aa954183f4"));
         Console.WriteLine();
         Console.WriteLine($"F(x):              {strip}");
         Console.WriteLine("L:                 5");
@@ -671,8 +672,8 @@ internal static class Program
             "x => (x % 2) / (x % 2)"
         };
 
-        Console.WriteLine("Структурное сокращение одинаковых функций по L1/SP2:");
-        Console.WriteLine("Классические нулевые точки не вычисляются до тождества F/F → 1.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.40a0d1485ccf"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.908259110c38"));
         Console.WriteLine();
 
         var failures = 0;
@@ -734,10 +735,10 @@ internal static class Program
         Expression<Func<double, double>> source = x => about != null ? x + 1 : x + 1;
         var derived = (Expression<Func<double, double>>)RicisPhasePipeline.Simplify(source);
 
-        Console.WriteLine("Исходная лямбда с захваченным about:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.640615de9bc9"));
         Console.WriteLine($"  {source}");
         Console.WriteLine();
-        Console.WriteLine("Производная RICIS-лямбда с SEO-профилем автора:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.2b385a2b6882"));
         Console.WriteLine($"  {derived}");
         Console.WriteLine();
         Console.WriteLine($"Проверка исполнения: x=2 → {derived.Compile()(2):G17}");
@@ -814,7 +815,7 @@ internal static class Program
         }
 
         Console.WriteLine(failures == 0
-            ? "Парсер: все встроенные проверки успешно пройдены."
+            ? RicisLegacyTextResources.Get("runtime.legacy.14737b5f2c10")
             : $"Парсер: сбоев {failures}.");
         return failures == 0 ? 0 : 1;
     }
@@ -822,51 +823,51 @@ internal static class Program
     private static void PrintBanner()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("RICIS Console — интерактивный разбор и преобразование лямбд");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.d222cfd65123"));
         Console.ResetColor();
-        Console.WriteLine("Введите help для синтаксиса, examples для каталога, all для пакетного прогона, exit для выхода.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.d04bc9ac037b"));
         Console.WriteLine();
     }
 
     private static void PrintHelp()
     {
-        Console.WriteLine("Поддерживаемый безопасный синтаксис:");
-        Console.WriteLine("  [x =>] выражение");
-        Console.WriteLine("  Система выражений: lambda1; lambda2; ...; lambdaN");
-        Console.WriteLine("  Операторы: +, -, *, /, ^ и круглые скобки.");
-        Console.WriteLine("  Константы: pi, e.");
-        Console.WriteLine("  Функции: sin, cos, tan, sinh, cosh, tanh, exp, log, log10, sqrt, abs, sign, clamp, mod, pow.");
-        Console.WriteLine("  RICIS-функции: min, max, positivePart, negativePart, distance, sum, integral, derivative/dxdt.");
-        Console.WriteLine("  Финансовая expression-функция: compoundInterest(S, r, n) или interest(S, r, n), где r — процент.");
-        Console.WriteLine("  Допустимы варианты Math.Sin(x) и sin(x); имена регистронезависимы.");
-        Console.WriteLine("  Важно: степень записывайте как x^2 или pow(x, 2); parser не использует оператор **.");
-        Console.WriteLine("  Примеры новых функций: derivative(x^3), integral(x+1, 5), sum(x, 1), distance(x, 5), compoundInterest(100, 10, 2).");
-        Console.WriteLine("  Пример системы: x => x + 1; x => derivative(x ^ 3); x => integral(x, 5).");
-        Console.WriteLine("  Ввод не компилируется как C# и не может вызывать произвольные методы.");
-        Console.WriteLine("  all запускает все поддерживаемые примеры из каталога; в CLI используйте --all.");
-        Console.WriteLine("  В CLI --author-seo-demo показывает SEO-блок при захвате внешней переменной about.");
-        Console.WriteLine("  В CLI --derivative-demo показывает DxDt() как символьную перестройку без lim и Лопиталя.");
-        Console.WriteLine("  В CLI --structural-demo показывает L1/SP2 для sign, clamp, abs и остатка.");
-        Console.WriteLine("  В CLI --integral-demo показывает Integral(F, L) как геометрическое применение A6.");
-        Console.WriteLine("  В CLI --sum-demo показывает Sum(F, G) для двух отложенных лямбд.");
-        Console.WriteLine("  В CLI --proof-demo показывает Compose, At, Difference, Ratio и Product.");
-        Console.WriteLine("  В CLI --academic-proof-demo записывает пошаговый академический вывод Prove в StringBuilder.");
-        Console.WriteLine("  В CLI --system-proof-demo доказывает следствие из системы двух линейных уравнений.");
-        Console.WriteLine("  В CLI --riemann-proof-demo выводит конечное следствие из Riemann-связанной системы симметрий, не доказывая саму гипотезу.");
-        Console.WriteLine("  В CLI --jacobian-proof-demo показывает JAC-001: lambda-посылки, checked proof и A6 Jacobian bridge.");
-        Console.WriteLine("  В CI --jacobian-proof-latex и --jacobian-proof-lean выдают standalone artifacts для внешней проверки форматов.");
-        Console.WriteLine("  В CLI --continuous-demo показывает Abs, Min, Max, Clamp, части числа и Distance.");
-        Console.WriteLine("  В CLI --complex-demo показывает Re, Im, сопряжение, произведение и норму комплексных функций.");
-        Console.WriteLine("  В CLI --interest-demo показывает P=S·(1+r/100)^n как чистое expression-дерево.");
-        Console.WriteLine("  В CLI --analytic-demo показывает аналитические Math.*-узлы и производную Pow(F,3).");
-        Console.WriteLine("  В CLI --public-api-demo проверяет ExactEvaluator, CircleSectors, PolarConverter, NumericConstants и RicisType.");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.7f2330d2bbc8"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.ffcd489e92b9"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.416d7d14588d"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.93bace57b4c8"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.8099ef03dba9"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.6ccb906783b8"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.f7d335bd5913"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.71ebe4b7d311"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.cc439dc3fc96"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.1f4a267baf74"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.4b1d29984c30"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.c89502be3567"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.f2f2fd6bfe9d"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.e17e26ee0562"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.e74ed7b0bca3"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.4481989d8c91"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.1d89bb7c27e3"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.9e25cdd21553"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.a96ae4768a3d"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.500cb2e02d86"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.96433f2f26aa"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.89a4282f9a92"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.f542732f1557"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.544a20f19ad7"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.762723409760"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.bc0190f24dca"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.92cb71bfe04f"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.47b9480a6fbd"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.262f67ae6e94"));
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.783f50c5c083"));
         Console.WriteLine();
         PrintExamples();
     }
 
     private static void PrintExamples()
     {
-        Console.WriteLine("Примеры:");
+        Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.b575ce0c3c75"));
         foreach (var example in ExampleCatalog.All)
         {
             Console.WriteLine($"  {example.Id}: {example.Input} — {example.Title}");
