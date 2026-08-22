@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using Ricis.Core.Resources;
 using Ricis.Core.Extensions;
 
 namespace Ricis.ConsoleApp;
@@ -15,7 +16,7 @@ public sealed class LambdaTextParser
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            throw new LambdaParseException("Пустая строка не является выражением.", 0);
+            throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.11753584bf90"), 0);
         }
 
         var source = text.Trim();
@@ -29,13 +30,13 @@ public sealed class LambdaTextParser
             body = source[(arrow + 2)..].Trim();
             if (!IsIdentifier(parameterName))
             {
-                throw new LambdaParseException("Слева от => ожидается один идентификатор параметра.", 0);
+                throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.892d4f425b41"), 0);
             }
         }
 
         if (body.Length == 0)
         {
-            throw new LambdaParseException("После => ожидается тело выражения.", source.Length);
+            throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.464095494446"), source.Length);
         }
 
         var parameter = Expression.Parameter(typeof(double), parameterName);
@@ -68,7 +69,7 @@ public sealed class LambdaTextParser
             var result = ParseAddition();
             if (_current.Kind != TokenKind.End)
             {
-                throw Error($"Неожиданный символ '{_current.Text}'.");
+                throw Error(RicisLegacyTextResources.Format("runtime.legacy.2314782a83a9", ("_current.Text", _current.Text)));
             }
 
             return result;
@@ -145,7 +146,7 @@ public sealed class LambdaTextParser
                 Consume(TokenKind.Number);
                 if (!double.TryParse(token.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
                 {
-                    throw new LambdaParseException($"Невозможно разобрать число '{token.Text}'.", token.Position);
+                    throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.3ab9c5806c9b", ("token.Text", token.Text)), token.Position);
                 }
 
                 return Expression.Constant(value);
@@ -172,7 +173,7 @@ public sealed class LambdaTextParser
                 return nested;
             }
 
-            throw Error("Ожидаются число, параметр, функция или открывающая скобка.");
+            throw Error(RicisLegacyTextResources.Get("runtime.legacy.3a05c51e1dec"));
         }
 
         private Expression ParseIdentifier(Token token)
@@ -188,7 +189,7 @@ public sealed class LambdaTextParser
                 "PI" => Expression.Constant(Math.PI),
                 "E" => Expression.Constant(Math.E),
                 _ => throw new LambdaParseException(
-                    $"Неизвестный идентификатор '{token.Text}'. Допустимы {_parameter.Name}, pi и e.", token.Position),
+                    RicisLegacyTextResources.Format("runtime.legacy.1e150064f8ac", ("token.Text", token.Text), ("_parameter.Name", _parameter.Name)), token.Position),
             };
         }
 
@@ -235,7 +236,7 @@ public sealed class LambdaTextParser
                 "DERIVATIVE" or "DXDT" => Derivative(arguments, function),
                 "COMPOUNDINTEREST" or "INTEREST" => CompoundInterest(arguments, function),
                 _ => throw new LambdaParseException(
-                    $"Функция '{function.Text}' не поддерживается. Используйте Sin, Cos, Tan, Sinh, Cosh, Tanh, Exp, Log, Log10, Sqrt, Abs, Sign, Clamp, Mod, Pow, Min, Max, PositivePart, NegativePart, Distance, Sum, Integral, Derivative, CompoundInterest или Interest.",
+                    RicisLegacyTextResources.Format("runtime.legacy.f588be7b4ee3", ("function.Text", function.Text)),
                     function.Position),
             };
         }
@@ -244,7 +245,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 1)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
             }
 
             var method = typeof(Math).GetMethod(methodName, [typeof(double)])!;
@@ -255,7 +256,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 1)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
             }
 
             var method = typeof(Math).GetMethod(nameof(Math.Sign), [typeof(double)])!;
@@ -266,7 +267,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 2)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
             }
 
             return Expression.Modulo(arguments[0], arguments[1]);
@@ -276,7 +277,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 3)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно три аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4e0b3f961ec1", ("token.Text", token.Text)), token.Position);
             }
 
             var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double), typeof(double)])!;
@@ -287,7 +288,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 2)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
             }
 
             var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double)])!;
@@ -301,7 +302,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 2)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
             }
 
             return operation(arguments[0], arguments[1]);
@@ -311,7 +312,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 2)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
             }
 
             var test = chooseMaximum
@@ -324,7 +325,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 1)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
             }
 
             var zero = Expression.Constant(0.0);
@@ -338,7 +339,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 2)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно два аргумента.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
             }
 
             return Expression.Call(typeof(Math), nameof(Math.Abs), Type.EmptyTypes,
@@ -349,7 +350,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 1)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно один аргумент.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
             }
 
             return SymbolicDerivator.Derive(arguments[0], CurrentParameter(arguments));
@@ -359,7 +360,7 @@ public sealed class LambdaTextParser
         {
             if (arguments.Count != 3)
             {
-                throw new LambdaParseException($"{token.Text} принимает ровно три аргумента: S, r и n.", token.Position);
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.34bc5f6bd8d9", ("token.Text", token.Text)), token.Position);
             }
 
             var rate = Expression.Divide(arguments[1], Expression.Constant(100.0));
@@ -370,7 +371,7 @@ public sealed class LambdaTextParser
         private static ParameterExpression CurrentParameter(IReadOnlyList<Expression> arguments)
         {
             var parameter = arguments.SelectMany(FindParameters).FirstOrDefault();
-            return parameter ?? throw new InvalidOperationException("Для производной требуется параметр lambda.");
+            return parameter ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.0c5092326413"));
         }
 
         private static IEnumerable<ParameterExpression> FindParameters(Expression expression)
@@ -405,7 +406,7 @@ public sealed class LambdaTextParser
         {
             if (_current.Kind != expected)
             {
-                throw Error($"Ожидается '{Display(expected)}', получено '{_current.Text}'.");
+                throw Error(RicisLegacyTextResources.Format("runtime.legacy.11ccd114dc95", ("Display(expected)", Display(expected)), ("_current.Text", _current.Text)));
             }
 
             _current = NextToken();
@@ -487,7 +488,7 @@ public sealed class LambdaTextParser
                 return new Token(TokenKind.Identifier, _text[start.._position], start);
             }
 
-            throw new LambdaParseException($"Недопустимый символ '{current}'.", start);
+            throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.a0de865f6d3f", ("current", current)), start);
         }
 
         private LambdaParseException Error(string message) => new(message, _current.Position);
@@ -525,7 +526,7 @@ public sealed class LambdaTextParser
     private readonly record struct Token(TokenKind Kind, string Text, int Position);
 }
 
-public sealed class LambdaParseException(string message, int position) : Exception($"{message} Позиция: {position}.")
+public sealed class LambdaParseException(string message, int position) : Exception(RicisLegacyTextResources.Format("runtime.legacy.0c4c6ba53c95", ("message", message), ("position", position)))
 {
     public int Position { get; } = position;
 }
