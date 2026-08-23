@@ -69,3 +69,4 @@ console_*.txt
 *._check.txt
 *_regression.txt
 *_build.log
+*.lutconfig
