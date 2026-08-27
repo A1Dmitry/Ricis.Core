@@ -54,17 +54,16 @@ public sealed class UniversityComplexRationalReduceTests
 
         var reduced = RicisPhasePipeline.Simplify(source);
 
-        // Expectation 2 — RICIS: preserve the two excluded denominator keys
-        // instead of silently erasing them after cancellation: ∞_{−2} at x=1
-        // and ∞_{3} at x=2.
-        var keyed = reduced.Body as KeyedInfinityExpression;
-        Assert.IsNotNull(keyed, $"Expected keyed RICIS poles, got: {reduced}");
-        Assert.AreEqual(2, keyed!.Branches.Count);
-        CollectionAssert.AreEquivalent(
-            new[] { -2d, 3d },
-            keyed.Branches.Select(branch => (double)((ConstantExpression)branch.Numerator).Value!).ToArray());
+        // Expectation 2 — RICIS: preserve the reduced parent numerator index
+        // (2x−3)(x+1) and both excluded denominator keys, rather than replacing
+        // the index with key-specific numerical projections.
+        var infinity = reduced.Body as InfinityExpression;
+        Assert.IsNotNull(infinity, $"Expected a RICIS indexed pole, got: {reduced}");
+        var expectedParentIndex = Expression.Multiply(twoXMinusThree, xPlusOne);
+        Assert.IsTrue(infinity!.Numerator.AreEqual(expectedParentIndex),
+            $"SP4 must retain the reduced parent index. Actual: {infinity.Numerator}");
         CollectionAssert.AreEquivalent(
             new[] { 1d, 2d },
-            keyed.Roots.Select(root => root.Value).ToArray());
+            infinity.Roots.Select(root => root.Value).ToArray());
     }
 }

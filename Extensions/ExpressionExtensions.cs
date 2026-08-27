@@ -183,7 +183,11 @@ public static class ExpressionExtensions
     }
 
     /// <summary>
-    /// Executes <c>AddSingularityIfValid</c> for the RICIS expression model.
+    /// Adds a certified A1 pole while retaining the parent numerator expression
+    /// as its deferred RICIS index. Root discovery and the preceding A4
+    /// classification are owned by <c>RicisTransformVisitor</c>; this helper
+    /// performs no numerical evaluation, tolerance-based index rewrite or
+    /// singularity classification.
     /// </summary>
     public static void AddSingularityIfValid(this
         Expression numerator,
@@ -191,27 +195,11 @@ public static class ExpressionExtensions
         double value,
         List<InfinityExpression> singularities)
     {
-        // A1 is applied at a concrete key. Substitute that key into F and
-        // reduce its finite value before it becomes the infinity index:
-        // F(a) / 0 -> ∞_{F(a)}. The original expression remains available
-        // upstream; this node represents its independent derived result.
-        if (!numerator.TryEvaluate(param.Name, value, out var indexValue) ||
-            Math.Abs(indexValue) < 1e-10)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(numerator);
+        ArgumentNullException.ThrowIfNull(param);
+        ArgumentNullException.ThrowIfNull(singularities);
 
-        // Root solvers work in double precision. Canonicalise an integer index
-        // within the solver tolerance so all keys with F(a)=1 share exactly
-        // the same structural constant instead of adjacent binary values.
-        if (Math.Abs(indexValue - Math.Round(indexValue)) <= 1e-10)
-        {
-            indexValue = Math.Round(indexValue);
-        }
-
-        var index = Expression.Constant(indexValue);
-        var infinity = new PoleInfinityExpression(index, [(param, value)], []);
-        singularities.Add(infinity);
+        singularities.Add(new PoleInfinityExpression(numerator, [(param, value)], []));
     }
 
     /// <summary>
