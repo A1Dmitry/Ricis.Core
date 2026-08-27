@@ -1,0 +1,98 @@
+name: Publish NuGet package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'NuGet package version (for example 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-nuget-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Pack and publish Ricis.Core
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve package version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid NuGet version: $version"
+            exit 1
+          fi
+
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "Publishing Ricis.Core version $version"
+
+      - name: Restore
+        run: dotnet restore Ricis.Core.csproj
+
+      - name: Build
+        run: dotnet build Ricis.Core.csproj --configuration Release --no-restore -p:RicisCoreVersion=${{ steps.version.outputs.value }}
+
+      - name: Pack
+        run: dotnet pack Ricis.Core.csproj --configuration Release --no-build --output ./artifacts -p:RicisCoreVersion=${{ steps.version.outputs.value }}
+
+      - name: Verify package version
+        shell: bash
+        run: |
+          expected="${{ steps.version.outputs.value }}"
+          actual=$(unzip -p ./artifacts/*.nupkg '*.nuspec' | sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' | head -n 1)
+          if [[ "$actual" != "$expected" ]]; then
+            echo "Package version mismatch: expected $expected, got $actual"
+            exit 1
+          fi
+          echo "Verified Ricis.Core package version $actual"
+
+      - name: Publish to NuGet.org
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_SOURCE: https://api.nuget.org/v3/index.json
+        run: |
+          set -euo pipefail
+          if [[ -z "${NUGET_API_KEY:-}" ]]; then
+            echo "::error::NUGET_API_KEY is not configured for this repository/environment. Add the NuGet.org API key as the GitHub Actions secret NUGET_API_KEY."
+            exit 1
+          fi
+
+          shopt -s nullglob
+          packages=(./artifacts/*.nupkg)
+          if (( ${#packages[@]} == 0 )); then
+            echo "::error::No .nupkg files found under ./artifacts."
+            exit 1
+          fi
+
+          for package in "${packages[@]}"; do
+            echo "Publishing $(basename "$package") to $NUGET_SOURCE"
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
+              --source "$NUGET_SOURCE" \
+              --skip-duplicate
+          done

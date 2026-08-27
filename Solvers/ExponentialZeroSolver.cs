@@ -1,5 +1,6 @@
 ﻿using Ricis.Core.Solvers.ZeroSolver;
 using System.Linq.Expressions;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Solvers
 {
@@ -9,6 +10,9 @@ namespace Ricis.Core.Solvers
     /// </summary>
     public static class ExponentialZeroSolver
     {
+        /// <summary>
+        /// Executes <c>FindRoots</c> for the RICIS expression model.
+        /// </summary>
         public static ICollection<Root> FindRoots(Expression expr, ParameterExpression parameter)
         {
             var roots = new List<Root>();
@@ -31,6 +35,13 @@ namespace Ricis.Core.Solvers
                 inner = visitor.FoundExpArgument;
             }
 
+            // Выражение не содержит exp(...): этот специализированный решатель
+            // не должен вмешиваться или выбрасывать исключение.
+            if (inner is null)
+            {
+                return roots;
+            }
+
             // Делегируем поиск корней внутреннему универсальному солверу
             var innerRoots = inner.FindExactRoots(parameter);
             if (innerRoots.Any())
@@ -42,6 +53,9 @@ namespace Ricis.Core.Solvers
         }
 
         // Совместимый адаптер: возвращаем первый корень, если он есть.
+        /// <summary>
+        /// Executes <c>Solve</c> for the RICIS expression model.
+        /// </summary>
         public static (ParameterExpression, double)? Solve(Expression expr)
         {
             // используем общий адаптер, чтобы не дублировать поиск параметра и нормализацию
@@ -72,9 +86,24 @@ namespace Ricis.Core.Solvers
         private static bool IsDirectExpEqualsOne(Expression expr, out Expression argument)
         {
             argument = null;
-            // оставляю заглушку — при необходимости можно распознавать равенства
-            throw new NotImplementedException();
-           // return false;
+            if (expr is not BinaryExpression { NodeType: ExpressionType.Equal } equality)
+            {
+                return false;
+            }
+
+            if (IsExpCall(equality.Left) && equality.Right is ConstantExpression right && IsOneLike(right.Value))
+            {
+                argument = ((MethodCallExpression)equality.Left).Arguments[0];
+                return true;
+            }
+
+            if (IsExpCall(equality.Right) && equality.Left is ConstantExpression left && IsOneLike(left.Value))
+            {
+                argument = ((MethodCallExpression)equality.Right).Arguments[0];
+                return true;
+            }
+
+            return false;
         }
 
         private static bool IsExpCall(Expression expr)
@@ -101,6 +130,8 @@ namespace Ricis.Core.Solvers
         private class ExpFinderVisitor : ExpressionVisitor
         {
             public Expression FoundExpArgument { get; private set; }
+
+            protected override Expression VisitExtension(Expression node) => node;
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {

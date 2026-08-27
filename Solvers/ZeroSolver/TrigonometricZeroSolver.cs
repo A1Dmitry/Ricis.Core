@@ -2,8 +2,14 @@
 
 namespace Ricis.Core.Solvers.ZeroSolver;
 
+/// <summary>
+/// Represents the RICIS public type <c>TrigonometricZeroSolver</c>.
+/// </summary>
 public static class TrigonometricZeroSolver
 {
+    /// <summary>
+    /// Executes <c>FindTrigonometricRoots</c> for the RICIS expression model.
+    /// </summary>
     public static List<Root> FindTrigonometricRoots(this Expression expr, ParameterExpression param)
     {
         var roots = new List<Root>();

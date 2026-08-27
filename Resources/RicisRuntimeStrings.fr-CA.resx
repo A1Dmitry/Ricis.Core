@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="FactorialNegative" xml:space="preserve"><value>La factorielle est définie uniquement pour les valeurs entières non négatives.</value></data>
+  <data name="StrictZeroDenominator" xml:space="preserve"><value>L’expression de référence contient un dénominateur nul.</value></data>
+  <data name="UnresolvedRicisNode" xml:space="preserve"><value>Le nœud RICIS non résolu {0} ne peut pas être compilé strictement. Appliquez d’abord le pipeline normatif.</value></data>
+  <data name="UnknownProviderError" xml:space="preserve"><value>Erreur de fournisseur inconnue.</value></data>
+</root>

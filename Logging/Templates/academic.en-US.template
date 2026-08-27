@@ -1,0 +1,15 @@
+# {{Title}}
+
+Status: {{Status}}
+
+## Proof steps
+{{#each Steps}}### Step {{this.Number}}: {{this.Phase}}
+Rule: {{this.Rule}}
+{{this.Message}}
+Status: {{this.Status}}
+
+{{/each}}## Limitations
+{{#each Limitations}}- {{this}}
+{{/each}}
+## Conclusion
+{{Conclusion}}

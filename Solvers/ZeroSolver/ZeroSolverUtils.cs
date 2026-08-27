@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using Ricis.Core.Expressions;
+
 namespace Ricis.Core.Solvers.ZeroSolver
 {
     /// <summary>
@@ -10,6 +12,9 @@ namespace Ricis.Core.Solvers.ZeroSolver
     /// </summary>
     public static class ZeroSolverUtils
     {
+        /// <summary>
+        /// Executes <c>FindFirstParameter</c> for the RICIS expression model.
+        /// </summary>
         public static ParameterExpression FindFirstParameter(this Expression expr)
         {
             var pf = new ParamFinder();
@@ -17,6 +22,9 @@ namespace Ricis.Core.Solvers.ZeroSolver
             return pf.Parameter;
         }
 
+        /// <summary>
+        /// Executes <c>NormalizeZero</c> for the RICIS expression model.
+        /// </summary>
         public static double NormalizeZero(double v) => v == 0.0 ? 0.0 : v;
 
         /// <summary>
@@ -49,6 +57,8 @@ namespace Ricis.Core.Solvers.ZeroSolver
         private class ParamFinder : ExpressionVisitor
         {
             public ParameterExpression Parameter { get; private set; }
+
+            protected override Expression VisitExtension(Expression node) => node;
 
             protected override Expression VisitParameter(ParameterExpression node)
             {

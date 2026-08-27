@@ -1,16 +1,20 @@
 using System.Linq.Expressions;
 using Ricis.Core.Solvers.ZeroSolver;
+using Ricis.Core.Expressions;
 
 namespace Ricis.Core.Solvers;
 
 /// <summary>
-///     Log solver: распознаёт Math.Log(x) == 0 => x = 1.
-///     Реализует FindTrigonometricRoots/FindFirstRoot pattern совместимо с ZeroSolverUtils.
+///     Log solver: Г°Г Г±ГЇГ®Г§Г­Г ВёГІ Math.Log(x) == 0 => x = 1.
+///     ГђГҐГ Г«ГЁГ§ГіГҐГІ FindTrigonometricRoots/FindFirstRoot pattern Г±Г®ГўГ¬ГҐГ±ГІГЁГ¬Г® Г± ZeroSolverUtils.
 /// </summary>
 public static class LogSolver
 {
-    // Возвращает все точные корни для expr = 0, относительно переданного параметра.
-    // Поддерживает случаи вида Log(x) (нативно) и вложенные вызовы, если найдём явный параметр.
+    // Г‚Г®Г§ГўГ°Г Г№Г ГҐГІ ГўГ±ГҐ ГІГ®Г·Г­Г»ГҐ ГЄГ®Г°Г­ГЁ Г¤Г«Гї expr = 0, Г®ГІГ­Г®Г±ГЁГІГҐГ«ГјГ­Г® ГЇГҐГ°ГҐГ¤Г Г­Г­Г®ГЈГ® ГЇГ Г°Г Г¬ГҐГІГ°Г .
+    // ГЏГ®Г¤Г¤ГҐГ°Г¦ГЁГўГ ГҐГІ Г±Г«ГіГ·Г ГЁ ГўГЁГ¤Г  Log(x) (Г­Г ГІГЁГўГ­Г®) ГЁ ГўГ«Г®Г¦ГҐГ­Г­Г»ГҐ ГўГ»Г§Г®ГўГ», ГҐГ±Г«ГЁ Г­Г Г©Г¤ВёГ¬ ГїГўГ­Г»Г© ГЇГ Г°Г Г¬ГҐГІГ°.
+    /// <summary>
+    /// Executes <c>FindRoots</c> for the RICIS expression model.
+    /// </summary>
     public static ICollection<Root> FindRoots(this Expression expr, ParameterExpression parameter)
     {
         var roots = new List<Root>();
@@ -19,12 +23,12 @@ public static class LogSolver
             return roots;
         }
 
-        // Простая форма: Log(x)
+        // ГЏГ°Г®Г±ГІГ Гї ГґГ®Г°Г¬Г : Log(x)
         if (expr is MethodCallExpression call && call.Method.DeclaringType == typeof(Math) &&
             call.Method.Name == "Log" && call.Arguments.Count == 1)
         {
             var arg = call.Arguments[0];
-            // если аргумент — именно искомый параметр
+            // ГҐГ±Г«ГЁ Г Г°ГЈГіГ¬ГҐГ­ГІ вЂ” ГЁГ¬ГҐГ­Г­Г® ГЁГ±ГЄГ®Г¬Г»Г© ГЇГ Г°Г Г¬ГҐГІГ°
             if (arg is ParameterExpression p && p == parameter)
             {
                 // ln(x) = 0 => x = 1
@@ -32,21 +36,25 @@ public static class LogSolver
                 return roots;
             }
 
-            // если аргумент — выражение, пытаемся найти, равен ли параметр внутри
-            var pf = arg.FindFirstParameter();
-            if (pf == parameter)
+            // Р”Р»СЏ СЃРѕСЃС‚Р°РІРЅРѕРіРѕ Р°СЂРіСѓРјРµРЅС‚Р° log(g(x)) = 0 РЅРµРѕР±С…РѕРґРёРјРѕ СЂРµС€РёС‚СЊ
+            // g(x) - 1 = 0, Р° РЅРµ РїСЂРёРїРёСЃС‹РІР°С‚СЊ РїР°СЂР°РјРµС‚СЂСѓ Р·РЅР°С‡РµРЅРёРµ 1.
+            if (arg.FindFirstParameter() == parameter)
             {
-                roots.Add(new Root(parameter, 1.0));
-                return roots;
+                return Expression.Subtract(arg, RicisType.InfinityOne).FindExactRoots(parameter);
             }
         }
 
-        // Попытка найти Log(...) внутри более сложного выражения
+        // ГЏГ®ГЇГ»ГІГЄГ  Г­Г Г©ГІГЁ Log(...) ГўГ­ГіГІГ°ГЁ ГЎГ®Г«ГҐГҐ Г±Г«Г®Г¦Г­Г®ГЈГ® ГўГ»Г°Г Г¦ГҐГ­ГЁГї
         var finder = new LogFinder();
         finder.Visit(expr);
-        // если внутри нашли Log(u) где u содержит параметр — решаем u = 1
+        // ГҐГ±Г«ГЁ ГўГ­ГіГІГ°ГЁ Г­Г ГёГ«ГЁ Log(u) ГЈГ¤ГҐ u Г±Г®Г¤ГҐГ°Г¦ГЁГІ ГЇГ Г°Г Г¬ГҐГІГ° вЂ” Г°ГҐГёГ ГҐГ¬ u = 1
         var inner = finder.FoundLogArgument;
-        // Используем UniversalZeroSolver чтобы найти корни inner == 1 => inner-1 == 0
+        if (inner is null)
+        {
+            return roots;
+        }
+
+        // Г€Г±ГЇГ®Г«ГјГ§ГіГҐГ¬ UniversalZeroSolver Г·ГІГ®ГЎГ» Г­Г Г©ГІГЁ ГЄГ®Г°Г­ГЁ inner == 1 => inner-1 == 0
         var eqExpr = Expression.Subtract(inner, RicisType.InfinityOne);
         var innerRoots = eqExpr.FindExactRoots(parameter);
         roots.AddRange(innerRoots);
@@ -54,7 +62,10 @@ public static class LogSolver
         return roots;
     }
 
-    // Совместимый адаптер для SingularitySolver: возвращает первый root (param,double)? используя ZeroSolverUtils
+    // Г‘Г®ГўГ¬ГҐГ±ГІГЁГ¬Г»Г© Г Г¤Г ГЇГІГҐГ° Г¤Г«Гї SingularitySolver: ГўГ®Г§ГўГ°Г Г№Г ГҐГІ ГЇГҐГ°ГўГ»Г© root (param,double)? ГЁГ±ГЇГ®Г«ГјГ§ГіГї ZeroSolverUtils
+    /// <summary>
+    /// Executes <c>Solve</c> for the RICIS expression model.
+    /// </summary>
     public static (ParameterExpression, double)? Solve(this Expression expr)
     {
         return ZeroSolverUtils.FindFirstRootFromFindRoots(FindRoots, expr);
@@ -63,6 +74,8 @@ public static class LogSolver
     private class LogFinder : ExpressionVisitor
     {
         public Expression FoundLogArgument { get; private set; }
+
+        protected override Expression VisitExtension(Expression node) => node;
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

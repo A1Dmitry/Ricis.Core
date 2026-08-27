@@ -1,0 +1,73 @@
+% RICIS-LOCALE: de-DE
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsfonts}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\DeclareUnicodeCharacter{03B7}{\ensuremath{\eta}}
+\DeclareUnicodeCharacter{03C9}{\ensuremath{\omega}}
+\DeclareUnicodeCharacter{2202}{\ensuremath{\partial}}
+\DeclareUnicodeCharacter{03BD}{\ensuremath{\nu}}
+\geometry{a4paper, margin=1in}
+
+\newtheorem{theorem}{Satz}
+\newtheorem{lemma}{Lemma}
+\newtheorem{axiom}{Axiom}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Korollar}
+\newtheorem{remark}{Bemerkung}
+\renewcommand{\contentsname}{Inhaltsverzeichnis}
+\renewcommand{\proofname}{Beweis}
+
+\title{ {{Title}} \\ \large {{Subtitle}} }
+\author{ {{AuthorDisplayName}} }
+\date{}
+
+\begin{document}
+\maketitle
+{{Abstracts}}
+{{#if TableOfContentsIncluded}}
+\tableofcontents
+\vspace{1cm}
+{{/if}}
+\section*{ {{EvidenceBoundaryLabel}} }
+\addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
+{{EvidenceBoundary}}
+{{#if AuthorIncluded}}
+\section*{Autor und SEO-Metadaten}
+\addcontentsline{toc}{section}{Autor und SEO-Metadaten}
+\textbf{Name:} {{AuthorDisplayName}}\\
+\textbf{Alternativer Name:} {{AuthorAlternateName}}\\
+\textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
+\textbf{Beschreibung:} {{AuthorDescription}}\\
+\textbf{Schlüsselwörter:} {{AuthorKeywords}}
+{{AuthorWorks}}
+{{/if}}
+{{#each Sections}}
+{{this.Opening}}
+\textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
+{{this.Body}}
+{{this.Equation}}
+{{this.Claims}}
+{{this.ProofSteps}}
+{{this.ValidationRows}}
+{{/each}}
+{{#if EpilogueIncluded}}
+\section*{ {{EpilogueHeading}} }
+\addcontentsline{toc}{section}{ {{EpilogueHeading}} }
+{{Epilogue}}
+{{EpilogueSteps}}
+{{/if}}
+{{#if ConclusionIncluded}}
+\section*{ {{ConclusionHeading}} }
+\addcontentsline{toc}{section}{ {{ConclusionHeading}} }
+{{Conclusion}}
+{{ConclusionSteps}}
+{{/if}}
+{{AppendixSections}}
+{{TechnicalAppendix}}
+\end{document}

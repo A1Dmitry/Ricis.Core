@@ -5,8 +5,14 @@ using Ricis.Core.Simplifiers;
 
 namespace Ricis.Core;
 
+/// <summary>
+/// Represents the RICIS public type <c>ExactEvaluator</c>.
+/// </summary>
 public static class ExactEvaluator
 {
+    /// <summary>
+    /// Attempts to <c>Evaluate</c> within the RICIS model.
+    /// </summary>
     public static bool TryEvaluate(this Expression expr, string paramName, Rational paramValue, out Rational result)
     {
         result = Rational.Zero;

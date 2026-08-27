@@ -4,9 +4,49 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>Ricis.Core</PackageId>
+    <Authors>A1Dmitry</Authors>
+    <Description>RICIS III symbolic algebra and deferred expression engine for .NET.</Description>
+    <PackageTags>RICIS;symbolic-algebra;expression-trees;calculus</PackageTags>
+    <RepositoryUrl>https://github.com/A1Dmitry/Ricis.Core</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <WarningsAsErrors>$(WarningsAsErrors);1591</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="Ricis.Resources/Ricis.Resources.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <EmbeddedResource Include="Logging/Templates/*.template">
+      <LogicalName>Ricis.Core.Logging.Templates.%(Filename).template</LogicalName>
+    </EmbeddedResource>
+    <Content Include="Logging/Templates/*.template" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
+    <Content Include="Logging/Templates/*.schema.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
+    <Content Include="Logging/Templates/*.exemplar.json" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="templates/" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Resources/**/*.cs" />
+    <Compile Remove="Ricis.Resources/**/*.cs" />
+    <None Remove="Ricis.Resources/**" />
+    <EmbeddedResource Remove="Resources/**/*.resx" />
+    <Compile Remove="RegressionTests/**/*.cs" />
+    <Compile Remove="UnitTests/**/*.cs" />
+    <None Remove="UnitTests/**" />
+    <Compile Remove="Ricis.Console/**/*.cs" />
+    <Compile Remove="Ricis.NavierStokes.Console/**/*.cs" />
+    <Compile Remove="Ricis.WebApi/**/*.cs" />
+    <None Remove="Ricis.WebApi/**/*.cs" />
+    <Compile Remove="Ricis.WebAssembly/**/*.cs" />
+    <None Remove="Ricis.WebAssembly/**" />
+    <Compile Remove="Ricis.Finance/**/*.cs" />
+    <None Remove="Ricis.Finance/**" />
+    <Compile Remove="Ricis.Numerics/**/*.cs" />
+    <None Remove="Ricis.Numerics/**" />
+  </ItemGroup>
 
 </Project>

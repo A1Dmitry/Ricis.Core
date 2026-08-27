@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="FactorialNegative" xml:space="preserve"><value>Die Fakultät ist nur für nichtnegative ganzzahlige Werte definiert.</value></data>
+  <data name="StrictZeroDenominator" xml:space="preserve"><value>Der Referenzausdruck enthält einen Nenner mit dem Wert null.</value></data>
+  <data name="UnresolvedRicisNode" xml:space="preserve"><value>Der nicht aufgelöste RICIS-Knoten {0} kann nicht strikt kompiliert werden. Führen Sie zuerst die normative Pipeline aus.</value></data>
+  <data name="UnknownProviderError" xml:space="preserve"><value>Unbekannter Providerfehler.</value></data>
+</root>

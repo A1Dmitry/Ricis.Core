@@ -5,31 +5,35 @@ using Ricis.Core.Polynomial;
 
 namespace Ricis.Core.Solvers;
 
+/// <summary>
+/// Represents the RICIS public type <c>SingularitySolver</c>.
+/// </summary>
 public static class SingularitySolver
 {
+    /// <summary>
+    /// Executes <c>SolveRoots</c> for the RICIS expression model.
+    /// </summary>
     public static List<(ParameterExpression expr, double value)> SolveRoots(this Expression denominator)
     {
         var roots = new HashSet<(ParameterExpression, double)>();
 
-        // 1. Аналитический поиск
+        // SP2/SP4: preserve exact structural factors first. This prevents a
+        // broad numerical tolerance from merging close but distinct factors.
         CollectRoots(denominator, roots);
-
-        // 2. Численный фолбэк (L25)
-        if (roots.Count != 0 || !IsTranscendentalComposite(denominator))
+        if (roots.Count != 0)
         {
             return roots.ToList();
         }
 
-        var param = FindParameter(denominator);
-        if (param == null)
+        var parameter = FindParameter(denominator);
+        // Then use the common polynomial/numerical solver for forms that are
+        // not directly decomposed, such as x²−4 or 1−Tan(x).
+        if (parameter is not null)
         {
-            return roots.ToList();
-        }
-
-        var numericalRoots = denominator.FindNumericalRoots(param);
-        foreach (var root in numericalRoots)
-        {
-            roots.Add((root.Parameter, root.DoubleValue));
+            foreach (var root in PolynomialZeroSolver.FindRoots(denominator, parameter))
+            {
+                roots.Add((root.Parameter, root.DoubleValue));
+            }
         }
 
         return roots.ToList();
@@ -68,6 +72,17 @@ public static class SingularitySolver
         {
             case ParameterExpression p:
                 roots.Add((p, 0.0));
+                break;
+
+            case BinaryExpression { NodeType: ExpressionType.Power } power when
+                power.Right is ConstantExpression exponent && TryGetDouble(exponent, out var powerValue) && powerValue > 0:
+                // A positive real power vanishes exactly where its base vanishes.
+                CollectRoots(power.Left, roots);
+                break;
+
+            case MethodCallExpression { Method.Name: "Pow", Arguments.Count: 2 } pow when
+                IsPositiveConstant(pow.Arguments[1]):
+                CollectRoots(pow.Arguments[0], roots);
                 break;
 
             case BinaryExpression bin:
@@ -127,6 +142,18 @@ public static class SingularitySolver
                 }
                 break;
 
+            case MethodCallExpression call when call.Method.Name is "Sin" or "Cos" or "Tan" &&
+                                                call.Arguments.Count == 1 && call.Arguments[0] is ParameterExpression:
+                // Preserve the established principal-key contract for a pure
+                // trigonometric denominator. Composite arguments fall through
+                // to the certified numerical solver and retain their root set.
+                var trigRoot = TrigSolver.Solve(call);
+                if (trigRoot.HasValue)
+                {
+                    roots.Add(trigRoot.Value);
+                }
+                break;
+
             case MethodCallExpression call when call.Method.Name == "Log":
                 if (call.Arguments.Count == 1 && call.Arguments[0] is ParameterExpression paramLog)
                 {
@@ -137,6 +164,24 @@ public static class SingularitySolver
     }
 
     // --- Хелперы ---
+    private static bool IsPositiveConstant(Expression expression)
+    {
+        if (expression is ConstantExpression constant && TryGetDouble(constant, out var value))
+        {
+            return value > 0;
+        }
+        if (expression is BinaryExpression { NodeType: ExpressionType.Divide } ratio &&
+            ratio.Left is ConstantExpression numerator && TryGetDouble(numerator, out var numeratorValue) &&
+            ratio.Right is ConstantExpression denominator && TryGetDouble(denominator, out var denominatorValue) &&
+            denominatorValue != 0)
+        {
+            var ratioValue = numeratorValue / denominatorValue;
+            return double.IsFinite(ratioValue) && ratioValue > 0;
+        }
+        return false;
+    }
+
+
     private static bool TryGetDouble(ConstantExpression c, out double val)
     {
         val = 0.0;
@@ -148,23 +193,6 @@ public static class SingularitySolver
         try { val = Convert.ToDouble(c.Value); return true; } catch { return false; }
     }
 
-    private static bool IsTranscendentalComposite(Expression expr)
-    {
-        var hasTrig = false;
-        var hasArithmetic = false;
-        new ExpressionTraverser(node =>
-        {
-            if (node is MethodCallExpression call && call.Method.DeclaringType == typeof(Math))
-            {
-                hasTrig = true;
-            }
-            else if (node is BinaryExpression)
-            {
-                hasArithmetic = true;
-            }
-        }).Visit(expr);
-        return hasTrig && hasArithmetic;
-    }
 
     private static ParameterExpression FindParameter(Expression expr)
     {

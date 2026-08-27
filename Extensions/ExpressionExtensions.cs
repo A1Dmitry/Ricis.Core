@@ -1,28 +1,81 @@
 ﻿using Ricis.Core.Expressions;
 using Ricis.Core.Simplifiers;
+using Ricis.Core.Resources;
 using System.Linq.Expressions;
 using System.Numerics;
 
 namespace Ricis.Core.Extensions;
 
+/// <summary>
+/// Represents the RICIS public type <c>ExpressionExtensions</c>.
+/// </summary>
 public static class ExpressionExtensions
 {
 
+    /// <summary>
+    /// Executes <c>Prepare</c> for the RICIS expression model.
+    /// </summary>
     public static Expression<Func<double, double>> Prepare(this Expression expr, ParameterExpression param)
     {
         return Expression.Lambda<Func<double, double>>(expr, param);
     }
+
+    /// <summary>
+    /// Creates a typed lambda for an ordinary finite RICIS expression. The
+    /// constraint permits <see cref="System.Numerics.BigInteger"/> and user
+    /// scalar types that implement .NET generic math.
+    /// </summary>
+    public static Expression<Func<T, T>> Prepare<T>(this Expression expr, ParameterExpression param)
+        where T : INumber<T>
+    {
+        ArgumentNullException.ThrowIfNull(expr);
+        ArgumentNullException.ThrowIfNull(param);
+        NumericConstants.Register<T>();
+
+        if (expr.Type != typeof(T) || param.Type != typeof(T))
+        {
+            throw new ArgumentException(
+                RicisLegacyTextResources.Format("report.legacy.986f2fab61ab", ("typeof(T).FullName", typeof(T).FullName)));
+        }
+
+        return Expression.Lambda<Func<T, T>>(expr, param);
+    }
+
+    /// <summary>
+    /// Compiles an already derived, finite RICIS expression without converting
+    /// it to <see cref="double"/>. This preserves arbitrary precision and the
+    /// semantics of custom <c>INumber&lt;TSelf&gt;</c> scalar types.
+    /// </summary>
+    public static Func<T, T> CompileFinite<T>(this Expression expr, ParameterExpression param)
+        where T : INumber<T> => expr.Prepare<T>(param).Compile();
+
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static double Evaluate(this Expression expr, ParameterExpression param, double value)
     {
         return expr.Prepare(param).Compile()(value);
     }
 
+    /// <summary>
+    /// Evaluates a finite expression with a generic-math value. This API is
+    /// intentionally separate from double-based singularity/root discovery.
+    /// </summary>
+    public static T EvaluateFinite<T>(this Expression expr, ParameterExpression param, T value)
+        where T : INumber<T> => expr.CompileFinite<T>(param)(value);
+
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static double Evaluate(this Expression expr, string paramName, double value)
     {
         var lambda = expr.Evaluate( value, paramName);
         return lambda.Compile()();
     }
 
+    /// <summary>
+    /// Executes <c>Evaluate</c> for the RICIS expression model.
+    /// </summary>
     public static Expression<Func<double>> Evaluate(this Expression expr, double value, string paramName = null)
     {
         // Используем SubstitutionVisitor для безопасной подмены параметра
@@ -63,21 +116,10 @@ public static class ExpressionExtensions
     /// </summary>
     public static bool IsCommutative(this Expression node)
     {
-        var nodeType  = node.NodeType;
-        return nodeType switch
-        {
-            ExpressionType.Add => true,
-            ExpressionType.Multiply => true,
-            ExpressionType.Equal => true,
-            ExpressionType.NotEqual => true,
-            ExpressionType.AndAlso => true,
-            ExpressionType.OrElse => true,
-            ExpressionType.And => true,
-            ExpressionType.Or => true,
-            ExpressionType.Power => true,
-            
-            _ => false
-        };
+        // Reordering is sound only for built-in arithmetic operations. User-defined
+        // operators and logical nodes may carry side effects or custom semantics.
+        return node is BinaryExpression { Method: null } binary &&
+               binary.NodeType is ExpressionType.Add or ExpressionType.Multiply;
     }
 
     /// <summary>
@@ -103,6 +145,9 @@ public static class ExpressionExtensions
         MethodCallExpression m => 10 + m.Arguments.Sum(a => a.GetComplexityScore()),
         _ => 20
     };
+    /// <summary>
+    /// Attempts to <c>Evaluate</c> within the RICIS model.
+    /// </summary>
     public static bool TryEvaluate(this Expression expr, string paramName, double value, out double result)
     {
         try
@@ -119,6 +164,9 @@ public static class ExpressionExtensions
     }
 
 
+    /// <summary>
+    /// Executes <c>EvaluateAtPoint</c> for the RICIS expression model.
+    /// </summary>
     public static double EvaluateAtPoint(this Expression expr, double value, string paramName = null)
     {
         try
@@ -134,34 +182,58 @@ public static class ExpressionExtensions
         }
     }
 
+    /// <summary>
+    /// Executes <c>AddSingularityIfValid</c> for the RICIS expression model.
+    /// </summary>
     public static void AddSingularityIfValid(this
         Expression numerator,
         ParameterExpression param,
         double value,
         List<InfinityExpression> singularities)
     {
-        var numAtRoot = numerator.EvaluateAtPoint(value, param.Name);
+        // A1 is applied at a concrete key. Substitute that key into F and
+        // reduce its finite value before it becomes the infinity index:
+        // F(a) / 0 -> ∞_{F(a)}. The original expression remains available
+        // upstream; this node represents its independent derived result.
+        if (!numerator.TryEvaluate(param.Name, value, out var indexValue) ||
+            Math.Abs(indexValue) < 1e-10)
+        {
+            return;
+        }
 
-        var infinity =
-            // Полюс C/0 -> Индекс C (числитель)
-            InfinityExpression.CreateLazy(numAtRoot == 0.0
-                    ? RicisType.InfinityZero
-                    : numerator,
-                param, value);
+        // Root solvers work in double precision. Canonicalise an integer index
+        // within the solver tolerance so all keys with F(a)=1 share exactly
+        // the same structural constant instead of adjacent binary values.
+        if (Math.Abs(indexValue - Math.Round(indexValue)) <= 1e-10)
+        {
+            indexValue = Math.Round(indexValue);
+        }
 
+        var index = Expression.Constant(indexValue);
+        var infinity = new PoleInfinityExpression(index, [(param, value)], []);
         singularities.Add(infinity);
     }
 
     /// <summary>
-    /// Является ли выражение нулем (поддержка всех числовых типов)
+    /// Determines whether an expression denotes zero, including a RICIS indexed
+    /// zero <c>0_F</c> whose deferred index is retained for symbolic work.
     /// </summary>
     public static bool IsZero(this Expression expr) => expr switch
     {
+        ZeroInfinityExpression => true,
+        UnaryExpression
+        {
+            NodeType: ExpressionType.Negate or ExpressionType.UnaryPlus,
+            Operand: ZeroInfinityExpression
+        } => true,
         ConstantExpression c => IsZeroValue(c.Value),
         _ => false
     };
 
     // Хелпер для поиска параметра (x)
+    /// <summary>
+    /// Executes <c>FindParameter</c> for the RICIS expression model.
+    /// </summary>
     public static ParameterExpression FindParameter(this Expression expr)
     {
         ParameterExpression found = null;
@@ -176,6 +248,9 @@ public static class ExpressionExtensions
         return found;
     }
 
+    /// <summary>
+    /// Determines whether <c>IsTranscendentalCandidate</c> holds for the supplied RICIS expression.
+    /// </summary>
     public static bool IsTranscendentalCandidate(this Expression expr)
     {
         var hasTranscendental = false;
@@ -247,7 +322,7 @@ public static class ExpressionExtensions
         0 or 0L or 0.0 or 0m or 0f => true,
         BigInteger b => b == 0,
         string s => s == "0",
-        _ => false
+        _ => NumericConstants.IsZero(value)
     };
 
     private static bool IsOneValue(object value) => value switch
@@ -255,6 +330,6 @@ public static class ExpressionExtensions
         1 or 1L or 1.0 or 1m or 1f => true,
         BigInteger b => b == 1,
         string s => s == "1",
-        _ => false
+        _ => NumericConstants.IsOne(value)
     };
 }

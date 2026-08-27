@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="EvidenceBoundaryLabel" xml:space="preserve"><value>Sempadan bukti</value></data>
+  <data name="SemanticStatusLabel" xml:space="preserve"><value>Status semantik</value></data>
+  <data name="ClaimEvidenceBoundaryLabel" xml:space="preserve"><value>Sempadan bukti:</value></data>
+  <data name="ConclusionHeading" xml:space="preserve"><value>Kesimpulan</value></data>
+  <data name="EpilogueHeading" xml:space="preserve"><value>Epilog</value></data>
+  <data name="ValidationHeaderCase" xml:space="preserve"><value>Kes</value></data>
+  <data name="ValidationHeaderCondition" xml:space="preserve"><value>Syarat</value></data>
+  <data name="ValidationHeaderResolution" xml:space="preserve"><value>Penyelesaian</value></data>
+  <data name="ValidationHeaderStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="TechnicalAppendixHeading" xml:space="preserve"><value>Lampiran teknikal</value></data>
+  <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>Bahasa abstrak semantic LaTeX tidak disokong: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>Koleksi templat '{0}' tidak dibenarkan bagi kontrak laporan '{1}'.</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>Gunakan hanya koleksi yang diisytiharkan oleh kontrak laporan, atau tambahkan koleksi yang dibenarkan selepas semakan pada renderer model yang berkenaan.</value></data>
+</root>

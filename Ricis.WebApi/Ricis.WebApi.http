@@ -1,0 +1,6 @@
+@Ricis.WebApi_HostAddress = http://localhost:5044
+
+GET {{Ricis.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

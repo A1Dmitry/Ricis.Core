@@ -1,0 +1,170 @@
+name: Build and test
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-and-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and run regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Verify every repository project belongs to the solution
+        run: python3 scripts/verify_solution_projects.py
+
+      - name: Restore solution
+        run: dotnet restore Ricis.Core.sln
+
+      - name: Build solution
+        run: dotnet build Ricis.Core.sln --configuration Release --no-restore
+
+      - name: Verify generated independent MSTest catalog
+        run: python3 scripts/generate_mstest_regression_adapter.py --check
+
+      - name: Verify generated ULong2048 mixed-integral operator matrix
+        run: python3 scripts/generate_ulong2048_integral_operators.py --check
+
+      - name: Verify unified Ricis.Core version
+        shell: bash
+        run: |
+          mapfile -t projects < <(dotnet sln Ricis.Core.sln list | awk '/\.csproj$/ { print }')
+          expected=""
+          for project in "${projects[@]}"; do
+            current=$(dotnet msbuild "$project" -getProperty:Version | tail -n 1)
+            echo "$project => $current"
+            if [[ -z "$expected" ]]; then expected="$current"; fi
+            if [[ "$current" != "$expected" ]]; then
+              echo "Version mismatch: expected $expected, got $current in $project"
+              exit 1
+            fi
+          done
+          echo "All projects use Ricis.Core version $expected"
+
+      - name: Run complete regression suite through MSTest
+        run: dotnet test UnitTests/Ricis.Core.UnitTests.csproj --configuration Release --no-build
+
+      - name: Run standalone Numerics unit suite
+        run: dotnet test Ricis.Numerics/Ricis.Numerics.UnitTests/Ricis.Numerics.UnitTests.csproj --configuration Release --no-build
+
+      - name: Verify Numerics benchmark parity scenario
+        run: dotnet run --project Ricis.Numerics/Ricis.Numerics.Benchmarks/Ricis.Numerics.Benchmarks.csproj --configuration Release --no-build -- --quick --output /tmp/ricis-numerics-benchmark.json
+
+      - name: Run regression suite
+        run: dotnet run --project RegressionTests/Ricis.Core.RegressionTests.csproj --configuration Release --no-build
+
+      - name: Run finance regression suite
+        run: dotnet run --project Ricis.Finance/Ricis.Finance.RegressionTests/Ricis.Finance.RegressionTests.csproj --configuration Release --no-build
+
+      - name: Smoke-test Swagger and expression API
+        run: |
+          ASPNETCORE_ENVIRONMENT=Development nohup dotnet Ricis.WebApi/bin/Release/net8.0/Ricis.WebApi.dll --urls http://127.0.0.1:5044 > /tmp/ricis-webapi.log 2>&1 &
+          api_pid=$!
+          cleanup_api() {
+            status=$?
+            if [ "$status" -ne 0 ] && [ -f /tmp/ricis-webapi.log ]; then
+              echo '--- Ricis.WebApi startup log ---'
+              cat /tmp/ricis-webapi.log
+              echo '--- End Ricis.WebApi startup log ---'
+            fi
+            kill "$api_pid" 2>/dev/null || true
+            wait "$api_pid" 2>/dev/null || true
+            exit "$status"
+          }
+          trap cleanup_api EXIT
+          for attempt in $(seq 1 30); do
+            if curl --max-time 10 -fsS http://127.0.0.1:5044/health > /tmp/ricis-health.json; then
+              curl --max-time 10 -fsS http://127.0.0.1:5044/swagger/v1/swagger.json > /tmp/ricis-openapi.json
+              break
+            fi
+            sleep 1
+          done
+          node <<'NODE'
+          const fs = require('fs');
+          const document = JSON.parse(fs.readFileSync('/tmp/ricis-openapi.json', 'utf8'));
+          if (document.info?.title !== 'RICIS III Web API') throw new Error(`Unexpected OpenAPI title: ${document.info?.title}`);
+          if (document.paths?.['/api/expressions/simplify']?.post?.operationId !== 'SimplifyExpression') throw new Error('Missing SimplifyExpression operationId');
+          const requiredExamples = {
+            '/api/expressions/simplify': ['linear', 'singular', 'about metadata'],
+            '/api/expressions/derivative': ['polynomial', 'reciprocal bridge', 'trigonometric'],
+            '/api/expressions/system': ['two curves', 'coordinate system', 'singular system']
+          };
+          for (const [path, names] of Object.entries(requiredExamples)) {
+            const operation = document.paths?.[path]?.post;
+            if (!operation?.summary || !operation?.description) throw new Error(`Missing OpenAPI metadata: ${path}`);
+            const examples = operation.requestBody?.content?.['application/json']?.examples ?? {};
+            for (const name of names) if (!examples[name]?.value?.expression) throw new Error(`Missing example ${name}: ${path}`);
+          }
+          for (const schema of ['ExpressionRequest', 'ExpressionResponse', 'ExpressionSystemResponse', 'ParseErrorResponse']) {
+            if (!document.components?.schemas?.[schema]?.description) throw new Error(`Missing XML schema description: ${schema}`);
+          }
+          console.log('Swagger metadata, examples and XML schema descriptions verified.');
+          NODE
+          curl --max-time 10 -fsS -X POST http://127.0.0.1:5044/api/expressions/simplify \
+            -H 'Content-Type: application/json' \
+            -d '{"expression":"x => ((x ^ 2) - 25) / (x - 5)"}' \
+            > /tmp/ricis-simplify.json
+          grep -q '"ricis":"x => (x + 5)"' /tmp/ricis-simplify.json
+
+      - name: Setup LaTeX validator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-lang-cyrillic
+
+      - name: Setup Lean toolchain and Mathlib cache
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-mathlib-cache: true
+          lake-package-directory: FormalVerification/Lean
+
+      - name: Verify versioned Lean evidence artifacts
+        run: python3 scripts/verify_lean_artifacts.py --compile
+
+      - name: Generate and compile LeanDoc
+        run: |
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-doc-demo > /tmp/ricis_generated.lean
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --lean-a6-demo > /tmp/ricis_a6_generated.lean
+          cd FormalVerification/Lean
+          lake env lean /tmp/ricis_generated.lean
+          lake env lean /tmp/ricis_a6_generated.lean
+          if grep -niE 'sorry|sorryAx' /tmp/ricis_generated.lean /tmp/ricis_a6_generated.lean; then
+            echo "Generated LeanDoc contains forbidden sorry token."
+            exit 1
+          fi
+
+      - name: Generate and validate Jacobian proof artifacts
+        run: |
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --jacobian-proof-latex > /tmp/ricis_jacobian_proof.tex
+          mkdir -p /tmp/ricis-jacobian-latex
+          pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
+            -output-directory=/tmp/ricis-jacobian-latex /tmp/ricis_jacobian_proof.tex \
+            > /tmp/ricis_jacobian_latex.log 2>&1
+          test -s /tmp/ricis-jacobian-latex/ricis_jacobian_proof.pdf
+          if grep -E '(^! |LaTeX Error:|Fatal error|Overfull \\hbox)' /tmp/ricis_jacobian_latex.log; then
+            echo "Jacobian LaTeX artifact contains a compilation error or overfull proof-trace line."
+            exit 1
+          fi
+          dotnet run --project Ricis.Console/Ricis.Console.csproj --configuration Release --no-build -- --jacobian-proof-lean > /tmp/ricis_jacobian_proof.lean
+          cd FormalVerification/Lean
+          lake env lean /tmp/ricis_jacobian_proof.lean
+          if grep -niE 'sorry|sorryAx' /tmp/ricis_jacobian_proof.lean; then
+            echo "Jacobian Lean artifact contains forbidden sorry token."
+            exit 1
+          fi

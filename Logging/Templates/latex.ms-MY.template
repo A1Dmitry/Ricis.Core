@@ -1,0 +1,73 @@
+% RICIS-LOCALE: ms-MY
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsfonts}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\DeclareUnicodeCharacter{03B7}{\ensuremath{\eta}}
+\DeclareUnicodeCharacter{03C9}{\ensuremath{\omega}}
+\DeclareUnicodeCharacter{2202}{\ensuremath{\partial}}
+\DeclareUnicodeCharacter{03BD}{\ensuremath{\nu}}
+\geometry{a4paper, margin=1in}
+
+\newtheorem{theorem}{Teorem}
+\newtheorem{lemma}{Lema}
+\newtheorem{axiom}{Aksiom}
+\newtheorem{definition}{Takrif}
+\newtheorem{corollary}{Akibat}
+\newtheorem{remark}{Catatan}
+\renewcommand{\contentsname}{Kandungan}
+\renewcommand{\proofname}{Bukti}
+
+\title{ {{Title}} \\ \large {{Subtitle}} }
+\author{ {{AuthorDisplayName}} }
+\date{}
+
+\begin{document}
+\maketitle
+{{Abstracts}}
+{{#if TableOfContentsIncluded}}
+\tableofcontents
+\vspace{1cm}
+{{/if}}
+\section*{ {{EvidenceBoundaryLabel}} }
+\addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
+{{EvidenceBoundary}}
+{{#if AuthorIncluded}}
+\section*{Pengarang dan metadata SEO}
+\addcontentsline{toc}{section}{Pengarang dan metadata SEO}
+\textbf{Nama:} {{AuthorDisplayName}}\\
+\textbf{Nama alternatif:} {{AuthorAlternateName}}\\
+\textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
+\textbf{Penerangan:} {{AuthorDescription}}\\
+\textbf{Kata kunci:} {{AuthorKeywords}}
+{{AuthorWorks}}
+{{/if}}
+{{#each Sections}}
+{{this.Opening}}
+\textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
+{{this.Body}}
+{{this.Equation}}
+{{this.Claims}}
+{{this.ProofSteps}}
+{{this.ValidationRows}}
+{{/each}}
+{{#if EpilogueIncluded}}
+\section*{ {{EpilogueHeading}} }
+\addcontentsline{toc}{section}{ {{EpilogueHeading}} }
+{{Epilogue}}
+{{EpilogueSteps}}
+{{/if}}
+{{#if ConclusionIncluded}}
+\section*{ {{ConclusionHeading}} }
+\addcontentsline{toc}{section}{ {{ConclusionHeading}} }
+{{Conclusion}}
+{{ConclusionSteps}}
+{{/if}}
+{{AppendixSections}}
+{{TechnicalAppendix}}
+\end{document}

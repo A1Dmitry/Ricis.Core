@@ -1,0 +1,670 @@
+﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using Ricis.Finance.Application;
+using Ricis.Finance.Bepaid;
+using Ricis.Finance.Domain;
+
+var tests = new (string Name, Func<Task> Body)[]
+{
+    ("FIN01: Money запрещает смешение валют", MoneyRejectsCurrencyMixing),
+    ("FIN02: FeeBreakdown сохраняет gross, комиссии и net раздельно", FeeBreakdownSeparatesFacts),
+    ("FIN03: Provider webhook идемпотентен и создаёт receipt candidate по payment event", ProviderPaymentIsIdempotentAndTaxable),
+    ("FIN04: Payout резервирует только доступный остаток и отправляется один раз", PayoutIsAuthorisedAndIdempotent),
+    ("FIN05: Payout policy блокирует неразрешённый release без вызова provider", PayoutPolicyBlocksProviderCall),
+    ("FIN06: Threshold status принадлежит policy и не является глобальным лимитом", TaxPositionIsPolicyOwned),
+    ("FIN07: Payment launch registry не допускает неявный CIS fallback", PaymentLaunchRegistryRequiresExplicitCapability),
+    ("FIN08: bePaid ЕРИП launch передаёт RequestID и возвращает provider-issued bank deep links", BepaidEripLaunchMapsProviderResponse),
+    ("FIN09: bePaid СБП launch возвращает provider-hosted selector и не делает возврат подтверждением", BepaidSbpLaunchMapsProviderHandoff),
+    ("FIN10: Invoice issue сохраняет order reference и идемпотентность", InvoiceIssueIsIdempotentAndAuditable),
+    ("FIN11: Invoice lifecycle строго ограничивает cancel и expire transitions", InvoiceLifecycleRejectsInvalidTransitions),
+    ("FIN12: Invoice launch допускается только active aggregate и идемпотентен", InvoiceLaunchIsActiveAndIdempotent),
+    ("FIN13: FxSnapshot нормализует валюты и отклоняет некорректный code", FxSnapshotNormalizesCurrency),
+    ("FIN14: Bank application отклоняет non-HTTPS provider deep link", BankApplicationRejectsInsecureDeepLink),
+    ("FIN15: Payment rail registry publishes explicit country capabilities", PaymentRailRegistryPublishesCapabilities),
+    ("FIN16: Annual tax policy evaluates every declared counterparty kind", TaxPolicyEvaluatesDeclaredCounterpartyKind),
+    ("FIN17: Reserved bank fee and tax receipt ports remain explicit contracts", ReservedFinancePortsRemainExplicit),
+    ("FIN18: Payout confirmation and rejection enforce submitted lifecycle", PayoutConfirmationAndRejectionEnforceLifecycle),
+    ("FIN19: lifecycle enums expose reconciled and review-required states", LifecycleEnumsExposeDeclaredStates),
+};
+
+var failures = 0;
+foreach (var (name, body) in tests)
+{
+    try
+    {
+        await body();
+        Console.WriteLine($"PASS: {name}");
+    }
+    catch (Exception error)
+    {
+        failures++;
+        Console.WriteLine($"FAIL: {name}\n  {error}");
+    }
+}
+
+if (failures > 0)
+{
+    Console.Error.WriteLine($"{failures} finance regression test(s) failed.");
+    return 1;
+}
+
+Console.WriteLine($"All {tests.Length} finance regression tests passed.");
+return 0;
+
+static Task LifecycleEnumsExposeDeclaredStates()
+{
+    Require(Enum.IsDefined(SettlementStatus.Reconciled),
+        "Settlement lifecycle обязан публиковать state Reconciled.");
+    Require(Enum.IsDefined(TaxThresholdStatus.ReviewRequired),
+        "Tax policy обязан публиковать state ReviewRequired.");
+    Require(SettlementStatus.Reconciled != SettlementStatus.Confirmed &&
+            TaxThresholdStatus.ReviewRequired != TaxThresholdStatus.Warning,
+        "Declared lifecycle states должны оставаться различимыми.");
+    return Task.CompletedTask;
+}
+
+static Task MoneyRejectsCurrencyMixing()
+{
+    RequireThrows<InvalidOperationException>(() => _ = new Money(1m, "USD").Add(new Money(1m, "EUR")));
+    RequireThrows<ArgumentOutOfRangeException>(() => _ = new Money(-0.01m, "USD"));
+    return Task.CompletedTask;
+}
+
+static Task FxSnapshotNormalizesCurrency()
+{
+    var snapshot = new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 20), " usd ", " byn ", 3.2m);
+    Require(snapshot.SourceCurrency == "USD" && snapshot.TargetCurrency == "BYN",
+        "FxSnapshot обязан нормализовать валютные коды через канонический Money contract.");
+    RequireThrows<ArgumentException>(() => _ = new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 20), "", "BYN", 3.2m));
+    return Task.CompletedTask;
+}
+
+static Task BankApplicationRejectsInsecureDeepLink()
+{
+    RequireThrows<ArgumentException>(() => _ = new BankApplicationOption(
+        "Example Bank",
+        null,
+        new Dictionary<MobilePlatform, Uri>
+        {
+            [MobilePlatform.Android] = new Uri("http://provider.example/deep-link"),
+        }));
+    return Task.CompletedTask;
+}
+
+static Task FeeBreakdownSeparatesFacts()
+{
+    var fees = new FeeBreakdown(new Money(100m, "USD"), new Money(6m, "USD"), new Money(3m, "USD"));
+    Require(fees.Gross.Amount == 100m && fees.ProviderFee.Amount == 6m && fees.BankFee.Amount == 3m && fees.Net.Amount == 91m,
+        "Fee breakdown обязан хранить gross, обе комиссии и net без смешения.");
+    return Task.CompletedTask;
+}
+
+static async Task ProviderPaymentIsIdempotentAndTaxable()
+{
+    var timestamp = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var service = new RecordProviderPaymentService(
+        new StubWebhookVerifier(new VerifiedProviderPayment(
+            "evt-001",
+            "invoice-001",
+            new Money(100m, "USD"),
+            CounterpartyKind.ForeignBusiness,
+            timestamp,
+            new FeeBreakdown(new Money(100m, "USD"), new Money(6m, "USD"), Money.Zero("USD")))),
+        repositories,
+        new StubFxRateSource(new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 19), "USD", "BYN", 3.20m)),
+        new StubTaxPolicy("tax-policy/2026-08", createCandidate: true));
+
+    var payload = new ProviderWebhookPayload("signature", "body", new Dictionary<string, string>());
+    var first = await service.HandleAsync(payload, CancellationToken.None);
+    var duplicate = await service.HandleAsync(payload, CancellationToken.None);
+
+    Require(!first.WasDuplicate && first.TaxReceiptCandidate is not null && first.TaxReceiptCandidate.GrossInByN.Amount == 320m,
+        "Первый verified provider payment обязан создать candidate из gross payment и FX snapshot.");
+    Require(duplicate.WasDuplicate && repositories.StoredSettlementCount == 1,
+        "Повторный webhook с тем же provider event id не должен создавать второй settlement.");
+}
+
+static async Task PayoutIsAuthorisedAndIdempotent()
+{
+    var repositories = new InMemoryRepositories();
+    var settlement = CreateSettlement();
+    await repositories.StoreAsync(settlement, CancellationToken.None);
+    var provider = new StubProviderPort("payout-001");
+    var service = new RequestPayoutService(
+        repositories,
+        repositories,
+        new StubPayoutReleasePolicy(isAllowed: true),
+        provider,
+        new StubClock(new DateTimeOffset(2026, 8, 19, 9, 0, 0, TimeSpan.Zero)));
+    var command = new RequestPayout(settlement.Id, "request-001", new Money(50m, "USD"));
+
+    var first = await service.HandleAsync(command, CancellationToken.None);
+    var duplicate = await service.HandleAsync(command, CancellationToken.None);
+
+    Require(first.Status == PayoutStatus.Submitted && first.ProviderPayoutId == "payout-001" && provider.CallCount == 1,
+        "Разрешённый payout должен быть отправлен provider один раз.");
+    Require(ReferenceEquals(first, duplicate) &&
+            settlement.AvailableToAllocate.Amount == 44m &&
+            settlement.Allocated.Amount == 50m,
+        "Идемпотентный payout должен вернуть сохранённый aggregate, сохранить allocated=50 и не резервировать сумму повторно.");
+}
+
+static async Task PayoutPolicyBlocksProviderCall()
+{
+    var repositories = new InMemoryRepositories();
+    var settlement = CreateSettlement();
+    await repositories.StoreAsync(settlement, CancellationToken.None);
+    var provider = new StubProviderPort("must-not-submit");
+    var service = new RequestPayoutService(
+        repositories,
+        repositories,
+        new StubPayoutReleasePolicy(isAllowed: false),
+        provider,
+        new StubClock(DateTimeOffset.UtcNow));
+
+    await RequireThrowsAsync<InvalidOperationException>(() => service.HandleAsync(
+        new RequestPayout(settlement.Id, "blocked-001", new Money(1m, "USD")),
+        CancellationToken.None).AsTask());
+    Require(provider.CallCount == 0 && settlement.AvailableToAllocate.Amount == 94m,
+        "Отклонённый policy payout не должен вызывать provider или менять баланс settlement.");
+}
+
+static Task TaxPositionIsPolicyOwned()
+{
+    var policy = new StubTaxPolicy("tax-policy/2026-08", createCandidate: true);
+    var position = policy.EvaluateAnnualPosition(2026, CounterpartyKind.BelarusRegisteredBusiness, new Money(48_000m, "BYN"));
+    Require(position.Status == TaxThresholdStatus.Warning && position.CounterpartyKind == CounterpartyKind.BelarusRegisteredBusiness,
+        "Пороговая оценка должна возвращаться политикой для конкретной категории контрагента.");
+    return Task.CompletedTask;
+}
+
+static Task PaymentRailRegistryPublishesCapabilities()
+{
+    var provider = new StubPaymentLaunchPort(
+        [new PaymentRailCapability("BY", PaymentRail.BelarusEripEpos, ["BYN"])],
+        new PaymentLaunchSession(
+            "test-provider",
+            "session-capabilities",
+            PaymentRail.BelarusEripEpos,
+            new Money(10m, "BYN"),
+            new PaymentHandoff(new Uri("https://provider.example/select"), PaymentHandoffMethod.Get),
+            null,
+            null,
+            null));
+    var registry = new PaymentRailRegistry([provider]);
+
+    var by = registry.GetCapabilities("by");
+    var unknown = registry.GetCapabilities("KZ");
+
+    Require(by.Count == 1 && by[0].PayerCountryCode == "BY" && unknown.Count == 0,
+        "GetCapabilities обязан normalise country и не выводить default route для неизвестной страны.");
+    return Task.CompletedTask;
+}
+
+static Task TaxPolicyEvaluatesDeclaredCounterpartyKind()
+{
+    ITaxPolicy policy = new StubTaxPolicy("tax-policy/2026-08", createCandidate: true);
+    var position = policy.EvaluateAnnualPosition(2026, CounterpartyKind.Individual, new Money(1m, "BYN"));
+
+    Require(position.CounterpartyKind == CounterpartyKind.Individual && position.TaxYear == 2026,
+        "ITaxPolicy должен принимать declared Individual partition без hardcoded tax decision в aggregate.");
+    return Task.CompletedTask;
+}
+
+static async Task ReservedFinancePortsRemainExplicit()
+{
+    var payout = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "fee-quote-001", new Money(10m, "BYN"), DateTimeOffset.UtcNow);
+    IBankFeeSchedule fees = new StubBankFeeSchedule(new Money(0.5m, "BYN"));
+    var fee = await fees.QuoteAsync(payout, new DateOnly(2026, 8, 20), CancellationToken.None);
+
+    var candidate = new TaxReceiptCandidate(
+        Guid.NewGuid(),
+        Guid.NewGuid(),
+        new Money(10m, "USD"),
+        new Money(32m, "BYN"),
+        CounterpartyKind.Individual,
+        DateTimeOffset.UtcNow,
+        "tax-policy/2026-08");
+    ITaxReceiptGateway gateway = new StubTaxReceiptGateway(new TaxReceiptSubmission("receipt-001", DateTimeOffset.UtcNow));
+    var submission = await gateway.SubmitAsync(candidate, CancellationToken.None);
+
+    Require(fee.Amount == 0.5m && fee.Currency == "BYN" && submission.ExternalReceiptId == "receipt-001",
+        "Reserved port contracts обязаны оставаться явными asynchronous boundaries без hidden fallback.");
+}
+
+static Task PayoutConfirmationAndRejectionEnforceLifecycle()
+{
+    var confirmed = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "confirm-001", new Money(10m, "USD"), DateTimeOffset.UtcNow);
+    confirmed.MarkSubmitted("provider-confirmed");
+    confirmed.Confirm(new Money(0.25m, "USD"));
+    Require(confirmed.Status == PayoutStatus.Confirmed && confirmed.ActualBankFee?.Amount == 0.25m,
+        "Confirm должен установить confirmed status и actual bank fee только после provider submission.");
+
+    var rejected = new PayoutRequest(Guid.NewGuid(), Guid.NewGuid(), "reject-001", new Money(10m, "USD"), DateTimeOffset.UtcNow);
+    rejected.MarkSubmitted("provider-rejected");
+    rejected.Reject();
+    Require(rejected.Status == PayoutStatus.Rejected,
+        "Reject должен установить rejected status только после provider submission.");
+    RequireThrows<InvalidOperationException>(() => rejected.Reject());
+    return Task.CompletedTask;
+}
+
+static async Task PaymentLaunchRegistryRequiresExplicitCapability()
+{
+    var provider = new StubPaymentLaunchPort(
+        [new PaymentRailCapability("BY", PaymentRail.BelarusEripEpos, ["BYN"])],
+        new PaymentLaunchSession(
+            "test-provider",
+            "session-001",
+            PaymentRail.BelarusEripEpos,
+            new Money(10m, "BYN"),
+            new PaymentHandoff(new Uri("https://provider.example/select"), PaymentHandoffMethod.Get),
+            null,
+            null,
+            null));
+    var registry = new PaymentRailRegistry([provider]);
+    var service = new CreatePaymentLaunchService(registry);
+
+    var result = await service.HandleAsync(CreateLaunch("BY", PaymentRail.BelarusEripEpos, new Money(10m, "BYN")), CancellationToken.None);
+    Require(result.ProviderPaymentId == "session-001" && provider.CallCount == 1,
+        "Явно поддержанный BY/ЕРИП/BYN launch обязан быть направлен в зарегистрированный adapter.");
+    RequireThrows<NotSupportedException>(() => _ = registry.Resolve(
+        CreateLaunch("KZ", PaymentRail.BelarusEripEpos, new Money(10m, "BYN"))));
+    RequireThrows<NotSupportedException>(() => _ = registry.Resolve(
+        CreateLaunch("BY", PaymentRail.BelarusEripEpos, new Money(10m, "RUB"))));
+}
+
+static async Task BepaidEripLaunchMapsProviderResponse()
+{
+    const string qrPayload = "0002010123";
+    const string qrPayloadBase64 = "MDAwMjAxMDEyMw==";
+    const string responseJson = """
+        {
+          "transaction": {
+            "uid": "erip-session-001",
+            "expired_at": "2026-08-20T08:00:00Z",
+            "erip": {
+              "qr_code_raw": "MDAwMjAxMDEyMw==",
+              "qr_code": "data:image/png;base64,aW1hZ2U=",
+              "banks": [
+                {
+                  "name": "Тестовый Банк",
+                  "icon": "PHN2Zz48L3N2Zz4=",
+                  "platform_urls": {
+                    "ios": "https://ios.bank.example/pay?payload=",
+                    "android": "https://android.bank.example/pay?payload=",
+                    "huaweiapp": "https://huawei.bank.example/pay?payload="
+                  }
+                }
+              ]
+            }
+          }
+        }
+        """;
+    var handler = new RecordingHttpHandler(HttpStatusCode.OK, responseJson);
+    using var httpClient = new HttpClient(handler);
+    var provider = new BepaidPaymentLaunchPort(
+        httpClient,
+        new BepaidOptions("shop-001", "secret-001", eripServiceNumber: 77, apiBaseUri: new Uri("https://api.test.example/")));
+
+    var session = await provider.CreateAsync(
+        CreateLaunch("BY", PaymentRail.BelarusEripEpos, new Money(123.45m, "BYN"), idempotencyKey: "launch-001"),
+        CancellationToken.None);
+
+    Require(handler.RequestUri == "https://api.test.example/beyag/payments" && handler.Method == HttpMethod.Post,
+        "ЕРИП adapter обязан вызывать документированный bePaid endpoint создания счёта.");
+    Require(handler.RequestId == "launch-001" && handler.Authorization?.Scheme == "Basic" &&
+            Encoding.UTF8.GetString(Convert.FromBase64String(handler.Authorization.Parameter!)) == "shop-001:secret-001",
+        "ЕРИП adapter обязан передать provider RequestID и Basic credentials из host configuration.");
+    Require(handler.Body.Contains("\"amount\":12345", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"currency\":\"BYN\"", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"account_number\":\"order-001\"", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"service_no\":77", StringComparison.Ordinal),
+        "ЕРИП adapter обязан сериализовать сумму в копейках, BYN, account number и configured service number.");
+    Require(session.ProviderPaymentId == "erip-session-001" && session.Handoff is null && session.QrCodeDataUri == "data:image/png;base64,aW1hZ2U=",
+        "ЕРИП response обязан сохранить provider session id, QR image и не выдумывать невыданный selector URI.");
+    Require(session.BankApplications.Count == 1 &&
+            session.BankApplications[0].DeepLinks[MobilePlatform.Android].AbsoluteUri == $"https://android.bank.example/pay?payload={qrPayload}" &&
+            session.BankApplications[0].IconDataUri == "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+        "ЕРИП adapter обязан строить bank deep link из provider prefix и Base64-декодированного QR payload.");
+    Require(qrPayloadBase64 == Convert.ToBase64String(Encoding.UTF8.GetBytes(qrPayload)), "Тестовый QR payload должен оставаться корректным Base64 evidence.");
+}
+
+static async Task BepaidSbpLaunchMapsProviderHandoff()
+{
+    const string responseJson = """
+        {
+          "transaction": {
+            "uid": "sbp-session-001",
+            "expired_at": "2026-08-20T08:00:00Z",
+            "form": {
+              "action": "https://qr.nspk.ru/AD100000TEST",
+              "method": "GET",
+              "fields": []
+            }
+          }
+        }
+        """;
+    var handler = new RecordingHttpHandler(HttpStatusCode.OK, responseJson);
+    using var httpClient = new HttpClient(handler);
+    var provider = new BepaidPaymentLaunchPort(
+        httpClient,
+        new BepaidOptions("shop-001", "secret-001", apiBaseUri: new Uri("https://api.test.example/")));
+
+    var session = await provider.CreateAsync(
+        CreateLaunch("RU", PaymentRail.RussiaSbp, new Money(500m, "RUB"), idempotencyKey: "sbp-launch-001"),
+        CancellationToken.None);
+
+    Require(handler.RequestUri == "https://api.test.example/beyag/transactions/payments" && handler.RequestId == "sbp-launch-001",
+        "СБП adapter обязан использовать документированный alternative-payment endpoint и RequestID.");
+    Require(handler.Body.Contains("\"amount\":50000", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"currency\":\"RUB\"", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"method\":{\"type\":\"sbp\"}", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"return_url\":\"https://merchant.example/return\"", StringComparison.Ordinal) &&
+            handler.Body.Contains("\"notification_url\":\"https://merchant.example/webhook\"", StringComparison.Ordinal),
+        "СБП adapter обязан передать RUB сумму в копейках, method=sbp, return и notification URL.");
+    Require(session.ProviderPaymentId == "sbp-session-001" && session.Handoff is not null &&
+            session.Handoff.Action.AbsoluteUri == "https://qr.nspk.ru/AD100000TEST" &&
+            session.Handoff.Method == PaymentHandoffMethod.Get && session.BankApplications.Count == 0 && session.QrCodeDataUri is null,
+        "СБП launch обязан вернуть provider-owned selector URL, а не самостоятельно сгенерированный bank deep link или факт оплаты.");
+    Require(provider.Capabilities.Any(capability => capability.Supports("RU", PaymentRail.RussiaSbp, new Money(1m, "RUB"))) &&
+            !provider.Capabilities.Any(capability => capability.Supports("KZ", PaymentRail.RussiaSbp, new Money(1m, "RUB"))),
+        "СБП capability должна быть явной только для RU/RUB; прочий СНГ не должен быть fallback-маршрутом.");
+}
+
+static async Task InvoiceIssueIsIdempotentAndAuditable()
+{
+    var now = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var service = new IssueInvoiceService(repositories, new StubClock(now));
+    var command = new IssueInvoice(
+        "order-invoice-001",
+        new Money(25m, "BYN"),
+        new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)),
+        now.AddHours(2),
+        "invoice-issue-001");
+
+    var first = await service.HandleAsync(command, CancellationToken.None);
+    var duplicate = await service.HandleAsync(command, CancellationToken.None);
+
+    Require(first.Id == duplicate.Id && first.Status == InvoiceStatus.Issued &&
+            first.OrderReference == "order-invoice-001" && repositories.StoredInvoiceCount == 1,
+        "Повторный issue command должен вернуть тот же invoice и сохранить auditable order reference ровно один раз.");
+    RequireThrowsAsync<InvalidOperationException>(() => service.HandleAsync(
+        command with { IdempotencyKey = "invoice-issue-002" }, CancellationToken.None).AsTask()).GetAwaiter().GetResult();
+}
+
+static async Task InvoiceLifecycleRejectsInvalidTransitions()
+{
+    var issueAt = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var issued = await new IssueInvoiceService(repositories, new StubClock(issueAt)).HandleAsync(
+        new IssueInvoice("order-cancel-001", new Money(10m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), issueAt.AddHours(1), "issue-cancel-001"),
+        CancellationToken.None);
+    var cancelled = await new CancelInvoiceService(repositories, new StubClock(issueAt.AddMinutes(1))).HandleAsync(
+        new CancelInvoice(issued.Id), CancellationToken.None);
+    Require(cancelled.Status == InvoiceStatus.Cancelled, "Issued invoice должен переходить в Cancelled только через application command.");
+    await RequireThrowsAsync<InvalidOperationException>(() => new CancelInvoiceService(repositories, new StubClock(issueAt.AddMinutes(2)))
+        .HandleAsync(new CancelInvoice(issued.Id), CancellationToken.None).AsTask());
+
+    var expirable = await new IssueInvoiceService(repositories, new StubClock(issueAt)).HandleAsync(
+        new IssueInvoice("order-expire-001", new Money(11m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), issueAt.AddHours(1), "issue-expire-001"),
+        CancellationToken.None);
+    await RequireThrowsAsync<InvalidOperationException>(() => new ExpireInvoiceService(repositories, new StubClock(issueAt.AddMinutes(30)))
+        .HandleAsync(new ExpireInvoice(expirable.Id), CancellationToken.None).AsTask());
+    var expired = await new ExpireInvoiceService(repositories, new StubClock(issueAt.AddHours(1)))
+        .HandleAsync(new ExpireInvoice(expirable.Id), CancellationToken.None);
+    Require(expired.Status == InvoiceStatus.Expired, "Invoice должен переходить в Expired только после ExpiresAtUtc.");
+}
+
+static async Task InvoiceLaunchIsActiveAndIdempotent()
+{
+    var now = new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero);
+    var repositories = new InMemoryRepositories();
+    var invoice = await new IssueInvoiceService(repositories, new StubClock(now)).HandleAsync(
+        new IssueInvoice("order-launch-001", new Money(12m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), now.AddHours(1), "issue-launch-001"),
+        CancellationToken.None);
+    var provider = new StubPaymentLaunchPort(
+        [new PaymentRailCapability("BY", PaymentRail.BelarusEripEpos, ["BYN"])],
+        new PaymentLaunchSession("test-provider", "provider-session-001", PaymentRail.BelarusEripEpos,
+            invoice.Amount, new PaymentHandoff(new Uri("https://provider.example/pay"), PaymentHandoffMethod.Get), null, null, null));
+    var service = new CreateInvoiceLaunchService(repositories, repositories, provider, new StubClock(now));
+    var command = new CreateInvoiceLaunch(invoice.Id, "Оплата заказа", "127.0.0.1",
+        new Uri("https://merchant.example/return"), new Uri("https://merchant.example/webhook"), "launch-invoice-001", true);
+
+    var first = await service.HandleAsync(command, CancellationToken.None);
+    var duplicate = await service.HandleAsync(command, CancellationToken.None);
+    Require(first.Session.ProviderPaymentId == "provider-session-001" && ReferenceEquals(first, duplicate) && provider.CallCount == 1,
+        "Invoice launch должен создать provider session один раз и вернуть сохранённое evidence при duplicate command.");
+
+    var expired = await new IssueInvoiceService(repositories, new StubClock(now)).HandleAsync(
+        new IssueInvoice("order-launch-expired", new Money(13m, "BYN"),
+            new InvoicePaymentRoute("BY", nameof(PaymentRail.BelarusEripEpos)), now.AddMinutes(1), "issue-launch-expired"),
+        CancellationToken.None);
+    await RequireThrowsAsync<InvalidOperationException>(() => new CreateInvoiceLaunchService(repositories, repositories, provider, new StubClock(now.AddMinutes(2)))
+        .HandleAsync(command with { InvoiceId = expired.Id, IdempotencyKey = "launch-expired" }, CancellationToken.None).AsTask());
+    Require(expired.Status == InvoiceStatus.Expired && provider.CallCount == 1,
+        "Expired invoice должен быть автоматически переведён в Expired без вызова provider.");
+}
+
+static CreatePaymentLaunch CreateLaunch(string country, PaymentRail rail, Money amount, string idempotencyKey = "launch-001") =>
+    new(
+        country,
+        rail,
+        amount,
+        "order-001",
+        "Оплата заказа #1",
+        "127.0.0.1",
+        new Uri("https://merchant.example/return"),
+        new Uri("https://merchant.example/webhook"),
+        idempotencyKey,
+        new DateTimeOffset(2026, 8, 20, 8, 0, 0, TimeSpan.Zero),
+        test: true);
+
+static Settlement CreateSettlement()
+{
+    var payment = new ProviderPayment(
+        Guid.NewGuid(),
+        $"evt-{Guid.NewGuid():N}",
+        "invoice-payout",
+        new Money(100m, "USD"),
+        CounterpartyKind.ForeignBusiness,
+        new DateTimeOffset(2026, 8, 19, 8, 0, 0, TimeSpan.Zero));
+    return new Settlement(
+        Guid.NewGuid(),
+        payment,
+        new FeeBreakdown(payment.Gross, new Money(6m, "USD"), Money.Zero("USD")),
+        new FxSnapshot("NBRB-test", new DateOnly(2026, 8, 19), "USD", "BYN", 3.20m));
+}
+
+static void Require(bool condition, string message)
+{
+    if (!condition)
+    {
+        throw new InvalidOperationException(message);
+    }
+}
+
+static void RequireThrows<TException>(Action action)
+    where TException : Exception
+{
+    try
+    {
+        action();
+        throw new InvalidOperationException($"Ожидалось исключение {typeof(TException).Name}.");
+    }
+    catch (TException)
+    {
+    }
+}
+
+static async Task RequireThrowsAsync<TException>(Func<Task> action)
+    where TException : Exception
+{
+    try
+    {
+        await action();
+        throw new InvalidOperationException($"Ожидалось исключение {typeof(TException).Name}.");
+    }
+    catch (TException)
+    {
+    }
+}
+
+sealed class InMemoryRepositories : ISettlementRepository, IPayoutRepository, IInvoiceRepository, IInvoiceLaunchRepository
+{
+    private readonly Dictionary<Guid, Settlement> _settlementsById = [];
+    private readonly Dictionary<string, Settlement> _settlementsByEventId = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, PayoutRequest> _payouts = new(StringComparer.Ordinal);
+    private readonly Dictionary<Guid, Invoice> _invoicesById = [];
+    private readonly Dictionary<string, Invoice> _invoicesByOrderReference = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Invoice> _invoicesByIssueKey = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, InvoiceLaunchRecord> _invoiceLaunches = new(StringComparer.Ordinal);
+
+    public int StoredSettlementCount => _settlementsById.Count;
+
+    public int StoredInvoiceCount => _invoicesById.Count;
+
+    public ValueTask<Settlement?> FindByIdAsync(Guid settlementId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_settlementsById.GetValueOrDefault(settlementId));
+
+    public ValueTask<Settlement?> FindByProviderEventIdAsync(string providerEventId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_settlementsByEventId.GetValueOrDefault(providerEventId));
+
+    public ValueTask StoreAsync(Settlement settlement, CancellationToken cancellationToken)
+    {
+        _settlementsById[settlement.Id] = settlement;
+        _settlementsByEventId[settlement.Payment.ProviderEventId] = settlement;
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask<PayoutRequest?> FindByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_payouts.GetValueOrDefault(idempotencyKey));
+
+    public ValueTask StoreAsync(PayoutRequest payout, CancellationToken cancellationToken)
+    {
+        _payouts[payout.IdempotencyKey] = payout;
+        return ValueTask.CompletedTask;
+    }
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByIdAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesById.GetValueOrDefault(invoiceId));
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByOrderReferenceAsync(string orderReference, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesByOrderReference.GetValueOrDefault(orderReference));
+
+    ValueTask<Invoice?> IInvoiceRepository.FindByIssueIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoicesByIssueKey.GetValueOrDefault(idempotencyKey));
+
+    public ValueTask StoreAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        _invoicesById[invoice.Id] = invoice;
+        _invoicesByOrderReference[invoice.OrderReference] = invoice;
+        _invoicesByIssueKey[invoice.IssueIdempotencyKey] = invoice;
+        return ValueTask.CompletedTask;
+    }
+
+    ValueTask<InvoiceLaunchRecord?> IInvoiceLaunchRepository.FindByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_invoiceLaunches.GetValueOrDefault(idempotencyKey));
+
+    public ValueTask StoreAsync(InvoiceLaunchRecord launch, CancellationToken cancellationToken)
+    {
+        _invoiceLaunches[launch.IdempotencyKey] = launch;
+        return ValueTask.CompletedTask;
+    }
+}
+
+sealed class StubWebhookVerifier(VerifiedProviderPayment verified) : IPaymentProviderWebhookVerifier
+{
+    public ValueTask<VerifiedProviderPayment> VerifyAsync(ProviderWebhookPayload payload, CancellationToken cancellationToken) => ValueTask.FromResult(verified);
+}
+
+sealed class StubFxRateSource(FxSnapshot snapshot) : IFxRateSource
+{
+    public ValueTask<FxSnapshot> GetSnapshotAsync(DateOnly effectiveDate, string sourceCurrency, string targetCurrency, CancellationToken cancellationToken) => ValueTask.FromResult(snapshot);
+}
+
+sealed class StubTaxPolicy(string version, bool createCandidate) : ITaxPolicy
+{
+    public string Version => version;
+
+    public TaxReceiptDecision DecideReceipt(Settlement settlement) => new(createCandidate, settlement.Payment.ConfirmedAtUtc, "Confirmed settlement is policy-taxable in this test.");
+
+    public AnnualTaxPosition EvaluateAnnualPosition(int taxYear, CounterpartyKind counterpartyKind, Money taxableIncomeByN) =>
+        new(taxYear, counterpartyKind, taxableIncomeByN, TaxThresholdStatus.Warning, version);
+}
+
+sealed class StubBankFeeSchedule(Money quote) : IBankFeeSchedule
+{
+    public ValueTask<Money> QuoteAsync(PayoutRequest request, DateOnly effectiveDate, CancellationToken cancellationToken) => ValueTask.FromResult(quote);
+}
+
+sealed class StubTaxReceiptGateway(TaxReceiptSubmission submission) : ITaxReceiptGateway
+{
+    public ValueTask<TaxReceiptSubmission> SubmitAsync(TaxReceiptCandidate candidate, CancellationToken cancellationToken) => ValueTask.FromResult(submission);
+}
+
+sealed class StubPayoutReleasePolicy(bool isAllowed) : IPayoutReleasePolicy
+{
+    public PayoutReleaseDecision Decide(Settlement settlement, Money requestedAmount) => new(isAllowed, isAllowed ? "Allowed by test policy." : "Manual compliance review required.");
+}
+
+sealed class StubProviderPort(string providerPayoutId) : IPaymentProviderPort
+{
+    public int CallCount { get; private set; }
+
+    public ValueTask<ProviderPayoutSubmission> SubmitPayoutAsync(PayoutRequest request, CancellationToken cancellationToken)
+    {
+        CallCount++;
+        return ValueTask.FromResult(new ProviderPayoutSubmission(providerPayoutId));
+    }
+}
+
+sealed class StubClock(DateTimeOffset now) : IClock
+{
+    public DateTimeOffset UtcNow => now;
+}
+
+sealed class StubPaymentLaunchPort(IReadOnlyCollection<PaymentRailCapability> capabilities, PaymentLaunchSession session) : IPaymentLaunchPort
+{
+    public int CallCount { get; private set; }
+
+    public IReadOnlyCollection<PaymentRailCapability> Capabilities => capabilities;
+
+    public ValueTask<PaymentLaunchSession> CreateAsync(CreatePaymentLaunch request, CancellationToken cancellationToken)
+    {
+        CallCount++;
+        return ValueTask.FromResult(session);
+    }
+}
+
+sealed class RecordingHttpHandler(HttpStatusCode statusCode, string responseJson) : HttpMessageHandler
+{
+    public HttpMethod? Method { get; private set; }
+
+    public string? RequestUri { get; private set; }
+
+    public string Body { get; private set; } = string.Empty;
+
+    public string? RequestId { get; private set; }
+
+    public AuthenticationHeaderValue? Authorization { get; private set; }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Method = request.Method;
+        RequestUri = request.RequestUri?.AbsoluteUri;
+        Body = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken);
+        RequestId = request.Headers.TryGetValues("RequestID", out var values) ? values.SingleOrDefault() : null;
+        Authorization = request.Headers.Authorization;
+        return new HttpResponseMessage(statusCode)
+        {
+            Content = new StringContent(responseJson, Encoding.UTF8, "application/json"),
+        };
+    }
+}

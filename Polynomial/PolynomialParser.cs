@@ -10,6 +10,9 @@ namespace Ricis.Core.Polynomial
    
     public static class PolynomialParser
     {
+        /// <summary>
+        /// Executes <c>ParseQuadratic</c> for the RICIS expression model.
+        /// </summary>
         public static (ParameterExpression, double a, double b, double c)? ParseQuadratic(this Expression expr)
         {
             if (expr == null) return null;

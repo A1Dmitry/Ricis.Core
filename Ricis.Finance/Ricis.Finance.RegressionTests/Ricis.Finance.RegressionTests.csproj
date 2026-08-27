@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ricis.Finance.Domain\Ricis.Finance.Domain.csproj" />
+    <ProjectReference Include="..\Ricis.Finance.Application\Ricis.Finance.Application.csproj" />
+    <ProjectReference Include="..\Ricis.Finance.Bepaid\Ricis.Finance.Bepaid.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

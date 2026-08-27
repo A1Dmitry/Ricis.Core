@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="FactorialNegative" xml:space="preserve"><value>Факториал определён только для неотрицательных целых чисел.</value></data>
+  <data name="StrictZeroDenominator" xml:space="preserve"><value>Референсное выражение содержит нулевой знаменатель.</value></data>
+  <data name="UnresolvedRicisNode" xml:space="preserve"><value>Нерешённый RICIS-узел {0} нельзя строго скомпилировать. Сначала примените нормативный pipeline.</value></data>
+  <data name="UnknownProviderError" xml:space="preserve"><value>Неизвестная ошибка провайдера.</value></data>
+</root>

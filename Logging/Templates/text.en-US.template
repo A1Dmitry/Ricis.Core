@@ -1,0 +1,7 @@
+{{Title}}
+Status: {{RunStatus}}
+{{#each Rows}}[{{this.Sequence}}] {{this.Severity}} {{this.Sender}} {{this.EventCode}} {{this.Phase}}: {{this.Message}}
+Before: {{this.Before}}
+After: {{this.After}}
+Exception: {{this.ExceptionType}}
+{{/each}}

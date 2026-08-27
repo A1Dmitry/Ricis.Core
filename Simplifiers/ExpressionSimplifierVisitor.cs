@@ -1,25 +1,53 @@
 ﻿using System.Linq.Expressions;
 using System.Numerics;
+using Ricis.Core;
+using Ricis.Core.Expressions;
 using Ricis.Core.Extensions;
 
 namespace Ricis.Core.Simplifiers;
 
-public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
+/// <summary>
+/// Represents the RICIS public type <c>ExpressionSimplifierVisitor</c>.
+/// </summary>
+public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpressionVisitor
 {
-    private readonly Dictionary<string, ParameterExpression> _parameters = new();
+    private readonly IRicisScalarPolicy scalarPolicy;
 
+    /// <summary>Initializes the legacy built-in scalar route.</summary>
+    public ExpressionSimplifierVisitor()
+        : this(RicisScalarPolicies.Legacy)
+    {
+    }
 
+    internal ExpressionSimplifierVisitor(IRicisScalarPolicy scalarPolicy)
+    {
+        this.scalarPolicy = scalarPolicy ?? throw new ArgumentNullException(nameof(scalarPolicy));
+    }
+
+    /// <inheritdoc />
+    protected override Expression VisitExtension(Expression node) =>
+        RicisSpecialExpressionRebinder.Rebind(node, Visit);
+
+    /// <inheritdoc />
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var left = Visit(node.Left);
         var right = Visit(node.Right);
+
+        // RICIS extensions have already received their normative A/O(1)
+        // semantics in earlier phases. Do not apply ordinary zero, power,
+        // distribution, or commutative rewrites across indexed payload nodes.
+        if (left is RicisExpression || right is RicisExpression)
+        {
+            return node.Update(left, node.Conversion, right);
+        }
 
         // Базовые алгебраические тождества
         switch (node.NodeType)
         {
             case ExpressionType.Add when IsZero(left): return right;
             case ExpressionType.Add when IsZero(right): return left;
-            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return Expression.Constant(0, node.Type);
+            case ExpressionType.Multiply when IsZero(left) || IsZero(right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsOne(left): return right;
             case ExpressionType.Multiply when IsOne(right): return left;
             case ExpressionType.Divide when IsZero(left): return left;
@@ -31,8 +59,8 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         {
             return node.NodeType switch
             {
-                ExpressionType.Add => Expression.Multiply(Expression.Constant(2, node.Type), left),
-                ExpressionType.Multiply => CreatePower(left, 2),
+                ExpressionType.Add => Expression.Multiply(CreateNumericConstant(2, node.Type), left),
+                ExpressionType.Multiply when node.Method is null => CreatePowerOrProduct(left),
                 _ => node.Update(left, node.Conversion, right)
             };
         }
@@ -46,7 +74,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         // Константы
         if (left is ConstantExpression lc && right is ConstantExpression rc)
         {
-            return SimplifyConstants(node.NodeType, lc.Value, rc.Value);
+            return SimplifyConstants(node, lc, rc);
         }
 
         // Сложение/умножение дробей
@@ -69,9 +97,15 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return node.Update(left, node.Conversion, right);
     }
 
+    /// <inheritdoc />
     protected override Expression VisitUnary(UnaryExpression node)
     {
         var operand = Visit(node.Operand);
+
+        if (operand is RicisExpression)
+        {
+            return node.Update(operand);
+        }
 
         // Двойное отрицание
         if (node.NodeType == ExpressionType.Negate && operand is UnaryExpression innerNegate &&
@@ -80,93 +114,31 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
             return innerNegate.Operand;
         }
 
-        if (operand is ConstantExpression c)
-        {
-            return SimplifyConstantsUnary(node.NodeType, c.Value);
-        }
-
+        // Keep unary constants in their original scalar type. Converting every
+        // value through BigInteger truncates fractional values and can make a
+        // later indexed payload type-inconsistent.
         return node.Update(operand);
     }
 
-    private Expression SimplifyConstantsUnary(ExpressionType nodeType, object value)
-    {
-        try
-        {
-            var num = value.ToBigInteger();
 
-            return nodeType switch
-            {
-                ExpressionType.Negate => Expression.Constant(-num, typeof(BigInteger)),
-                ExpressionType.UnaryPlus => Expression.Constant(num, typeof(BigInteger)),
-                ExpressionType.Not when value is bool b => Expression.Constant(!b, typeof(bool)),
-                _ => throw new ArgumentException($"Unsupported unary operation: {nodeType}")
-            };
-        }
-        catch
-        {
-            // Fallback для неподдерживаемых типов
-            return Expression.MakeUnary(nodeType, Expression.Constant(value), value?.GetType() ?? typeof(object));
-        }
-    }
-
-
+    /// <inheritdoc />
     protected override Expression VisitConditional(ConditionalExpression node)
     {
         var test = Visit(node.Test);
         var ifTrue = Visit(node.IfTrue);
         var ifFalse = Visit(node.IfFalse);
 
-        if (test is ConstantExpression tc && (bool)tc.Value)
+        if (test is ConstantExpression { Value: true })
         {
             return ifTrue;
         }
 
-        if (test is ConstantExpression tf && !(bool)tf.Value)
+        if (test is ConstantExpression { Value: false })
         {
             return ifFalse;
         }
 
         return node.Update(test, ifTrue, ifFalse);
-    }
-
-    internal Expression VisitLogical(BinaryExpression node)
-    {
-        var left = Visit(node.Left);
-        var right = Visit(node.Right);
-
-        // Идемпотентность: x && x → x, x || x → x
-        if (AreIdentical(left, right))
-        {
-            return node.NodeType == ExpressionType.AndAlso ? left : right;
-        }
-
-        // x && true → x, x || false → x
-        if (node.NodeType == ExpressionType.AndAlso)
-        {
-            if (IsTrue(right))
-            {
-                return left;
-            }
-
-            if (IsFalse(right))
-            {
-                return Expression.Constant(false, node.Type);
-            }
-        }
-        else
-        {
-            if (IsTrue(right))
-            {
-                return right;
-            }
-
-            if (IsFalse(right))
-            {
-                return left;
-            }
-        }
-
-        return node.Update(left, node.Conversion, right);
     }
 
     // Распределение: (a+b)*c → a*c + b*c
@@ -179,20 +151,9 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return Visit(Expression.Add(term1, term2));
     }
 
-    private bool AreIdentical(Expression a, Expression b)
+    private static bool AreIdentical(Expression a, Expression b)
     {
-        // Простое сравнение с кэшированием для одинаковых поддеревьев
-        return ReferenceEquals(a, b) || NormalizeForComparison(a) == NormalizeForComparison(b);
-    }
-
-    private string NormalizeForComparison(Expression node)
-    {
-        return node switch
-        {
-            ParameterExpression p => $"P{p.Name}",
-            ConstantExpression c => $"C{c.Value}",
-            _ => $"{node.NodeType}"
-        };
+        return ReferenceEquals(a, b) || a.AreEqual(b);
     }
 
     private bool ShouldCommute(Expression left, Expression right)
@@ -228,37 +189,22 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
         return expr is BinaryExpression b && b.NodeType == ExpressionType.Add;
     }
 
-    private Expression SimplifyConstants(ExpressionType op, object l, object r)
+    private static Expression SimplifyConstants(BinaryExpression node, ConstantExpression left, ConstantExpression right)
     {
-        var left = ToBigInteger(l);
-        var right = ToBigInteger(r);
-        return op switch
+        try
         {
-            ExpressionType.Add => Expression.Constant(left + right),
-            ExpressionType.Subtract => Expression.Constant(left - right),
-            ExpressionType.Multiply => Expression.Constant(left * right),
-            ExpressionType.Divide => SimplifyFraction(left, right),
-            ExpressionType.Power => Expression.Constant(BigInteger.Pow(left, (int)right)),
-            _ => throw new ArgumentException()
-        };
-    }
-
-    private static Expression SimplifyFraction(BigInteger num, BigInteger den)
-    {
-        if (den == 0)
-        {
-            throw new DivideByZeroException();
+            // Fold using the original expression-tree operator, then retain its
+            // declared type. This avoids truncating doubles/decimals to BigInteger.
+            var folded = Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+            var boxed = Expression.Convert(folded, typeof(object));
+            var value = Expression.Lambda<Func<object>>(boxed).Compile()();
+            return Expression.Constant(value, node.Type);
         }
-
-        if (num == 0)
+        catch
         {
-            return Expression.Constant(BigInteger.Zero);
+            // Preserve the valid tree when an operator cannot be folded safely.
+            return node.Update(left, node.Conversion, right);
         }
-
-        var gcd = BigInteger.GreatestCommonDivisor(num < 0 ? -num : num, den);
-        return Expression.Divide(
-            Expression.Constant(num / gcd, typeof(BigInteger)),
-            Expression.Constant(den / gcd, typeof(BigInteger)));
     }
 
     private static Expression SimplifyFractionSum((Expression, Expression) f1, (Expression, Expression) f2)
@@ -279,42 +225,44 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor
             Expression.Multiply(b, d));
     }
 
-    private Expression CreatePower(Expression @base, int exponent)
+    private Expression CreatePowerOrProduct(Expression @base)
     {
-        return Expression.Power(@base, Expression.Constant(exponent));
-    }
-
-    private static bool IsZero(Expression e)
-    {
-        return e is ConstantExpression c && ToBigInteger(c.Value) == 0;
-    }
-
-    private static bool IsOne(Expression e)
-    {
-        return e is ConstantExpression c && ToBigInteger(c.Value) == 1;
-    }
-
-    private static bool IsTrue(Expression e)
-    {
-        return e is ConstantExpression c && (bool)c.Value;
-    }
-
-    private static bool IsFalse(Expression e)
-    {
-        return e is ConstantExpression c && !(bool)c.Value;
-    }
-
-    private static BigInteger ToBigInteger(object value)
-    {
-        return value switch
+        try
         {
-            BigInteger b => b,
-            int i => i,
-            long l => l,
-            decimal m => (BigInteger)m,
-            double d => (BigInteger)d,
-            float f => (BigInteger)f,
-            _ => 0
-        };
+            return Expression.Power(@base, CreateNumericConstant(2, @base.Type));
+        }
+        catch (ArgumentException)
+        {
+            // Expression.Power is not defined for every INumber type (notably
+            // BigInteger). Preserve the exact ordinary product instead of
+            // changing the scalar domain or throwing from a simplifier.
+            return Expression.Multiply(@base, @base);
+        }
     }
+
+    private bool IsZero(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsZeroValue(constant.Value);
+
+    private bool IsOne(Expression expression) =>
+        expression is ConstantExpression constant && scalarPolicy.IsOneValue(constant.Value);
+
+    private static bool IsNumericValue(object value, int expected) => value switch
+    {
+        byte v => v == expected,
+        sbyte v => v == expected,
+        short v => v == expected,
+        ushort v => v == expected,
+        int v => v == expected,
+        uint v => v == expected,
+        long v => v == expected,
+        ulong v => expected >= 0 && v == (ulong)expected,
+        float v => v == expected,
+        double v => v == expected,
+        decimal v => v == expected,
+        BigInteger v => v == expected,
+        _ => false,
+    };
+
+    private Expression CreateNumericConstant(int value, Type type) => scalarPolicy.FromInt32(value, type);
+
 }

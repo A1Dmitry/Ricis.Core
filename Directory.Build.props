@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Ricis.Core is the version source of truth for the complete solution. -->
+    <RicisCoreVersion Condition="'$(RicisCoreVersion)' == ''">0.7.0</RicisCoreVersion>
+    <VersionPrefix>$(RicisCoreVersion)</VersionPrefix>
+    <Version>$(RicisCoreVersion)</Version>
+    <AssemblyVersion>$(RicisCoreVersion).0</AssemblyVersion>
+    <FileVersion>$(RicisCoreVersion).0</FileVersion>
+    <InformationalVersion>$(RicisCoreVersion)</InformationalVersion>
+    <RepositoryUrl>https://github.com/A1Dmitry/Ricis.Core</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

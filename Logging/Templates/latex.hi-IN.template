@@ -1,0 +1,75 @@
+% RICIS-LOCALE: hi-IN
+% RICIS-ENGINE: lualatex
+\documentclass[12pt]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\setdefaultlanguage{hindi}
+\setotherlanguage{english}
+\newfontfamily\devanagarifont{Noto Serif Devanagari}[Script=Devanagari]
+\newfontfamily\hindifont{Noto Serif Devanagari}[Script=Devanagari]
+\newfontfamily\devanagarifonttt{Noto Sans Devanagari}[Script=Devanagari]
+\newfontfamily\hindifonttt{Noto Sans Devanagari}[Script=Devanagari]
+\newfontfamily\englishfont{Latin Modern Roman}
+\geometry{a4paper, margin=1in}
+
+\newtheorem{theorem}{प्रमेय}
+\newtheorem{lemma}{लेम्मा}
+\newtheorem{axiom}{अभिगृहीत}
+\newtheorem{definition}{परिभाषा}
+\newtheorem{corollary}{परिणाम}
+\newtheorem{remark}{टिप्पणी}
+\renewcommand{\contentsname}{विषय-सूची}
+\renewcommand{\proofname}{प्रमाण}
+
+\title{ {{Title}} \\ \large {{Subtitle}} }
+\author{ {{AuthorDisplayName}} }
+\date{}
+
+\begin{document}
+\maketitle
+{{Abstracts}}
+{{#if TableOfContentsIncluded}}
+\tableofcontents
+\vspace{1cm}
+{{/if}}
+\section*{ {{EvidenceBoundaryLabel}} }
+\addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
+{{EvidenceBoundary}}
+{{#if AuthorIncluded}}
+\section*{लेखक और SEO मेटाडेटा}
+\addcontentsline{toc}{section}{लेखक और SEO मेटाडेटा}
+\textbf{नाम:} {{AuthorDisplayName}}\\
+\textbf{वैकल्पिक नाम:} {{AuthorAlternateName}}\\
+\textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
+\textbf{विवरण:} {{AuthorDescription}}\\
+\textbf{मुख्य शब्द:} {{AuthorKeywords}}
+{{AuthorWorks}}
+{{/if}}
+{{#each Sections}}
+{{this.Opening}}
+\textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
+{{this.Body}}
+{{this.Equation}}
+{{this.Claims}}
+{{this.ProofSteps}}
+{{this.ValidationRows}}
+{{/each}}
+{{#if EpilogueIncluded}}
+\section*{ {{EpilogueHeading}} }
+\addcontentsline{toc}{section}{ {{EpilogueHeading}} }
+{{Epilogue}}
+{{EpilogueSteps}}
+{{/if}}
+{{#if ConclusionIncluded}}
+\section*{ {{ConclusionHeading}} }
+\addcontentsline{toc}{section}{ {{ConclusionHeading}} }
+{{Conclusion}}
+{{ConclusionSteps}}
+{{/if}}
+{{AppendixSections}}
+{{TechnicalAppendix}}
+\end{document}

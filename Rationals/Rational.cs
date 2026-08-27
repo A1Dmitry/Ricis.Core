@@ -3,19 +3,38 @@ using DivideByZeroException = System.DivideByZeroException;
 
 namespace Ricis.Core.Rationals;
 
+/// <summary>
+/// Represents the RICIS public type <c>Rational</c>.
+/// </summary>
 public readonly struct Rational : IEquatable<Rational>
 {
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         return HashCode.Combine(Numerator, Denominator);
     }
 
+    /// <summary>
+    /// Gets the <c>Zero</c> value of <c>Rational</c>.
+    /// </summary>
     public static readonly Rational Zero = new(0);
+    /// <summary>
+    /// Gets the <c>One</c> value of <c>Rational</c>.
+    /// </summary>
     public static readonly Rational One = new(1);
 
+    /// <summary>
+    /// Gets the <c>Numerator</c> value of <c>Rational</c>.
+    /// </summary>
     public BigInteger Numerator { get; }
+    /// <summary>
+    /// Gets the <c>Denominator</c> value of <c>Rational</c>.
+    /// </summary>
     public BigInteger Denominator { get; } // always > 0
 
+    /// <summary>
+    /// Performs the <c>operator -</c> operation.
+    /// </summary>
     public static Rational operator -(Rational a)
     {
         if (a.Numerator.IsZero)
@@ -26,6 +45,9 @@ public readonly struct Rational : IEquatable<Rational>
         return new Rational(-a.Numerator, a.Denominator);
     }
 
+    /// <summary>
+    /// Initializes a new instance of <c>Rational</c>.
+    /// </summary>
     public Rational(BigInteger numerator, BigInteger denominator)
     {
         if (denominator.IsZero)
@@ -44,17 +66,29 @@ public readonly struct Rational : IEquatable<Rational>
         Denominator = denominator / gcd;
     }
 
+    /// <summary>
+    /// Initializes a new instance of <c>Rational</c>.
+    /// </summary>
     public Rational(BigInteger integer) : this(integer, BigInteger.One)
     {
     }
 
+    /// <summary>
+    /// Gets the <c>IsZero</c> value of <c>Rational</c>.
+    /// </summary>
     public bool IsZero => Numerator.IsZero;
 
+    /// <summary>
+    /// Executes <c>Create</c> for the RICIS expression model.
+    /// </summary>
     public static Rational Create(long value)
     {
         return new Rational(value);
     }
 
+    /// <summary>
+    /// Executes <c>FromDecimal</c> for the RICIS expression model.
+    /// </summary>
     public static Rational FromDecimal(decimal d)
     {
         var bits = decimal.GetBits(d);
@@ -71,26 +105,41 @@ public readonly struct Rational : IEquatable<Rational>
         return new Rational(numerator, denominator);
     }
 
+    /// <summary>
+    /// Executes <c>ToDouble</c> for the RICIS expression model.
+    /// </summary>
     public double ToDouble()
     {
         return (double)Numerator / (double)Denominator;
     }
 
+    /// <summary>
+    /// Performs the <c>operator +</c> operation.
+    /// </summary>
     public static Rational operator +(Rational a, Rational b)
     {
         return new Rational(a.Numerator * b.Denominator + b.Numerator * a.Denominator, a.Denominator * b.Denominator);
     }
 
+    /// <summary>
+    /// Performs the <c>operator -</c> operation.
+    /// </summary>
     public static Rational operator -(Rational a, Rational b)
     {
         return new Rational(a.Numerator * b.Denominator - b.Numerator * a.Denominator, a.Denominator * b.Denominator);
     }
 
+    /// <summary>
+    /// Performs the <c>operator *</c> operation.
+    /// </summary>
     public static Rational operator *(Rational a, Rational b)
     {
         return new Rational(a.Numerator * b.Numerator, a.Denominator * b.Denominator);
     }
 
+    /// <summary>
+    /// Performs the <c>operator /</c> operation.
+    /// </summary>
     public static Rational operator /(Rational a, Rational b)
     {
         if (b.Numerator.IsZero)
@@ -101,17 +150,24 @@ public readonly struct Rational : IEquatable<Rational>
         return new Rational(a.Numerator * b.Denominator, a.Denominator * b.Numerator);
     }
 
+    /// <inheritdoc />
     public override string ToString()
     {
         return Denominator.IsOne ? Numerator.ToString() : $"{Numerator}/{Denominator}";
     }
 
+    /// <summary>
+    /// Executes <c>Equals</c> for the RICIS expression model.
+    /// </summary>
     public bool Equals(Rational other)
     {
         return Numerator.Equals(other.Numerator) && Denominator.Equals(other.Denominator);
     }
 
 
+    /// <summary>
+    /// Executes <c>Floor</c> for the RICIS expression model.
+    /// </summary>
     public static Rational Floor(Rational r)
     {
         var floored = r.Numerator / r.Denominator;
@@ -123,89 +179,140 @@ public readonly struct Rational : IEquatable<Rational>
         return new Rational(floored);
     }
 
+    /// <summary>
+    /// Performs the <c>operator &lt;</c> operation.
+    /// </summary>
     public static bool operator <(Rational left, Rational right)
     {
         return left.Numerator * right.Denominator < right.Numerator * left.Denominator;
     }
 
+    /// <summary>
+    /// Performs the <c>operator ==</c> operation.
+    /// </summary>
     public static bool operator ==(Rational left, Rational right)
     {
         return left.Numerator * right.Denominator == right.Numerator * left.Denominator;
     }
 
+    /// <summary>
+    /// Performs the <c>operator !=</c> operation.
+    /// </summary>
     public static bool operator !=(Rational left, Rational right)
     {
         return !(left == right);
     }
 
 
+    /// <summary>
+    /// Performs the <c>operator &gt;</c> operation.
+    /// </summary>
     public static bool operator >(Rational left, Rational right)
     {
         return left.Numerator * right.Denominator > right.Numerator * left.Denominator;
     }
 
+    /// <summary>
+    /// Performs the <c>operator &lt;=</c> operation.
+    /// </summary>
     public static bool operator <=(Rational left, Rational right)
     {
         return left.Numerator * right.Denominator <= right.Numerator * left.Denominator;
     }
 
+    /// <summary>
+    /// Performs the <c>operator &gt;=</c> operation.
+    /// </summary>
     public static bool operator >=(Rational left, Rational right)
     {
         return left.Numerator * right.Denominator >= right.Numerator * left.Denominator;
     }
 
+    /// <summary>
+    /// Converts a value through <c>implicit operator Rational</c>.
+    /// </summary>
     public static implicit operator Rational(int value)
     {
         return new Rational(value, BigInteger.One);
     }
 
+    /// <summary>
+    /// Converts a value through <c>implicit operator Rational</c>.
+    /// </summary>
     public static implicit operator Rational(long value)
     {
         return new Rational(value, BigInteger.One);
     }
 
+    /// <summary>
+    /// Converts a value through <c>implicit operator Rational</c>.
+    /// </summary>
     public static implicit operator Rational(BigInteger value)
     {
         return new Rational(value, BigInteger.One);
     }
 
     // === ﬂ¬Õ¿ﬂ  ŒÕ¬≈–—»ﬂ ¬ DOUBLE (‰Îˇ fallback Ë ‚˚‚Ó‰‡) ===
+    /// <summary>
+    /// Converts a value through <c>explicit operator double</c>.
+    /// </summary>
     public static explicit operator double(Rational r)
     {
         return r.ToDouble();
     }
 
     // === Œœ≈–¿“Œ–€ — INT ===
+    /// <summary>
+    /// Performs the <c>operator +</c> operation.
+    /// </summary>
     public static Rational operator +(Rational a, int b)
     {
         return a + new Rational(b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator +</c> operation.
+    /// </summary>
     public static Rational operator +(int a, Rational b)
     {
         return new Rational(a) + b;
     }
 
+    /// <summary>
+    /// Performs the <c>operator -</c> operation.
+    /// </summary>
     public static Rational operator -(Rational a, int b)
     {
         return a - new Rational(b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator -</c> operation.
+    /// </summary>
     public static Rational operator -(int a, Rational b)
     {
         return new Rational(a) - b;
     }
 
+    /// <summary>
+    /// Performs the <c>operator *</c> operation.
+    /// </summary>
     public static Rational operator *(Rational a, int b)
     {
         return a * new Rational(b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator *</c> operation.
+    /// </summary>
     public static Rational operator *(int a, Rational b)
     {
         return new Rational(a) * b;
     }
 
+    /// <summary>
+    /// Performs the <c>operator /</c> operation.
+    /// </summary>
     public static Rational operator /(Rational a, int b)
     {
         if (b == 0)
@@ -216,6 +323,9 @@ public readonly struct Rational : IEquatable<Rational>
         return a / new Rational(b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator /</c> operation.
+    /// </summary>
     public static Rational operator /(int a, Rational b)
     {
         if (b.IsZero)
@@ -230,26 +340,39 @@ public readonly struct Rational : IEquatable<Rational>
     //public static Rational operator -(Rational a) => new Rational(-a.Numerator, a.Denominator);
 
     // === —–¿¬Õ≈Õ»≈ — INT (ÂÒÎË ÌÛÊÌÓ) ===
+    /// <summary>
+    /// Performs the <c>operator ==</c> operation.
+    /// </summary>
     public static bool operator ==(Rational a, int b)
     {
         return a == new Rational(b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator ==</c> operation.
+    /// </summary>
     public static bool operator ==(int a, Rational b)
     {
         return new Rational(a) == b;
     }
 
+    /// <summary>
+    /// Performs the <c>operator !=</c> operation.
+    /// </summary>
     public static bool operator !=(Rational a, int b)
     {
         return !(a == b);
     }
 
+    /// <summary>
+    /// Performs the <c>operator !=</c> operation.
+    /// </summary>
     public static bool operator !=(int a, Rational b)
     {
         return !(a == b);
     }
 
+    /// <inheritdoc />
     public override bool Equals(object obj)
     {
         return obj is Rational rational && Equals(rational);

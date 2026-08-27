@@ -1,0 +1,291 @@
+{
+  "documentId": "navier-stokes-ricis-academic-structure/en-US/v1",
+  "title": "Régularité globale des équations de Navier-Stokes en 3D",
+  "subtitle": "Document de preuve dans le paradigme RICIS (version sans limites)",
+  "statusKey": "structural-exemplar-not-kernel-proof",
+  "includeTableOfContents": true,
+  "evidenceBoundary": "Ce document est une projection sémantique anglaise de la source structurelle Navier-Stokes fournie. L'énoncé de régularité globale demeure une revendication externe Deferred ; il n'est pas KernelChecked sans une proposition typée, des hypothèses explicites et un pont sémantique Lean.",
+  "abstracts": [
+    {
+      "language": "fr-CA",
+      "label": "Résumé",
+      "body": "Ce document fournit une structure récursive de rapport de preuve pour la source Navier‑Stokes dans le paradigme RICIS. Les expressions singulières sont représentées comme des objets structurels indexés, et SP4 et A6 sont consignées comme transformations normatives déclarées. La revendication externe de régularité globale n'est pas promue par ce rapport au statut vérifié par le noyau."
+    }
+  ],
+  "sections": [
+    {
+      "sectionId": "ns-introduction",
+      "kind": "Narrative",
+      "presentation": "Unnumbered",
+      "heading": "Introduction: the epistemological barrier of classical analysis and the need for a change of paradigm",
+      "body": "La source oppose les limites à l'indexation directe des expressions singulières et introduit une interprétation géométrique des monolithes de différents ordres. Dans ce rapport sémantique, ce matériel constitue un contexte méthodologique plutôt qu'une preuve indépendante d'un théorème externe.",
+      "evidenceStatus": "narrative-context"
+    },
+    {
+      "sectionId": "ns-limit-preamble",
+      "kind": "Narrative",
+      "heading": "Preamble: the prohibition of limits",
+      "body": "Pour ce scénario RICIS, la notation de limite n'est pas utilisée. Le document décrit plutôt l'indexation directe d'une expression en un point choisi suivie d'une simplification normative via SP2, SP4 et les axiomes déclarés.",
+      "equation": "limite classique en x=a -> évaluation indexée directe en x=a",
+      "evidenceStatus": "declared-method"
+    },
+    {
+      "sectionId": "ns-foundation",
+      "kind": "Definition",
+      "heading": "An absolute foundation without limits",
+      "body": "Le fondement fixe l'absence de limites et la séquence prévue : réduction algébrique, indexation d'expressions et règles normatives RICIS.",
+      "evidenceStatus": "declared-foundation",
+      "children": [
+        {
+          "sectionId": "ns-l0-continuity",
+          "kind": "Definition",
+          "heading": "L0_Continuité_absolue (sans limites)",
+          "body": "La continuité est comprise comme l'absence de rupture d'identité lors du passage entre niveaux de récursion ; cette règle est un méta-axiome déclaré.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-l1-identity",
+          "kind": "Definition",
+          "heading": "L1_Identité",
+          "body": "L'identité X = X préserve le type T(X) ; les opérations ne peuvent pas transmuter les types sans un morphisme défini explicitement.",
+          "evidenceStatus": "declared-foundation"
+        },
+        {
+          "sectionId": "ns-direct-computation",
+          "kind": "Narrative",
+          "heading": "Direct computation instead of a limit",
+          "body": "Si une valeur est définie classiquement, elle est conservée. Si une forme singulière survient, SP4, SP2, puis les axiomes RICIS sont appliqués ; le point est pris directement.",
+          "evidenceStatus": "declared-method"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-monolith-geometry",
+      "kind": "Definition",
+      "heading": "Geometric interlude I: a line, plane, and volume are not sets of points",
+      "body": "Un point, une ligne, un plan et un volume sont représentés comme des monolithes primaires hétérogènes T0, T1, T2 et T3. L'intégrale est traitée comme une opération à l'intérieur d'un monolithe volumétrique plutôt que comme une théorie externe de la mesure démontrée ici.",
+      "evidenceStatus": "declared-geometry"
+    },
+    {
+      "sectionId": "ns-safety-protocols",
+      "kind": "AxiomGroup",
+      "heading": "Safety protocols",
+      "body": "SP1 limite la localité d'une transformation. SP2 exige que des termes identiques soient réduits avant d'utiliser les axiomes RICIS. SP3 préserve une relation d'indices lorsque la réduction est impossible. SP4 indexe l'expression originale plutôt que le résidu numérique en un point.",
+      "evidenceStatus": "declared-protocol"
+    },
+    {
+      "sectionId": "ns-ricis-axioms",
+      "kind": "AxiomGroup",
+      "heading": "RICIS axioms (limit-free vector form)",
+      "body": "A1 à A7 et A10 énoncent des règles déclarées pour l'infini indexé, le zéro typé, les formes 0/0 et infinity/infinity, et le produit compatible 0_F fois infinity_F. Ces règles sont des hypothèses normatives du scénario RICIS.",
+      "equation": "0_F times infinity_F = F only when the structural indices match",
+      "evidenceStatus": "declared-axioms"
+    },
+    {
+      "sectionId": "ns-direct-indexing",
+      "kind": "Derivation",
+      "heading": "A limit-free Navier-Stokes derivation",
+      "body": "Cette section rassemble les dérivations RICIS locales utilisées par la source pour décrire une singularité potentielle. Chaque dérivation reste déclarée tant qu'un pont sémantique typé distinct n'est pas fourni.",
+      "evidenceStatus": "declared-ricis-derivation",
+      "children": [
+        {
+          "sectionId": "ns-local-indexing",
+          "kind": "Derivation",
+          "heading": "Indexation directe d'une singularité potentielle",
+          "body": "Dans la source, le volume local et l'énstrophie reçoivent un indice structurel commun issu du tenseur de déformation. Le produit indexé compatible est ensuite réduit selon A6. Cette étape enregistre les entrées requises et une règle ; elle n'établit pas la régularité analytique externe.",
+          "equation": "E_local = 0_S times infinity_S = S",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 1,
+              "ruleId": "SP4",
+              "phase": "direct-indexing",
+              "statement": "le volume et l'énstrophie reçoivent un indice structurel commun à partir de l'expression de déformation déclarée",
+              "status": "declared"
+            },
+            {
+              "number": 2,
+              "ruleId": "A6",
+              "phase": "local-enstrophy",
+              "statement": "le zéro et l'infini indexés compatibles se réduisent à leur indice commun",
+              "status": "declared"
+            }
+          ],
+          "children": [
+            {
+              "sectionId": "ns-local-enstrophy-calculation",
+              "kind": "Derivation",
+              "heading": "Calcul direct de l'énstrophie locale",
+              "body": "L'énstrophie locale E_local est écrite via le volume indexé compatible et l'énstrophie indexée. Cette représentation RICIS reste une transformation déclarée plutôt qu'une estimation PDE vérifiée par le noyau.",
+              "equation": "E_local = integral over 0_S of infinity_S = S",
+              "evidenceStatus": "declared-ricis-transformation"
+            },
+            {
+              "sectionId": "ns-finiteness-lemma",
+              "kind": "Lemma",
+              "heading": "Finiteness",
+              "body": "Le tenseur structurel S demeure une obligation de matière distincte. La source le met en relation avec l'énergie initiale, la viscosité positive et la circulation, mais le rapport sémantique ne déclare pas ces relations comme vérifiées par le noyau.",
+              "evidenceStatus": "open-subject-matter-obligation"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-vorticity-dynamics",
+          "kind": "Derivation",
+          "heading": "Resolution of the critical term (omega dot nabla) omega",
+          "body": "La source décrit l'échelle η comme un paramètre structurel et écrit les termes convectifs et visqueux via des formes indexées. Ce rapport conserve la construction comme une décomposition typée plutôt qu'une estimation PDE prouvée.",
+          "equation": "partial_t omega = indexed convection plus indexed viscosity",
+          "evidenceStatus": "declared-ricis-transformation",
+          "proofSteps": [
+            {
+              "number": 3,
+              "ruleId": "SP4",
+              "phase": "scale-indexing",
+              "statement": "les dérivées reçoivent des indices d'échelle structurelle sans notation de limite",
+              "status": "declared"
+            },
+            {
+              "number": 4,
+              "ruleId": "A6",
+              "phase": "typed-reduction",
+              "statement": "les termes d'échelle indexés compatibles ne se réduisent qu'en présence d'hypothèses explicites de compatibilité",
+              "status": "declared"
+            }
+          ]
+        },
+        {
+          "sectionId": "ns-monolith-projection",
+          "kind": "Narrative",
+          "heading": "Geometric interlude II: why this works without limits",
+          "body": "La source interprète la projection d'un monolithe volumétrique sur un point comme un zéro typé qui préserve un indice structurel. Ce fragment reste une explication géométrique du modèle.",
+          "evidenceStatus": "narrative-explanation"
+        },
+        {
+          "sectionId": "ns-fractal-law",
+          "kind": "Definition",
+          "heading": "Hierarchical unfolding (Fractal Law) without limits",
+          "body": "L'opérateur récursif R déplie un objet, son type, son infini indexé et son zéro typé aux niveaux successifs. Dans la source, il est appliqué à une projection, une ligne de courant, une surface de vortex et au champ complet.",
+          "equation": "R(Q) = {Q, T(Q), infinity_Q, 0_Q, R(infinity_Q), R(0_Q)}",
+          "evidenceStatus": "declared-recursion"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-theorem-proof",
+      "kind": "Claim",
+      "heading": "Theorem and proof (without limits)",
+      "body": "Le théorème externe relatif au domaine traité est inclus pour préserver la forme de la source fournie. Son statut demeure Deferred tant qu'une proposition typée, des hypothèses, des lemmes locaux et des ponts sémantiques périphériques ne sont pas fournis.",
+      "evidenceStatus": "deferred-subject-matter",
+      "claims": [
+        {
+          "claimId": "NS-CLAIM",
+          "statement": "Pour des données initiales régulières d'énergie finie et une viscosité positive, la solution 3D des équations de Navier‑Stokes est globalement régulière.",
+          "evidenceStatus": "Deferred",
+          "evidenceBoundary": "La source fournie et le modèle de route RICIS ne contiennent pas de théorème typé vérifié par le noyau, d'hypothèses ou de pont vers l'énoncé PDE externe."
+        }
+      ],
+      "proofSteps": [
+        {
+          "number": 1,
+          "ruleId": "NS-01",
+          "phase": "contradiction-setup",
+          "statement": "le document suppose un point de perte potentielle de régularité comme obligation de preuve initiale",
+          "status": "declared"
+        },
+        {
+          "number": 2,
+          "ruleId": "NS-02",
+          "phase": "direct-indexing",
+          "statement": "le volume local et l'énstrophie sont indexés via la quantité structurelle déclarée",
+          "status": "declared"
+        },
+        {
+          "number": 3,
+          "ruleId": "NS-03",
+          "phase": "local-enstrophy",
+          "statement": "A6 n'est appliqué qu'aux indices correspondants dans la composition locale indiquée",
+          "status": "declared"
+        },
+        {
+          "number": 4,
+          "ruleId": "NS-04",
+          "phase": "finiteness-obligation",
+          "statement": "la finitude du tenseur structurel reste une obligation de matière distincte",
+          "status": "open-obligation"
+        },
+        {
+          "number": 5,
+          "ruleId": "NS-05",
+          "phase": "vorticity-dynamics",
+          "statement": "la décomposition typée des termes critiques est consignée comme une dérivation RICIS",
+          "status": "declared"
+        },
+        {
+          "number": 6,
+          "ruleId": "NS-06",
+          "phase": "global-bridge",
+          "statement": "le passage d'une représentation RICIS locale à la régularité classique globale nécessite un pont sémantique",
+          "status": "open-obligation"
+        },
+        {
+          "number": 7,
+          "ruleId": "NS-07",
+          "phase": "external-theorem-status",
+          "statement": "la revendication externe finale ne peut pas être promue en KernelChecked par ce document",
+          "status": "Deferred"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-type-verification",
+      "kind": "Validation",
+      "heading": "Verification through type consistency (without limits)",
+      "body": "Le tableau préserve la forme source d'un contrôle pour des indices homogènes, compatibles et incompatibles. Il s'agit d'une explication structurelle plutôt que d'un théorème externe indépendant.",
+      "evidenceStatus": "structured-explanation",
+      "validationRows": [
+        {
+          "case": "Homogène",
+          "condition": "T(F) = T(G)",
+          "resolution": "opération indexée directe",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Compatible",
+          "condition": "T(F) est compatible avec T(G)",
+          "resolution": "élévation typée ou pont",
+          "evidenceStatus": "declared"
+        },
+        {
+          "case": "Incompatible",
+          "condition": "T(F) est incompatible avec T(G)",
+          "resolution": "un monolithe composite ou une obligation distincte est requise",
+          "evidenceStatus": "declared"
+        }
+      ]
+    },
+    {
+      "sectionId": "ns-glossary",
+      "kind": "Appendix",
+      "presentation": "Appendix",
+      "heading": "Appendix: RICIS glossary",
+      "body": "L'infini indexé conserve la manière dont il est atteint. Le zéro typé conserve la raison structurelle de son annulation. Un monolithe d'ordre n est une unité structurelle primaire. SP4 indexe une expression, et A6 décrit l'effondrement compatible du zéro et de l'infini indexés.",
+      "evidenceStatus": "reference"
+    }
+  ],
+  "epilogueHeading": "Épilogue : ce qui est établi dans le scénario sans limites",
+  "epilogue": "La forme structurelle de l'épilogue de la source est conservée comme conclusion du scénario RICIS. Elle ne promeut pas l'énoncé externe de régularité globale au statut KernelChecked.",
+  "epilogueSteps": [
+    "Sur le plan méthodologique, RICIS remplace les limites par l'indexation directe d'expressions en un point via SP4.",
+    "Géométriquement, le volume est traité comme un monolithe T3, tandis que la projection vers un point porte un indice structurel.",
+    "Analytique­ment, le zéro et l'infini indexés compatibles se réduisent selon A6 seulement dans le cadre de la règle RICIS énoncée.",
+    "Sur le plan physique, la viscosité et d'autres hypothèses du domaine restent des obligations typées distinctes plutôt qu'une conséquence de l'agencement.",
+    "Mathématiquement, la régularité globale externe demeure Deferred tant qu'un théorème vérifié par le noyau et un pont sémantique n'existent pas."
+  ],
+  "conclusionHeading": "Conclusion finale",
+  "conclusion": "Les équations de Navier‑Stokes 3D sont représentées ici via une décomposition RICIS. Ce modèle préserve la forme de la conclusion de la source mais ne remplace pas une formalisation de matière distincte.",
+  "conclusionSteps": [
+    "Dans RICIS il n'y a pas de limites, seulement l'indexation directe.",
+    "Un volume n'est pas un ensemble de points mais un monolithe.",
+    "Le produit du zéro indexé et de l'infini indexé avec un indice commun est une règle RICIS déclarée finie selon A6."
+  ]
+}

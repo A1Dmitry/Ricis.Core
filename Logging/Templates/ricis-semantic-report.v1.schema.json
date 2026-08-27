@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ricis.example/schema/ricis-semantic-report/v1",
+  "title": "RICIS Semantic Report v1",
+  "type": "object",
+  "required": ["schema", "reportType", "kernelVerification", "status", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "ricis-semantic-report/v1" },
+    "reportType": { "const": "json-semantic" },
+    "kernelVerification": { "type": "boolean", "const": false },
+    "status": { "type": "string", "minLength": 1 },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sequence", "kind", "visibility", "sender", "phase", "eventCode", "message", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "sequence": { "type": "integer", "minimum": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "visibility": { "type": "string", "minLength": 1 },
+          "sender": { "type": "string", "minLength": 1 },
+          "phase": { "type": "string", "minLength": 1 },
+          "eventCode": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "exceptionType": { "type": "string" },
+          "handlingStatus": { "type": "string" },
+          "publicCause": { "type": "string" }
+        }
+      }
+    }
+  }
+}

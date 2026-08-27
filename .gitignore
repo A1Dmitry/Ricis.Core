@@ -1,44 +1,72 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
+﻿# Build output
+[Bb]in/
+[Oo]bj/
 
-/.vs
-/bin/Debug/net8.0
-/obj
-/RegressionTests/bin/Debug/net8.0
-/RegressionTests/obj/Debug/net8.0
-/Ricis.Console/bin/Debug/net8.0
-/Ricis.Console/obj
-/Ricis.NavierStokes.Console/bin/Debug/net8.0
-/Ricis.NavierStokes.Console/obj/Debug/net8.0
-/Ricis.Numerics/bin/Debug/net8.0
-/Ricis.Numerics/obj
-/Ricis.Numerics/Ricis.Numerics.Benchmarks/bin/Debug/net8.0
-/Ricis.Numerics/Ricis.Numerics.Benchmarks/obj/Debug/net8.0
-/Ricis.Numerics/Ricis.Numerics.UnitTests/bin/Debug/net8.0
-/Ricis.Numerics/Ricis.Numerics.UnitTests/obj/Debug/net8.0
-/Ricis.Numerics/Ricis.Numerics.UnitTests/obj
-/Ricis.Numerics/Ricis.Numerics.Benchmarks/obj
-/Ricis.WebApi/bin/Debug/net8.0
-/Ricis.NavierStokes.Console/obj
-/Ricis.WebApi/obj
-/RegressionTests/obj
-/Ricis.WebAssembly/bin/Debug/net8.0
-/Ricis.WebAssembly/obj/Debug/net8.0
-/Ricis.WebAssembly/obj
-/UnitTests/bin/Debug/net8.0
-/UnitTests/obj
-/Ricis.Core.sln.DotSettings.user
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# NuGet and package artifacts
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results and coverage
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage-report/
+
+# Generated documentation and symbols
+*.dll
+*.exe
+*.pdb
+*.xml
+*.deps.json
+*.runtimeconfig.json
+
+# Temporary and log files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Lean build cache
+.lake/
+
+# Local task outputs
+console_*.txt
+*._check.txt
+*_regression.txt
+*_build.log
 *.lutconfig
-/Ricis.Console/Properties/launchSettings.json
-/Ricis.Finance/Ricis.Finance.Application/bin/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.Application/obj
-/Ricis.Finance/Ricis.Finance.Bepaid/bin/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.Bepaid/obj/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.Bepaid/obj
-/Ricis.Finance/Ricis.Finance.Domain/bin/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.Domain/obj/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.Domain/obj
-/Ricis.Finance/Ricis.Finance.RegressionTests/bin/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.RegressionTests/obj/Debug/net8.0
-/Ricis.Finance/Ricis.Finance.RegressionTests/obj

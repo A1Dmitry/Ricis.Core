@@ -1,10 +1,17 @@
 ﻿using Ricis.Core.Rationals;
 using System.Numerics;
+using Ricis.Core.Resources;
 
 namespace Ricis.Core;
 
+/// <summary>
+/// Represents the RICIS public type <c>CircleSectors</c>.
+/// </summary>
 public readonly struct CircleSectors
 {
+    /// <summary>
+    /// Gets the <c>Fraction</c> value of <c>CircleSectors</c>.
+    /// </summary>
     public Rational Fraction { get; }
 
     private CircleSectors(Rational fraction)
@@ -18,6 +25,9 @@ public readonly struct CircleSectors
         }
     }
 
+    /// <summary>
+    /// Executes <c>FromRadians</c> for the RICIS expression model.
+    /// </summary>
     public static CircleSectors FromRadians(double radians, int maxDenominator = 100)
     {
         if (double.IsNaN(radians) || double.IsInfinity(radians))
@@ -97,6 +107,9 @@ public readonly struct CircleSectors
         return x < 0 ? -result : result;
     }
 
+    /// <summary>
+    /// Executes <c>InSectors</c> for the RICIS expression model.
+    /// </summary>
     public string InSectors(int totalSectors)
     {
         if (totalSectors <= 0)
@@ -112,32 +125,33 @@ public readonly struct CircleSectors
         {
             if (whole.IsZero)
             {
-                return "0 секторов";
+                return RicisLegacyTextResources.Get("runtime.legacy.e35833b2044a");
             }
 
             if (whole == Rational.Create(totalSectors))
             {
-                return "полный круг";
+                return RicisLegacyTextResources.Get("runtime.legacy.b21098a6244b");
             }
 
-            return $"ровно {whole} секторов из {totalSectors}";
+            return RicisLegacyTextResources.Format("runtime.legacy.29d21c34f591", ("whole", whole), ("totalSectors", totalSectors));
         }
 
-        return $"{sectorsPassed} секторов из {totalSectors}";
+        return RicisLegacyTextResources.Format("runtime.legacy.4becb3af5ca9", ("sectorsPassed", sectorsPassed), ("totalSectors", totalSectors));
     }
 
+    /// <inheritdoc />
     public override string ToString()
     {
         if (Fraction.IsZero)
         {
-            return "0 круга";
+            return RicisLegacyTextResources.Get("runtime.legacy.2f76f05bc135");
         }
 
         if (Fraction.Denominator.IsOne)
         {
-            return $"{Fraction.Numerator} полных кругов";
+            return RicisLegacyTextResources.Format("runtime.legacy.63165961aeb4", ("Fraction.Numerator", Fraction.Numerator));
         }
 
-        return $"{Fraction} полного круга";
+        return RicisLegacyTextResources.Format("runtime.legacy.0015d6e3591f", ("Fraction", Fraction));
     }
 }

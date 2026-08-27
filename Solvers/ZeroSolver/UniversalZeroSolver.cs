@@ -19,7 +19,7 @@ public static class UniversalZeroSolver
         var roots = new List<Root>();
 
         // 1. Полиномы любой степени — приоритет №1 (самые точные)
-        var polyRoots = expr.FindRoots(param);
+        var polyRoots = PolynomialZeroSolver.FindRoots(expr, param);
         if (polyRoots.Count > 0)
         {
             roots.AddRange(polyRoots);
@@ -33,7 +33,14 @@ public static class UniversalZeroSolver
             roots.AddRange(trigRoots);
         }
 
-        // 3. Экспонента: exp(expr) = 1 ⇒ expr = 0 (если встретим exp(...) - 1)
+        // 3. Логарифм: log(g(x)) = 0 ⇒ g(x) = 1.
+        var logRoots = LogSolver.FindRoots(expr, param);
+        if (logRoots.Count > 0)
+        {
+            roots.AddRange(logRoots);
+        }
+
+        // 4. Экспонента: exp(expr) = 1 ⇒ expr = 0 (если встретим exp(...) - 1)
         var expRoots = ExponentialZeroSolver.FindRoots(expr, param);
         if (expRoots.Count > 0)
         {

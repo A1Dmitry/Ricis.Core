@@ -1,0 +1,76 @@
+% RICIS-LOCALE: ru-RU
+\documentclass[12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsfonts}
+\usepackage{textcomp}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\geometry{a4paper, margin=1in}
+
+\newtheorem{theorem}{Теорема}
+\newtheorem{lemma}{Лемма}
+\newtheorem{axiom}{Аксиома}
+\newtheorem{definition}{Определение}
+\newtheorem{corollary}{Следствие}
+\newtheorem{remark}{Замечание}
+
+\title{ {{Title}} \\ \large {{Subtitle}} }
+\author{ {{AuthorDisplayName}} }
+\date{}
+
+\begin{document}
+\maketitle
+
+{{Abstracts}}
+
+{{#if TableOfContentsIncluded}}
+\tableofcontents
+\vspace{1cm}
+{{/if}}
+
+\section*{ {{EvidenceBoundaryLabel}} }
+\addcontentsline{toc}{section}{ {{EvidenceBoundaryLabel}} }
+{{EvidenceBoundary}}
+
+{{#if AuthorIncluded}}
+\section*{Автор и SEO-метаданные}
+\addcontentsline{toc}{section}{Автор и SEO-метаданные}
+\textbf{Имя:} {{AuthorDisplayName}}\\
+\textbf{Альтернативное имя:} {{AuthorAlternateName}}\\
+\textbf{ORCID:} \texttt{ {{AuthorOrcid}} }\\
+\textbf{Описание:} {{AuthorDescription}}\\
+\textbf{Ключевые слова:} {{AuthorKeywords}}
+{{AuthorWorks}}
+{{/if}}
+
+{{#each Sections}}
+{{this.Opening}}
+\textit{ {{SemanticStatusLabel}}:} {{this.Status}}\\
+{{this.Body}}
+{{this.Equation}}
+{{this.Claims}}
+{{this.ProofSteps}}
+{{this.ValidationRows}}
+{{/each}}
+
+{{#if EpilogueIncluded}}
+\section*{ {{EpilogueHeading}} }
+\addcontentsline{toc}{section}{ {{EpilogueHeading}} }
+{{Epilogue}}
+{{EpilogueSteps}}
+{{/if}}
+
+{{#if ConclusionIncluded}}
+\section*{ {{ConclusionHeading}} }
+\addcontentsline{toc}{section}{ {{ConclusionHeading}} }
+{{Conclusion}}
+{{ConclusionSteps}}
+{{/if}}
+
+{{AppendixSections}}
+{{TechnicalAppendix}}
+\end{document}

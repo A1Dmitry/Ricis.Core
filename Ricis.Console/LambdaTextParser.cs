@@ -1,0 +1,532 @@
+using System.Globalization;
+using System.Linq.Expressions;
+using Ricis.Core.Resources;
+using Ricis.Core.Extensions;
+
+namespace Ricis.ConsoleApp;
+
+/// <summary>
+/// Parses a constrained mathematical lambda into a typed LINQ expression tree.
+/// No C# source is compiled or evaluated: the parser accepts only the grammar
+/// documented by the console and only whitelisted System.Math functions.
+/// </summary>
+public sealed class LambdaTextParser
+{
+    public Expression<Func<double, double>> Parse(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.11753584bf90"), 0);
+        }
+
+        var source = text.Trim();
+        var arrow = source.IndexOf("=>", StringComparison.Ordinal);
+        var parameterName = "x";
+        var body = source;
+
+        if (arrow >= 0)
+        {
+            parameterName = source[..arrow].Trim();
+            body = source[(arrow + 2)..].Trim();
+            if (!IsIdentifier(parameterName))
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.892d4f425b41"), 0);
+            }
+        }
+
+        if (body.Length == 0)
+        {
+            throw new LambdaParseException(RicisLegacyTextResources.Get("runtime.legacy.464095494446"), source.Length);
+        }
+
+        var parameter = Expression.Parameter(typeof(double), parameterName);
+        var parser = new BodyParser(body, parameter);
+        var expression = parser.Parse();
+        return Expression.Lambda<Func<double, double>>(expression, parameter);
+    }
+
+    private static bool IsIdentifier(string value) =>
+        value.Length > 0 &&
+        (char.IsLetter(value[0]) || value[0] == '_') &&
+        value.Skip(1).All(ch => char.IsLetterOrDigit(ch) || ch == '_');
+
+    private sealed class BodyParser
+    {
+        private readonly string _text;
+        private readonly ParameterExpression _parameter;
+        private Token _current;
+        private int _position;
+
+        public BodyParser(string text, ParameterExpression parameter)
+        {
+            _text = text;
+            _parameter = parameter;
+            _current = NextToken();
+        }
+
+        public Expression Parse()
+        {
+            var result = ParseAddition();
+            if (_current.Kind != TokenKind.End)
+            {
+                throw Error(RicisLegacyTextResources.Format("runtime.legacy.2314782a83a9", ("_current.Text", _current.Text)));
+            }
+
+            return result;
+        }
+
+        private Expression ParseAddition()
+        {
+            var left = ParseMultiplication();
+            while (_current.Kind is TokenKind.Plus or TokenKind.Minus)
+            {
+                var operation = _current.Kind;
+                Consume(operation);
+                var right = ParseMultiplication();
+                left = operation == TokenKind.Plus ? Expression.Add(left, right) : Expression.Subtract(left, right);
+            }
+
+            return left;
+        }
+
+        private Expression ParseMultiplication()
+        {
+            var left = ParseUnary();
+            while (_current.Kind is TokenKind.Star or TokenKind.Slash or TokenKind.Percent)
+            {
+                var operation = _current.Kind;
+                Consume(operation);
+                var right = ParseUnary();
+                left = operation switch
+                {
+                    TokenKind.Star => Expression.Multiply(left, right),
+                    TokenKind.Slash => Expression.Divide(left, right),
+                    _ => Expression.Modulo(left, right)
+                };
+            }
+
+            return left;
+        }
+
+        private Expression ParseUnary()
+        {
+            if (_current.Kind == TokenKind.Plus)
+            {
+                Consume(TokenKind.Plus);
+                return ParseUnary();
+            }
+
+            if (_current.Kind == TokenKind.Minus)
+            {
+                Consume(TokenKind.Minus);
+                return Expression.Negate(ParseUnary());
+            }
+
+            return ParsePower();
+        }
+
+        private Expression ParsePower()
+        {
+            var left = ParsePrimary();
+            if (_current.Kind == TokenKind.Caret)
+            {
+                Consume(TokenKind.Caret);
+                var right = ParseUnary();
+                return Expression.Power(left, right);
+            }
+
+            return left;
+        }
+
+        private Expression ParsePrimary()
+        {
+            if (_current.Kind == TokenKind.Number)
+            {
+                var token = _current;
+                Consume(TokenKind.Number);
+                if (!double.TryParse(token.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                {
+                    throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.3ab9c5806c9b", ("token.Text", token.Text)), token.Position);
+                }
+
+                return Expression.Constant(value);
+            }
+
+            if (_current.Kind == TokenKind.Identifier)
+            {
+                var token = _current;
+                Consume(TokenKind.Identifier);
+
+                if (_current.Kind == TokenKind.LeftParenthesis)
+                {
+                    return ParseFunctionCall(token);
+                }
+
+                return ParseIdentifier(token);
+            }
+
+            if (_current.Kind == TokenKind.LeftParenthesis)
+            {
+                Consume(TokenKind.LeftParenthesis);
+                var nested = ParseAddition();
+                Consume(TokenKind.RightParenthesis);
+                return nested;
+            }
+
+            throw Error(RicisLegacyTextResources.Get("runtime.legacy.3a05c51e1dec"));
+        }
+
+        private Expression ParseIdentifier(Token token)
+        {
+            if (string.Equals(token.Text, _parameter.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return _parameter;
+            }
+
+            var name = NormaliseName(token.Text);
+            return name switch
+            {
+                "PI" => Expression.Constant(Math.PI),
+                "E" => Expression.Constant(Math.E),
+                _ => throw new LambdaParseException(
+                    RicisLegacyTextResources.Format("runtime.legacy.1e150064f8ac", ("token.Text", token.Text), ("_parameter.Name", _parameter.Name)), token.Position),
+            };
+        }
+
+        private Expression ParseFunctionCall(Token function)
+        {
+            Consume(TokenKind.LeftParenthesis);
+            var arguments = new List<Expression>();
+            if (_current.Kind != TokenKind.RightParenthesis)
+            {
+                arguments.Add(ParseAddition());
+                while (_current.Kind == TokenKind.Comma)
+                {
+                    Consume(TokenKind.Comma);
+                    arguments.Add(ParseAddition());
+                }
+            }
+
+            Consume(TokenKind.RightParenthesis);
+            var name = NormaliseName(function.Text);
+            return name switch
+            {
+                "SIN" => OneArgumentMath(nameof(Math.Sin), arguments, function),
+                "COS" => OneArgumentMath(nameof(Math.Cos), arguments, function),
+                "TAN" => OneArgumentMath(nameof(Math.Tan), arguments, function),
+                "SINH" => OneArgumentMath(nameof(Math.Sinh), arguments, function),
+                "COSH" => OneArgumentMath(nameof(Math.Cosh), arguments, function),
+                "TANH" => OneArgumentMath(nameof(Math.Tanh), arguments, function),
+                "EXP" => OneArgumentMath(nameof(Math.Exp), arguments, function),
+                "LOG" => OneArgumentMath(nameof(Math.Log), arguments, function),
+                "LOG10" => OneArgumentMath(nameof(Math.Log10), arguments, function),
+                "SQRT" => OneArgumentMath(nameof(Math.Sqrt), arguments, function),
+                "ABS" => OneArgumentMath(nameof(Math.Abs), arguments, function),
+                "SIGN" => Sign(arguments, function),
+                "CLAMP" => ThreeArgumentMath(nameof(Math.Clamp), arguments, function),
+                "MOD" => Modulo(arguments, function),
+                "POW" => TwoArgumentMath(nameof(Math.Pow), arguments, function),
+                "MIN" => Extremum(arguments, function, chooseMaximum: false),
+                "MAX" => Extremum(arguments, function, chooseMaximum: true),
+                "POSITIVE" or "POSITIVEPART" => Part(arguments, function, positive: true),
+                "NEGATIVE" or "NEGATIVEPART" => Part(arguments, function, positive: false),
+                "DISTANCE" => Distance(arguments, function),
+                "SUM" => BinaryArithmetic(arguments, function, Expression.Add),
+                "INTEGRAL" => BinaryArithmetic(arguments, function, Expression.Multiply),
+                "DERIVATIVE" or "DXDT" => Derivative(arguments, function),
+                "COMPOUNDINTEREST" or "INTEREST" => CompoundInterest(arguments, function),
+                _ => throw new LambdaParseException(
+                    RicisLegacyTextResources.Format("runtime.legacy.f588be7b4ee3", ("function.Text", function.Text)),
+                    function.Position),
+            };
+        }
+
+        private static Expression OneArgumentMath(string methodName, IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(methodName, [typeof(double)])!;
+            return Expression.Call(method, arguments[0]);
+        }
+
+        private static Expression Sign(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(nameof(Math.Sign), [typeof(double)])!;
+            return Expression.Convert(Expression.Call(method, arguments[0]), typeof(double));
+        }
+
+        private static Expression Modulo(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
+            }
+
+            return Expression.Modulo(arguments[0], arguments[1]);
+        }
+
+        private static Expression ThreeArgumentMath(string methodName, IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 3)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4e0b3f961ec1", ("token.Text", token.Text)), token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double), typeof(double)])!;
+            return Expression.Call(method, arguments[0], arguments[1], arguments[2]);
+        }
+
+        private static Expression TwoArgumentMath(string methodName, IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
+            }
+
+            var method = typeof(Math).GetMethod(methodName, [typeof(double), typeof(double)])!;
+            return Expression.Call(method, arguments[0], arguments[1]);
+        }
+
+        private static Expression BinaryArithmetic(
+            IReadOnlyList<Expression> arguments,
+            Token token,
+            Func<Expression, Expression, BinaryExpression> operation)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
+            }
+
+            return operation(arguments[0], arguments[1]);
+        }
+
+        private static Expression Extremum(IReadOnlyList<Expression> arguments, Token token, bool chooseMaximum)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
+            }
+
+            var test = chooseMaximum
+                ? Expression.GreaterThan(arguments[0], arguments[1])
+                : Expression.LessThan(arguments[0], arguments[1]);
+            return Expression.Condition(test, arguments[0], arguments[1]);
+        }
+
+        private static Expression Part(IReadOnlyList<Expression> arguments, Token token, bool positive)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
+            }
+
+            var zero = Expression.Constant(0.0);
+            var test = positive
+                ? Expression.GreaterThan(arguments[0], zero)
+                : Expression.LessThan(arguments[0], zero);
+            return Expression.Condition(test, arguments[0], zero);
+        }
+
+        private static Expression Distance(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 2)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.601c62dc3ca1", ("token.Text", token.Text)), token.Position);
+            }
+
+            return Expression.Call(typeof(Math), nameof(Math.Abs), Type.EmptyTypes,
+                Expression.Subtract(arguments[0], arguments[1]));
+        }
+
+        private static Expression Derivative(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 1)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.4c2fea7184a9", ("token.Text", token.Text)), token.Position);
+            }
+
+            return SymbolicDerivator.Derive(arguments[0], CurrentParameter(arguments));
+        }
+
+        private static Expression CompoundInterest(IReadOnlyList<Expression> arguments, Token token)
+        {
+            if (arguments.Count != 3)
+            {
+                throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.34bc5f6bd8d9", ("token.Text", token.Text)), token.Position);
+            }
+
+            var rate = Expression.Divide(arguments[1], Expression.Constant(100.0));
+            var baseValue = Expression.Add(Expression.Constant(1.0), rate);
+            return Expression.Multiply(arguments[0], Expression.Power(baseValue, arguments[2]));
+        }
+
+        private static ParameterExpression CurrentParameter(IReadOnlyList<Expression> arguments)
+        {
+            var parameter = arguments.SelectMany(FindParameters).FirstOrDefault();
+            return parameter ?? throw new InvalidOperationException(RicisLegacyTextResources.Get("runtime.legacy.0c5092326413"));
+        }
+
+        private static IEnumerable<ParameterExpression> FindParameters(Expression expression)
+        {
+            var visitor = new ParameterFinder();
+            visitor.Visit(expression);
+            return visitor.Parameters;
+        }
+
+        private sealed class ParameterFinder : ExpressionVisitor
+        {
+            public List<ParameterExpression> Parameters { get; } = [];
+
+            protected override Expression VisitParameter(ParameterExpression node)
+            {
+                if (!Parameters.Contains(node))
+                {
+                    Parameters.Add(node);
+                }
+
+                return base.VisitParameter(node);
+            }
+        }
+
+        private static string NormaliseName(string name)
+        {
+            var separator = name.LastIndexOf('.');
+            return (separator >= 0 ? name[(separator + 1)..] : name).ToUpperInvariant();
+        }
+
+        private void Consume(TokenKind expected)
+        {
+            if (_current.Kind != expected)
+            {
+                throw Error(RicisLegacyTextResources.Format("runtime.legacy.11ccd114dc95", ("Display(expected)", Display(expected)), ("_current.Text", _current.Text)));
+            }
+
+            _current = NextToken();
+        }
+
+        private Token NextToken()
+        {
+            while (_position < _text.Length && char.IsWhiteSpace(_text[_position]))
+            {
+                _position++;
+            }
+
+            if (_position >= _text.Length)
+            {
+                return new Token(TokenKind.End, string.Empty, _position);
+            }
+
+            var start = _position;
+            var current = _text[_position];
+            switch (current)
+            {
+                case '+': _position++; return new Token(TokenKind.Plus, "+", start);
+                case '-': _position++; return new Token(TokenKind.Minus, "-", start);
+                case '*': _position++; return new Token(TokenKind.Star, "*", start);
+                case '/': _position++; return new Token(TokenKind.Slash, "/", start);
+                case '%': _position++; return new Token(TokenKind.Percent, "%", start);
+                case '^': _position++; return new Token(TokenKind.Caret, "^", start);
+                case '(': _position++; return new Token(TokenKind.LeftParenthesis, "(", start);
+                case ')': _position++; return new Token(TokenKind.RightParenthesis, ")", start);
+                case ',': _position++; return new Token(TokenKind.Comma, ",", start);
+            }
+
+            if (char.IsDigit(current) || current == '.')
+            {
+                var hasExponent = false;
+                _position++;
+                while (_position < _text.Length)
+                {
+                    var ch = _text[_position];
+                    if (char.IsDigit(ch) || ch == '.')
+                    {
+                        _position++;
+                        continue;
+                    }
+
+                    if ((ch == 'e' || ch == 'E') && !hasExponent)
+                    {
+                        hasExponent = true;
+                        _position++;
+                        if (_position < _text.Length && (_text[_position] == '+' || _text[_position] == '-'))
+                        {
+                            _position++;
+                        }
+
+                        continue;
+                    }
+
+                    break;
+                }
+
+                return new Token(TokenKind.Number, _text[start.._position], start);
+            }
+
+            if (char.IsLetter(current) || current == '_')
+            {
+                _position++;
+                while (_position < _text.Length)
+                {
+                    var ch = _text[_position];
+                    if (char.IsLetterOrDigit(ch) || ch is '_' or '.')
+                    {
+                        _position++;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                return new Token(TokenKind.Identifier, _text[start.._position], start);
+            }
+
+            throw new LambdaParseException(RicisLegacyTextResources.Format("runtime.legacy.a0de865f6d3f", ("current", current)), start);
+        }
+
+        private LambdaParseException Error(string message) => new(message, _current.Position);
+
+        private static string Display(TokenKind kind) => kind switch
+        {
+            TokenKind.Plus => "+",
+            TokenKind.Minus => "-",
+            TokenKind.Star => "*",
+            TokenKind.Slash => "/",
+            TokenKind.Percent => "%",
+            TokenKind.Caret => "^",
+            TokenKind.LeftParenthesis => "(",
+            TokenKind.RightParenthesis => ")",
+            _ => kind.ToString(),
+        };
+    }
+
+    private enum TokenKind
+    {
+        End,
+        Number,
+        Identifier,
+        Plus,
+        Minus,
+        Star,
+        Slash,
+        Percent,
+        Caret,
+        LeftParenthesis,
+        RightParenthesis,
+        Comma,
+    }
+
+    private readonly record struct Token(TokenKind Kind, string Text, int Position);
+}
+
+public sealed class LambdaParseException(string message, int position) : Exception(RicisLegacyTextResources.Format("runtime.legacy.0c4c6ba53c95", ("message", message), ("position", position)))
+{
+    public int Position { get; } = position;
+}

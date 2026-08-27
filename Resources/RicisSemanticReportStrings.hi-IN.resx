@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="EvidenceBoundaryLabel" xml:space="preserve"><value>प्रमाण-सीमा</value></data>
+  <data name="SemanticStatusLabel" xml:space="preserve"><value>अर्थगत स्थिति</value></data>
+  <data name="ClaimEvidenceBoundaryLabel" xml:space="preserve"><value>प्रमाण-सीमा:</value></data>
+  <data name="ConclusionHeading" xml:space="preserve"><value>निष्कर्ष</value></data>
+  <data name="EpilogueHeading" xml:space="preserve"><value>उपसंहार</value></data>
+  <data name="ValidationHeaderCase" xml:space="preserve"><value>मामला</value></data>
+  <data name="ValidationHeaderCondition" xml:space="preserve"><value>शर्त</value></data>
+  <data name="ValidationHeaderResolution" xml:space="preserve"><value>समाधान</value></data>
+  <data name="ValidationHeaderStatus" xml:space="preserve"><value>स्थिति</value></data>
+  <data name="TechnicalAppendixHeading" xml:space="preserve"><value>तकनीकी परिशिष्ट</value></data>
+  <data name="UnsupportedAbstractLanguage" xml:space="preserve"><value>असमर्थित semantic LaTeX सार-भाषा: '{0}'.</value></data>
+  <data name="TemplateCollectionContractFailure" xml:space="preserve"><value>टेम्पलेट संग्रह '{0}' '{1}' रिपोर्ट अनुबंध के लिए अनुमत नहीं है।</value></data>
+  <data name="TemplateCollectionContractRemediation" xml:space="preserve"><value>केवल रिपोर्ट अनुबंध में घोषित संग्रहों का उपयोग करें, या संबंधित मॉडल renderer में समीक्षा के बाद अनुमत संग्रह जोड़ें।</value></data>
+</root>
