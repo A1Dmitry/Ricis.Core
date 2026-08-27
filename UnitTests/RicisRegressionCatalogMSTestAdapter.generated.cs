@@ -144,7 +144,7 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_034() => RicisRegressionTestCatalog.Tests[33].Body();
 
-    [TestMethod("S05: sin(x)/cos(x) даёт ∞₁ после подстановки ключа")]
+    [TestMethod("S05: sin(x)/cos(x) сохраняет parent индекс Sin(x)")]
     [TestCategory("Regression")]
     public void Regression_035() => RicisRegressionTestCatalog.Tests[34].Body();
 
@@ -152,7 +152,7 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_036() => RicisRegressionTestCatalog.Tests[35].Body();
 
-    [TestMethod("S07: sin(2x)/cos(2x) сохраняет ветви ∞₁ и ∞_{−1} по ключам")]
+    [TestMethod("S07: sin(2x)/cos(2x) сохраняет parent индекс Sin(2x) и все ключи")]
     [TestCategory("Regression")]
     public void Regression_037() => RicisRegressionTestCatalog.Tests[36].Body();
 
@@ -1076,7 +1076,7 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_267() => RicisRegressionTestCatalog.Tests[266].Body();
 
-    [TestMethod("RC26: SP2/A1 — 1/(1−2/x) даёт ∞₂ при x=2")]
+    [TestMethod("RC26: SP2/A1 — 1/(1−2/x) сохраняет parent индекс x при x=2")]
     [TestCategory("Regression")]
     public void Regression_268() => RicisRegressionTestCatalog.Tests[267].Body();
 
@@ -1088,7 +1088,7 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_270() => RicisRegressionTestCatalog.Tests[269].Body();
 
-    [TestMethod("RC29: A1 — x²/(a·x²+a·b+c) даёт ∞₁ для обоих ключей")]
+    [TestMethod("RC29: A1 — x²/(a·x²+a·b+c) сохраняет parent индекс x² для обоих ключей")]
     [TestCategory("Regression")]
     public void Regression_271() => RicisRegressionTestCatalog.Tests[270].Body();
 
@@ -1100,7 +1100,7 @@ public sealed class RicisRegressionCatalogMSTestAdapter
     [TestCategory("Regression")]
     public void Regression_273() => RicisRegressionTestCatalog.Tests[272].Body();
 
-    [TestMethod("RC32: A1 — x/(x²−1) сохраняет разные индексы в своих ключах")]
+    [TestMethod("RC32: A1 — x/(x²−1) сохраняет один parent индекс x и оба ключа")]
     [TestCategory("Regression")]
     public void Regression_274() => RicisRegressionTestCatalog.Tests[273].Body();
 
