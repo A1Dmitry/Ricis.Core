@@ -1,14 +1,21 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core", "Ricis.Core.csproj", "{48D1DD38-E25D-498A-8029-312D32FDD733}"
+	ProjectSection(ProjectDependencies) = postProject
+		{489ABA6C-F86C-44A5-A97D-76135F1C802E} = {489ABA6C-F86C-44A5-A97D-76135F1C802E}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Console", "Ricis.Console\Ricis.Console.csproj", "{223F0FA4-322C-4E4D-BB83-E8029805DDD0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.NavierStokes.Console", "Ricis.NavierStokes.Console\Ricis.NavierStokes.Console.csproj", "{B21A2D42-7062-4FF4-9EBE-3EECE30F012E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.WebApi", "Ricis.WebApi\Ricis.WebApi.csproj", "{6F3C067B-8369-4B6A-B86E-8BE5F326F148}"
+	ProjectSection(ProjectDependencies) = postProject
+		{489ABA6C-F86C-44A5-A97D-76135F1C802E} = {489ABA6C-F86C-44A5-A97D-76135F1C802E}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.WebAssembly", "Ricis.WebAssembly\Ricis.WebAssembly.csproj", "{489ABA6C-F86C-44A5-A97D-76135F1C802E}"
 EndProject
@@ -44,9 +51,6 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{48D1DD38-E25D-498A-8029-312D32FDD733}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -109,6 +113,9 @@ Global
 		{98FC9730-AF3D-4D4D-B8C4-BB5AFB7EC9DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98FC9730-AF3D-4D4D-B8C4-BB5AFB7EC9DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98FC9730-AF3D-4D4D-B8C4-BB5AFB7EC9DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ADB89228-7479-4389-8EF3-5AC79E42C9AF} = {9B1A514F-2DFB-4C96-9724-F3DB10670A0A}
