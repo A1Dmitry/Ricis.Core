@@ -22,8 +22,9 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = MaxRequestBodyBytes;
 });
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+var services = builder.Services;
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
@@ -37,7 +38,7 @@ builder.Services.AddSwaggerGen(options =>
         options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
     }
 });
-builder.Services.AddCors(options =>
+services.AddCors(options =>
 {
     options.AddPolicy(WebAssemblyCorsPolicy, policy =>
     {
@@ -46,16 +47,16 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-builder.Services.AddSingleton<IProofClock, SystemProofClock>();
-builder.Services.AddSingleton<IProofRunIdFactory, GuidProofRunIdFactory>();
-builder.Services.AddSingleton<IProofRunSnapshotStore, InMemoryProofRunSnapshotStore>();
-builder.Services.AddSingleton<IProofRunDeriver>(serviceProvider =>
+services.AddSingleton<IProofClock, SystemProofClock>();
+services.AddSingleton<IProofRunIdFactory, GuidProofRunIdFactory>();
+services.AddSingleton<IProofRunSnapshotStore, InMemoryProofRunSnapshotStore>();
+services.AddSingleton<IProofRunDeriver>(serviceProvider =>
     new ExpressionEquivalenceProofRunDeriver(
         ProofEndpointComposition.CreateExpressionEquivalenceProfile(
             serviceProvider.GetRequiredService<IConfiguration>())));
-builder.Services.AddSingleton<ProofRunApplicationService>();
+services.AddSingleton<ProofRunApplicationService>();
 // Startup seed: confirmed CachedSolutions are available to the 3D map from the first request.
-builder.Services.AddSingleton(_ => DefaultCachedSolutions.CreateIndex());
+services.AddSingleton(_ => DefaultCachedSolutions.CreateIndex());
 var app = builder.Build();
 app.UseCors(WebAssemblyCorsPolicy);
 
