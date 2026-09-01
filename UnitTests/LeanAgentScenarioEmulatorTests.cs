@@ -8,6 +8,32 @@ namespace Ricis.Core.UnitTests;
 [TestClass]
 public sealed class LeanAgentScenarioEmulatorTests
 {
+    [TestMethod]
+    public void EmulatorStudiesLeanArtifactsAndUsesRicisCoreForRemovableAcademicFormula()
+    {
+        var x = Expression.Parameter(typeof(double), "x");
+        var formula = Expression.Lambda<Func<double, double>>(
+            Expression.Divide(
+                Expression.Subtract(Expression.Power(x, Expression.Constant(2d)), Expression.Constant(25d)),
+                Expression.Subtract(x, Expression.Constant(5d))),
+            x);
+        var scenario = new LeanAgentAcademicScenario(
+            "academic-removable-square",
+            "Устранимая разность квадратов",
+            formula,
+            "x + 5 при x ≠ 5",
+            "Разложить x²−25 на множители и не потерять ограничение области.");
+
+        var result = CreateEmulator().Run(scenario);
+
+        Assert.IsTrue(result.MandatoryKnowledgeArtifactCount > 0);
+        Assert.IsFalse(result.LeanToolchainAvailable);
+        Assert.IsTrue(result.Trace.Any(entry => entry.Stage == "Lean knowledge" && entry.Verified));
+        Assert.IsTrue(result.Trace.Any(entry => entry.Stage == "RICIS.Core" && entry.Action.Contains("Фаза 1", StringComparison.Ordinal)));
+        Assert.IsTrue(result.RicisResult.Body.AreEqual(Expression.Add(x, Expression.Constant(5d))),
+            $"Expected RICIS.Core reduction x+5, got {result.RicisResult}.");
+        EmitTrace(result);
+    }
 
     [TestMethod]
     public void EmulatorUsesRicisCoreForQuadraticPoleInsteadOfClassicalCancellation()
