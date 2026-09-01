@@ -111,4 +111,18 @@ public sealed class ClassicalImpossibleRicisCasesTests
         var infinity = (InfinityExpression)ricisReduced;
         Assert.AreEqual(1.0, infinity.NumeratorAsDouble(), 1e-12);
     }
+
+    [TestMethod]
+    public void RationalDecomposition_100Over3_ReturnsExact33AndOneThird()
+    {
+        // Classical C# 100 / 3 in int loses remainder -> 33.
+        // Classical double 100.0 / 3.0 loses exactness -> 33.333333333333336.
+        // RICIS Rational: 100/3 decomposes into exact whole = 33 and remainder = 1/3, formatted as "33 + 1/3".
+        var rational = new Ricis.Core.Rationals.Rational(100, 3);
+        var (whole, remainder) = rational.DecomposeMixed();
+
+        Assert.AreEqual(new BigInteger(33), whole);
+        Assert.AreEqual(new Ricis.Core.Rationals.Rational(1, 3), remainder);
+        Assert.AreEqual("33 + 1/3", rational.ToMixedString());
+    }
 }
