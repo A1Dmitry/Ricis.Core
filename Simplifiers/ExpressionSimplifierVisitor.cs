@@ -48,6 +48,7 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
             case ExpressionType.Add when IsZero(left): return right;
             case ExpressionType.Add when IsZero(right): return left;
             case ExpressionType.Subtract when IsZero(right): return left;
+            case ExpressionType.Subtract when AreIdentical(left, right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsZero(left) || IsZero(right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsOne(left): return right;
             case ExpressionType.Multiply when IsOne(right): return left;
@@ -98,6 +99,18 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
                 ExpressionType.Multiply => SimplifyFractionProduct(GetFraction(left), GetFraction(right)),
                 _ => node.Update(left, node.Conversion, right)
             };
+        }
+
+        // Тригонометрическое тождество: sin^2(u) + cos^2(u) → 1
+        if (node.NodeType == ExpressionType.Add && TryReducePythagoreanIdentity(left, right, out var pythagoreanOne))
+        {
+            return pythagoreanOne;
+        }
+
+        // Произведение tan(u) * cos(u) → sin(u)
+        if (node.NodeType == ExpressionType.Multiply && TryReduceTanCos(left, right, out var sinExpr))
+        {
+            return sinExpr;
         }
 
         // Распределительный закон: (a+b)*c → a*c + b*c
@@ -161,6 +174,29 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
                     innerCall.Arguments.Count == 1)
                 {
                     return innerCall.Arguments[0];
+                }
+
+                // ln(x^k) => k * ln(x)
+                if (arg is BinaryExpression { NodeType: ExpressionType.Power } pow)
+                {
+                    var logBase = Expression.Call(call.Method, pow.Left);
+                    return Visit(Expression.Multiply(pow.Right, logBase));
+                }
+            }
+            else if (call.Method.Name == "Sin")
+            {
+                // sin(-x) => -sin(x)
+                if (arg is UnaryExpression { NodeType: ExpressionType.Negate } neg)
+                {
+                    return Expression.Negate(Expression.Call(call.Method, neg.Operand));
+                }
+            }
+            else if (call.Method.Name == "Cos")
+            {
+                // cos(-x) => cos(x)
+                if (arg is UnaryExpression { NodeType: ExpressionType.Negate } neg)
+                {
+                    return Expression.Call(call.Method, neg.Operand);
                 }
             }
             else if (call.Method.Name == "Exp")
@@ -251,6 +287,99 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
     private bool IsSum(Expression expr)
     {
         return expr is BinaryExpression b && b.NodeType == ExpressionType.Add;
+    }
+
+    private bool TryReducePythagoreanIdentity(Expression left, Expression right, out Expression result)
+    {
+        result = null;
+
+        if (IsTrigSquare(left, "Sin", out var u1) && IsTrigSquare(right, "Cos", out var u2) && AreIdentical(u1, u2))
+        {
+            result = CreateNumericConstant(1, left.Type);
+            return true;
+        }
+
+        if (IsTrigSquare(left, "Cos", out u1) && IsTrigSquare(right, "Sin", out u2) && AreIdentical(u1, u2))
+        {
+            result = CreateNumericConstant(1, left.Type);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsTrigSquare(Expression expr, string methodName, out Expression argument)
+    {
+        argument = null;
+        if (expr is BinaryExpression { NodeType: ExpressionType.Power } pow &&
+            TryGetFiniteDouble(pow.Right, out var exponent) && Math.Abs(exponent - 2.0) < 1e-15)
+        {
+            return IsTrigCall(pow.Left, methodName, out argument);
+        }
+
+        if (expr is BinaryExpression { NodeType: ExpressionType.Multiply } mult &&
+            IsTrigCall(mult.Left, methodName, out var arg1) &&
+            IsTrigCall(mult.Right, methodName, out var arg2) &&
+            AreIdentical(arg1, arg2))
+        {
+            argument = arg1;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsTrigCall(Expression expr, string methodName, out Expression argument)
+    {
+        argument = null;
+        if (expr is MethodCallExpression call &&
+            call.Method.DeclaringType == typeof(Math) &&
+            call.Method.Name == methodName &&
+            call.Arguments.Count == 1)
+        {
+            argument = call.Arguments[0];
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryReduceTanCos(Expression left, Expression right, out Expression result)
+    {
+        result = null;
+
+        if (IsTrigCall(left, "Tan", out var u1) && IsTrigCall(right, "Cos", out var u2) && AreIdentical(u1, u2))
+        {
+            result = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, u1);
+            return true;
+        }
+
+        if (IsTrigCall(right, "Tan", out u1) && IsTrigCall(left, "Cos", out u2) && AreIdentical(u1, u2))
+        {
+            result = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, u1);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetFiniteDouble(Expression expression, out double value)
+    {
+        value = 0.0;
+        if (expression is not ConstantExpression constant || constant.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            value = Convert.ToDouble(constant.Value, System.Globalization.CultureInfo.InvariantCulture);
+            return double.IsFinite(value);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static Expression SimplifyConstants(BinaryExpression node, ConstantExpression left, ConstantExpression right)
