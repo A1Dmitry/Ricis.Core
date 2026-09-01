@@ -1,0 +1,114 @@
+using System.Linq.Expressions;
+using System.Numerics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Ricis.Core.Expressions;
+using Ricis.Core.Extensions;
+using Ricis.Core.Phases;
+using Ricis.Core.SpecialFunctions;
+
+namespace Ricis.Core.UnitTests;
+
+[TestClass]
+public sealed class ClassicalImpossibleRicisCasesTests
+{
+    [TestMethod]
+    public void SharedZeroDenominator_ClassicalNaN_RicisExactReduction()
+    {
+        // Classical: (x/0) / (5/0) at x=4 => (4/0)/(5/0) = Infinity/Infinity = NaN.
+        var x = Expression.Parameter(typeof(double), "x");
+        var zero = Expression.Constant(0.0);
+        var source = Expression.Divide(
+            Expression.Divide(x, zero),
+            Expression.Divide(Expression.Constant(5.0), zero));
+
+        var nativeFn = Expression.Lambda<Func<double, double>>(source, x).Compile();
+        double classicalResult = nativeFn(4.0);
+        Assert.IsTrue(double.IsNaN(classicalResult), $"Classical evaluation must produce NaN, got {classicalResult}");
+
+        // RICIS III: SP2 cancels common zero denominator => x / 5
+        var ricisFn = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        Assert.IsNotNull(ricisFn);
+
+        var expectedBody = Expression.Divide(x, Expression.Constant(5.0));
+        Assert.IsTrue(ricisFn.Body.AreEqual(expectedBody), $"Expected RICIS reduction x/5, got {ricisFn.Body}");
+
+        var compiledRicis = ricisFn.Compile();
+        Assert.AreEqual(0.8, compiledRicis(4.0), 1e-12);
+    }
+
+    [TestMethod]
+    public void IdenticalTrigRatio_ClassicalNaNAtZero_RicisExactOne()
+    {
+        // Classical: sin(x) / sin(x) at x=0 => sin(0)/sin(0) = 0/0 = NaN.
+        var x = Expression.Parameter(typeof(double), "x");
+        var sin = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, x);
+        var source = Expression.Divide(sin, sin);
+
+        var nativeFn = Expression.Lambda<Func<double, double>>(source, x).Compile();
+        double classicalResult = nativeFn(0.0);
+        Assert.IsTrue(double.IsNaN(classicalResult), $"Classical evaluation must produce NaN, got {classicalResult}");
+
+        // RICIS III: ID-01 / L1 normalizes F/F -> 1
+        var ricisFn = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        Assert.IsTrue(ricisFn.Body.IsOne(), $"Expected exact constant 1, got {ricisFn.Body}");
+        Assert.AreEqual(1.0, ricisFn.Compile()(0.0), 1e-12);
+    }
+
+    [TestMethod]
+    public void LargeFactorialRatio_ClassicalOverflowNaN_RicisExactValue()
+    {
+        // Classical: 200! / 199! using BigInteger factorial method.
+        // For double or standard computation, 200! exceeds Double.MaxValue (~1.79e308), so classical double math gives Infinity/Infinity = NaN.
+        var n = Expression.Constant(new BigInteger(200));
+        var predecessor = Expression.Constant(new BigInteger(199));
+
+        var factMethod = typeof(Factorial).GetMethod(nameof(Factorial.Of))!;
+        var source = Expression.Divide(
+            Expression.Call(factMethod, n),
+            Expression.Call(factMethod, predecessor));
+
+        // RICIS III: SP2 adjacent factorials n! / (n-1)! -> n
+        var reduced = RicisPhasePipeline.Simplify(source);
+        Assert.IsNotNull(reduced);
+        Assert.IsTrue(reduced.AreEqual(n), $"Expected 200, got {reduced}");
+    }
+
+    [TestMethod]
+    public void RemovableCubicSingularity_ClassicalNaNAtRoot_RicisExactPolynomial()
+    {
+        // Classical: (x^3 - 8) / (x - 2) at x=2 => (8 - 8)/(2 - 2) = 0/0 = NaN.
+        var x = Expression.Parameter(typeof(double), "x");
+        var xCubed = Expression.Multiply(Expression.Multiply(x, x), x);
+        var source = Expression.Divide(
+            Expression.Subtract(xCubed, Expression.Constant(8.0)),
+            Expression.Subtract(x, Expression.Constant(2.0)));
+
+        var nativeFn = Expression.Lambda<Func<double, double>>(source, x).Compile();
+        double classicalResult = nativeFn(2.0);
+        Assert.IsTrue(double.IsNaN(classicalResult), $"Classical evaluation must produce NaN at x=2, got {classicalResult}");
+
+        // RICIS III: Polynomial division in SP2 reduces (x^3-8)/(x-2) -> x^2 + 2x + 4
+        var ricisFn = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        Assert.IsNotNull(ricisFn);
+
+        double ricisResultAt2 = ricisFn.Compile()(2.0);
+        Assert.AreEqual(12.0, ricisResultAt2, 1e-12, "RICIS III evaluates the removable singularity to exact 12");
+    }
+
+    [TestMethod]
+    public void PolarTangentAtHalfPi_ClassicalPrecisionErrorOrInfinity_RicisIndexedInfinity()
+    {
+        // Classical: Math.Tan(Math.PI / 2) returns ~1.633123935319537E+16 due to floating point representation of pi/2.
+        double point = Math.PI / 2.0;
+        double classicalResult = Math.Tan(point);
+        Assert.IsTrue(classicalResult > 1e15, "Classical floating point Math.Tan(pi/2) gives huge finite float error");
+
+        // RICIS III: Polar Converter recognizes rational circle sector 1/4 circle (90 deg) and yields exact indexed pole infinity
+        var call = Expression.Call(typeof(Math).GetMethod(nameof(Math.Tan), [typeof(double)])!, Expression.Constant(point));
+        var ricisReduced = PolarConverter.CollapseConstantTrig(call);
+
+        Assert.IsInstanceOfType<InfinityExpression>(ricisReduced);
+        var infinity = (InfinityExpression)ricisReduced;
+        Assert.AreEqual(1.0, infinity.NumeratorAsDouble(), 1e-12);
+    }
+}
