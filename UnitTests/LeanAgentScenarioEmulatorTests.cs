@@ -8,7 +8,7 @@ namespace Ricis.Core.UnitTests;
 [TestClass]
 public sealed class LeanAgentScenarioEmulatorTests
 {
-    
+
     [TestMethod]
     public void EmulatorUsesRicisCoreForQuadraticPoleInsteadOfClassicalCancellation()
     {
