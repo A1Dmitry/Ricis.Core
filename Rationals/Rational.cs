@@ -372,6 +372,41 @@ public readonly struct Rational : IEquatable<Rational>
         return !(a == b);
     }
 
+    /// <summary>
+    /// Decomposes the rational number into its integer part and remaining proper fraction (whole + remainder/denominator).
+    /// For example, 100/3 decomposes into whole = 33 and remainder = 1/3.
+    /// </summary>
+    public (BigInteger Whole, Rational Remainder) DecomposeMixed()
+    {
+        var whole = Numerator / Denominator;
+        var remainderNum = BigInteger.Abs(Numerator % Denominator);
+        return (whole, new Rational(remainderNum, Denominator));
+    }
+
+    /// <summary>
+    /// Formats the rational number as a mixed fraction string (e.g., "33 + 1/3").
+    /// </summary>
+    public string ToMixedString()
+    {
+        if (Denominator.IsOne)
+        {
+            return Numerator.ToString();
+        }
+
+        var (whole, remainder) = DecomposeMixed();
+        if (whole.IsZero)
+        {
+            return ToString();
+        }
+
+        if (remainder.IsZero)
+        {
+            return whole.ToString();
+        }
+
+        return $"{whole} + {remainder}";
+    }
+
     /// <inheritdoc />
     public override bool Equals(object obj)
     {

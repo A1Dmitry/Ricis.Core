@@ -47,11 +47,24 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         {
             case ExpressionType.Add when IsZero(left): return right;
             case ExpressionType.Add when IsZero(right): return left;
+            case ExpressionType.Subtract when IsZero(right): return left;
+            case ExpressionType.Subtract when AreIdentical(left, right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsZero(left) || IsZero(right): return scalarPolicy.ZeroOf(node.Type);
             case ExpressionType.Multiply when IsOne(left): return right;
             case ExpressionType.Multiply when IsOne(right): return left;
             case ExpressionType.Divide when IsZero(left): return left;
             case ExpressionType.Divide when IsOne(right): return left;
+        }
+
+        // Сокращение обратных операций: (A + B) - B → A, (A - B) + B → A
+        if (node.NodeType == ExpressionType.Subtract && left is BinaryExpression { NodeType: ExpressionType.Add } sumLeft)
+        {
+            if (AreIdentical(sumLeft.Right, right)) return sumLeft.Left;
+            if (AreIdentical(sumLeft.Left, right)) return sumLeft.Right;
+        }
+        if (node.NodeType == ExpressionType.Add && left is BinaryExpression { NodeType: ExpressionType.Subtract } subLeft)
+        {
+            if (AreIdentical(subLeft.Right, right)) return subLeft.Left;
         }
 
         // Нормализация: x+x → 2*x, x*x → Pow(x,2)
@@ -88,6 +101,18 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
             };
         }
 
+        // Тригонометрическое тождество: sin^2(u) + cos^2(u) → 1
+        if (node.NodeType == ExpressionType.Add && TryReducePythagoreanIdentity(left, right, out var pythagoreanOne))
+        {
+            return pythagoreanOne;
+        }
+
+        // Произведение tan(u) * cos(u) → sin(u)
+        if (node.NodeType == ExpressionType.Multiply && TryReduceTanCos(left, right, out var sinExpr))
+        {
+            return sinExpr;
+        }
+
         // Распределительный закон: (a+b)*c → a*c + b*c
         if (node.NodeType == ExpressionType.Multiply && IsSum(left))
         {
@@ -120,6 +145,81 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
         return node.Update(operand);
     }
 
+
+    /// <inheritdoc />
+    protected override Expression VisitMethodCall(MethodCallExpression node)
+    {
+        var visited = base.VisitMethodCall(node);
+        if (visited is not MethodCallExpression call)
+        {
+            return visited;
+        }
+
+        if (call.Method.DeclaringType == typeof(Math) && call.Arguments.Count == 1)
+        {
+            var arg = call.Arguments[0];
+
+            if (call.Method.Name == "Log")
+            {
+                // ln(1) => 0
+                if (IsOne(arg))
+                {
+                    return scalarPolicy.ZeroOf(call.Type);
+                }
+
+                // ln(exp(x)) => x
+                if (arg is MethodCallExpression innerCall &&
+                    innerCall.Method.DeclaringType == typeof(Math) &&
+                    innerCall.Method.Name == "Exp" &&
+                    innerCall.Arguments.Count == 1)
+                {
+                    return innerCall.Arguments[0];
+                }
+
+                // ln(x^k) => k * ln(x)
+                if (arg is BinaryExpression { NodeType: ExpressionType.Power } pow)
+                {
+                    var logBase = Expression.Call(call.Method, pow.Left);
+                    return Visit(Expression.Multiply(pow.Right, logBase));
+                }
+            }
+            else if (call.Method.Name == "Sin")
+            {
+                // sin(-x) => -sin(x)
+                if (arg is UnaryExpression { NodeType: ExpressionType.Negate } neg)
+                {
+                    return Expression.Negate(Expression.Call(call.Method, neg.Operand));
+                }
+            }
+            else if (call.Method.Name == "Cos")
+            {
+                // cos(-x) => cos(x)
+                if (arg is UnaryExpression { NodeType: ExpressionType.Negate } neg)
+                {
+                    return Expression.Call(call.Method, neg.Operand);
+                }
+            }
+            else if (call.Method.Name == "Exp")
+            {
+                // exp(0) => 1
+                if (IsZero(arg))
+                {
+                    return CreateNumericConstant(1, call.Type);
+                }
+
+                // exp(ln(x)) => x
+                if (arg is MethodCallExpression innerCall &&
+                    innerCall.Method.DeclaringType == typeof(Math) &&
+                    innerCall.Method.Name == "Log" &&
+                    innerCall.Arguments.Count == 1)
+                {
+                    return innerCall.Arguments[0];
+                }
+            }
+        }
+
+        return call;
+    }
 
     /// <inheritdoc />
     protected override Expression VisitConditional(ConditionalExpression node)
@@ -187,6 +287,99 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
     private bool IsSum(Expression expr)
     {
         return expr is BinaryExpression b && b.NodeType == ExpressionType.Add;
+    }
+
+    private bool TryReducePythagoreanIdentity(Expression left, Expression right, out Expression result)
+    {
+        result = null;
+
+        if (IsTrigSquare(left, "Sin", out var u1) && IsTrigSquare(right, "Cos", out var u2) && AreIdentical(u1, u2))
+        {
+            result = CreateNumericConstant(1, left.Type);
+            return true;
+        }
+
+        if (IsTrigSquare(left, "Cos", out u1) && IsTrigSquare(right, "Sin", out u2) && AreIdentical(u1, u2))
+        {
+            result = CreateNumericConstant(1, left.Type);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsTrigSquare(Expression expr, string methodName, out Expression argument)
+    {
+        argument = null;
+        if (expr is BinaryExpression { NodeType: ExpressionType.Power } pow &&
+            TryGetFiniteDouble(pow.Right, out var exponent) && Math.Abs(exponent - 2.0) < 1e-15)
+        {
+            return IsTrigCall(pow.Left, methodName, out argument);
+        }
+
+        if (expr is BinaryExpression { NodeType: ExpressionType.Multiply } mult &&
+            IsTrigCall(mult.Left, methodName, out var arg1) &&
+            IsTrigCall(mult.Right, methodName, out var arg2) &&
+            AreIdentical(arg1, arg2))
+        {
+            argument = arg1;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsTrigCall(Expression expr, string methodName, out Expression argument)
+    {
+        argument = null;
+        if (expr is MethodCallExpression call &&
+            call.Method.DeclaringType == typeof(Math) &&
+            call.Method.Name == methodName &&
+            call.Arguments.Count == 1)
+        {
+            argument = call.Arguments[0];
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryReduceTanCos(Expression left, Expression right, out Expression result)
+    {
+        result = null;
+
+        if (IsTrigCall(left, "Tan", out var u1) && IsTrigCall(right, "Cos", out var u2) && AreIdentical(u1, u2))
+        {
+            result = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, u1);
+            return true;
+        }
+
+        if (IsTrigCall(right, "Tan", out u1) && IsTrigCall(left, "Cos", out u2) && AreIdentical(u1, u2))
+        {
+            result = Expression.Call(typeof(Math).GetMethod(nameof(Math.Sin), [typeof(double)])!, u1);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetFiniteDouble(Expression expression, out double value)
+    {
+        value = 0.0;
+        if (expression is not ConstantExpression constant || constant.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            value = Convert.ToDouble(constant.Value, System.Globalization.CultureInfo.InvariantCulture);
+            return double.IsFinite(value);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static Expression SimplifyConstants(BinaryExpression node, ConstantExpression left, ConstantExpression right)
