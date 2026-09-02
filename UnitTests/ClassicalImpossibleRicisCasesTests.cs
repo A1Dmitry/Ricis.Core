@@ -128,4 +128,35 @@ public sealed class ClassicalImpossibleRicisCasesTests
         var negativeRational = new Ricis.Core.Rationals.Rational(-100, 3);
         Assert.AreEqual("-33 - 1/3", negativeRational.ToMixedString());
     }
+
+    [TestMethod]
+    public void EpsilonDisplacementAnalysis_CubicRemovableSingularity_MatchesRicisAndLimit()
+    {
+        // Evaluating (x^3 - 8) / (x - 2) with x = 2 + epsilon (for epsilon != 0):
+        // Numerator: (2 + eps)^3 - 8 = 12*eps + 6*eps^2 + eps^3 = eps * (12 + 6*eps + eps^2)
+        // Denominator: (2 + eps) - 2 = eps
+        // Ratio: eps * (12 + 6*eps + eps^2) / eps = 12 + 6*eps + eps^2.
+        // As eps -> 0, the ratio equals 12.
+        double[] epsilons = [1e-1, 1e-3, 1e-6, 1e-9, 1e-12];
+        foreach (var eps in epsilons)
+        {
+            double xVal = 2.0 + eps;
+            double classicalRatio = (Math.Pow(xVal, 3.0) - 8.0) / (xVal - 2.0);
+            double epsilonExpansion = 12.0 + (6.0 * eps) + (eps * eps);
+
+            Assert.AreEqual(epsilonExpansion, classicalRatio, 1e-7, $"Epsilon ratio mismatch at eps={eps}");
+        }
+
+        // RICIS III (SP2) reduces (x^3 - 8)/(x - 2) -> x^2 + 2x + 4, which at x = 2 is exactly 12.
+        var x = Expression.Parameter(typeof(double), "x");
+        var xCubed = Expression.Multiply(Expression.Multiply(x, x), x);
+        var source = Expression.Divide(
+            Expression.Subtract(xCubed, Expression.Constant(8.0)),
+            Expression.Subtract(x, Expression.Constant(2.0)));
+
+        var ricisReduced = RicisPhasePipeline.Simplify(Expression.Lambda<Func<double, double>>(source, x));
+        double ricisAtTwo = ricisReduced.Compile()(2.0);
+
+        Assert.AreEqual(12.0, ricisAtTwo, 1e-12, "RICIS III exact value at x=2 equals the epsilon limit 12");
+    }
 }
