@@ -124,5 +124,8 @@ public sealed class ClassicalImpossibleRicisCasesTests
         Assert.AreEqual(new BigInteger(33), whole);
         Assert.AreEqual(new Ricis.Core.Rationals.Rational(1, 3), remainder);
         Assert.AreEqual("33 + 1/3", rational.ToMixedString());
+
+        var negativeRational = new Ricis.Core.Rationals.Rational(-100, 3);
+        Assert.AreEqual("-33 - 1/3", negativeRational.ToMixedString());
     }
 }

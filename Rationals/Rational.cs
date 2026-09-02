@@ -404,7 +404,7 @@ public readonly struct Rational : IEquatable<Rational>
             return whole.ToString();
         }
 
-        return $"{whole} + {remainder}";
+        return whole < 0 ? $"{whole} - {remainder}" : $"{whole} + {remainder}";
     }
 
     /// <inheritdoc />

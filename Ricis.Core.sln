@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Core", "Ricis.Core.csproj", "{48D1DD38-E25D-498A-8029-312D32FDD733}"
-	ProjectSection(ProjectDependencies) = postProject
-		{489ABA6C-F86C-44A5-A97D-76135F1C802E} = {489ABA6C-F86C-44A5-A97D-76135F1C802E}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ricis.Console", "Ricis.Console\Ricis.Console.csproj", "{223F0FA4-322C-4E4D-BB83-E8029805DDD0}"
 EndProject
