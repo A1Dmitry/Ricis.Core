@@ -47,6 +47,12 @@
     <None Remove="Ricis.Finance/**" />
     <Compile Remove="Ricis.Numerics/**/*.cs" />
     <None Remove="Ricis.Numerics/**" />
+    <Compile Remove="Ricis.Kinematics/**/*.cs" />
+    <None Remove="Ricis.Kinematics/**" />
+    <Compile Remove="Ricis.Kinematics.UnitTests/**/*.cs" />
+    <None Remove="Ricis.Kinematics.UnitTests/**" />
+    <Compile Remove="Ricis.Robotics3D.App/**/*.cs" />
+    <None Remove="Ricis.Robotics3D.App/**" />
   </ItemGroup>
 
 </Project>
