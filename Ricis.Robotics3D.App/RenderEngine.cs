@@ -43,25 +43,3 @@ public sealed class RenderEngine
         Console.WriteLine($"  det(J) = {det:E3}{singularNotice}");
     }
 }
-
-public static class Program
-{
-    public static void Main(string[] args)
-    {
-        Console.WriteLine("=================================================");
-        Console.WriteLine(" Ricis.Robotics3D.App - 3D Arm Manipulator Control");
-        Console.WriteLine("=================================================");
-
-        var gpu = new GpuCapabilities(RenderMode.AutoDetect);
-        Console.WriteLine(gpu);
-
-        var model = ArmModelAsset.GetDefaultFreeModel();
-        Console.WriteLine(model);
-
-        var engine = new RenderEngine(gpu, model);
-
-        Console.WriteLine("\nSimulating movement through kinematic singular point (theta2 = 0)...");
-        double[] singularAngles = [0, 0, 0, 0, 0, 0];
-        engine.RenderFrame(singularAngles);
-    }
-}
