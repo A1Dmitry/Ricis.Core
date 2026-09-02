@@ -386,11 +386,18 @@ public sealed class ExpressionSimplifierVisitor : ExpressionVisitor, IExpression
     {
         try
         {
-            // Fold using the original expression-tree operator, then retain its
-            // declared type. This avoids truncating doubles/decimals to BigInteger.
+            if (node.NodeType == ExpressionType.Power)
+            {
+                var lVal = Convert.ToDouble(left.Value, System.Globalization.CultureInfo.InvariantCulture);
+                var rVal = Convert.ToDouble(right.Value, System.Globalization.CultureInfo.InvariantCulture);
+                var res = Math.Pow(lVal, rVal);
+                return Expression.Constant(Convert.ChangeType(res, node.Type, System.Globalization.CultureInfo.InvariantCulture), node.Type);
+            }
+
             var folded = Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
             var boxed = Expression.Convert(folded, typeof(object));
-            var value = Expression.Lambda<Func<object>>(boxed).Compile()();
+            var rawValue = Expression.Lambda<Func<object>>(boxed).Compile()();
+            var value = Convert.ChangeType(rawValue, node.Type, System.Globalization.CultureInfo.InvariantCulture);
             return Expression.Constant(value, node.Type);
         }
         catch

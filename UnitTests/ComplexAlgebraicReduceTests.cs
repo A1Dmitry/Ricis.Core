@@ -16,27 +16,9 @@ public sealed class ComplexAlgebraicReduceTests
     [TestMethod]
     public void ComplexSchoolFractionReducesToOne()
     {
-        var x = Expression.Parameter(typeof(double), "x");
-        var x2 = Expression.Power(x, Expression.Constant(2d));
-        var x3 = Expression.Power(x, Expression.Constant(3d));
-
-        var differenceOfSquares = Expression.Divide(
-            Expression.Subtract(x2, Expression.Constant(25d)),
-            Expression.Subtract(x, Expression.Constant(5d)));
-        var differenceOfCubes = Expression.Divide(
-            Expression.Subtract(x3, Expression.Constant(8d)),
-            Expression.Subtract(x, Expression.Constant(2d)));
-        var quadraticFactor = Expression.Add(
-            Expression.Add(x2, Expression.Multiply(Expression.Constant(2d), x)),
-            Expression.Constant(4d));
-        var expectedFactors = Expression.Multiply(
-            Expression.Add(x, Expression.Constant(5d)),
-            quadraticFactor);
-        var source = Expression.Lambda<Func<double, double>>(
-            Expression.Divide(
-                Expression.Multiply(differenceOfSquares, differenceOfCubes),
-                expectedFactors),
-            x);
+        Expression<Func<double, double>> source = x =>
+            (((x * x - 25.0) / (x - 5.0)) * ((x * x * x - 8.0) / (x - 2.0))) /
+            ((x + 5.0) * (x * x + 2.0 * x + 4.0));
 
         var reduced = RicisPhasePipeline.Simplify(source);
 
