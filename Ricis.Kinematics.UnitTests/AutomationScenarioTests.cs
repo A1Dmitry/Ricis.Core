@@ -7,6 +7,9 @@ namespace Ricis.Kinematics.UnitTests;
 [TestClass]
 public sealed class AutomationScenarioTests
 {
+    private AutomationScenarioService _scenarioService;
+
+
     [TestMethod]
     public void ScenarioInitialization_PlacesThreeWorkpiecesInSourceBoxA()
     {

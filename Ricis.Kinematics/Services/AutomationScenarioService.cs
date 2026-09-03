@@ -67,33 +67,19 @@ public sealed class AutomationScenarioService
         CurrentState = ScenarioState.Stopped;
         ProgressPercentage = 0;
         CurrentActionDescription = "Объекты размещены в Ящике A";
+
     }
 
-        // Bio-inspired minimal relative shift interpolation (tentacle / human arm principle)
-        double targetY = 0.3 - (0.6 * localT);
-        double targetZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
-        var targetPosition = new EndEffectorPosition(0.4, targetY, targetZ);
-
-        var shiftSolver = new MinimalRelativeShiftSolver();
-        var currentAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
-        var bioAngles = shiftSolver.SolveBioInspiredTargetAngles(ManipulatorArm.CreatePuma560(), targetPosition, currentAngles, stepSize: 0.1);
+   
 
     private static void UpdateWorkpiece(Workpiece piece, int pieceIndex, double localT)
     {
-        if (localT > 0.15 && localT < 0.8)
-        {
-            piece.SetGrabbed(true);
-            piece.MoveTo(targetPosition);
-        }
-        else if (localT >= 0.8)
-        {
-            piece.SetGrabbed(false);
-            piece.MoveTo(new EndEffectorPosition(0.4, -0.25 - pieceIndex * 0.05, 0.08));
-        }
+        //TODO implement UpdateWorkpiece
+        throw new NotImplementedException();
+    }
 
-        string action = $"Перекладывание объекта '{piece.ColorName}' ({index + 1}/3) (Био-инспирированный минимальный сдвиг)";
-        CurrentActionDescription = action;
-
-        return (bioAngles, action);
+    public (object angles0, object status0) StepScenarioFrame(double i)
+    {
+        throw new NotImplementedException();
     }
 }

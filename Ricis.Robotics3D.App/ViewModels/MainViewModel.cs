@@ -108,6 +108,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     public ICommand StartScenarioCommand { get; }
     public ICommand PauseScenarioCommand { get; }
     public ICommand ResetScenarioCommand { get; }
+    public Action KinematicsUpdated { get; set; }
 
     private void SetJoint(ref double field, double value, string propertyName)
     {
@@ -181,18 +182,8 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
 
     private void AnimationTimer_Tick(object? sender, EventArgs e)
     {
-        var nextProgress = Math.Min(100.0, ScenarioProgress + 0.8);
-        var (angles, status) = _scenarioService.StepScenarioFrame(nextProgress);
-        ScenarioProgress = _scenarioService.ProgressPercentage;
-        ScenarioStatusText = status;
-        ApplyJoints(angles, notify: true);
-        if (nextProgress >= 100.0)
-        {
-            _scenarioService.Complete();
-            _animationTimer.Stop();
-            ScenarioStatusText = _scenarioService.CurrentActionDescription;
-        }
-        RefreshScenarioState();
+        //TODO implement AnimationTimer_Tick
+        throw new NotImplementedException();
     }
 
     private void RefreshScenarioState()
