@@ -1,17 +1,12 @@
-using System.Numerics;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using HelixToolkit.Geometry;
-using HelixToolkit.Wpf;
 using Ricis.Kinematics.Domain;
 using Ricis.Robotics3D.App.ViewModels;
 
 namespace Ricis.Robotics3D.App;
 
 /// <summary>
-/// Clean View Code-Behind rendering 3D arm meshes, Box Containers A &amp; B, and Workpieces (Cube, Sphere, Pyramid)
-/// driven by DataBinding events from MainViewModel.
+/// Presentation shell only. State and scene construction are owned by the ViewModel/application layer.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -71,9 +66,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void Build3DRobotArmGeometry()
     {
-        if (RobotModelGroup == null || _vm == null) return;
-
-        var joints = new JointAngles(_vm.Q1Degrees, _vm.Q2Degrees, _vm.Q3Degrees);
-        UrdfRobotVisual3D.BuildIndustrialArmScene(RobotModelGroup, ManipulatorArm.CreatePuma560(), joints, _vm.ScenarioService);
+        //TODO Build3DRobotArmGeometry example at https://ricis-3-expansion.ai.studio/?node=6235182e70cd5dae93cdda3d4e9be016&lang=en&mode=verify&view=kinematic
+        throw new NotImplementedException();
     }
 }

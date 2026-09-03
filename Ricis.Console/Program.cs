@@ -569,7 +569,7 @@ internal static class Program
         var conjugateIm = conjugate.Im();
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.49681bb299cc"));
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.7d6f0f3dd89e"));
-
+        
         Console.WriteLine($"z.Re(x):             {re}");
         Console.WriteLine($"z.Im(x):             {im}");
         Console.WriteLine($"conj(z).Re(x):       {conjugateRe}");
@@ -588,7 +588,7 @@ internal static class Program
         var compiledNorm = norm.Compile();
         foreach (var point in new[] { -1.0, 0.0, 2.0 })
         {
-
+            
             Console.WriteLine($"{point,4:G}  {compiledRe(point),8:G5}  {compiledIm(point),7:G5}  " +
                               $"{compiledProductRe(point),9:G5}  {compiledProductIm(point),9:G5}  " +
                               $"{compiledSquareNorm(point),7:G5}  {compiledNorm(point),6:G5}");
