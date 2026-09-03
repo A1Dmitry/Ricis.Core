@@ -142,10 +142,10 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
 
 
         var outerState = SaveState();
-        
+
         if (GetCoeefs(node.Left, outerState, out var leftCoeffs)) return;
         if (GetCoeefs(node.Right, outerState, out var rightCoeffs)) return;
-       
+
 
         RestoreState(outerState);
 
