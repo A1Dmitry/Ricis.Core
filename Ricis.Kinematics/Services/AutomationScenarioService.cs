@@ -60,9 +60,10 @@ public sealed class AutomationScenarioService
         double targetZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
         var targetPosition = new EndEffectorPosition(0.4, targetY, targetZ);
 
-        var shiftSolver = new MinimalRelativeShiftSolver();
-        var currentAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
-        var bioAngles = shiftSolver.SolveBioInspiredTargetAngles(ManipulatorArm.CreatePuma560(), targetPosition, currentAngles, stepSize: 0.1);
+        var cartesianSolver = new LinearCartesianTrajectorySolver();
+        var startAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
+        var linearSteps = cartesianSolver.GenerateStraightLineMotion(ManipulatorArm.CreatePuma560(), startAngles, targetPosition, stepSpeed: 0.05, maxSteps: 5);
+        var bioAngles = linearSteps.Count > 0 ? linearSteps[^1].CurrentJointsQ : startAngles;
 
         // Update workpiece position and grabbed state based on arc
         if (localT > 0.2 && localT < 0.8)
