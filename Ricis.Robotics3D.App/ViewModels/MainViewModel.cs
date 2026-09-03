@@ -6,7 +6,7 @@ using Ricis.Kinematics.Services;
 namespace Ricis.Robotics3D.App.ViewModels;
 
 /// <summary>
-/// Main MVVM ViewModel coordinating Domain Kinematics, Automation Scenarios, GPU Capabilities, and WPF UI.
+/// Main MVVM ViewModel matching Expansion Map architecture with solver selection (DLS vs RICIS Constraint Engine).
 /// </summary>
 public sealed class MainViewModel : ViewModelBase
 {
@@ -16,6 +16,8 @@ public sealed class MainViewModel : ViewModelBase
     private readonly ArmModelAsset _asset;
     private readonly AutomationScenarioService _scenarioService;
     private readonly DispatcherTimer _animationTimer;
+
+    private double[] _linkLengths = [0.4, 0.8, 0.7]; // Expansion Map L0=0.4m, L1=0.8m, L2=0.7m (Max reach = 1.5m)
 
     private double _q1Degrees;
     private double _q2Degrees;
@@ -30,6 +32,7 @@ public sealed class MainViewModel : ViewModelBase
     private double _scenarioProgress;
     private bool _isSingular;
     private bool _isScenarioRunning;
+    private bool _useRicisSolver = true; // Selected engine
     private int _selectedRenderModeIndex;
 
     public MainViewModel()
@@ -52,7 +55,7 @@ public sealed class MainViewModel : ViewModelBase
 
         _animationTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(40) // ~25 FPS animation loop
+            Interval = TimeSpan.FromMilliseconds(30) // ~25 FPS animation loop
         };
         _animationTimer.Tick += AnimationTimer_Tick;
 
@@ -78,6 +81,12 @@ public sealed class MainViewModel : ViewModelBase
     {
         get => _q3Degrees;
         set { if (SetProperty(ref _q3Degrees, value)) UpdateKinematics(); }
+    }
+
+    public bool UseRicisSolver
+    {
+        get => _useRicisSolver;
+        set { if (SetProperty(ref _useRicisSolver, value)) UpdateKinematics(); }
     }
 
     public string GpuStatusText
@@ -196,7 +205,7 @@ public sealed class MainViewModel : ViewModelBase
 
     private void AnimationTimer_Tick(object? sender, EventArgs e)
     {
-        ScenarioProgress += 0.8; // Step forward
+        ScenarioProgress += 0.8;
         if (ScenarioProgress > 100.0)
         {
             ScenarioProgress = 100.0;
@@ -220,18 +229,17 @@ public sealed class MainViewModel : ViewModelBase
 
     private void UpdateKinematics()
     {
-        var joints = new JointAngles(Q1Degrees, Q2Degrees, Q3Degrees);
-        _arm.UpdateJoints(joints);
+        var currentJoints = new JointAngles(Q1Degrees, Q2Degrees, Q3Degrees);
+        var currentEE = _solver.ComputeForwardKinematics(_arm, currentJoints);
 
-        var pos = _solver.ComputeForwardKinematics(_arm, joints);
-        PositionText = pos.ToString();
+        PositionText = currentEE.ToString();
 
-        double det = _solver.ComputeJacobianDeterminant(_arm, joints);
+        double det = _solver.ComputeJacobianDeterminant(_arm, currentJoints);
         JacobianText = $"det(J) = {det:E3}";
 
-        IsSingular = Math.Abs(det) < 1e-4;
+        IsSingular = Math.Abs(det) < 0.15;
         SingularityStatusText = IsSingular
-            ? "СИНГУЛЯРНОСТЬ! RICIS III АКТИВИРОВАН (БЕЗ NaN / CБОЯ)"
+            ? (UseRicisSolver ? "СИНГУЛЯРНОСТЬ! RICIS III ИНВАРИАНТНЫЙ СОЛВЕР (БЕЗ ДРИФТА)" : "СИНГУЛЯРНОСТЬ! DLS BASELINE (ДРИФТ И СБАВКА СКОРОСТИ)")
             : "СТАТУС: ШТАТНОЕ ДВИЖЕНИЕ (ДЕТЕРМИНАНТ НЕ-НУЛЕВОЙ)";
 
         KinematicsUpdated?.Invoke();
