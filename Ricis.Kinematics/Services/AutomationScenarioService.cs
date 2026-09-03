@@ -55,20 +55,20 @@ public sealed class AutomationScenarioService
 
         var piece = Workpieces[index];
 
-        // Smooth joint angle trajectory generation:
-        // q1 sweeps from +40 deg (Box A) to -40 deg (Box B)
-        // q2 and q3 dip down to grab/release and lift during transit
-        double q1 = 40.0 - (80.0 * localT);
-        double q2 = -20.0 + (30.0 * Math.Sin(localT * Math.PI));
-        double q3 = 10.0 - (20.0 * Math.Sin(localT * Math.PI));
+        // Bio-inspired minimal relative shift interpolation (tentacle / human arm principle)
+        double targetY = 0.3 - (0.6 * localT);
+        double targetZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
+        var targetPosition = new EndEffectorPosition(0.4, targetY, targetZ);
+
+        var shiftSolver = new MinimalRelativeShiftSolver();
+        var currentAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
+        var bioAngles = shiftSolver.SolveBioInspiredTargetAngles(ManipulatorArm.CreatePuma560(), targetPosition, currentAngles, stepSize: 0.1);
 
         // Update workpiece position and grabbed state based on arc
         if (localT > 0.2 && localT < 0.8)
         {
             piece.SetGrabbed(true);
-            double arcY = 0.3 - (0.6 * localT);
-            double arcZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
-            piece.MoveTo(new EndEffectorPosition(0.4, arcY, arcZ));
+            piece.MoveTo(targetPosition);
         }
         else if (localT >= 0.8)
         {
@@ -76,9 +76,9 @@ public sealed class AutomationScenarioService
             piece.MoveTo(new EndEffectorPosition(0.4, -0.25 - (index * 0.05), 0.08));
         }
 
-        string action = $"Перекладывание объекта '{piece.ColorName}' ({index + 1}/3) из Ящика A в Ящик B";
+        string action = $"Перекладывание объекта '{piece.ColorName}' ({index + 1}/3) (Био-инспирированный минимальный сдвиг)";
         CurrentActionDescription = action;
 
-        return (new JointAngles(q1, q2, q3), action);
+        return (bioAngles, action);
     }
 }
