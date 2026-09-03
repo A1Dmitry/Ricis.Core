@@ -15,8 +15,8 @@ public sealed class KinematicsSolver : IKinematicsSolver
 
     public double ComputeJacobianDeterminant(ManipulatorArm arm, JointAngles joints)
     {
-        double l1 = arm.Links.Count > 1 ? Math.Abs(arm.Links[1].A) : 0.4318;
-        double l2 = arm.Links.Count > 2 ? Math.Sqrt(Math.Pow(arm.Links[2].A, 2) + Math.Pow(arm.Links[2].D, 2)) : 0.1514;
+        double l1 = arm.Links.Count > 1 ? Math.Abs(arm.Links[1].A) : 0.425;
+        double l2 = arm.Links.Count > 2 ? Math.Abs(arm.Links[2].A) : 0.3922;
 
         var detLambda = JacobianAnalytic.ComputeSingularDeterminant(l1, l2);
         return JacobianAnalytic.EvaluateDeterminant(detLambda, joints.Q2Radians);

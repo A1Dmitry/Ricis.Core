@@ -1,7 +1,7 @@
 namespace Ricis.Kinematics.Domain;
 
 /// <summary>
-/// DDD aggregate for a six-axis PUMA 560 industrial manipulator using standard DH parameters.
+/// DDD Aggregate Entity representing an industrial 6-DOF manipulator arm with Denavit-Hartenberg specifications.
 /// </summary>
 public sealed class ManipulatorArm
 {
@@ -13,7 +13,6 @@ public sealed class ManipulatorArm
     {
         ModelName = modelName;
         Links = links.ToList().AsReadOnly();
-        if (Links.Count != 6) throw new ArgumentException("A six-axis manipulator requires six DH links.", nameof(links));
         CurrentJoints = JointAngles.Zero;
     }
 
@@ -21,15 +20,19 @@ public sealed class ManipulatorArm
     {
         var links = new List<DHParameter>
         {
-            DHParameter.Create(0, Math.PI / 2, 0, 0),
-            DHParameter.Create(0.4318, 0, 0, 0),
-            DHParameter.Create(0.0203, -Math.PI / 2, 0.15005, 0),
-            DHParameter.Create(0, Math.PI / 2, 0.4318, 0),
-            DHParameter.Create(0, -Math.PI / 2, 0, 0),
-            DHParameter.Create(0, 0, 0, 0)
+            DHParameter.Create(0, Math.PI / 2, 0.2, 0),       // Base
+            DHParameter.Create(0.425, 0, 0, 0),               // Upper Arm (l1 = 0.425)
+            DHParameter.Create(0.3922, 0, 0, 0),              // Forearm (l2 = 0.3922)
+            DHParameter.Create(0, Math.PI / 2, 0.1, 0),
+            DHParameter.Create(0, -Math.PI / 2, 0.1, 0),
+            DHParameter.Create(0, 0, 0.08, 0)
         };
-        return new ManipulatorArm("PUMA 560 (standard DH, 6-DOF)", links);
+
+        return new ManipulatorArm("PUMA 560 / UR5 Industrial Arm", links);
     }
 
-    public void UpdateJoints(JointAngles newJoints) => CurrentJoints = newJoints;
+    public void UpdateJoints(JointAngles newJoints)
+    {
+        CurrentJoints = newJoints;
+    }
 }
