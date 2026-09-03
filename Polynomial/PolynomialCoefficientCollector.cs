@@ -123,21 +123,29 @@ public class PolynomialCoefficientCollector(ParameterExpression parameterExpress
 
     private void VisitMultiply(BinaryExpression node)
     {
+        bool GetCoeefs(Expression expression1, (int power, Rational mult, Dictionary<int, Rational> coeffs) valueTuple,
+            out Dictionary<int, Rational> dictionary)
+        {
+            _currentMultiplier = Rational.One;
+            _currentPower = -1;
+            Coefficients.Clear();
+            base.Visit(expression1);
+            if (!IsPolynomial)
+            {
+                RestoreState(valueTuple);
+                dictionary = new Dictionary<int, Rational>();
+                return true;
+            }
+            dictionary = new Dictionary<int, Rational>(Coefficients);
+            return false;
+        }
+
+
         var outerState = SaveState();
 
-        _currentMultiplier = Rational.One;
-        _currentPower = -1;
-        Coefficients.Clear();
-        base.Visit(node.Left);
-        if (!IsPolynomial) { RestoreState(outerState); return; }
-        var leftCoeffs = new Dictionary<int, Rational>(Coefficients);
+        if (GetCoeefs(node.Left, outerState, out var leftCoeffs)) return;
+        if (GetCoeefs(node.Right, outerState, out var rightCoeffs)) return;
 
-        _currentMultiplier = Rational.One;
-        _currentPower = -1;
-        Coefficients.Clear();
-        base.Visit(node.Right);
-        if (!IsPolynomial) { RestoreState(outerState); return; }
-        var rightCoeffs = new Dictionary<int, Rational>(Coefficients);
 
         RestoreState(outerState);
 

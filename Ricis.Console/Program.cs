@@ -561,25 +561,37 @@ internal static class Program
         var product = first.Multiply(second);
         var squaredNorm = first.SquaredNorm();
         var norm = first.Norm();
-
+        var re = first.Re();
+        var im = first.Im();
+        var productRe = product.Re();
+        var productIm = product.Im();
+        var conjugateRe = conjugate.Re();
+        var conjugateIm = conjugate.Im();
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.49681bb299cc"));
         Console.WriteLine(RicisLegacyTextResources.Get("runtime.legacy.7d6f0f3dd89e"));
-        Console.WriteLine($"z.Re(x):             {first.Re()}");
-        Console.WriteLine($"z.Im(x):             {first.Im()}");
-        Console.WriteLine($"conj(z).Re(x):       {conjugate.Re()}");
-        Console.WriteLine($"conj(z).Im(x):       {conjugate.Im()}");
-        Console.WriteLine($"(z·w).Re(x):         {product.Re()}");
-        Console.WriteLine($"(z·w).Im(x):         {product.Im()}");
+
+        Console.WriteLine($"z.Re(x):             {re}");
+        Console.WriteLine($"z.Im(x):             {im}");
+        Console.WriteLine($"conj(z).Re(x):       {conjugateRe}");
+        Console.WriteLine($"conj(z).Im(x):       {conjugateIm}");
+        Console.WriteLine($"(z·w).Re(x):         {productRe}");
+        Console.WriteLine($"(z·w).Im(x):         {productIm}");
         Console.WriteLine($"|z|²:                {squaredNorm}");
         Console.WriteLine($"|z|:                 {norm}");
         Console.WriteLine();
         Console.WriteLine("x       Re(z)    Im(z)    Re(z·w)  Im(z·w)  |z|²     |z|");
-
+        var compiledRe = re.Compile();
+        var compiledIm = im.Compile();
+        var compiledProductRe = productRe.Compile();
+        var compiledProductIm = productIm.Compile();
+        var compiledSquareNorm = squaredNorm.Compile();
+        var compiledNorm = norm.Compile();
         foreach (var point in new[] { -1.0, 0.0, 2.0 })
         {
-            Console.WriteLine($"{point,4:G}  {first.Re().Compile()(point),8:G5}  {first.Im().Compile()(point),7:G5}  " +
-                              $"{product.Re().Compile()(point),9:G5}  {product.Im().Compile()(point),9:G5}  " +
-                              $"{squaredNorm.Compile()(point),7:G5}  {norm.Compile()(point),6:G5}");
+
+            Console.WriteLine($"{point,4:G}  {compiledRe(point),8:G5}  {compiledIm(point),7:G5}  " +
+                              $"{compiledProductRe(point),9:G5}  {compiledProductIm(point),9:G5}  " +
+                              $"{compiledSquareNorm(point),7:G5}  {compiledNorm(point),6:G5}");
         }
 
         return 0;
@@ -770,6 +782,7 @@ internal static class Program
             }
         }
 
+        RunComplexDemo();
         Console.WriteLine();
         Console.WriteLine(failures == 0
             ? RicisLegacyTextResources.Format("runtime.legacy.026159f7b09c", ("ExampleCatalog.All.Count", ExampleCatalog.All.Count), ("ExampleCatalog.All.Count", ExampleCatalog.All.Count))
