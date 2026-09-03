@@ -1,13 +1,15 @@
+using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using HelixToolkit.Geometry;
 using HelixToolkit.Wpf;
 using Ricis.Robotics3D.App.ViewModels;
 
 namespace Ricis.Robotics3D.App;
 
 /// <summary>
-/// Clean View Code-Behind rendering 3D arm meshes driven by DataBinding events from MainViewModel.
+/// Clean View Code-Behind rendering 3D arm meshes compatible with HelixToolkit 3.1.2.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -33,7 +35,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Renders 3D arm links in HelixToolkit Viewport driven by ViewModel DataBinding updates.
+    /// Renders 3D arm links in HelixToolkit 3.1.2 Viewport driven by ViewModel DataBinding updates.
     /// </summary>
     private void Build3DRobotArmGeometry()
     {
@@ -55,52 +57,85 @@ public partial class MainWindow : Window
         MeshBuilder mb = new MeshBuilder(false, false);
 
         // Base Pedestal
-        Point3D p0 = new Point3D(0, 0, 0);
-        Point3D p1 = new Point3D(0, 0, 0.2);
-        mb.AddCylinder(p0, p1, 0.12, 32);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), baseMaterial));
+        Vector3 v0 = new Vector3(0, 0, 0);
+        Vector3 v1 = new Vector3(0, 0, 0.2f);
+        mb.AddCylinder(v0, v1, 0.12f, 32);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), baseMaterial));
 
         // Base Joint
         mb = new MeshBuilder(false, false);
-        mb.AddSphere(p1, 0.08);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), jointMaterial));
+        mb.AddSphere(v1, 0.08f);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), jointMaterial));
 
-        double l1 = 0.425;
-        double l2 = 0.3922;
+        float l1 = 0.425f;
+        float l2 = 0.3922f;
 
         // Joint 2
-        double x1 = l1 * Math.Cos(radQ1) * Math.Cos(radQ2);
-        double y1 = l1 * Math.Sin(radQ1) * Math.Cos(radQ2);
-        double z1 = p1.Z + l1 * Math.Sin(radQ2);
-        Point3D p2 = new Point3D(x1, y1, z1);
+        float x1 = (float)(l1 * Math.Cos(radQ1) * Math.Cos(radQ2));
+        float y1 = (float)(l1 * Math.Sin(radQ1) * Math.Cos(radQ2));
+        float z1 = (float)(v1.Z + l1 * Math.Sin(radQ2));
+        Vector3 v2 = new Vector3(x1, y1, z1);
 
         // Upper Arm
         mb = new MeshBuilder(false, false);
-        mb.AddCylinder(p1, p2, 0.06, 24);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), link1Material));
+        mb.AddCylinder(v1, v2, 0.06f, 24);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), link1Material));
 
         // Joint 3
         mb = new MeshBuilder(false, false);
-        mb.AddSphere(p2, 0.07);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), jointMaterial));
+        mb.AddSphere(v2, 0.07f);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), jointMaterial));
 
         // End Effector
         double relAngle = radQ2 + radQ3;
-        double x2 = x1 + l2 * Math.Cos(radQ1) * Math.Cos(relAngle);
-        double y2 = y1 + l2 * Math.Sin(radQ1) * Math.Cos(relAngle);
-        double z2 = z1 + l2 * Math.Sin(relAngle);
-        Point3D p3 = new Point3D(x2, y2, z2);
+        float x2 = (float)(x1 + l2 * Math.Cos(radQ1) * Math.Cos(relAngle));
+        float y2 = (float)(y1 + l2 * Math.Sin(radQ1) * Math.Cos(relAngle));
+        float z2 = (float)(z1 + l2 * Math.Sin(relAngle));
+        Vector3 v3 = new Vector3(x2, y2, z2);
 
         // Forearm
         mb = new MeshBuilder(false, false);
-        mb.AddCylinder(p2, p3, 0.045, 24);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), link2Material));
+        mb.AddCylinder(v2, v3, 0.045f, 24);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), link2Material));
 
         // Flange / Tool
         mb = new MeshBuilder(false, false);
-        mb.AddSphere(p3, 0.05);
-        Point3D pTool = new Point3D(x2 + 0.05 * Math.Cos(radQ1), y2 + 0.05 * Math.Sin(radQ1), z2);
-        mb.AddCone(p3, pTool, 0.04, true, 20);
-        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh(), endEffectorMaterial));
+        mb.AddSphere(v3, 0.05f);
+        Vector3 vTool = new Vector3((float)(x2 + 0.05 * Math.Cos(radQ1)), (float)(y2 + 0.05 * Math.Sin(radQ1)), z2);
+        mb.AddCone(v3, vTool, 0.04f, true, 20);
+        RobotModelGroup.Children.Add(new GeometryModel3D(mb.ToMesh().ToWpfMesh(), endEffectorMaterial));
+    }
+}
+
+/// <summary>
+/// HelixToolkit 3.x Geometry conversion extensions for WPF 3D.
+/// </summary>
+public static class HelixGeometryExtensions
+{
+    public static System.Windows.Media.Media3D.MeshGeometry3D ToWpfMesh(this HelixToolkit.Geometry.MeshGeometry3D mesh)
+    {
+        var wpfMesh = new System.Windows.Media.Media3D.MeshGeometry3D();
+        if (mesh.Positions != null)
+        {
+            foreach (var p in mesh.Positions)
+            {
+                wpfMesh.Positions.Add(new Point3D(p.X, p.Y, p.Z));
+            }
+        }
+        if (mesh.TriangleIndices != null)
+        {
+            foreach (var idx in mesh.TriangleIndices)
+            {
+                wpfMesh.TriangleIndices.Add(idx);
+            }
+        }
+        if (mesh.Normals != null)
+        {
+            foreach (var n in mesh.Normals)
+            {
+                wpfMesh.Normals.Add(new Vector3D(n.X, n.Y, n.Z));
+            }
+        }
+        return wpfMesh;
     }
 }
