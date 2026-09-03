@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="HelixToolkit.Wpf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Ricis.Core.csproj" />
     <ProjectReference Include="..\Ricis.Kinematics\Ricis.Kinematics.csproj" />
   </ItemGroup>
