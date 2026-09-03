@@ -1,11 +1,12 @@
 using System.Windows.Input;
+using System.Windows.Threading;
 using Ricis.Kinematics.Domain;
 using Ricis.Kinematics.Services;
 
 namespace Ricis.Robotics3D.App.ViewModels;
 
 /// <summary>
-/// Main MVVM ViewModel coordinating Domain Kinematics, GPU Capabilities, 3D Asset metadata, and WPF UI.
+/// Main MVVM ViewModel coordinating Domain Kinematics, Automation Scenarios, GPU Capabilities, and WPF UI.
 /// </summary>
 public sealed class MainViewModel : ViewModelBase
 {
@@ -13,6 +14,8 @@ public sealed class MainViewModel : ViewModelBase
     private readonly IKinematicsSolver _solver;
     private readonly GpuCapabilities _gpu;
     private readonly ArmModelAsset _asset;
+    private readonly AutomationScenarioService _scenarioService;
+    private readonly DispatcherTimer _animationTimer;
 
     private double _q1Degrees;
     private double _q2Degrees;
@@ -23,26 +26,40 @@ public sealed class MainViewModel : ViewModelBase
     private string _positionText = string.Empty;
     private string _jacobianText = string.Empty;
     private string _singularityStatusText = string.Empty;
+    private string _scenarioStatusText = string.Empty;
+    private double _scenarioProgress;
     private bool _isSingular;
+    private bool _isScenarioRunning;
     private int _selectedRenderModeIndex;
 
     public MainViewModel()
-        : this(ManipulatorArm.CreatePuma560(), new KinematicsSolver(), new GpuCapabilities(RenderMode.AutoDetect), ArmModelAsset.GetDefaultFreeModel())
+        : this(ManipulatorArm.CreatePuma560(), new KinematicsSolver(), new GpuCapabilities(RenderMode.AutoDetect), ArmModelAsset.GetDefaultFreeModel(), new AutomationScenarioService())
     {
     }
 
-    public MainViewModel(ManipulatorArm arm, IKinematicsSolver solver, GpuCapabilities gpu, ArmModelAsset asset)
+    public MainViewModel(ManipulatorArm arm, IKinematicsSolver solver, GpuCapabilities gpu, ArmModelAsset asset, AutomationScenarioService scenarioService)
     {
         _arm = arm;
         _solver = solver;
         _gpu = gpu;
         _asset = asset;
+        _scenarioService = scenarioService;
 
         ResetSingularCommand = new RelayCommand(ResetToSingularPoint);
+        StartScenarioCommand = new RelayCommand(StartScenario);
+        PauseScenarioCommand = new RelayCommand(PauseScenario);
+        ResetScenarioCommand = new RelayCommand(ResetScenario);
+
+        _animationTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(40) // ~25 FPS animation loop
+        };
+        _animationTimer.Tick += AnimationTimer_Tick;
 
         UpdateGpuUI();
         UpdateAssetUI();
         UpdateKinematics();
+        ScenarioStatusText = _scenarioService.CurrentActionDescription;
     }
 
     public double Q1Degrees
@@ -93,10 +110,28 @@ public sealed class MainViewModel : ViewModelBase
         private set => SetProperty(ref _singularityStatusText, value);
     }
 
+    public string ScenarioStatusText
+    {
+        get => _scenarioStatusText;
+        private set => SetProperty(ref _scenarioStatusText, value);
+    }
+
+    public double ScenarioProgress
+    {
+        get => _scenarioProgress;
+        private set => SetProperty(ref _scenarioProgress, value);
+    }
+
     public bool IsSingular
     {
         get => _isSingular;
         private set => SetProperty(ref _isSingular, value);
+    }
+
+    public bool IsScenarioRunning
+    {
+        get => _isScenarioRunning;
+        private set => SetProperty(ref _isScenarioRunning, value);
     }
 
     public int SelectedRenderModeIndex
@@ -119,12 +154,16 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
+    public AutomationScenarioService ScenarioService => _scenarioService;
+
     public ICommand ResetSingularCommand { get; }
+    public ICommand StartScenarioCommand { get; }
+    public ICommand PauseScenarioCommand { get; }
+    public ICommand ResetScenarioCommand { get; }
 
     public event Action? KinematicsUpdated;
 
     private void UpdateGpuUI() => GpuStatusText = _gpu.ToString();
-
     private void UpdateAssetUI() => AssetText = _asset.ToString();
 
     private void ResetToSingularPoint()
@@ -132,6 +171,51 @@ public sealed class MainViewModel : ViewModelBase
         Q1Degrees = 0;
         Q2Degrees = 0;
         Q3Degrees = 0;
+    }
+
+    private void StartScenario()
+    {
+        IsScenarioRunning = true;
+        _animationTimer.Start();
+    }
+
+    private void PauseScenario()
+    {
+        IsScenarioRunning = false;
+        _animationTimer.Stop();
+    }
+
+    private void ResetScenario()
+    {
+        PauseScenario();
+        ScenarioProgress = 0.0;
+        _scenarioService.InitializeWorkpieces();
+        ScenarioStatusText = _scenarioService.CurrentActionDescription;
+        ResetToSingularPoint();
+    }
+
+    private void AnimationTimer_Tick(object? sender, EventArgs e)
+    {
+        ScenarioProgress += 0.8; // Step forward
+        if (ScenarioProgress > 100.0)
+        {
+            ScenarioProgress = 100.0;
+            PauseScenario();
+            ScenarioStatusText = "Сценарий #1 успешно завершен!";
+            return;
+        }
+
+        var (angles, status) = _scenarioService.StepScenarioFrame(ScenarioProgress);
+        _q1Degrees = angles.Q1Degrees;
+        _q2Degrees = angles.Q2Degrees;
+        _q3Degrees = angles.Q3Degrees;
+
+        OnPropertyChanged(nameof(Q1Degrees));
+        OnPropertyChanged(nameof(Q2Degrees));
+        OnPropertyChanged(nameof(Q3Degrees));
+
+        ScenarioStatusText = status;
+        UpdateKinematics();
     }
 
     private void UpdateKinematics()
