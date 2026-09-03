@@ -11,74 +11,90 @@ public enum ScenarioState
 }
 
 /// <summary>
-/// Domain service generating trajectories and step sequences for Scenario #1:
-/// Transferring cubes, spheres, and pyramids from Box A to Box B while enforcing joint angle limits.
+/// Deterministic pick-and-place scenario for a six-axis PUMA 560.
+/// Joint motion uses a time-scaled quintic profile with zero velocity and acceleration at waypoints.
 /// </summary>
 public sealed class AutomationScenarioService
 {
     public BoxContainer SourceBox { get; } = BoxContainer.SourceBoxA;
     public BoxContainer TargetBox { get; } = BoxContainer.TargetBoxB;
-    public List<Workpiece> Workpieces { get; } = new();
-
+    private readonly List<Workpiece> _workpieces = new();
+    private readonly JointTrajectoryPlanner _trajectoryPlanner;
+    private readonly IReadOnlyList<JointAngles> _waypoints;
+    public IReadOnlyList<Workpiece> Workpieces => _workpieces;
     public ScenarioState CurrentState { get; private set; } = ScenarioState.Stopped;
-    public double ProgressPercentage { get; private set; } = 0.0;
+    public double ProgressPercentage { get; private set; }
     public string CurrentActionDescription { get; private set; } = "Готов к запуску сценария";
 
     public AutomationScenarioService()
     {
+        _trajectoryPlanner = new JointTrajectoryPlanner(maxVelocityDegreesPerSecond: 45, maxAccelerationDegreesPerSecondSquared: 90);
+        _waypoints = new List<JointAngles>
+        {
+            new(0, 0, 0, 0, 0, 0),
+            new(35, -35, 55, 0, 35, 0),
+            new(-35, -35, 55, 0, 35, 0),
+            new(-35, -20, 30, 0, 35, 0)
+        }.AsReadOnly();
         InitializeWorkpieces();
     }
 
+    public void Start()
+    {
+        if (CurrentState is ScenarioState.Stopped or ScenarioState.Paused) CurrentState = ScenarioState.Running;
+    }
+
+    public void Pause()
+    {
+        if (CurrentState == ScenarioState.Running) CurrentState = ScenarioState.Paused;
+    }
+
+    public void Complete()
+    {
+        ProgressPercentage = 100;
+        CurrentState = ScenarioState.Completed;
+        CurrentActionDescription = "Сценарий #1 успешно завершен!";
+    }
+
+    public void Reset() => InitializeWorkpieces();
+
     public void InitializeWorkpieces()
     {
-        Workpieces.Clear();
-        Workpieces.Add(new Workpiece("P1_Cube", WorkpieceShape.Cube, "Красный Кубик", new EndEffectorPosition(0.4, 0.25, 0.08)));
-        Workpieces.Add(new Workpiece("P2_Sphere", WorkpieceShape.Sphere, "Синий Шарик", new EndEffectorPosition(0.4, 0.30, 0.08)));
-        Workpieces.Add(new Workpiece("P3_Pyramid", WorkpieceShape.Pyramid, "Желтая Пирамида", new EndEffectorPosition(0.4, 0.35, 0.08)));
-
+        _workpieces.Clear();
+        _workpieces.Add(new Workpiece("P1_Cube", WorkpieceShape.Cube, "Красный Кубик", new EndEffectorPosition(0.4, 0.25, 0.08)));
+        _workpieces.Add(new Workpiece("P2_Sphere", WorkpieceShape.Sphere, "Синий Шарик", new EndEffectorPosition(0.4, 0.30, 0.08)));
+        _workpieces.Add(new Workpiece("P3_Pyramid", WorkpieceShape.Pyramid, "Желтая Пирамида", new EndEffectorPosition(0.4, 0.35, 0.08)));
         CurrentState = ScenarioState.Stopped;
-        ProgressPercentage = 0.0;
+        ProgressPercentage = 0;
         CurrentActionDescription = "Объекты размещены в Ящике A";
     }
 
-    /// <summary>
-    /// Computes joint angles for animation frame at step time t (0.0 to 1.0).
-    /// </summary>
-    public (JointAngles Angles, string StatusText) StepScenarioFrame(double tPercentage)
+    public (JointAngles Angles, string StatusText) StepScenarioFrame(double progressPercentage)
     {
-        ProgressPercentage = Math.Clamp(tPercentage, 0.0, 100.0);
-        double normalizedT = ProgressPercentage / 100.0;
+        ProgressPercentage = Math.Clamp(progressPercentage, 0, 100);
+        var normalized = ProgressPercentage / 100.0;
+        var pieceIndex = Math.Min((int)(normalized * 3), 2);
+        var localT = normalized * 3.0 - pieceIndex;
+        var piece = _workpieces[pieceIndex];
+        UpdateWorkpiece(piece, pieceIndex, localT);
+        var angles = _trajectoryPlanner.Interpolate(_waypoints, ProgressPercentage);
+        CurrentActionDescription = ProgressPercentage >= 100
+            ? "Все детали перенесены в Ящик B"
+            : $"Перекладывание объекта '{piece.ColorName}' ({pieceIndex + 1}/3), t={localT:P0}";
+        return (angles, CurrentActionDescription);
+    }
 
-        // Sequence of 3 workpieces: [0.0 - 0.33], [0.33 - 0.66], [0.66 - 1.00]
-        int index = Math.Min((int)(normalizedT * 3), 2);
-        double localT = (normalizedT * 3.0) - index; // 0.0 to 1.0
-
-        var piece = Workpieces[index];
-
-        // Smooth joint angle trajectory generation:
-        // q1 sweeps from +40 deg (Box A) to -40 deg (Box B)
-        // q2 and q3 dip down to grab/release and lift during transit
-        double q1 = 40.0 - (80.0 * localT);
-        double q2 = -20.0 + (30.0 * Math.Sin(localT * Math.PI));
-        double q3 = 10.0 - (20.0 * Math.Sin(localT * Math.PI));
-
-        // Update workpiece position and grabbed state based on arc
-        if (localT > 0.2 && localT < 0.8)
+    private static void UpdateWorkpiece(Workpiece piece, int pieceIndex, double localT)
+    {
+        if (localT > 0.15 && localT < 0.8)
         {
             piece.SetGrabbed(true);
-            double arcY = 0.3 - (0.6 * localT);
-            double arcZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
-            piece.MoveTo(new EndEffectorPosition(0.4, arcY, arcZ));
+            piece.MoveTo(new EndEffectorPosition(0.4, 0.3 - 0.6 * localT, 0.08 + 0.18 * Math.Sin(localT * Math.PI)));
         }
         else if (localT >= 0.8)
         {
             piece.SetGrabbed(false);
-            piece.MoveTo(new EndEffectorPosition(0.4, -0.25 - (index * 0.05), 0.08));
+            piece.MoveTo(new EndEffectorPosition(0.4, -0.25 - pieceIndex * 0.05, 0.08));
         }
-
-        string action = $"Перекладывание объекта '{piece.ColorName}' ({index + 1}/3) из Ящика A в Ящик B";
-        CurrentActionDescription = action;
-
-        return (new JointAngles(q1, q2, q3), action);
     }
 }
