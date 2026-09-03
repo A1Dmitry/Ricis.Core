@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:helix="http://helix-toolkit.org/wpf"
         xmlns:vm="clr-namespace:Ricis.Robotics3D.App.ViewModels"
-        Title="RICIS III 3D Arm Manipulator Automation Studio (DDD / MVVM)" Height="800" Width="1180"
+        Title="RICIS PUMA 560 Automation Studio (MVVM, procedural 6-DOF)" Height="800" Width="1180"
         Background="#1E1E1E">
     <Window.DataContext>
         <vm:MainViewModel/>
@@ -40,12 +40,9 @@
                         <StackPanel>
                             <TextBlock Text="{Binding GpuStatusText}" Foreground="#DCDCDC" TextWrapping="Wrap" Margin="0,0,0,8" FontSize="11"/>
                             <TextBlock Text="Режим рендеринга:" Foreground="White" Margin="0,4,0,2" FontSize="12"/>
-                            <ComboBox SelectedIndex="{Binding SelectedRenderModeIndex, Mode=TwoWay}" Margin="0,0,0,6">
-                                <ComboBoxItem Content="AutoDetect (NVIDIA/iGPU)"/>
-                                <ComboBoxItem Content="Hardware High Performance (NVIDIA GTX 1650)"/>
-                                <ComboBoxItem Content="Hardware Compatibility (Integrated iGPU)"/>
-                                <ComboBoxItem Content="Software CPU Fallback"/>
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding RenderModes}"
+                                      SelectedItem="{Binding SelectedRenderMode, Mode=TwoWay}"
+                                      Margin="0,0,0,6"/>
                         </StackPanel>
                     </GroupBox>
 
@@ -67,6 +64,15 @@
 
                             <TextBlock Text="Joint 3 (Локоть Theta 3):" Foreground="White"/>
                             <Slider Minimum="-180" Maximum="180" Value="{Binding Q3Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 4 (Запястье Theta 4):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q4Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 5 (Запястье Theta 5):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q5Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 6 (Фланец Theta 6):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q6Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
 
                             <Button Content="Сбросить в Сингулярную Точку (det=0)" Command="{Binding ResetSingularCommand}" Background="#007ACC" Foreground="White" Padding="6" Margin="0,6,0,0"/>
                         </StackPanel>
@@ -106,11 +112,7 @@
                         <helix:GridLinesVisual3D Width="10" Length="10" MinorDistance="0.2" MajorDistance="1.0" Thickness="0.01" Fill="#2A2A2A"/>
 
                         <!-- Robot Arm and Workspace Scene Group -->
-                        <ModelVisual3D>
-                            <ModelVisual3D.Content>
-                                <Model3DGroup x:Name="RobotModelGroup"/>
-                            </ModelVisual3D.Content>
-                        </ModelVisual3D>
+                        <ModelVisual3D Content="{Binding SceneModel}"/>
                     </helix:HelixViewport3D>
                 </Border>
 

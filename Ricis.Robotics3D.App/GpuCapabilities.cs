@@ -1,50 +1,39 @@
 namespace Ricis.Robotics3D.App;
 
-/// <summary>
-/// GPU Hardware acceleration rendering modes.
-/// </summary>
 public enum RenderMode
 {
-    AutoDetect = 0,
-    HardwareHighPerformance = 1, // e.g. Discrete NVIDIA GTX 1650
-    HardwareCompatibility = 2,    // e.g. Integrated Intel/AMD iGPU
-    SoftwareCpuFallback = 3      // Pure CPU fallback mode
+    AutoDetect,
+    HardwareHighPerformance,
+    HardwareCompatibility,
+    SoftwareCpuFallback
 }
 
 /// <summary>
-/// Probes GPU hardware and manages manual override rendering settings.
+/// Rendering policy metadata. WPF/HelixToolkit owns the actual graphics pipeline;
+/// this class must not claim a concrete adapter without a real platform probe.
 /// </summary>
 public sealed class GpuCapabilities
 {
-    public string DetectedAdapterName { get; private set; } = "Unknown Adapter";
+    public string DetectedAdapterName { get; private set; } = "Не определён (платформенный probe не подключён)";
     public bool HasDiscreteGpu { get; private set; }
     public RenderMode ActiveRenderMode { get; private set; }
 
-    public GpuCapabilities(RenderMode preferredMode = RenderMode.AutoDetect)
-    {
-        ProbeHardware(preferredMode);
-    }
+    public GpuCapabilities(RenderMode preferredMode = RenderMode.AutoDetect) => ProbeHardware(preferredMode);
 
     public void ProbeHardware(RenderMode modeOverride)
     {
-        // Simulated hardware detector targeting NVIDIA GTX 1650 or available adapters
-        string vendor = Environment.GetEnvironmentVariable("GPU_VENDOR") ?? "NVIDIA Corporation";
-        string deviceName = Environment.GetEnvironmentVariable("GPU_DEVICE") ?? "NVIDIA GeForce GTX 1650";
-
-        DetectedAdapterName = $"{vendor} {deviceName}";
-        HasDiscreteGpu = DetectedAdapterName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ||
-                         DetectedAdapterName.Contains("Radeon", StringComparison.OrdinalIgnoreCase);
-
-        if (modeOverride != RenderMode.AutoDetect)
-        {
-            ActiveRenderMode = modeOverride;
-        }
-        else
-        {
-            ActiveRenderMode = HasDiscreteGpu ? RenderMode.HardwareHighPerformance : RenderMode.HardwareCompatibility;
-        }
+        var vendor = Environment.GetEnvironmentVariable("GPU_VENDOR");
+        var device = Environment.GetEnvironmentVariable("GPU_DEVICE");
+        DetectedAdapterName = string.IsNullOrWhiteSpace(vendor) || string.IsNullOrWhiteSpace(device)
+            ? "Не определён (информационный режим)"
+            : $"{vendor} {device}";
+        HasDiscreteGpu = !string.IsNullOrWhiteSpace(vendor) &&
+            (vendor.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) || vendor.Contains("AMD", StringComparison.OrdinalIgnoreCase));
+        ActiveRenderMode = modeOverride == RenderMode.AutoDetect
+            ? RenderMode.HardwareCompatibility
+            : modeOverride;
     }
 
     public override string ToString() =>
-        $"[GPU Status] Adapter: {DetectedAdapterName} | Discrete: {HasDiscreteGpu} | Active Mode: {ActiveRenderMode}";
+        $"[GPU policy] Adapter: {DetectedAdapterName} | Discrete: {HasDiscreteGpu} | Mode: {ActiveRenderMode} (не управляет WPF pipeline)";
 }

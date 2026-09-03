@@ -1,22 +1,12 @@
-using System.Numerics;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using HelixToolkit.Geometry;
-using HelixToolkit.Wpf;
-using Ricis.Kinematics.Domain;
-using Ricis.Robotics3D.App.ViewModels;
 
 namespace Ricis.Robotics3D.App;
 
 /// <summary>
-/// Clean View Code-Behind rendering 3D arm meshes, Box Containers A &amp; B, and Workpieces (Cube, Sphere, Pyramid)
-/// driven by DataBinding events from MainViewModel.
+/// Presentation shell only. State and scene construction are owned by the ViewModel/application layer.
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _vm;
-
     public MainWindow()
     {
         InitializeComponent();
