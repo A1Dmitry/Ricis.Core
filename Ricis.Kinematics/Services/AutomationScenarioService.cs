@@ -69,32 +69,31 @@ public sealed class AutomationScenarioService
         CurrentActionDescription = "Объекты размещены в Ящике A";
     }
 
-    public (JointAngles Angles, string StatusText) StepScenarioFrame(double progressPercentage)
-    {
-        ProgressPercentage = Math.Clamp(progressPercentage, 0, 100);
-        var normalized = ProgressPercentage / 100.0;
-        var pieceIndex = Math.Min((int)(normalized * 3), 2);
-        var localT = normalized * 3.0 - pieceIndex;
-        var piece = _workpieces[pieceIndex];
-        UpdateWorkpiece(piece, pieceIndex, localT);
-        var angles = _trajectoryPlanner.Interpolate(_waypoints, ProgressPercentage);
-        CurrentActionDescription = ProgressPercentage >= 100
-            ? "Все детали перенесены в Ящик B"
-            : $"Перекладывание объекта '{piece.ColorName}' ({pieceIndex + 1}/3), t={localT:P0}";
-        return (angles, CurrentActionDescription);
-    }
+        // Bio-inspired minimal relative shift interpolation (tentacle / human arm principle)
+        double targetY = 0.3 - (0.6 * localT);
+        double targetZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
+        var targetPosition = new EndEffectorPosition(0.4, targetY, targetZ);
+
+        var shiftSolver = new MinimalRelativeShiftSolver();
+        var currentAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
+        var bioAngles = shiftSolver.SolveBioInspiredTargetAngles(ManipulatorArm.CreatePuma560(), targetPosition, currentAngles, stepSize: 0.1);
 
     private static void UpdateWorkpiece(Workpiece piece, int pieceIndex, double localT)
     {
         if (localT > 0.15 && localT < 0.8)
         {
             piece.SetGrabbed(true);
-            piece.MoveTo(new EndEffectorPosition(0.4, 0.3 - 0.6 * localT, 0.08 + 0.18 * Math.Sin(localT * Math.PI)));
+            piece.MoveTo(targetPosition);
         }
         else if (localT >= 0.8)
         {
             piece.SetGrabbed(false);
             piece.MoveTo(new EndEffectorPosition(0.4, -0.25 - pieceIndex * 0.05, 0.08));
         }
+
+        string action = $"Перекладывание объекта '{piece.ColorName}' ({index + 1}/3) (Био-инспирированный минимальный сдвиг)";
+        CurrentActionDescription = action;
+
+        return (bioAngles, action);
     }
 }
