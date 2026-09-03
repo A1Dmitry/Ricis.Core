@@ -101,7 +101,7 @@
                 </Border>
 
                 <!-- Overlay Telemetry Bar -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="SpaceBetween" Margin="0,8,0,0">
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
                     <TextBlock Text="{Binding PositionText}" Foreground="White" FontSize="13" FontFamily="Consolas"/>
                     <TextBlock Text="{Binding JacobianText}" Foreground="#FFD700" FontSize="13" FontFamily="Consolas"/>
                 </StackPanel>
