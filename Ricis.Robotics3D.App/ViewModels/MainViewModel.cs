@@ -128,7 +128,7 @@ public sealed class MainViewModel : ViewModelBase
     public double ScenarioProgress
     {
         get => _scenarioProgress;
-        private set => SetProperty(ref _scenarioProgress, value);
+        set => SetProperty(ref _scenarioProgress, value);
     }
 
     public bool IsSingular
