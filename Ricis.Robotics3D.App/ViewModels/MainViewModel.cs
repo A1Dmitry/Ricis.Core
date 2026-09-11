@@ -34,6 +34,7 @@ public sealed class MainViewModel : ViewModelBase
     private bool _isScenarioRunning;
     private bool _useRicisSolver = true; // Selected engine
     private int _selectedRenderModeIndex;
+    private int _selectedScenarioIndex;
 
     public MainViewModel()
         : this(ManipulatorArm.CreatePuma560(), new KinematicsSolver(), new GpuCapabilities(RenderMode.AutoDetect), ArmModelAsset.GetDefaultFreeModel(), new AutomationScenarioService())
@@ -128,7 +129,7 @@ public sealed class MainViewModel : ViewModelBase
     public double ScenarioProgress
     {
         get => _scenarioProgress;
-        set => SetProperty(ref _scenarioProgress, value);
+        private set => SetProperty(ref _scenarioProgress, value);
     }
 
     public bool IsSingular
@@ -141,6 +142,25 @@ public sealed class MainViewModel : ViewModelBase
     {
         get => _isScenarioRunning;
         private set => SetProperty(ref _isScenarioRunning, value);
+    }
+
+    public int SelectedScenarioIndex
+    {
+        get => _selectedScenarioIndex;
+        set
+        {
+            if (SetProperty(ref _selectedScenarioIndex, value))
+            {
+                ScenarioType type = value switch
+                {
+                    1 => ScenarioType.Scenario2_ConveyorSorting,
+                    2 => ScenarioType.Scenario3_SingularContourWelding,
+                    _ => ScenarioType.Scenario1_BoxTransfer
+                };
+                _scenarioService.SelectScenario(type);
+                ResetScenario();
+            }
+        }
     }
 
     public int SelectedRenderModeIndex
