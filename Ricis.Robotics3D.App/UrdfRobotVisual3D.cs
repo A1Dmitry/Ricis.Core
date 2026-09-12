@@ -81,18 +81,73 @@ public static class UrdfRobotVisual3D
         mb.AddSphere(v3, 0.06f, 24, 24);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
 
-        // Pneumatic Parallel Claw Gripper
-        mb = new MeshBuilder(false, false);
-        Vector3 vToolCenter = new Vector3((float)(x2 + 0.07 * Math.Cos(radQ1)), (float)(y2 + 0.07 * Math.Sin(radQ1)), z2);
-        mb.AddBox(vToolCenter, 0.07f, 0.07f, 0.05f);
-        Vector3 clawLeft = new Vector3(vToolCenter.X, vToolCenter.Y + 0.035f, vToolCenter.Z);
-        mb.AddBox(clawLeft, 0.05f, 0.018f, 0.07f);
-        Vector3 clawRight = new Vector3(vToolCenter.X, vToolCenter.Y - 0.035f, vToolCenter.Z);
-        mb.AddBox(clawRight, 0.05f, 0.018f, 0.07f);
-        sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), pneumaticGoldMat));
+        // Specialized End-Effector Tool rendering based on Active Scenario
+        RenderEndEffectorTool(sceneGroup, scenario.ActiveScenario, radQ1, v3, z2, x2, y2);
 
-        // Render Boxes and Industrial Workpieces
+        // Render Environmental Models and Industrial Workpieces
         RenderWorkspaceEnvironment(sceneGroup, scenario);
+    }
+
+    private static void RenderEndEffectorTool(
+        Model3DGroup sceneGroup,
+        ScenarioType scenarioType,
+        double radQ1,
+        Vector3 wristPos,
+        float z2,
+        float x2,
+        float y2)
+    {
+        MeshBuilder mb = new MeshBuilder(false, false);
+        Vector3 vToolCenter = new Vector3((float)(x2 + 0.07 * Math.Cos(radQ1)), (float)(y2 + 0.07 * Math.Sin(radQ1)), z2);
+
+        if (scenarioType == ScenarioType.Scenario8_ArtisticDrawing)
+        {
+            // Artist Painting Brush
+            var brushMat = MaterialHelper.CreateMaterial(Color.FromRgb(200, 30, 30));
+            mb.AddCylinder(wristPos, vToolCenter, 0.02f, 16);
+            Vector3 tip = vToolCenter + new Vector3(0.04f, 0, -0.02f);
+            mb.AddCone(vToolCenter, tip - vToolCenter, 0.015f, 0.002f, 0.04f, true, true, 16);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), brushMat));
+        }
+        else if (scenarioType == ScenarioType.Scenario9_SculptingCarving)
+        {
+            // Sculptor Carving Chisel Bit
+            var steelMat = MaterialHelper.CreateMaterial(Color.FromRgb(180, 190, 205));
+            mb.AddBox(vToolCenter, 0.06f, 0.04f, 0.04f);
+            Vector3 chiselTip = vToolCenter + new Vector3(0.05f, 0, -0.01f);
+            mb.AddBox(chiselTip, 0.04f, 0.02f, 0.008f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), steelMat));
+        }
+        else if (scenarioType == ScenarioType.Scenario5_BerryHarvesting)
+        {
+            // Fine Micro-Picker Tool
+            var microMat = MaterialHelper.CreateMaterial(Color.FromRgb(0, 180, 210));
+            mb.AddCylinder(wristPos, vToolCenter, 0.025f, 16);
+            Vector3 clawLeft = new Vector3(vToolCenter.X, vToolCenter.Y + 0.012f, vToolCenter.Z);
+            mb.AddBox(clawLeft, 0.03f, 0.005f, 0.04f);
+            Vector3 clawRight = new Vector3(vToolCenter.X, vToolCenter.Y - 0.012f, vToolCenter.Z);
+            mb.AddBox(clawRight, 0.03f, 0.005f, 0.04f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), microMat));
+        }
+        else if (scenarioType == ScenarioType.Scenario7_FragilePackaging)
+        {
+            // Soft Vacuum Suction Cup Tool
+            var vacuumMat = MaterialHelper.CreateMaterial(Color.FromRgb(40, 40, 45));
+            mb.AddCylinder(wristPos, vToolCenter, 0.03f, 16);
+            mb.AddCone(vToolCenter, new Vector3(0, 0, -0.04f), 0.045f, 0.03f, 0.03f, true, true, 20);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), vacuumMat));
+        }
+        else
+        {
+            // Pneumatic Parallel Claw Gripper (Default)
+            var pneumaticGoldMat = MaterialHelper.CreateMaterial(Color.FromRgb(230, 180, 25));
+            mb.AddBox(vToolCenter, 0.07f, 0.07f, 0.05f);
+            Vector3 clawLeft = new Vector3(vToolCenter.X, vToolCenter.Y + 0.035f, vToolCenter.Z);
+            mb.AddBox(clawLeft, 0.05f, 0.018f, 0.07f);
+            Vector3 clawRight = new Vector3(vToolCenter.X, vToolCenter.Y - 0.035f, vToolCenter.Z);
+            mb.AddBox(clawRight, 0.05f, 0.018f, 0.07f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), pneumaticGoldMat));
+        }
     }
 
     private static void RenderWorkspaceEnvironment(Model3DGroup sceneGroup, AutomationScenarioService scenario)
@@ -113,6 +168,59 @@ public static class UrdfRobotVisual3D
                   (float)boxB.WidthMeters, (float)boxB.LengthMeters, (float)boxB.HeightMeters);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), boxMat));
 
+        // Specialized Environmental Scenery per Scenario
+        if (scenario.ActiveScenario == ScenarioType.Scenario4_AppleHarvesting)
+        {
+            // Apple Orchard Tree Canopy & Basket
+            MeshBuilder treeMb = new MeshBuilder(false, false);
+            var woodMat = MaterialHelper.CreateMaterial(Color.FromRgb(90, 50, 20));
+            var leavesMat = MaterialHelper.CreateMaterial(Color.FromRgb(34, 139, 34));
+
+            treeMb.AddCylinder(new Vector3(0.45f, 0.35f, 0f), new Vector3(0.45f, 0.35f, 0.40f), 0.06f, 20);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(treeMb.ToMesh()), woodMat));
+
+            treeMb = new MeshBuilder(false, false);
+            treeMb.AddSphere(new Vector3(0.45f, 0.35f, 0.55f), 0.22f, 20, 20);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(treeMb.ToMesh()), leavesMat));
+        }
+        else if (scenario.ActiveScenario == ScenarioType.Scenario5_BerryHarvesting)
+        {
+            // Berry Bush Scenery
+            MeshBuilder bushMb = new MeshBuilder(false, false);
+            var bushMat = MaterialHelper.CreateMaterial(Color.FromRgb(20, 100, 40));
+            bushMb.AddSphere(new Vector3(0.40f, 0.28f, 0.28f), 0.16f, 18, 18);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(bushMb.ToMesh()), bushMat));
+        }
+        else if (scenario.ActiveScenario == ScenarioType.Scenario6_AutomotiveAssembly)
+        {
+            // Car Chassis Frame Scenery
+            MeshBuilder carMb = new MeshBuilder(false, false);
+            var chassisMat = MaterialHelper.CreateMaterial(Color.FromRgb(70, 80, 95));
+            carMb.AddBox(new Vector3(0.55f, 0.30f, 0.25f), 0.40f, 0.60f, 0.22f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(carMb.ToMesh()), chassisMat));
+        }
+        else if (scenario.ActiveScenario == ScenarioType.Scenario8_ArtisticDrawing)
+        {
+            // Artist Easel & Canvas
+            MeshBuilder easelMb = new MeshBuilder(false, false);
+            var canvasMat = MaterialHelper.CreateMaterial(Color.FromRgb(245, 245, 240));
+            var frameMat = MaterialHelper.CreateMaterial(Color.FromRgb(120, 80, 40));
+            easelMb.AddBox(new Vector3(0.52f, 0.0f, 0.40f), 0.02f, 0.50f, 0.50f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(easelMb.ToMesh()), canvasMat));
+
+            easelMb = new MeshBuilder(false, false);
+            easelMb.AddBox(new Vector3(0.52f, 0.0f, 0.10f), 0.04f, 0.04f, 0.20f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(easelMb.ToMesh()), frameMat));
+        }
+        else if (scenario.ActiveScenario == ScenarioType.Scenario9_SculptingCarving)
+        {
+            // Marble Sculpture Block Scenery
+            MeshBuilder stoneMb = new MeshBuilder(false, false);
+            var marbleMat = MaterialHelper.CreateMaterial(Color.FromRgb(220, 225, 230));
+            stoneMb.AddBox(new Vector3(0.45f, 0.0f, 0.20f), 0.30f, 0.30f, 0.25f);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(stoneMb.ToMesh()), marbleMat));
+        }
+
         // Workpieces
         foreach (var piece in scenario.Workpieces)
         {
@@ -124,6 +232,12 @@ public static class UrdfRobotVisual3D
                 WorkpieceShape.Cube => Color.FromRgb(220, 40, 40),
                 WorkpieceShape.Sphere => Color.FromRgb(30, 120, 230),
                 WorkpieceShape.Pyramid => Color.FromRgb(240, 190, 20),
+                WorkpieceShape.Apple => Color.FromRgb(230, 30, 30),
+                WorkpieceShape.Berry => Color.FromRgb(70, 30, 180),
+                WorkpieceShape.CarWheel => Color.FromRgb(30, 30, 35),
+                WorkpieceShape.FragileVase => Color.FromRgb(100, 220, 255),
+                WorkpieceShape.CanvasBrush => Color.FromRgb(200, 30, 30),
+                WorkpieceShape.SculptureBlock => Color.FromRgb(210, 215, 220),
                 _ => Colors.Gray
             };
 
@@ -139,6 +253,24 @@ public static class UrdfRobotVisual3D
                     break;
                 case WorkpieceShape.Pyramid:
                     mb.AddCone(center, Vector3.UnitZ, 0.035f, 0.0f, 0.055f, true, true, 4);
+                    break;
+                case WorkpieceShape.Apple:
+                    mb.AddSphere(center, 0.038f, 22, 22);
+                    break;
+                case WorkpieceShape.Berry:
+                    mb.AddSphere(center, 0.018f, 16, 16);
+                    break;
+                case WorkpieceShape.CarWheel:
+                    mb.AddCylinder(center, center + new Vector3(0.06f, 0, 0), 0.09f, 24);
+                    break;
+                case WorkpieceShape.FragileVase:
+                    mb.AddCone(center, Vector3.UnitZ, 0.04f, 0.025f, 0.09f, true, true, 20);
+                    break;
+                case WorkpieceShape.CanvasBrush:
+                    mb.AddSphere(center, 0.015f, 14, 14);
+                    break;
+                case WorkpieceShape.SculptureBlock:
+                    mb.AddBox(center, 0.08f, 0.08f, 0.08f);
                     break;
             }
 

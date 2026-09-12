@@ -155,6 +155,12 @@ public sealed class MainViewModel : ViewModelBase
                 {
                     1 => ScenarioType.Scenario2_ConveyorSorting,
                     2 => ScenarioType.Scenario3_SingularContourWelding,
+                    3 => ScenarioType.Scenario4_AppleHarvesting,
+                    4 => ScenarioType.Scenario5_BerryHarvesting,
+                    5 => ScenarioType.Scenario6_AutomotiveAssembly,
+                    6 => ScenarioType.Scenario7_FragilePackaging,
+                    7 => ScenarioType.Scenario8_ArtisticDrawing,
+                    8 => ScenarioType.Scenario9_SculptingCarving,
                     _ => ScenarioType.Scenario1_BoxTransfer
                 };
                 _scenarioService.SelectScenario(type);

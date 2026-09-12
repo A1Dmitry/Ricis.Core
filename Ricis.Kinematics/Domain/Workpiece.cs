@@ -4,7 +4,13 @@ public enum WorkpieceShape
 {
     Cube,
     Sphere,
-    Pyramid
+    Pyramid,
+    Apple,
+    Berry,
+    CarWheel,
+    FragileVase,
+    CanvasBrush,
+    SculptureBlock
 }
 
 /// <summary>
