@@ -15,11 +15,19 @@
 | Проект | Назначение |
 |---|---|
 | `Ricis.Core` | NuGet-библиотека: expression types, phases, bridges, calculus, vectors, matrices и proof API. |
+| `Ricis.Kinematics` | Доменная библиотека кинематики 3D-манипуляторов (DDD/SOLID, био-инспирированное минимальное смещение суставов, URDF/OBJ импорт, RICIS III мост сингулярностей). |
+| `Ricis.Robotics3D.App` | WPF `.NET 8` 3D-приложение (MVVM, HelixToolkit 3.1.2) с интерактивным вьюпортом, поддержкой GPU (NVIDIA GTX 1650) и сценариями автоматизации. |
 | `Ricis.Console` | Interactive/CLI parser ограниченной математической grammar. |
 | `Ricis.WebApi` | ASP.NET Core HTTP API поверх parser-а и RICIS pipeline. |
 | `Ricis.WebAssembly` | Standalone Blazor WebAssembly UI, использующий typed client существующего Web API. |
 | `Ricis.NavierStokes.Console` | Символьный proof scenario выбранного поля Навье—Стокса. |
 | `RegressionTests` | Изолированные regression contracts RICIS. |
+
+> **ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ ПО ТЕСТИРОВАНИЮ:** При написании модульных тестов для математических условий категорически запрещается использовать ручную громоздкую сборку деревьев выражений (`Expression.Divide`, `Expression.Multiply` и т.д.). Все входные математические условия тестов обязаны объявляться в виде чистой, лаконичной C# лямбда-записи:
+> ```csharp
+> Expression<Func<double, double>> expression = x => (x * x * x - 8.0) / (x - 2.0);
+> ```
+> Подробности см. в [`PUBLIC_API_TEST_POLICY.md`](PUBLIC_API_TEST_POLICY.md).
 
 ## Быстрый старт
 
