@@ -37,4 +37,19 @@ public sealed class AutomationScenarioTests
         Assert.IsNotNull(angles100);
         Assert.IsNotNull(status100);
     }
+
+    [TestMethod]
+    public void AllNineScenarios_SelectionAndStepFrame_SucceedsWithoutErrors()
+    {
+        foreach (ScenarioType scenarioType in System.Enum.GetValues<ScenarioType>())
+        {
+            _scenarioService.SelectScenario(scenarioType);
+            Assert.AreEqual(scenarioType, _scenarioService.ActiveScenario);
+            Assert.IsTrue(_scenarioService.Workpieces.Count > 0, $"Scenario {scenarioType} must initialize workpieces.");
+
+            var (angles, status) = _scenarioService.StepScenarioFrame(50.0);
+            Assert.IsNotNull(angles);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(status));
+        }
+    }
 }

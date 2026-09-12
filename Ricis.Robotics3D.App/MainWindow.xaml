@@ -28,6 +28,12 @@
                                 <ComboBoxItem Content="1. Перекладывание A -> B (Кубы, Шары, Пирамиды)"/>
                                 <ComboBoxItem Content="2. Конвейерная сортировка с линии"/>
                                 <ComboBoxItem Content="3. Сварка / 3D-печать контура в сингулярностях"/>
+                                <ComboBoxItem Content="4. Сборка яблок (Яблоневый сад)"/>
+                                <ComboBoxItem Content="5. Сборка ягод (Ягодный куст, микро-захват)"/>
+                                <ComboBoxItem Content="6. Сборка автомобиля (Установка колеса к ступице)"/>
+                                <ComboBoxItem Content="7. Упаковка бьющихся предметов (Хрустальная ваза)"/>
+                                <ComboBoxItem Content="8. Рисование (3D-спиральный узор кистью на холсте)"/>
+                                <ComboBoxItem Content="9. Скульптура (Снятие слоев мрамора долотом)"/>
                             </ComboBox>
 
                             <TextBlock Text="{Binding ScenarioStatusText}" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,8" FontSize="11" FontWeight="SemiBold"/>
