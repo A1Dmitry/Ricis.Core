@@ -36,6 +36,25 @@ public partial class MainWindow : Window
         Build3DRobotArmGeometry();
     }
 
+    private void Viewport3D_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (MainViewport == null || _vm == null) return;
+
+        Point mousePos = e.GetPosition(MainViewport);
+        var hitResult = VisualTreeHelper.HitTest(MainViewport, mousePos) as RayHitTestResult;
+
+        if (hitResult is RayMeshGeometry3DHitTestResult rayHit)
+        {
+            Point3D pt = rayHit.PointHit;
+            _vm.HandleUser3DClick(pt.X, pt.Y, pt.Z);
+        }
+        else
+        {
+            // Default 3D table plane hit fallback
+            _vm.HandleUser3DClick(0.45, 0.15, 0.10);
+        }
+    }
+
     /// <summary>
     /// Converts HelixToolkit 3.x Geometry.MeshGeometry3D to System.Windows.Media.Media3D.MeshGeometry3D.
     /// </summary>
@@ -73,7 +92,7 @@ public partial class MainWindow : Window
     {
         if (RobotModelGroup == null || _vm == null) return;
 
-        var joints = new JointAngles(_vm.Q1Degrees, _vm.Q2Degrees, _vm.Q3Degrees);
+        var joints = new JointAngles(_vm.Q1Degrees, _vm.Q2Degrees, _vm.Q3Degrees, _vm.Q4Degrees, _vm.Q5Degrees, _vm.Q6Degrees);
         UrdfRobotVisual3D.BuildIndustrialArmScene(RobotModelGroup, ManipulatorArm.CreatePuma560(), joints, _vm.ScenarioService);
     }
 }

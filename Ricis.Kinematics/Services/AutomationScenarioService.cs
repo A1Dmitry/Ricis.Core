@@ -24,7 +24,8 @@ public enum ScenarioType
     Scenario6_AutomotiveAssembly,
     Scenario7_FragilePackaging,
     Scenario8_ArtisticDrawing,
-    Scenario9_SculptingCarving
+    Scenario9_SculptingCarving,
+    Scenario10_InteractiveClickPickAndPlace
 }
 
 public sealed class AutomationScenarioService
@@ -40,6 +41,10 @@ public sealed class AutomationScenarioService
     public ScenarioState CurrentState { get; private set; } = ScenarioState.Stopped;
     public double ProgressPercentage { get; private set; } = 0.0;
     public string CurrentActionDescription { get; private set; } = "Готов к запуску сценария";
+
+    public Workpiece? SelectedWorkpiece { get; private set; }
+    public EndEffectorPosition? TargetPlacementLocation { get; private set; }
+    public bool IsHoldingObject => SelectedWorkpiece?.IsGrabbed ?? false;
 
     public AutomationScenarioService()
     {
@@ -102,10 +107,19 @@ public sealed class AutomationScenarioService
             Workpieces.Add(new Workpiece("D1_Brush", WorkpieceShape.CanvasBrush, "Кисть Художника", new EndEffectorPosition(0.50, 0.0, 0.40)));
             CurrentActionDescription = "Сценарий #8: Рисование художественного узора кистью на холсте";
         }
-        else
+        else if (ActiveScenario == ScenarioType.Scenario9_SculptingCarving)
         {
             Workpieces.Add(new Workpiece("S1_Block", WorkpieceShape.SculptureBlock, "Мраморный Блок", new EndEffectorPosition(0.45, 0.0, 0.25)));
             CurrentActionDescription = "Сценарий #9: Скульптура — высечение 3D барельефа долотом из камня";
+        }
+        else
+        {
+            Workpieces.Add(new Workpiece("I1_Cube", WorkpieceShape.Cube, "Красный Кубик", new EndEffectorPosition(0.4, 0.25, 0.08)));
+            Workpieces.Add(new Workpiece("I2_Sphere", WorkpieceShape.Sphere, "Синий Шарик", new EndEffectorPosition(0.4, -0.25, 0.08)));
+            Workpieces.Add(new Workpiece("I3_Apple", WorkpieceShape.Apple, "Сочное Яблоко", new EndEffectorPosition(0.5, 0.0, 0.12)));
+            SelectedWorkpiece = null;
+            TargetPlacementLocation = null;
+            CurrentActionDescription = "Интерактивный режим: Кликните по любому 3D-объекту мышью, чтобы рука его взяла!";
         }
 
         CurrentState = ScenarioState.Stopped;
@@ -148,6 +162,10 @@ public sealed class AutomationScenarioService
         if (ActiveScenario == ScenarioType.Scenario9_SculptingCarving)
         {
             return StepSculptingCarving(tPercentage);
+        }
+        if (ActiveScenario == ScenarioType.Scenario10_InteractiveClickPickAndPlace)
+        {
+            return StepInteractiveClickPickAndPlace(tPercentage);
         }
 
         return StepBoxTransfer(tPercentage);
@@ -386,5 +404,60 @@ public sealed class AutomationScenarioService
         string action = $"Сценарий #9: Скульптура — высечение слоев мрамора долотом (6-DOF IK)";
         CurrentActionDescription = action;
         return (ikAngles, action);
+    }
+
+    public bool TrySelectNearestObject(EndEffectorPosition clickPos, double maxDist = 0.35)
+    {
+        Workpiece? nearest = null;
+        double minDistance = maxDist;
+
+        foreach (var p in Workpieces)
+        {
+            double dx = p.Position.X - clickPos.X;
+            double dy = p.Position.Y - clickPos.Y;
+            double dz = p.Position.Z - clickPos.Z;
+            double dist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (dist < minDistance)
+            {
+                minDistance = dist;
+                nearest = p;
+            }
+        }
+
+        if (nearest != null)
+        {
+            SelectedWorkpiece = nearest;
+            SelectedWorkpiece.SetGrabbed(true);
+            CurrentActionDescription = $"Рука захватила '{nearest.ColorName}'! Кликните мышью на место, куда положить.";
+            return true;
+        }
+
+        return false;
+    }
+
+    public JointAngles SetPlacementLocationAndAnimate(EndEffectorPosition dropPos)
+    {
+        if (SelectedWorkpiece != null)
+        {
+            SelectedWorkpiece.MoveTo(dropPos);
+            SelectedWorkpiece.SetGrabbed(false);
+            CurrentActionDescription = $"Объект '{SelectedWorkpiece.ColorName}' перемещен! Кликните по следующему объекту.";
+            SelectedWorkpiece = null;
+        }
+
+        return _kinematicsSolver.SolveInverseKinematics(_arm, dropPos);
+    }
+
+    private (JointAngles Angles, string StatusText) StepInteractiveClickPickAndPlace(double tPercentage)
+    {
+        if (SelectedWorkpiece != null)
+        {
+            var ik = _kinematicsSolver.SolveInverseKinematics(_arm, SelectedWorkpiece.Position);
+            return (ik, CurrentActionDescription);
+        }
+
+        var homeIk = _kinematicsSolver.SolveInverseKinematics(_arm, new EndEffectorPosition(0.40, 0.0, 0.25));
+        return (homeIk, CurrentActionDescription);
     }
 }

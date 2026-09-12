@@ -39,7 +39,7 @@ public sealed class AutomationScenarioTests
     }
 
     [TestMethod]
-    public void AllNineScenarios_SelectionAndStepFrame_SucceedsWithoutErrors()
+    public void AllTenScenarios_SelectionAndStepFrame_SucceedsWithoutErrors()
     {
         foreach (ScenarioType scenarioType in System.Enum.GetValues<ScenarioType>())
         {
@@ -51,5 +51,24 @@ public sealed class AutomationScenarioTests
             Assert.IsNotNull(angles);
             Assert.IsFalse(string.IsNullOrWhiteSpace(status));
         }
+    }
+
+    [TestMethod]
+    public void InteractiveClickPickAndPlace_SelectsNearestObjectAndPlacesAtTarget()
+    {
+        _scenarioService.SelectScenario(ScenarioType.Scenario10_InteractiveClickPickAndPlace);
+        Assert.IsFalse(_scenarioService.IsHoldingObject);
+
+        // Click near the first object (0.4, 0.25, 0.08)
+        bool selected = _scenarioService.TrySelectNearestObject(new EndEffectorPosition(0.40, 0.25, 0.08));
+        Assert.IsTrue(selected, "Must select object near click position");
+        Assert.IsTrue(_scenarioService.IsHoldingObject, "Arm must hold grabbed object");
+
+        // Click near target drop location (0.6, -0.3, 0.1)
+        var dropTarget = new EndEffectorPosition(0.60, -0.30, 0.10);
+        var ik = _scenarioService.SetPlacementLocationAndAnimate(dropTarget);
+
+        Assert.IsFalse(_scenarioService.IsHoldingObject, "Arm must release object after placement");
+        Assert.IsNotNull(ik, "6-DOF IK angles must be calculated for drop target");
     }
 }

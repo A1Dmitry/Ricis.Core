@@ -182,6 +182,7 @@ public sealed class MainViewModel : ViewModelBase
                     6 => ScenarioType.Scenario7_FragilePackaging,
                     7 => ScenarioType.Scenario8_ArtisticDrawing,
                     8 => ScenarioType.Scenario9_SculptingCarving,
+                    9 => ScenarioType.Scenario10_InteractiveClickPickAndPlace,
                     _ => ScenarioType.Scenario1_BoxTransfer
                 };
                 _scenarioService.SelectScenario(type);
@@ -281,6 +282,56 @@ public sealed class MainViewModel : ViewModelBase
 
         ScenarioStatusText = status;
         UpdateKinematics();
+    }
+
+    public void HandleUser3DClick(double x, double y, double z)
+    {
+        var clickPos = new EndEffectorPosition(x, y, z);
+
+        if (_scenarioService.ActiveScenario != ScenarioType.Scenario10_InteractiveClickPickAndPlace)
+        {
+            _scenarioService.SelectScenario(ScenarioType.Scenario10_InteractiveClickPickAndPlace);
+            _selectedScenarioIndex = 9;
+            OnPropertyChanged(nameof(SelectedScenarioIndex));
+        }
+
+        if (!_scenarioService.IsHoldingObject)
+        {
+            // Step 1: Click on object to grab it
+            bool grabbed = _scenarioService.TrySelectNearestObject(clickPos);
+            if (grabbed)
+            {
+                var targetPos = _scenarioService.SelectedWorkpiece!.Position;
+                var ik = _solver.SolveInverseKinematics(_arm, targetPos);
+                ApplyJointAngles(ik);
+            }
+        }
+        else
+        {
+            // Step 2: Click on target location to place object
+            var ik = _scenarioService.SetPlacementLocationAndAnimate(clickPos);
+            ApplyJointAngles(ik);
+        }
+
+        ScenarioStatusText = _scenarioService.CurrentActionDescription;
+        UpdateKinematics();
+    }
+
+    private void ApplyJointAngles(JointAngles angles)
+    {
+        _q1Degrees = angles.Q1Degrees;
+        _q2Degrees = angles.Q2Degrees;
+        _q3Degrees = angles.Q3Degrees;
+        _q4Degrees = angles.Q4Degrees;
+        _q5Degrees = angles.Q5Degrees;
+        _q6Degrees = angles.Q6Degrees;
+
+        OnPropertyChanged(nameof(Q1Degrees));
+        OnPropertyChanged(nameof(Q2Degrees));
+        OnPropertyChanged(nameof(Q3Degrees));
+        OnPropertyChanged(nameof(Q4Degrees));
+        OnPropertyChanged(nameof(Q5Degrees));
+        OnPropertyChanged(nameof(Q6Degrees));
     }
 
     private void UpdateKinematics()
