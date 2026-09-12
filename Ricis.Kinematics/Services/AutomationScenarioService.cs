@@ -29,6 +29,9 @@ public enum ScenarioType
 
 public sealed class AutomationScenarioService
 {
+    private readonly KinematicsSolver _kinematicsSolver = new();
+    private readonly ManipulatorArm _arm = ManipulatorArm.CreatePuma560();
+
     public ScenarioType ActiveScenario { get; private set; } = ScenarioType.Scenario1_BoxTransfer;
     public BoxContainer SourceBox { get; } = BoxContainer.SourceBoxA;
     public BoxContainer TargetBox { get; } = BoxContainer.TargetBoxB;
@@ -155,27 +158,21 @@ public sealed class AutomationScenarioService
         ProgressPercentage = Math.Clamp(tPercentage, 0.0, 100.0);
         double normalizedT = ProgressPercentage / 100.0;
 
-        // Sequence of 3 workpieces: [0.0 - 0.33], [0.33 - 0.66], [0.66 - 1.00]
         int index = Math.Min((int)(normalizedT * 3), 2);
-        double localT = (normalizedT * 3.0) - index; // 0.0 to 1.0
+        double localT = (normalizedT * 3.0) - index;
 
         var piece = Workpieces[index];
 
-        // Bio-inspired minimal relative shift interpolation (tentacle / human arm principle)
         double targetY = 0.3 - (0.6 * localT);
         double targetZ = 0.08 + (0.25 * Math.Sin(localT * Math.PI));
-        var targetPosition = new EndEffectorPosition(0.4, targetY, targetZ);
+        var targetPos = new EndEffectorPosition(0.4, targetY, targetZ);
 
-        var cartesianSolver = new LinearCartesianTrajectorySolver();
-        var startAngles = new JointAngles(40.0 - (80.0 * localT), -20.0 + (30.0 * Math.Sin(localT * Math.PI)), 10.0 - (20.0 * Math.Sin(localT * Math.PI)));
-        var linearSteps = cartesianSolver.GenerateStraightLineMotion(ManipulatorArm.CreatePuma560(), startAngles, targetPosition, stepSpeed: 0.05, maxSteps: 5);
-        var bioAngles = linearSteps.Count > 0 ? linearSteps[^1].CurrentJointsQ : startAngles;
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
 
-        // Update workpiece position and grabbed state based on arc
         if (localT > 0.2 && localT < 0.8)
         {
             piece.SetGrabbed(true);
-            piece.MoveTo(targetPosition);
+            piece.MoveTo(targetPos);
         }
         else if (localT >= 0.8)
         {
@@ -186,7 +183,7 @@ public sealed class AutomationScenarioService
         string action = $"Сценарий #1: Перекладывание '{piece.ColorName}' ({index + 1}/3)";
         CurrentActionDescription = action;
 
-        return (bioAngles, action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepConveyorSorting(double tPercentage)
@@ -194,14 +191,16 @@ public sealed class AutomationScenarioService
         ProgressPercentage = Math.Clamp(tPercentage, 0.0, 100.0);
         double localT = ProgressPercentage / 100.0;
 
-        double q1 = -30.0 + (60.0 * localT);
-        double q2 = 10.0 * Math.Sin(localT * Math.PI * 2);
-        double q3 = 15.0 * Math.Cos(localT * Math.PI * 2);
+        double targetY = -0.4 + (0.8 * localT);
+        double targetZ = 0.12 + (0.15 * Math.Sin(localT * Math.PI));
+        var targetPos = new EndEffectorPosition(0.5, targetY, targetZ);
 
-        string action = $"Сценарий #2: Конвейерная сортировка детали (Прогресс {ProgressPercentage:F0}%)";
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
+
+        string action = $"Сценарий #2: Конвейерная сортировка детали 6-DOF IK (Прогресс {ProgressPercentage:F0}%)";
         CurrentActionDescription = action;
 
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepSingularContourWelding(double tPercentage)
@@ -209,15 +208,16 @@ public sealed class AutomationScenarioService
         ProgressPercentage = Math.Clamp(tPercentage, 0.0, 100.0);
         double localT = ProgressPercentage / 100.0;
 
-        // Sweeps directly through shoulder/elbow singular pole theta2 = 0
-        double q1 = 0.0;
-        double q2 = 15.0 * Math.Sin(localT * Math.PI * 4); // Passes zero 4 times
-        double q3 = -10.0 * Math.Sin(localT * Math.PI * 4);
+        double targetY = 0.25 * Math.Sin(localT * Math.PI * 4);
+        double targetZ = 0.20 + 0.10 * Math.Cos(localT * Math.PI * 4);
+        var targetPos = new EndEffectorPosition(0.55, targetY, targetZ);
 
-        string action = $"Сценарий #3: Сварка контура в сингулярной зоне (RICIS III Инвариант)";
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
+
+        string action = $"Сценарий #3: Сварка контура в сингулярной зоне (6-DOF RICIS Инвариант)";
         CurrentActionDescription = action;
 
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepAppleHarvesting(double tPercentage)
@@ -236,6 +236,8 @@ public sealed class AutomationScenarioService
         double targetZ = initialZ + (0.15 * Math.Sin(localT * Math.PI)) - (0.45 * localT);
         var targetPos = new EndEffectorPosition(0.45, targetY, targetZ);
 
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
+
         if (localT > 0.15 && localT < 0.85)
         {
             apple.SetGrabbed(true);
@@ -247,13 +249,9 @@ public sealed class AutomationScenarioService
             apple.MoveTo(new EndEffectorPosition(0.40, -0.30 - (index * 0.04), 0.10));
         }
 
-        double q1 = 45.0 - (90.0 * localT);
-        double q2 = 35.0 - (40.0 * localT);
-        double q3 = -20.0 + (30.0 * Math.Sin(localT * Math.PI));
-
-        string action = $"Сценарий #4: Сбор яблок с яблоневого дерева ({index + 1}/3)";
+        string action = $"Сценарий #4: Сбор яблок с яблоневого дерева (6-DOF IK {index + 1}/3)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepBerryHarvesting(double tPercentage)
@@ -265,14 +263,16 @@ public sealed class AutomationScenarioService
         double localT = (normalizedT * 2.0) - index;
 
         var berry = Workpieces[index];
-        double q1 = 30.0 - (60.0 * localT);
-        double q2 = 15.0 + (10.0 * Math.Sin(localT * Math.PI * 2));
-        double q3 = -10.0 - (15.0 * Math.Cos(localT * Math.PI));
+        double targetY = 0.30 - (0.55 * localT);
+        double targetZ = 0.32 + (0.12 * Math.Sin(localT * Math.PI));
+        var targetPos = new EndEffectorPosition(0.40, targetY, targetZ);
+
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
 
         if (localT > 0.2 && localT < 0.8)
         {
             berry.SetGrabbed(true);
-            berry.MoveTo(new EndEffectorPosition(0.40, 0.30 - (0.50 * localT), 0.30 + 0.1 * Math.Sin(localT * Math.PI)));
+            berry.MoveTo(targetPos);
         }
         else if (localT >= 0.8)
         {
@@ -280,9 +280,9 @@ public sealed class AutomationScenarioService
             berry.MoveTo(new EndEffectorPosition(0.40, -0.25 - (index * 0.03), 0.10));
         }
 
-        string action = $"Сценарий #5: Бережный микро-захват ягоды с кустарника ({index + 1}/2)";
+        string action = $"Сценарий #5: Бережный микро-захват ягоды с кустарника (6-DOF IK {index + 1}/2)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepAutomotiveAssembly(double tPercentage)
@@ -292,13 +292,11 @@ public sealed class AutomationScenarioService
 
         var wheel = Workpieces[0];
 
-        double q1 = -40.0 + (75.0 * localT);
-        double q2 = -15.0 + (25.0 * Math.Sin(localT * Math.PI));
-        double q3 = 10.0 + (20.0 * Math.Sin(localT * Math.PI));
-
         double targetY = -0.35 + (0.60 * localT);
         double targetZ = 0.15 + (0.20 * Math.Sin(localT * Math.PI));
         var targetPos = new EndEffectorPosition(0.55, targetY, targetZ);
+
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
 
         if (localT > 0.1 && localT < 0.9)
         {
@@ -311,9 +309,9 @@ public sealed class AutomationScenarioService
             wheel.MoveTo(new EndEffectorPosition(0.55, 0.25, 0.35));
         }
 
-        string action = $"Сценарий #6: Промышленный поднос и фиксация колеса к ступице автомобиля";
+        string action = $"Сценарий #6: Промышленный поднос и фиксация колеса к ступице (6-DOF IK)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepFragilePackaging(double tPercentage)
@@ -325,13 +323,11 @@ public sealed class AutomationScenarioService
         double sCurveT = 3 * localT * localT - 2 * localT * localT * localT;
 
         var vase = Workpieces[0];
-        double q1 = 40.0 - (80.0 * sCurveT);
-        double q2 = 10.0 * Math.Sin(sCurveT * Math.PI);
-        double q3 = -10.0 * Math.Sin(sCurveT * Math.PI);
-
         double targetY = 0.35 - (0.70 * sCurveT);
         double targetZ = 0.12 + (0.15 * Math.Sin(sCurveT * Math.PI));
         var targetPos = new EndEffectorPosition(0.40, targetY, targetZ);
+
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
 
         if (sCurveT > 0.15 && sCurveT < 0.85)
         {
@@ -344,9 +340,9 @@ public sealed class AutomationScenarioService
             vase.MoveTo(new EndEffectorPosition(0.40, -0.35, 0.10));
         }
 
-        string action = $"Сценарий #7: Упаковка бьющегося хрусталя с бесшовно-плавным графиком скоростей";
+        string action = $"Сценарий #7: Упаковка бьющегося хрусталя S-curve (6-DOF IK)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepArtisticDrawing(double tPercentage)
@@ -360,16 +356,15 @@ public sealed class AutomationScenarioService
         double canvasY = radius * Math.Cos(angle);
         double canvasZ = 0.40 + radius * Math.Sin(angle);
 
+        var targetPos = new EndEffectorPosition(0.50, canvasY, canvasZ);
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
+
         var brush = Workpieces[0];
-        brush.MoveTo(new EndEffectorPosition(0.50, canvasY, canvasZ));
+        brush.MoveTo(targetPos);
 
-        double q1 = (canvasY / 0.50) * (180.0 / Math.PI);
-        double q2 = 10.0 + 15.0 * Math.Sin(angle);
-        double q3 = -10.0 + 15.0 * Math.Cos(angle);
-
-        string action = $"Сценарий #8: Вычерчивание спирального узора кистью на холсте (3D Сплайн)";
+        string action = $"Сценарий #8: Вычерчивание спирального узора кистью на холсте (6-DOF IK)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 
     private (JointAngles Angles, string StatusText) StepSculptingCarving(double tPercentage)
@@ -379,17 +374,17 @@ public sealed class AutomationScenarioService
 
         // Sculpting relief grooves back and forth
         double pass = localT * 4.0;
-        double passY = -0.15 + 0.10 * (pass % 1.0);
-        double passZ = 0.25 - 0.05 * Math.Floor(pass);
+        double passY = -0.15 + 0.30 * (pass % 1.0);
+        double passZ = 0.25 - 0.04 * Math.Floor(pass);
+
+        var targetPos = new EndEffectorPosition(0.45, passY, passZ);
+        var ikAngles = _kinematicsSolver.SolveInverseKinematics(_arm, targetPos);
 
         var block = Workpieces[0];
+        block.MoveTo(targetPos);
 
-        double q1 = 15.0 * Math.Sin(localT * Math.PI * 8);
-        double q2 = -10.0 + 20.0 * Math.Cos(localT * Math.PI * 4);
-        double q3 = 5.0 + 10.0 * Math.Sin(localT * Math.PI * 4);
-
-        string action = $"Сценарий #9: Высокоточная художественная скульптура — снятие слоев мрамора долотом";
+        string action = $"Сценарий #9: Скульптура — высечение слоев мрамора долотом (6-DOF IK)";
         CurrentActionDescription = action;
-        return (new JointAngles(q1, q2, q3), action);
+        return (ikAngles, action);
     }
 }

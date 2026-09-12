@@ -13,6 +13,18 @@ public sealed class KinematicsSolver : IKinematicsSolver
         return new EndEffectorPosition(x, y, z);
     }
 
+    public JointAngles SolveInverseKinematics(ManipulatorArm arm, EndEffectorPosition targetPosition)
+    {
+        double l1 = arm.Links.Count > 1 && arm.Links[1].A > 0 ? arm.Links[1].A : 0.425;
+        double l2 = arm.Links.Count > 2 && arm.Links[2].A > 0 ? arm.Links[2].A : 0.3922;
+        double d1 = arm.Links.Count > 0 ? arm.Links[0].D : 0.2;
+
+        var (q1, q2, q3, q4, q5, q6) = SingularInverseKinematics.SolveAnalytical6DofIK(
+            targetPosition.X, targetPosition.Y, targetPosition.Z, l1, l2, d1);
+
+        return new JointAngles(q1, q2, q3, q4, q5, q6);
+    }
+
     public double ComputeJacobianDeterminant(ManipulatorArm arm, JointAngles joints)
     {
         double l1 = arm.Links.Count > 1 ? Math.Abs(arm.Links[1].A) : 0.425;

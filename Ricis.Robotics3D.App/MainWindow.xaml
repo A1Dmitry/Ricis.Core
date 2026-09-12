@@ -80,6 +80,15 @@
                             <TextBlock Text="Joint 3 (Локоть Theta 3):" Foreground="White"/>
                             <Slider Minimum="-180" Maximum="180" Value="{Binding Q3Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
 
+                            <TextBlock Text="Joint 4 (Кисть Roll Theta 4):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q4Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 5 (Кисть Pitch Theta 5):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q5Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 6 (Кисть Yaw Theta 6):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q6Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
                             <Button Content="Сбросить в Сингулярную Точку (det=0)" Command="{Binding ResetSingularCommand}" Background="#007ACC" Foreground="White" Padding="6" Margin="0,6,0,0"/>
                         </StackPanel>
                     </GroupBox>

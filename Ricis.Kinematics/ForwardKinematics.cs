@@ -56,22 +56,70 @@ public static class ForwardKinematics
     }
 
     /// <summary>
-    /// Computes end-effector 3D position (X, Y, Z) for a given joint angle configuration.
+    /// Computes exact 3D world positions (X, Y, Z) for every joint in the 6-DOF kinematic chain
+    /// using standard 4x4 homogenous Denavit-Hartenberg transformation matrix chain multiplication.
     /// </summary>
-    public static (double X, double Y, double Z) ComputeEndEffectorPosition(IReadOnlyList<DHParameter> links, double[] angles)
+    public static List<(double X, double Y, double Z)> ComputeJointPositions(IReadOnlyList<DHParameter> links, double[] angles)
     {
-        double currentX = 0, currentY = 0, currentZ = 0;
+        var positions = new List<(double X, double Y, double Z)>
+        {
+            (0.0, 0.0, 0.0) // Base origin P0
+        };
+
+        // Initialize world cumulative matrix T = Identity 4x4
+        double[,] T = {
+            { 1, 0, 0, 0 },
+            { 0, 1, 0, 0 },
+            { 0, 0, 1, 0 },
+            { 0, 0, 0, 1 }
+        };
 
         for (int i = 0; i < links.Count; i++)
         {
             var dh = links[i];
-            double q = i < angles.Length ? angles[i] + dh.Theta : dh.Theta;
+            double theta = (i < angles.Length ? angles[i] : 0.0) + dh.Theta;
+            double cosT = Math.Cos(theta);
+            double sinT = Math.Sin(theta);
+            double cosA = Math.Cos(dh.Alpha);
+            double sinA = Math.Sin(dh.Alpha);
 
-            currentX += dh.A * Math.Cos(q);
-            currentY += dh.A * Math.Sin(q);
-            currentZ += dh.D;
+            // Single link 4x4 DH transformation matrix M
+            double[,] M = {
+                { cosT, -sinT * cosA,  sinT * sinA, dh.A * cosT },
+                { sinT,  cosT * cosA, -cosT * sinA, dh.A * sinT },
+                { 0,     sinA,        cosA,        dh.D },
+                { 0,     0,           0,           1 }
+            };
+
+            // Multiply T = T * M
+            double[,] Tnext = new double[4, 4];
+            for (int r = 0; r < 4; r++)
+            {
+                for (int c = 0; c < 4; c++)
+                {
+                    double sum = 0;
+                    for (int k = 0; k < 4; k++)
+                    {
+                        sum += T[r, k] * M[k, c];
+                    }
+                    Tnext[r, c] = sum;
+                }
+            }
+
+            T = Tnext;
+            // Record joint origin position P_i = (T[0,3], T[1,3], T[2,3])
+            positions.Add((T[0, 3], T[1, 3], T[2, 3]));
         }
 
-        return (currentX, currentY, currentZ);
+        return positions;
+    }
+
+    /// <summary>
+    /// Computes end-effector 3D position (X, Y, Z) for a given joint angle configuration.
+    /// </summary>
+    public static (double X, double Y, double Z) ComputeEndEffectorPosition(IReadOnlyList<DHParameter> links, double[] angles)
+    {
+        var positions = ComputeJointPositions(links, angles);
+        return positions[^1];
     }
 }

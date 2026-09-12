@@ -22,6 +22,9 @@ public sealed class MainViewModel : ViewModelBase
     private double _q1Degrees;
     private double _q2Degrees;
     private double _q3Degrees;
+    private double _q4Degrees;
+    private double _q5Degrees;
+    private double _q6Degrees;
 
     private string _gpuStatusText = string.Empty;
     private string _assetText = string.Empty;
@@ -82,6 +85,24 @@ public sealed class MainViewModel : ViewModelBase
     {
         get => _q3Degrees;
         set { if (SetProperty(ref _q3Degrees, value)) UpdateKinematics(); }
+    }
+
+    public double Q4Degrees
+    {
+        get => _q4Degrees;
+        set { if (SetProperty(ref _q4Degrees, value)) UpdateKinematics(); }
+    }
+
+    public double Q5Degrees
+    {
+        get => _q5Degrees;
+        set { if (SetProperty(ref _q5Degrees, value)) UpdateKinematics(); }
+    }
+
+    public double Q6Degrees
+    {
+        get => _q6Degrees;
+        set { if (SetProperty(ref _q6Degrees, value)) UpdateKinematics(); }
     }
 
     public bool UseRicisSolver
@@ -206,6 +227,9 @@ public sealed class MainViewModel : ViewModelBase
         Q1Degrees = 0;
         Q2Degrees = 0;
         Q3Degrees = 0;
+        Q4Degrees = 0;
+        Q5Degrees = 0;
+        Q6Degrees = 0;
     }
 
     private void StartScenario()
@@ -244,10 +268,16 @@ public sealed class MainViewModel : ViewModelBase
         _q1Degrees = angles.Q1Degrees;
         _q2Degrees = angles.Q2Degrees;
         _q3Degrees = angles.Q3Degrees;
+        _q4Degrees = angles.Q4Degrees;
+        _q5Degrees = angles.Q5Degrees;
+        _q6Degrees = angles.Q6Degrees;
 
         OnPropertyChanged(nameof(Q1Degrees));
         OnPropertyChanged(nameof(Q2Degrees));
         OnPropertyChanged(nameof(Q3Degrees));
+        OnPropertyChanged(nameof(Q4Degrees));
+        OnPropertyChanged(nameof(Q5Degrees));
+        OnPropertyChanged(nameof(Q6Degrees));
 
         ScenarioStatusText = status;
         UpdateKinematics();
@@ -255,7 +285,7 @@ public sealed class MainViewModel : ViewModelBase
 
     private void UpdateKinematics()
     {
-        var currentJoints = new JointAngles(Q1Degrees, Q2Degrees, Q3Degrees);
+        var currentJoints = new JointAngles(Q1Degrees, Q2Degrees, Q3Degrees, Q4Degrees, Q5Degrees, Q6Degrees);
         var currentEE = _solver.ComputeForwardKinematics(_arm, currentJoints);
 
         PositionText = currentEE.ToString();
