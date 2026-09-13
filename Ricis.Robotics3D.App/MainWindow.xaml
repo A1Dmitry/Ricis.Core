@@ -34,6 +34,7 @@
                                 <ComboBoxItem Content="7. Упаковка бьющихся предметов (Хрустальная ваза)"/>
                                 <ComboBoxItem Content="8. Рисование (3D-спиральный узор кистью на холсте)"/>
                                 <ComboBoxItem Content="9. Скульптура (Снятие слоев мрамора долотом)"/>
+                                <ComboBoxItem Content="10. Интерактивный клик-режим (Клик по объекту -> Клик по месту)"/>
                             </ComboBox>
 
                             <TextBlock Text="{Binding ScenarioStatusText}" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,8" FontSize="11" FontWeight="SemiBold"/>
@@ -80,6 +81,15 @@
                             <TextBlock Text="Joint 3 (Локоть Theta 3):" Foreground="White"/>
                             <Slider Minimum="-180" Maximum="180" Value="{Binding Q3Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
 
+                            <TextBlock Text="Joint 4 (Кисть Roll Theta 4):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q4Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 5 (Кисть Pitch Theta 5):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q5Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Joint 6 (Кисть Yaw Theta 6):" Foreground="White"/>
+                            <Slider Minimum="-180" Maximum="180" Value="{Binding Q6Degrees, Mode=TwoWay}" Margin="0,2,0,8"/>
+
                             <Button Content="Сбросить в Сингулярную Точку (det=0)" Command="{Binding ResetSingularCommand}" Background="#007ACC" Foreground="White" Padding="6" Margin="0,6,0,0"/>
                         </StackPanel>
                     </GroupBox>
@@ -110,7 +120,7 @@
 
                 <!-- Interactive 3D Viewport with HelixToolkit -->
                 <Border Grid.Row="1" Background="#101010" CornerRadius="6" BorderBrush="#3F3F46" BorderThickness="1" ClipToBounds="True">
-                    <helix:HelixViewport3D ShowFrameRate="True" ZoomExtentsWhenLoaded="True" Background="#121212">
+                    <helix:HelixViewport3D x:Name="MainViewport" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" Background="#121212" MouseLeftButtonDown="Viewport3D_MouseLeftButtonDown">
                         <!-- Lighting -->
                         <helix:DefaultLights/>
 

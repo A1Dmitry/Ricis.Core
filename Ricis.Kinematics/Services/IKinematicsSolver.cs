@@ -8,6 +8,7 @@ namespace Ricis.Kinematics.Services;
 public interface IKinematicsSolver
 {
     EndEffectorPosition ComputeForwardKinematics(ManipulatorArm arm, JointAngles joints);
+    JointAngles SolveInverseKinematics(ManipulatorArm arm, EndEffectorPosition targetPosition);
     double ComputeJacobianDeterminant(ManipulatorArm arm, JointAngles joints);
     double[] SolveSingularJointVelocities(double detJ, double[] endEffectorVelocities, double dampingFactor = 0.01);
 }

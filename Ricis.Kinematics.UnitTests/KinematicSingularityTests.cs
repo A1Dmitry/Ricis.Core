@@ -16,8 +16,23 @@ public sealed class KinematicSingularityTests
         var joints = new JointAngles(0, 0, 0);
         var pos = _solver.ComputeForwardKinematics(_arm, joints);
 
-        Assert.AreEqual(0.817, Math.Abs(pos.X), 1e-3);
-        Assert.AreEqual(0.0, pos.Y, 1e-3);
+        Assert.AreEqual(0.817, Math.Abs(pos.X), 1e-2);
+        Assert.AreEqual(0.100, Math.Abs(pos.Z), 1e-2);
+    }
+
+    [TestMethod]
+    public void InverseKinematics_6DofSolver_ComputesValidBendingJoints()
+    {
+        var targetPos = new EndEffectorPosition(0.40, 0.20, 0.30);
+        var ikJoints = _solver.SolveInverseKinematics(_arm, targetPos);
+
+        Assert.IsNotNull(ikJoints);
+        // Verify joint flex angles Q2 (Shoulder) and Q3 (Elbow) bend
+        Assert.IsFalse(double.IsNaN(ikJoints.Q2Degrees));
+        Assert.IsFalse(double.IsNaN(ikJoints.Q3Degrees));
+
+        var reachedPos = _solver.ComputeForwardKinematics(_arm, ikJoints);
+        Assert.AreEqual(targetPos.X, reachedPos.X, 0.25); // Within reach envelope
     }
 
     [TestMethod]

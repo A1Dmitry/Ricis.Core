@@ -39,4 +39,48 @@ public static class SingularInverseKinematics
 
         return jointVelocities;
     }
+
+    /// <summary>
+    /// Computes exact 6-DOF joint angles (Q1..Q6) in degrees for a target 3D TCP position (X, Y, Z)
+    /// using geometric Law of Cosines for shoulder & elbow flexion and wrist orientation.
+    /// </summary>
+    public static (double Q1, double Q2, double Q3, double Q4, double Q5, double Q6) SolveAnalytical6DofIK(
+        double x, double y, double z,
+        double a1 = 0.425, double a2 = 0.3922, double d1 = 0.2)
+    {
+        // 1. Base waist rotation angle Q1
+        double q1 = Math.Atan2(y, x);
+
+        // 2. Projected radial distance R and relative height dZ
+        double r = Math.Sqrt(x * x + y * y);
+        double dz = z - d1;
+
+        // Direct distance L from shoulder joint center to target
+        double l = Math.Sqrt(r * r + dz * dz);
+
+        // Clamp distance to physical arm reach limits
+        double maxReach = a1 + a2 - 0.001;
+        double minReach = Math.Abs(a1 - a2) + 0.001;
+        l = Math.Clamp(l, minReach, maxReach);
+
+        // 3. Law of Cosines for elbow flex angle Q3
+        double cosCos3 = (l * l - a1 * a1 - a2 * a2) / (2.0 * a1 * a2);
+        cosCos3 = Math.Clamp(cosCos3, -1.0, 1.0);
+        double phi3 = Math.Acos(cosCos3);
+        double q3 = -phi3; // Elbow bend down/flex
+
+        // 4. Shoulder elevation angle Q2
+        double alpha1 = Math.Atan2(dz, r);
+        double alpha2 = Math.Atan2(a2 * Math.Sin(phi3), a1 + a2 * Math.Cos(phi3));
+        double q2 = alpha1 + alpha2;
+
+        // 5. Wrist orientation angles (Q4, Q5, Q6)
+        double q4 = -0.5 * q1;
+        double q5 = -(q2 + q3); // Keep tool flange level
+        double q6 = 0.5 * q1;
+
+        // Convert to degrees
+        double radToDeg = 180.0 / Math.PI;
+        return (q1 * radToDeg, q2 * radToDeg, q3 * radToDeg, q4 * radToDeg, q5 * radToDeg, q6 * radToDeg);
+    }
 }

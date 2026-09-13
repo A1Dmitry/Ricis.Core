@@ -3,6 +3,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Geometry;
 using HelixToolkit.Wpf;
+using Ricis.Kinematics;
 using Ricis.Kinematics.Domain;
 using Ricis.Kinematics.Services;
 
@@ -22,67 +23,90 @@ public static class UrdfRobotVisual3D
     {
         sceneGroup.Children.Clear();
 
-        double radQ1 = joints.Q1Radians;
-        double radQ2 = joints.Q2Radians;
-        double radQ3 = joints.Q3Radians;
+        // 1. Compute exact 3D DH transformation positions for all joints P0..P6
+        var pts = ForwardKinematics.ComputeJointPositions(arm.Links, joints.ToRadiansArray());
+
+        Vector3 p0 = new((float)pts[0].X, (float)pts[0].Y, (float)pts[0].Z);
+        Vector3 p1 = new((float)pts[1].X, (float)pts[1].Y, (float)pts[1].Z);
+        Vector3 p2 = new((float)pts[2].X, (float)pts[2].Y, (float)pts[2].Z);
+        Vector3 p3 = new((float)pts[3].X, (float)pts[3].Y, (float)pts[3].Z);
+        Vector3 p4 = pts.Count > 4 ? new((float)pts[4].X, (float)pts[4].Y, (float)pts[4].Z) : p3;
+        Vector3 p5 = pts.Count > 5 ? new((float)pts[5].X, (float)pts[5].Y, (float)pts[5].Z) : p4;
+        Vector3 p6 = pts.Count > 6 ? new((float)pts[6].X, (float)pts[6].Y, (float)pts[6].Z) : p5;
 
         // Premium PBR-styled Materials
         var titanPedestalMat = MaterialHelper.CreateMaterial(Color.FromRgb(30, 32, 38));
         var kukaOrangeMat = MaterialHelper.CreateMaterial(Color.FromRgb(240, 110, 15));
         var jointChromeMat = MaterialHelper.CreateMaterial(Color.FromRgb(210, 215, 225));
         var armDarkMat = MaterialHelper.CreateMaterial(Color.FromRgb(15, 20, 30));
-        var pneumaticGoldMat = MaterialHelper.CreateMaterial(Color.FromRgb(230, 180, 25));
 
-        // 1. Base Pedestal with mounting flange bolts
+        // Base Pedestal with mounting flange
         MeshBuilder mb = new MeshBuilder(false, false);
-        mb.AddCylinder(new Vector3(0, 0, 0), new Vector3(0, 0, 0.22f), 0.16f, 36);
-        mb.AddBox(new Vector3(0, 0, 0.02f), 0.38f, 0.38f, 0.04f);
+        mb.AddCylinder(p0, p1, 0.16f, 36);
+        mb.AddBox(p0 + new Vector3(0, 0, 0.02f), 0.38f, 0.38f, 0.04f);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), titanPedestalMat));
 
-        // 2. Base Joint Rotary Housing
+        // Base Waist Joint Housing
         mb = new MeshBuilder(false, false);
-        Vector3 v1 = new Vector3(0, 0, 0.22f);
-        mb.AddSphere(v1, 0.10f, 24, 24);
+        mb.AddSphere(p1, 0.10f, 24, 24);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
 
-        float l1 = 0.425f;
-        float l2 = 0.3922f;
-
-        // Joint 2 (Shoulder)
-        float x1 = (float)(l1 * Math.Cos(radQ1) * Math.Cos(radQ2));
-        float y1 = (float)(l1 * Math.Sin(radQ1) * Math.Cos(radQ2));
-        float z1 = (float)(v1.Z + l1 * Math.Sin(radQ2));
-        Vector3 v2 = new Vector3(x1, y1, z1);
-
-        // Upper Arm Main Link (Double-shell CAD profile)
+        // Upper Arm Link (P1 -> P2) (Shoulder Bending)
         mb = new MeshBuilder(false, false);
-        mb.AddCylinder(v1, v2, 0.075f, 32);
+        mb.AddCylinder(p1, p2, 0.075f, 32);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), kukaOrangeMat));
 
-        // Joint 3 (Elbow Ring)
+        // Shoulder Joint Sphere (P2)
         mb = new MeshBuilder(false, false);
-        mb.AddSphere(v2, 0.085f, 24, 24);
+        mb.AddSphere(p2, 0.085f, 24, 24);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
 
-        // End Effector
-        double relAngle = radQ2 + radQ3;
-        float x2 = (float)(x1 + l2 * Math.Cos(radQ1) * Math.Cos(relAngle));
-        float y2 = (float)(y1 + l2 * Math.Sin(radQ1) * Math.Cos(relAngle));
-        float z2 = (float)(z1 + l2 * Math.Sin(relAngle));
-        Vector3 v3 = new Vector3(x2, y2, z2);
-
-        // Forearm Link
+        // Forearm Link (P2 -> P3) (Elbow Flexing/Bending)
         mb = new MeshBuilder(false, false);
-        mb.AddCylinder(v2, v3, 0.055f, 32);
+        mb.AddCylinder(p2, p3, 0.055f, 32);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), armDarkMat));
 
-        // Wrist Rotator
+        // Elbow Joint Sphere (P3)
         mb = new MeshBuilder(false, false);
-        mb.AddSphere(v3, 0.06f, 24, 24);
+        mb.AddSphere(p3, 0.07f, 24, 24);
         sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
 
-        // Specialized End-Effector Tool rendering based on Active Scenario
-        RenderEndEffectorTool(sceneGroup, scenario.ActiveScenario, radQ1, v3, z2, x2, y2);
+        // Wrist Link 1 (P3 -> P4)
+        if (Vector3.Distance(p3, p4) > 0.001f)
+        {
+            mb = new MeshBuilder(false, false);
+            mb.AddCylinder(p3, p4, 0.045f, 24);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), armDarkMat));
+        }
+
+        // Wrist Roll Joint (P4)
+        mb = new MeshBuilder(false, false);
+        mb.AddSphere(p4, 0.055f, 20, 20);
+        sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
+
+        // Wrist Pitch Link 2 (P4 -> P5)
+        if (Vector3.Distance(p4, p5) > 0.001f)
+        {
+            mb = new MeshBuilder(false, false);
+            mb.AddCylinder(p4, p5, 0.040f, 24);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), kukaOrangeMat));
+        }
+
+        // Wrist Pitch Joint (P5)
+        mb = new MeshBuilder(false, false);
+        mb.AddSphere(p5, 0.050f, 20, 20);
+        sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), jointChromeMat));
+
+        // Tool Flange Link 3 (P5 -> P6)
+        if (Vector3.Distance(p5, p6) > 0.001f)
+        {
+            mb = new MeshBuilder(false, false);
+            mb.AddCylinder(p5, p6, 0.035f, 24);
+            sceneGroup.Children.Add(new GeometryModel3D(MainWindow.ConvertToWpfMesh(mb.ToMesh()), armDarkMat));
+        }
+
+        // Specialized End-Effector Tool rendering at Flange Position P6
+        RenderEndEffectorTool(sceneGroup, scenario.ActiveScenario, joints.Q1Radians, p6, p6.Z, p6.X, p6.Y);
 
         // Render Environmental Models and Industrial Workpieces
         RenderWorkspaceEnvironment(sceneGroup, scenario);
